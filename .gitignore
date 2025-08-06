@@ -1,0 +1,5 @@
+# Ignorera PyInstaller och Python-cachefiler
+build/
+dist/
+__pycache__/
+*.spec
