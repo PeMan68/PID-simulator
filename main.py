@@ -187,7 +187,6 @@ class PIDSimulatorApp:
         # Tooltip och markör
         self.tooltip = None
         self.cursor_line = None  # For vertical marker
-        self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
         self.update_plot()
 
     def create_widgets(self):
@@ -210,6 +209,25 @@ class PIDSimulatorApp:
         ttk.Entry(sys_frame, textvariable=self.proc_fout_var, width=6).grid(row=0, column=7)
         self.integrerande_var = tk.BooleanVar(value=self.process.integrerande)
         ttk.Checkbutton(sys_frame, text="Integrerande", variable=self.integrerande_var).grid(row=0, column=8, columnspan=2)
+        # --- Brusreglage ---
+        ttk.Label(sys_frame, text="Brus std").grid(row=1, column=0)
+        self.noise_std_var = tk.DoubleVar(value=0.0)
+        self.noise_scale = ttk.Scale(sys_frame, from_=0.0, to=5.0, variable=self.noise_std_var, orient=tk.HORIZONTAL, length=100)
+        self.noise_scale.grid(row=1, column=1, columnspan=2, sticky="we", padx=2)
+        self.noise_entry = ttk.Entry(sys_frame, textvariable=self.noise_std_var, width=5)
+        self.noise_entry.grid(row=1, column=3)
+        # --- Pulsstörning ---
+        ttk.Label(sys_frame, text="Puls (storlek)").grid(row=1, column=4)
+        self.pulse_mag_var = tk.DoubleVar(value=10.0)
+        self.pulse_entry = ttk.Entry(sys_frame, textvariable=self.pulse_mag_var, width=5)
+        self.pulse_entry.grid(row=1, column=5)
+        ttk.Label(sys_frame, text="(steg)").grid(row=1, column=6)
+        self.pulse_dur_var = tk.IntVar(value=3)
+        self.pulse_dur_entry = ttk.Entry(sys_frame, textvariable=self.pulse_dur_var, width=3)
+        self.pulse_dur_entry.grid(row=1, column=7)
+        self.pulse_active = False
+        self.pulse_steps_left = 0
+        ttk.Button(sys_frame, text="Pulsstörning", command=self.trigger_pulse).grid(row=1, column=8, padx=2)
 
         # Regulatorparametrar
         pid_frame = ttk.LabelFrame(frame, text="Regulatorparametrar")
@@ -273,7 +291,14 @@ class PIDSimulatorApp:
         # Plott
         self.fig, self.axs = plt.subplots(3, 1, sharex=True, figsize=(7,6))
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.root)
+        # Koppla musrörelse till canvas (måste ske efter att self.canvas skapats)
+        self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
         self.canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
+    def trigger_pulse(self):
+        # Aktivera puls-störning
+        self.pulse_active = True
+        self.pulse_steps_left = self.pulse_dur_var.get()
 
     def parse_float(self, var):
         try:
@@ -401,6 +426,15 @@ class PIDSimulatorApp:
         self.process.dead_time = self.parse_float(self.proc_dead_var)
         self.process.integrerande = self.integrerande_var.get()
         self.process.Fout = self.parse_float(self.proc_fout_var)
+        # --- Störningar ---
+        noise_std = self.noise_std_var.get()
+        noise = np.random.normal(0, noise_std) if noise_std > 0 else 0.0
+        pulse = 0.0
+        if getattr(self, 'pulse_active', False) and getattr(self, 'pulse_steps_left', 0) > 0:
+            pulse = self.pulse_mag_var.get()
+            self.pulse_steps_left -= 1
+            if self.pulse_steps_left <= 0:
+                self.pulse_active = False
         # Simulera ett steg
         pv = self.process.y
         # PID-beräkning med skydd mot division med noll
@@ -412,7 +446,9 @@ class PIDSimulatorApp:
             )
         except ZeroDivisionError:
             ctrl, err, integ, deriv = 0.0, 0.0, 0.0, 0.0
+        # Applicera störningar på processvärdet (y)
         self.process.step(ctrl, self.dt)
+        self.process.y += noise + pulse
         self.current_step += 1
         self.t.append(self.current_step*self.dt)
         self.y.append(self.process.y)
