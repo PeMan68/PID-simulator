@@ -245,14 +245,13 @@ class PIDSimulatorApp:
         self.td_var = tk.StringVar(value=str(self.pid.Td))
         ttk.Entry(pid_frame, textvariable=self.td_var, width=6).grid(row=0, column=6)
         ttk.Checkbutton(pid_frame, text="Derivata aktiv", variable=self.d_active_var).grid(row=0, column=7, padx=2)
+        ttk.Checkbutton(pid_frame, text="Anti-windup", variable=self.antiwindup_var).grid(row=1, column=0, columnspan=2, padx=2)
         # Börvärde
         bv_frame = ttk.LabelFrame(frame, text="Börvärde")
         bv_frame.pack(fill=tk.X, padx=5, pady=5)
         self.sp_var = tk.StringVar(value=str(self.setpoint))
         ttk.Entry(bv_frame, textvariable=self.sp_var, width=8).pack(side=tk.LEFT)
         ttk.Button(bv_frame, text="Sätt BV", command=self.set_setpoint).pack(side=tk.LEFT, padx=5)
-        # Anti-windup
-        ttk.Checkbutton(bv_frame, text="Anti-windup", variable=self.antiwindup_var).pack(side=tk.LEFT, padx=10)
 
         # Formler/resultat i egen ruta
         formula_frame = ttk.LabelFrame(frame, text="Formler och mellanresultat")
