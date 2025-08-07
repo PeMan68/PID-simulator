@@ -151,7 +151,7 @@ class PIDSimulatorApp:
         self.tooltip.place(x=x_root, y=y_root)
     def __init__(self, root):
         self.root = root
-        root.title("PID-simulator v1.1")
+        root.title("PID-simulator v1.2")
         # Öka fönsterbredd för att ge plats åt tooltip
         root.geometry("1100x700")
         root.minsize(1000, 600)
