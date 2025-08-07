@@ -8,15 +8,16 @@ import matplotlib.pyplot as plt
 
 # --- Processmodeller ---
 class Process:
-    def __init__(self, K=1.0, T=10.0, dead_time=2.0, integrerande=False, Fout=0.0):
+    def __init__(self, K=1.0, T=10.0, dead_time=2.0, integrerande=False, Fout=0.0, normalvarde=0.0):
         self.K = K
         self.T = T
         self.dead_time = dead_time
         self.integrerande = integrerande
         self.Fout = Fout  # Utflöde (för nivåreglering)
-        self.y_hist = [0.0]*int(dead_time+1)
+        self.normalvarde = normalvarde  # Normalvärde (NV)
+        self.y_hist = [normalvarde]*int(dead_time+1)  # Starta med normalvärdet
         self.u_hist = [0.0]*int(dead_time+1)
-        self.y = 0.0
+        self.y = normalvarde  # Starta på normalvärdet
         self.t = 0
 
     def step(self, u, dt):
@@ -26,7 +27,8 @@ class Process:
             # Nivåreglering: inflöde (styrsignal) minus utflöde
             self.y += (self.K * u_delayed - self.Fout) * dt / self.T
         else:
-            self.y += (-(self.y) + self.K * u_delayed) * dt / self.T
+            # Normalvärde: y går mot normalvarde om u=0
+            self.y += (-(self.y - self.normalvarde) + self.K * u_delayed) * dt / self.T
         self.y_hist.append(self.y)
         self.y_hist.pop(0)
         self.t += dt
@@ -149,7 +151,7 @@ class PIDSimulatorApp:
         self.tooltip.place(x=x_root, y=y_root)
     def __init__(self, root):
         self.root = root
-        root.title("PID-simulator v1.1")
+        root.title("PID-simulator v1.2")
         # Öka fönsterbredd för att ge plats åt tooltip
         root.geometry("1100x700")
         root.minsize(1000, 600)
@@ -159,8 +161,10 @@ class PIDSimulatorApp:
         self.current_step = 0
         self.running = False
         self._auto_paused = False
+        # Normalvärde (NV) - måste definieras före Process
+        self.nv_var = tk.DoubleVar(value=23.0)  # Exempel: rumstemperatur
         # Process och PID
-        self.process = Process(K=2.0, T=15.0, dead_time=3.0, integrerande=False, Fout=0.0)
+        self.process = Process(K=2.0, T=15.0, dead_time=3.0, integrerande=False, Fout=0.0, normalvarde=self.nv_var.get())
         self.pid = PID(Kp=2.0, Ti=10.0, Td=1.0, dt=self.dt)
         self.setpoint = 50.0
         # Begränsning och antiwindup
@@ -169,7 +173,7 @@ class PIDSimulatorApp:
         self.antiwindup_var = tk.BooleanVar(value=True)
         # Historik
         self.t = [0]
-        self.y = [0]
+        self.y = [self.nv_var.get()]  # Starta på normalvärdet
         self.u = [0]
         self.e = [0]
         self.i = [0]
@@ -184,11 +188,15 @@ class PIDSimulatorApp:
         self.d_active_var = tk.BooleanVar(value=True)
         # Autopaus-blockering
         self.autopause_var = tk.BooleanVar(value=True)
+        # Simuleringshastighet (delay i ms mellan steg)
+        self.speed_var = tk.IntVar(value=300)  # 300ms standard
         # GUI
         self.create_widgets()
         # Tooltip och markör
         self.tooltip = None
         self.cursor_line = None  # For vertical marker
+        # Uppdatera hastighetsetikett
+        self.update_speed_label()
         self.update_plot()
 
     def create_widgets(self):
@@ -245,14 +253,20 @@ class PIDSimulatorApp:
         self.td_var = tk.StringVar(value=str(self.pid.Td))
         ttk.Entry(pid_frame, textvariable=self.td_var, width=6).grid(row=0, column=6)
         ttk.Checkbutton(pid_frame, text="Derivata aktiv", variable=self.d_active_var).grid(row=0, column=7, padx=2)
+        ttk.Checkbutton(pid_frame, text="Anti-windup", variable=self.antiwindup_var).grid(row=1, column=0, columnspan=2, padx=2)
         # Börvärde
-        bv_frame = ttk.LabelFrame(frame, text="Börvärde")
+        bv_frame = ttk.LabelFrame(frame, text="Börvärde och Normalvärde")
         bv_frame.pack(fill=tk.X, padx=5, pady=5)
         self.sp_var = tk.StringVar(value=str(self.setpoint))
+        # Börvärde (vänster)
+        ttk.Label(bv_frame, text="Börvärde").pack(side=tk.LEFT, padx=(5,2))
         ttk.Entry(bv_frame, textvariable=self.sp_var, width=8).pack(side=tk.LEFT)
         ttk.Button(bv_frame, text="Sätt BV", command=self.set_setpoint).pack(side=tk.LEFT, padx=5)
-        # Anti-windup
-        ttk.Checkbutton(bv_frame, text="Anti-windup", variable=self.antiwindup_var).pack(side=tk.LEFT, padx=10)
+        # Normalvärde (höger)
+        ttk.Label(bv_frame, text="Normalvärde").pack(side=tk.LEFT, padx=(20,2))
+        self.nv_entry = ttk.Entry(bv_frame, textvariable=self.nv_var, width=8)
+        self.nv_entry.pack(side=tk.LEFT)
+        ttk.Button(bv_frame, text="Sätt NV", command=self.set_nv).pack(side=tk.LEFT, padx=5)
 
         # Formler/resultat i egen ruta
         formula_frame = ttk.LabelFrame(frame, text="Formler och mellanresultat")
@@ -281,6 +295,15 @@ class PIDSimulatorApp:
         self.reset_btn = ttk.Button(sim_frame, text="Återställ", command=self.reset)
         self.reset_btn.pack(side=tk.LEFT, padx=2)
         ttk.Checkbutton(sim_frame, text="Autopaus", variable=self.autopause_var).pack(side=tk.LEFT, padx=10)
+        
+        # Hastighetskontroller
+        ttk.Label(sim_frame, text="Hastighet:").pack(side=tk.LEFT, padx=(20,2))
+        speed_frame = ttk.Frame(sim_frame)
+        speed_frame.pack(side=tk.LEFT, padx=5)
+        ttk.Button(speed_frame, text="<<", command=self.speed_slower, width=3).pack(side=tk.LEFT)
+        ttk.Button(speed_frame, text=">>", command=self.speed_faster, width=3).pack(side=tk.LEFT)
+        self.speed_label = ttk.Label(speed_frame, text="1x", width=4)
+        self.speed_label.pack(side=tk.LEFT, padx=2)
 
         # Tidsfönster (flyttad längst ner)
         window_frame = ttk.LabelFrame(frame, text="Tidsfönster")
@@ -302,6 +325,31 @@ class PIDSimulatorApp:
         # Aktivera puls-störning
         self.pulse_active = True
         self.pulse_steps_left = self.pulse_dur_var.get()
+
+    def speed_faster(self):
+        # Minska delay = snabbare simulering
+        current = self.speed_var.get()
+        if current > 50:  # Minimum 50ms delay
+            new_speed = max(50, current - 50)
+            self.speed_var.set(new_speed)
+            self.update_speed_label()
+
+    def speed_slower(self):
+        # Öka delay = långsammare simulering
+        current = self.speed_var.get()
+        if current < 1000:  # Maximum 1000ms delay
+            new_speed = min(1000, current + 50)
+            self.speed_var.set(new_speed)
+            self.update_speed_label()
+
+    def update_speed_label(self):
+        # Beräkna hastighets-multiplikator (300ms = 1x)
+        delay = self.speed_var.get()
+        speed_factor = 300 / delay
+        if speed_factor >= 1:
+            self.speed_label.config(text=f"{speed_factor:.1f}x")
+        else:
+            self.speed_label.config(text=f"1/{1/speed_factor:.1f}x")
 
     def parse_float(self, var):
         try:
@@ -330,6 +378,25 @@ class PIDSimulatorApp:
             self.setpoint = float(str(self.sp_var.get()).replace(",", "."))
         except Exception:
             self.setpoint = 0.0
+
+    def set_nv(self):
+        # Hantera svenska decimalkomma för normalvärde
+        try:
+            nv = float(str(self.nv_entry.get()).replace(",", "."))
+            self.nv_var.set(nv)
+        except Exception:
+            nv = 23.0
+        # Uppdatera processens normalvärde direkt
+        self.process.normalvarde = self.nv_var.get()
+        # Uppdatera även startvärdet och historiken om vi inte är mitt i en simulering
+        if not self.running:
+            self.process.y = self.nv_var.get()
+            # Uppdatera hela dötidshistoriken med nya normalvärdet
+            self.process.y_hist = [self.nv_var.get()] * len(self.process.y_hist)
+            # Uppdatera den första punkten i plot-historiken
+            if len(self.y) > 0:
+                self.y[0] = self.nv_var.get()
+        self.update_plot()
 
     def start(self):
         self.running = True
@@ -360,7 +427,8 @@ class PIDSimulatorApp:
             T=self.parse_float(self.proc_t_var),
             dead_time=self.parse_float(self.proc_dead_var),
             integrerande=self.integrerande_var.get(),
-            Fout=self.parse_float(self.proc_fout_var)
+            Fout=self.parse_float(self.proc_fout_var),
+            normalvarde=self.nv_var.get()
         )
         self.pid = PID(Kp=self.parse_float(self.kp_var), Ti=self.parse_float(self.ti_var), Td=self.parse_float(self.td_var), dt=self.dt)
         try:
@@ -368,7 +436,7 @@ class PIDSimulatorApp:
         except Exception:
             self.setpoint = 0.0
         self.t = [0]
-        self.y = [0]
+        self.y = [self.nv_var.get()]  # Starta på normalvärdet
         self.u = [0]
         self.e = [0]
         self.i = [0]
@@ -431,6 +499,7 @@ class PIDSimulatorApp:
         self.process.dead_time = self.parse_float(self.proc_dead_var)
         self.process.integrerande = self.integrerande_var.get()
         self.process.Fout = self.parse_float(self.proc_fout_var)
+        self.process.normalvarde = self.nv_var.get()  # Uppdatera normalvärdet varje steg
         # --- Störningar ---
         noise_std = self.noise_std_var.get()
         noise = np.random.normal(0, noise_std) if noise_std > 0 else 0.0
@@ -483,7 +552,7 @@ class PIDSimulatorApp:
         self.formel_label.config(text=formel + res)
         self.update_plot()
         if self.running and not step:
-            self.root.after(300, self.simulate)
+            self.root.after(self.speed_var.get(), self.simulate)
         self.update_buttons()
 
     def update_plot(self):
@@ -654,7 +723,7 @@ class PIDSimulatorApp:
         self._just_reset = True
         self.running = False
         self.current_step = 0
-        self.process = Process(K=self.parse_float(self.proc_k_var), T=self.parse_float(self.proc_t_var), dead_time=self.parse_float(self.proc_dead_var), integrerande=self.integrerande_var.get())
+        self.process = Process(K=self.parse_float(self.proc_k_var), T=self.parse_float(self.proc_t_var), dead_time=self.parse_float(self.proc_dead_var), integrerande=self.integrerande_var.get(), normalvarde=self.nv_var.get())
         self.pid = PID(Kp=self.parse_float(self.kp_var), Ti=self.parse_float(self.ti_var), Td=self.parse_float(self.td_var), dt=self.dt)
         try:
             self.setpoint = float(str(self.sp_var.get()).replace(",", "."))

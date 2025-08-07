@@ -8,26 +8,31 @@ Kör `main.py` med Python 3.8+ och nödvändiga paket installerade (tkinter, mat
 
 ## Gränssnitt och funktioner
 - **Systemparametrar**: Ange processens förstärkning (K), tidskonstant (T), dötid, utflöde (för nivåreglering) och om processen är integrerande.
-- **Regulatorparametrar**: Ange PID-parametrar (Kp, Ti, Td) och aktivera/inaktivera I- och D-del.
-- **Börvärde**: Ange önskat börvärde och eventuellt utflöde (för nivåreglering).
-- **Simulering**: Starta (Kör), pausa, stega eller återställ simuleringen.
+- **Regulatorparametrar**: Ange PID-parametrar (Kp, Ti, Td) och aktivera/inaktivera I- och D-del. Anti-windup kan aktiveras för att förhindra integrator-mättnad.
+- **Börvärde och Normalvärde**: Ange önskat börvärde och normalvärde (det värde processen tenderar mot när ingen styrsignal är aktiv, t.ex. rumstemperatur).
+- **Störningar**: Lägg till brus och pulsstörningar för att testa regulatorns robusthet.
+- **Simulering**: Starta (Kör), pausa, stega eller återställ simuleringen. Hastighetskontroll (<</>>) låter dig köra simuleringen snabbare eller långsammare.
 - **Tidsfönster**: Välj om hela eller ett fönster av simuleringen ska visas, och navigera i tiden.
-- **Visualisering**: Tre grafer visar processvärde, regulatorutgång och PID-komponenter. Vertikal markör och tooltip visas vid paus/steg.
+- **Visualisering**: Tre grafer visar processvärde, regulatorutgång och PID-komponenter. Vertikal markör och tooltip visas vid paus/steg för detaljanalys.
 - **Formler och mellanresultat**: Aktuell PID-beräkning visas med alla delbidrag.
 - **Prestandamått**: Översläng, stigtid, inställningstid och stationärt fel visas under graferna.
 - **Auto-paus**: Simuleringen pausar automatiskt när systemet är nära börvärdet eller stabilt.
 
 ## Exempel på användning
 1. Välj process- och regulatorparametrar.
-2. Ange börvärde och eventuellt utflöde (för nivåreglering).
-3. Tryck "Kör" för att starta simuleringen. Simuleringen pausar automatiskt när systemet stabiliserats.
-4. Justera parametrar och observera effekterna.
-5. Använd "Stega" för att gå igenom simuleringen stegvis.
+2. Ange börvärde och normalvärde (t.ex. 23°C för rumstemperatur).
+3. Tryck "Sätt NV" för att aktivera normalvärdet, sedan "Kör" för att starta simuleringen.
+4. Använd hastighetsknapparna (<</>>) för att justera simuleringshastigheten.
+5. Justera parametrar och observera effekterna. Testa störningar (brus/puls).
+6. Använd "Stega" för att gå igenom simuleringen stegvis och analysera varje beräkningssteg.
+7. Hovra med musen över graferna under paus för detaljerad information vid varje tidpunkt.
 
 ## Tips
 - För nivåreglering (integrerande process): Ange utflöde > 0 och aktivera "Integrerande".
-- För självreglerande process: Avmarkera "Integrerande" och sätt utflöde till 0.
+- För självreglerande process: Avmarkera "Integrerande" och sätt utflöde till 0. Ställ in normalvärdet till det värde processen ska tendera mot (t.ex. rumstemperatur).
 - Testa olika PID-parametrar och observera hur systemet reagerar.
+- Använd hastighetskontrollerna för att studera snabba transienter (snabb hastighet) eller detaljanalys (långsam hastighet).
+- Aktivera anti-windup om systemet har begränsad styrsignal för att undvika integrator-mättnad.
 
 ---
 
@@ -37,9 +42,9 @@ Kör `main.py` med Python 3.8+ och nödvändiga paket installerade (tkinter, mat
 
 ### Självreglerande process
 - Exempel: Temperaturreglering.
-- Modelleras som ett första ordningens system med dötid.
-- Utsignal y(t) går mot ett nytt jämviktsläge efter en ändring av styrsignalen.
-- Påverkas av: K (förstärkning), T (tidskonstant), dötid.
+- Modelleras som ett första ordningens system med dötid och normalvärde.
+- Utsignal y(t) går mot normalvärdet när ingen styrsignal finns, mot ett nytt jämviktsläge efter en ändring av styrsignalen.
+- Påverkas av: K (förstärkning), T (tidskonstant), dötid, normalvärde (grundläggande jämviktstillstånd).
 
 ### Integrerande process (t.ex. nivåreglering)
 - Exempel: Tanknivå med inflöde (styrsignal) och utflöde (Fout).
@@ -97,9 +102,13 @@ Du kan själv räkna ut och testa dessa värden i simulatorn!
 
 ## Praktiska tips
 - Använd "Stega" och auto-paus för att analysera varje beräkningssteg.
+- Hovra med musen över graferna under paus för detaljerad tooltip-information.
+- Justera simuleringshastigheten med <</>>) för optimal studietakt.
 - Justera en parameter i taget och observera effekten.
 - För nivåreglering: Kontrollera att styrsignalen kan kompensera för utflödet.
+- För självreglerande processer: Sätt normalvärdet till det naturliga jämviktstillståndet.
 - Om systemet aldrig når börvärdet (stationärt fel): öka Kp eller aktivera I-delen.
+- Testa störningar (brus/puls) för att utvärdera regulatorns robusthet.
 
 ---
 
@@ -109,12 +118,17 @@ För mer teori, se kurslitteratur om reglerteknik och PID-reglering.
 Detta projekt demonstrerar PID-reglering för processindustriella tillämpningar. 
 
 ## Funktioner
-- Simulering av självreglerande och integrerande processer med dödtid och ställbar processförstärkning
+- Simulering av självreglerande och integrerande processer med dödtid, processförstärkning och normalvärde
+- Realistisk modellering med normalvärde (det värde processen tenderar mot utan styrsignal)
+- PID-reglering med aktiverbara I- och D-delar samt anti-windup-funktionalitet
 - Möjlighet att ställa PID-parametrar och processparametrar
-- Fördefinierade störningar och manuell ändring av börvärde
-- Grafiskt gränssnitt med realtidsplottar
+- Störningar: brus och pulsstörningar för robusthetstester
+- Hastighetskontroll för simuleringen (snabbare/långsammare)
+- Manuell ändring av börvärde och normalvärde under körning
+- Grafiskt gränssnitt med realtidsplottar och detaljerade tooltips
 - Möjlighet att pausa och stega simuleringen för pedagogisk genomgång
 - Tydlig presentation av regulatorns beräkningssteg (formler och resultat)
+- Prestandamått: översläng, stigtid, inställningstid och stationärt fel
 
 ## Syfte
 Projektet är avsett för utbildning i PID-reglering, t.ex. i en YH-klass.
