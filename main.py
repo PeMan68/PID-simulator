@@ -188,11 +188,15 @@ class PIDSimulatorApp:
         self.d_active_var = tk.BooleanVar(value=True)
         # Autopaus-blockering
         self.autopause_var = tk.BooleanVar(value=True)
+        # Simuleringshastighet (delay i ms mellan steg)
+        self.speed_var = tk.IntVar(value=300)  # 300ms standard
         # GUI
         self.create_widgets()
         # Tooltip och markör
         self.tooltip = None
         self.cursor_line = None  # For vertical marker
+        # Uppdatera hastighetsetikett
+        self.update_speed_label()
         self.update_plot()
 
     def create_widgets(self):
@@ -291,6 +295,15 @@ class PIDSimulatorApp:
         self.reset_btn = ttk.Button(sim_frame, text="Återställ", command=self.reset)
         self.reset_btn.pack(side=tk.LEFT, padx=2)
         ttk.Checkbutton(sim_frame, text="Autopaus", variable=self.autopause_var).pack(side=tk.LEFT, padx=10)
+        
+        # Hastighetskontroller
+        ttk.Label(sim_frame, text="Hastighet:").pack(side=tk.LEFT, padx=(20,2))
+        speed_frame = ttk.Frame(sim_frame)
+        speed_frame.pack(side=tk.LEFT, padx=5)
+        ttk.Button(speed_frame, text="<<", command=self.speed_slower, width=3).pack(side=tk.LEFT)
+        ttk.Button(speed_frame, text=">>", command=self.speed_faster, width=3).pack(side=tk.LEFT)
+        self.speed_label = ttk.Label(speed_frame, text="1x", width=4)
+        self.speed_label.pack(side=tk.LEFT, padx=2)
 
         # Tidsfönster (flyttad längst ner)
         window_frame = ttk.LabelFrame(frame, text="Tidsfönster")
@@ -312,6 +325,31 @@ class PIDSimulatorApp:
         # Aktivera puls-störning
         self.pulse_active = True
         self.pulse_steps_left = self.pulse_dur_var.get()
+
+    def speed_faster(self):
+        # Minska delay = snabbare simulering
+        current = self.speed_var.get()
+        if current > 50:  # Minimum 50ms delay
+            new_speed = max(50, current - 50)
+            self.speed_var.set(new_speed)
+            self.update_speed_label()
+
+    def speed_slower(self):
+        # Öka delay = långsammare simulering
+        current = self.speed_var.get()
+        if current < 1000:  # Maximum 1000ms delay
+            new_speed = min(1000, current + 50)
+            self.speed_var.set(new_speed)
+            self.update_speed_label()
+
+    def update_speed_label(self):
+        # Beräkna hastighets-multiplikator (300ms = 1x)
+        delay = self.speed_var.get()
+        speed_factor = 300 / delay
+        if speed_factor >= 1:
+            self.speed_label.config(text=f"{speed_factor:.1f}x")
+        else:
+            self.speed_label.config(text=f"1/{1/speed_factor:.1f}x")
 
     def parse_float(self, var):
         try:
@@ -514,7 +552,7 @@ class PIDSimulatorApp:
         self.formel_label.config(text=formel + res)
         self.update_plot()
         if self.running and not step:
-            self.root.after(300, self.simulate)
+            self.root.after(self.speed_var.get(), self.simulate)
         self.update_buttons()
 
     def update_plot(self):
