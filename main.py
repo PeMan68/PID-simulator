@@ -182,6 +182,8 @@ class PIDSimulatorApp:
         # PID-komponent aktivering
         self.i_active_var = tk.BooleanVar(value=True)
         self.d_active_var = tk.BooleanVar(value=True)
+        # Autopaus-blockering
+        self.autopause_var = tk.BooleanVar(value=True)
         # GUI
         self.create_widgets()
         # Tooltip och markör
@@ -278,6 +280,7 @@ class PIDSimulatorApp:
         self.step_btn.pack(side=tk.LEFT, padx=2)
         self.reset_btn = ttk.Button(sim_frame, text="Återställ", command=self.reset)
         self.reset_btn.pack(side=tk.LEFT, padx=2)
+        ttk.Checkbutton(sim_frame, text="Autopaus", variable=self.autopause_var).pack(side=tk.LEFT, padx=10)
 
         # Tidsfönster (flyttad längst ner)
         window_frame = ttk.LabelFrame(frame, text="Tidsfönster")
@@ -401,20 +404,22 @@ class PIDSimulatorApp:
             return
         # Automatisk paus om ärvärdet varit inom ±5% av börvärdet under 20 steg
         window = 20
-        if len(self.y) > window and not self._auto_paused:
-            y_arr = np.array(self.y[-window:])
-            sp_arr = np.array(self.sp[-window:])
-            # Auto-paus om ärvärdet är nära BV (±5%)
-            within_5 = np.abs(y_arr - sp_arr) <= 0.05 * np.abs(sp_arr)
-            # Auto-paus om ärvärdet är stabilt (liten variation)
-            bv_ref = np.abs(sp_arr[0]) if np.abs(sp_arr[0]) > 0 else 1.0
-            stable = (np.max(y_arr) - np.min(y_arr)) < max(0.01 * bv_ref, 0.5)
-            if np.all(within_5) or stable:
-                if not step:
-                    self.running = False
-                    self._auto_paused = True
-                    self.update_buttons()
-                    return
+        # Blockera autopaus om användaren valt det
+        if self.autopause_var.get():
+            if len(self.y) > window and not self._auto_paused:
+                y_arr = np.array(self.y[-window:])
+                sp_arr = np.array(self.sp[-window:])
+                # Auto-paus om ärvärdet är nära BV (±5%)
+                within_5 = np.abs(y_arr - sp_arr) <= 0.05 * np.abs(sp_arr)
+                # Auto-paus om ärvärdet är stabilt (liten variation)
+                bv_ref = np.abs(sp_arr[0]) if np.abs(sp_arr[0]) > 0 else 1.0
+                stable = (np.max(y_arr) - np.min(y_arr)) < max(0.01 * bv_ref, 0.5)
+                if np.all(within_5) or stable:
+                    if not step:
+                        self.running = False
+                        self._auto_paused = True
+                        self.update_buttons()
+                        return
         # Hämta parametrar och hantera decimalkomma
         self.pid.Kp = self.parse_float(self.kp_var)
         Ti = self.parse_float(self.ti_var) if self.i_active_var.get() else 0.0
