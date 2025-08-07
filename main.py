@@ -155,7 +155,7 @@ class PIDSimulatorApp:
         root.minsize(1000, 600)
         # Parametrar
         self.dt = 1.0
-        self.n_steps = 600
+        self.n_steps = 2000
         self.current_step = 0
         self.running = False
         self._auto_paused = False
