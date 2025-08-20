@@ -1,12 +1,29 @@
- # PID-simulator – Användarmanual
+ # PID-simulator – Användarmanual v1.4
 
 ## Syfte
-Detta program demonstrerar och simulerar PID-reglering för processindustriella system, med pedagogisk visualisering av process- och regulatorns signaler. Två processmodeller stöds: självreglerande och integrerande (t.ex. nivåreglering).
+Detta program demonstrerar och simulerar PID-reglering för processindustriella system, med pedagogisk visualisering av process- och regulatorns signaler. Stöder flera regulator-typer: On/Off, P, PI och PID, samt två processmodeller: självreglerande och integrerande.
 
 ## Starta programmet
 Kör `main.py` med Python 3.8+ och nödvändiga paket installerade (tkinter, matplotlib, numpy).
 
 ## Gränssnitt och funktioner
+
+### Regulator-presets (NYT i v1.4)
+- **On/Off-reglering**: Tvånivåreglering med konfigurerbar hysteresis
+  - Tre hysteresis-lägen: Över börvärdet, Under börvärdet, eller Båda sidorna
+  - Ställbara hysteresis-värden för precision
+  - Visuell hysteresis-visualisering i processvärdes-grafen
+- **P-reglering**: Endast proportionell del aktiv
+- **PI-reglering**: Proportionell + Integral komponenter
+- **PID-reglering**: Alla tre komponenter (P, I, D)
+- **Signalstörning på/av**: Enkel aktivering/inaktivering av alla störningar
+
+### Intelligent användargränssnitt
+- **Dynamiska kontroller**: Relevanta parametrar visas/döljs automatiskt baserat på vald preset
+- **Automatiska parametervärden**: Fördefinierade standardvärden för varje regulator-typ
+- **Förbättrad layout**: Preset-kontroller överst för enkel åtkomst
+
+### Övriga funktioner
 - **Systemparametrar**: Ange processens förstärkning (K), tidskonstant (T), dötid, utflöde (för nivåreglering) och om processen är integrerande.
 - **Regulatorparametrar**: Ange PID-parametrar (Kp, Ti, Td) och aktivera/inaktivera I- och D-del. Anti-windup kan aktiveras för att förhindra integrator-mättnad.
 - **Börvärde och Normalvärde**: Ange önskat börvärde och normalvärde (det värde processen tenderar mot när ingen styrsignal är aktiv, t.ex. rumstemperatur).
@@ -14,7 +31,7 @@ Kör `main.py` med Python 3.8+ och nödvändiga paket installerade (tkinter, mat
 - **Simulering**: Starta (Kör), pausa, stega eller återställ simuleringen. Hastighetskontroll (<</>>) låter dig köra simuleringen snabbare eller långsammare.
 - **Tidsfönster**: Välj om hela eller ett fönster av simuleringen ska visas, och navigera i tiden.
 - **Visualisering**: Tre grafer visar processvärde, regulatorutgång och PID-komponenter. Vertikal markör och tooltip visas vid paus/steg för detaljanalys.
-- **Formler och mellanresultat**: Aktuell PID-beräkning visas med alla delbidrag.
+- **Formler och mellanresultat**: Aktuell beräkning visas med alla delbidrag (anpassad för vald regulator-typ).
 - **Prestandamått**: Översläng, stigtid, inställningstid och stationärt fel visas under graferna.
 - **Auto-paus**: Simuleringen pausar automatiskt när systemet är nära börvärdet eller stabilt.
 
