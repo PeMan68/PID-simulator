@@ -217,7 +217,7 @@ class PIDSimulatorApp:
         self.tooltip.place(x=x_root, y=y_root)
     def __init__(self, root):
         self.root = root
-        root.title("PID-simulator v1.3")
+        root.title("PID-simulator v1.4")
         # Öka fönsterbredd för att ge plats åt tooltip
         root.geometry("1100x700")
         root.minsize(1000, 600)
@@ -1121,6 +1121,34 @@ class PIDSimulatorApp:
         # Plotta
         self.axs[0].plot(t, sp_plot, 'k--', label='Börvärde')
         self.axs[0].plot(t, y_plot, label='Är-värde')
+        
+        # Visa hysteresis-gränser för On/Off-reglering
+        if self.preset_mode.get() == "OnOff" and len(t) > 0:
+            hyst_type = self.onoff_hysteresis_type.get()
+            hyst_high = self.parse_float(self.onoff_hysteresis_high)
+            hyst_low = self.parse_float(self.onoff_hysteresis_low)
+            
+            # Konvertera hysteresis-gränser till samma enhet som plottet
+            if self.percent_mode_var.get():
+                # I procentläge: konvertera börvärde och hysteresis
+                setpoint_plot = self.to_percent(self.setpoint)
+                hyst_high_plot = hyst_high * (self.process_max.get() - self.process_min.get()) / 100.0
+                hyst_low_plot = hyst_low * (self.process_max.get() - self.process_min.get()) / 100.0
+            else:
+                # I vanligt läge: använd direkt värden
+                setpoint_plot = self.setpoint
+                hyst_high_plot = hyst_high
+                hyst_low_plot = hyst_low
+            
+            # Rita hysteresis-linjer
+            if hyst_type in ["upper", "both"]:
+                upper_line = [setpoint_plot + hyst_high_plot] * len(t)
+                self.axs[0].plot(t, upper_line, 'r:', alpha=0.7, linewidth=1, label=f'Hysteresis +{hyst_high:.1f}')
+            
+            if hyst_type in ["lower", "both"]:
+                lower_line = [setpoint_plot - hyst_low_plot] * len(t)
+                self.axs[0].plot(t, lower_line, 'r:', alpha=0.7, linewidth=1, label=f'Hysteresis -{hyst_low:.1f}')
+        
         # Tunna horisontella linjer för varje yticks (skala)
         yticks = np.linspace(ymin, ymax, num=8)
         for yy in yticks:
