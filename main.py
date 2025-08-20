@@ -938,15 +938,37 @@ class PIDSimulatorApp:
     def step_once(self):
         self.running = False
         self.update_buttons()
+        T_min = 0.01
+        T_value = self.parse_float(self.proc_t_var)
+        if T_value < T_min:
+            self.proc_t_var.set(str(T_min))
+            import tkinter.messagebox as msgbox
+            msgbox.showerror(
+                "Felaktig tidskonstant",
+                f"Tidskonstanten T måste vara minst {T_min}.\n"
+                f"Simuleringen har stoppats och T har satts till {T_min}."
+            )
+            return
         self.simulate(step=True)
 
     def reset(self):
         self.running = False
         self._auto_paused = False
         self.current_step = 0
+        T_min = 0.01
+        T_value = self.parse_float(self.proc_t_var)
+        if T_value < T_min:
+            self.proc_t_var.set(str(T_min))
+            import tkinter.messagebox as msgbox
+            msgbox.showerror(
+                "Felaktig tidskonstant",
+                f"Tidskonstanten T måste vara minst {T_min}.\n"
+                f"Simuleringen har stoppats och T har satts till {T_min}."
+            )
+            return
         self.process = Process(
             K=self.parse_float(self.proc_k_var),
-            T=self.validate_T_value(show_warning=True),  # Visa varning vid start
+            T=T_value,
             dead_time=self.parse_float(self.proc_dead_var),
             integrerande=self.integrerande_var.get(),
             Fout=self.parse_float(self.proc_fout_var),
