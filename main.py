@@ -1012,6 +1012,29 @@ class PIDSimulatorApp:
             self.reset_btn.state(["!disabled"])
 
     def simulate(self, step=False):
+        # Kontrollera numerisk instabilitet: PV utanför ±2×mätområdets gränser
+        mat_min = self.parse_float(self.matområde_min_var)
+        mat_max = self.parse_float(self.matområde_max_var)
+        pv = self.process.y
+        if pv < mat_min - abs(mat_max-mat_min)*2 or pv > mat_max + abs(mat_max-mat_min)*2:
+            self.running = False
+            self._auto_paused = False
+            self.update_buttons()
+            import tkinter.messagebox as msgbox
+            msgbox.showerror(
+                "Numerisk instabilitet",
+                f"Processvärdet (PV) har gått utanför rimliga gränser.\n\n"
+                f"PV = {pv:.3g}, mätområde = [{mat_min}, {mat_max}]\n\n"
+                "Möjliga orsaker:\n"
+                "- För liten tidskonstant T\n"
+                "- För stort tidssteg dt\n"
+                "- Extremt höga regulatorparametrar (Kp, Ti, Td)\n\n"
+                "Åtgärder:\n"
+                "- Öka T\n"
+                "- Minska dt (hastighet)\n"
+                "- Justera Kp, Ti, Td till rimliga värden"
+            )
+            return
         if self.current_step >= self.n_steps:
             self.running = False
             self._auto_paused = False
