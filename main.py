@@ -38,6 +38,10 @@ class Process:
         self.u_hist.append(u)
         u_delayed = self.u_hist.pop(0)
         
+        # Skydda mot division med noll
+        if self.T <= 0:
+            self.T = 1e-6  # Minimal tidskonstant
+        
         if self.enhetslös_K:
             # Enhetslös K: Konvertera y till %, beräkna i %, konvertera tillbaka
             y_pct = self.to_percent(self.y)
