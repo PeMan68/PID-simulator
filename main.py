@@ -67,6 +67,39 @@ class Process:
         self.t += dt
         return self.y
 
+# --- On/Off-regulator ---
+class OnOffController:
+    def __init__(self, hysteresis_type="both", hysteresis_high=2.0, hysteresis_low=2.0):
+        self.hysteresis_type = hysteresis_type  # "upper", "lower", "both"
+        self.hysteresis_high = hysteresis_high  # Hysteresis över börvärdet
+        self.hysteresis_low = hysteresis_low    # Hysteresis under börvärdet
+        self.output = 0.0  # Aktuell utsignal (0 eller 100)
+        
+    def step(self, setpoint, pv, umin=0.0, umax=100.0):
+        """On/Off reglering med konfigurerbar hysteresis"""
+        if self.hysteresis_type == "upper":
+            # Endast hysteresis över börvärdet
+            if pv < setpoint:
+                self.output = umax  # Slå på
+            elif pv > setpoint + self.hysteresis_high:
+                self.output = umin  # Slå av
+        elif self.hysteresis_type == "lower":
+            # Endast hysteresis under börvärdet
+            if pv > setpoint:
+                self.output = umin  # Slå av
+            elif pv < setpoint - self.hysteresis_low:
+                self.output = umax  # Slå på
+        else:  # "both"
+            # Hysteresis både över och under börvärdet
+            if pv < setpoint - self.hysteresis_low:
+                self.output = umax  # Slå på
+            elif pv > setpoint + self.hysteresis_high:
+                self.output = umin  # Slå av
+        
+        # Begränsa utsignal
+        self.output = max(umin, min(umax, self.output))
+        return self.output
+
 # --- PID-regulator ---
 class PID:
     def __init__(self, Kp=1.0, Ti=10.0, Td=0.0, dt=1.0):
@@ -238,6 +271,16 @@ class PIDSimulatorApp:
         self.manual_mode_var = tk.BooleanVar(value=False)
         self.manual_output_var = tk.DoubleVar(value=0.0)
         
+        # Preset-kontroller
+        self.preset_mode = tk.StringVar(value="PID")  # "OnOff", "P", "PI", "PID"
+        self.signal_disturbance_var = tk.BooleanVar(value=True)
+        
+        # On/Off regulator-parametrar
+        self.onoff_hysteresis_type = tk.StringVar(value="both")  # "upper", "lower", "both"
+        self.onoff_hysteresis_high = tk.DoubleVar(value=2.0)
+        self.onoff_hysteresis_low = tk.DoubleVar(value=2.0)
+        self.onoff_controller = OnOffController()
+        
         # Enhetsväxling (True = %, False = verkliga värden)
         self.percent_mode_var = tk.BooleanVar(value=False)
         self.process_min = tk.DoubleVar(value=0.0)   # Sätts intelligent baserat på normalvärde
@@ -258,11 +301,50 @@ class PIDSimulatorApp:
         self.cursor_line = None  # For vertical marker
         # Uppdatera hastighetsetikett
         self.update_speed_label()
+        # Initiera preset-val
+        self.on_preset_change()
         self.update_plot()
 
     def create_widgets(self):
         frame = ttk.Frame(self.root)
         frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Preset-kontroller (överst)
+        preset_frame = ttk.LabelFrame(frame, text="Regulator-presets")
+        preset_frame.pack(fill=tk.X, padx=5, pady=5)
+        
+        # Preset-val (radiobuttons)
+        preset_row1 = ttk.Frame(preset_frame)
+        preset_row1.pack(fill=tk.X, padx=5, pady=2)
+        
+        ttk.Radiobutton(preset_row1, text="On/Off", variable=self.preset_mode, value="OnOff", command=self.on_preset_change).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(preset_row1, text="P-reglering", variable=self.preset_mode, value="P", command=self.on_preset_change).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(preset_row1, text="PI-reglering", variable=self.preset_mode, value="PI", command=self.on_preset_change).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(preset_row1, text="PID-reglering", variable=self.preset_mode, value="PID", command=self.on_preset_change).pack(side=tk.LEFT, padx=5)
+        
+        # Signalstörning och On/Off-inställningar
+        preset_row2 = ttk.Frame(preset_frame)
+        preset_row2.pack(fill=tk.X, padx=5, pady=2)
+        
+        ttk.Checkbutton(preset_row2, text="Signalstörning", variable=self.signal_disturbance_var, command=self.on_disturbance_change).pack(side=tk.LEFT, padx=5)
+        
+        # On/Off hysteresis-kontroller (visas endast när On/Off är valt)
+        self.onoff_frame = ttk.Frame(preset_row2)
+        self.onoff_frame.pack(side=tk.LEFT, padx=(20,5))
+        
+        ttk.Label(self.onoff_frame, text="Hysteresis:").pack(side=tk.LEFT, padx=2)
+        ttk.Radiobutton(self.onoff_frame, text="Över", variable=self.onoff_hysteresis_type, value="upper", command=self.on_onoff_change).pack(side=tk.LEFT, padx=2)
+        ttk.Radiobutton(self.onoff_frame, text="Under", variable=self.onoff_hysteresis_type, value="lower", command=self.on_onoff_change).pack(side=tk.LEFT, padx=2)
+        ttk.Radiobutton(self.onoff_frame, text="Båda", variable=self.onoff_hysteresis_type, value="both", command=self.on_onoff_change).pack(side=tk.LEFT, padx=2)
+        
+        ttk.Label(self.onoff_frame, text="Hög:").pack(side=tk.LEFT, padx=(10,2))
+        self.onoff_high_entry = ttk.Entry(self.onoff_frame, textvariable=self.onoff_hysteresis_high, width=4)
+        self.onoff_high_entry.pack(side=tk.LEFT)
+        
+        ttk.Label(self.onoff_frame, text="Låg:").pack(side=tk.LEFT, padx=(5,2))
+        self.onoff_low_entry = ttk.Entry(self.onoff_frame, textvariable=self.onoff_hysteresis_low, width=4)
+        self.onoff_low_entry.pack(side=tk.LEFT)
+        
         # Systemparametrar
         sys_frame = ttk.LabelFrame(frame, text="Systemparametrar")
         sys_frame.pack(fill=tk.X, padx=5, pady=5)
@@ -314,24 +396,40 @@ class PIDSimulatorApp:
         # Regulatorparametrar
         pid_frame = ttk.LabelFrame(frame, text="Regulatorparametrar")
         pid_frame.pack(fill=tk.X, padx=5, pady=5)
-        ttk.Label(pid_frame, text="Kp").grid(row=0, column=0)
+        self.pid_frame = pid_frame  # Spara referens för att komma åt children
+        
+        # PID-parametrar
+        self.pid_params_frame = ttk.Frame(pid_frame)
+        self.pid_params_frame.pack(fill=tk.X, padx=5, pady=2)
+        
+        ttk.Label(self.pid_params_frame, text="Kp").grid(row=0, column=0)
         self.kp_var = tk.StringVar(value=str(self.pid.Kp))
-        ttk.Entry(pid_frame, textvariable=self.kp_var, width=6).grid(row=0, column=1)
-        ttk.Label(pid_frame, text="Ti").grid(row=0, column=2)
+        self.kp_entry = ttk.Entry(self.pid_params_frame, textvariable=self.kp_var, width=6)
+        self.kp_entry.grid(row=0, column=1)
+        
+        ttk.Label(self.pid_params_frame, text="Ti").grid(row=0, column=2)
         self.ti_var = tk.StringVar(value=str(self.pid.Ti))
-        ttk.Entry(pid_frame, textvariable=self.ti_var, width=6).grid(row=0, column=3)
-        ttk.Checkbutton(pid_frame, text="Integral aktiv", variable=self.i_active_var).grid(row=0, column=4, padx=2)
-        ttk.Label(pid_frame, text="Td").grid(row=0, column=5)
+        self.ti_entry = ttk.Entry(self.pid_params_frame, textvariable=self.ti_var, width=6)
+        self.ti_entry.grid(row=0, column=3)
+        
+        ttk.Label(self.pid_params_frame, text="Td").grid(row=0, column=4)
         self.td_var = tk.StringVar(value=str(self.pid.Td))
-        ttk.Entry(pid_frame, textvariable=self.td_var, width=6).grid(row=0, column=6)
-        ttk.Checkbutton(pid_frame, text="Derivata aktiv", variable=self.d_active_var).grid(row=0, column=7, padx=2)
-        ttk.Checkbutton(pid_frame, text="Anti-windup", variable=self.antiwindup_var).grid(row=1, column=0, columnspan=2, padx=2)
+        self.td_entry = ttk.Entry(self.pid_params_frame, textvariable=self.td_var, width=6)
+        self.td_entry.grid(row=0, column=5)
+        
+        # Anti-windup checkbox
+        self.antiwindup_check = ttk.Checkbutton(pid_frame, text="Anti-windup", variable=self.antiwindup_var)
+        self.antiwindup_check.pack(anchor="w", padx=5, pady=2)
  
         # Manuellt läge
-        ttk.Checkbutton(pid_frame, text="Manuellt läge", variable=self.manual_mode_var, command=self.on_manual_mode_change).grid(row=1, column=2, columnspan=2, padx=2)
-        ttk.Label(pid_frame, text="Manuell ut (%)").grid(row=1, column=4)
-        self.manual_entry = ttk.Entry(pid_frame, textvariable=self.manual_output_var, width=6)
-        self.manual_entry.grid(row=1, column=5)
+        self.manual_check = ttk.Checkbutton(pid_frame, text="Manuellt läge", variable=self.manual_mode_var, command=self.on_manual_mode_change)
+        self.manual_check.pack(anchor="w", padx=5, pady=2)
+        
+        self.manual_frame = ttk.Frame(pid_frame)
+        self.manual_frame.pack(fill=tk.X, padx=5, pady=2)
+        ttk.Label(self.manual_frame, text="Manuell ut (%):").pack(side=tk.LEFT)
+        self.manual_entry = ttk.Entry(self.manual_frame, textvariable=self.manual_output_var, width=6)
+        self.manual_entry.pack(side=tk.LEFT, padx=5)
         self.manual_entry.configure(state="disabled")  # Inaktiverad från början
         # Börvärde
         bv_frame = ttk.LabelFrame(frame, text="Börvärde och Normalvärde")
@@ -533,6 +631,77 @@ class PIDSimulatorApp:
             self.manual_entry.configure(state="disabled")
         # Uppdatera plotten direkt när manuellt läge växlas
         self.update_plot()
+    
+    def on_preset_change(self):
+        """Hanterar växling mellan regulator-presets"""
+        preset = self.preset_mode.get()
+        
+        if preset == "OnOff":
+            # Visa On/Off-kontroller, dölj PID-parametrar och irrelevanta kontroller
+            self.onoff_frame.pack(side=tk.LEFT, padx=(20,5))
+            self.pid_params_frame.pack_forget()
+            
+            # Dölj kontroller som inte är relevanta för On/Off
+            self.antiwindup_check.pack_forget()
+            self.manual_check.pack_forget()
+            self.manual_frame.pack_forget()
+                
+        else:
+            # Dölj On/Off-kontroller, visa PID-parametrar
+            self.onoff_frame.pack_forget()
+            self.pid_params_frame.pack(fill=tk.X, padx=5, pady=2)
+            
+            # Visa kontroller baserat på preset-typ
+            if preset == "P":
+                # P-reglering: Dölj anti-windup (mindre relevant utan integral)
+                self.antiwindup_check.pack_forget()
+            else:
+                # PI och PID: Visa anti-windup
+                self.antiwindup_check.pack(anchor="w", padx=5, pady=2)
+            
+            # Visa manuellt läge för alla PID-varianter
+            self.manual_check.pack(anchor="w", padx=5, pady=2)
+            self.manual_frame.pack(fill=tk.X, padx=5, pady=2)
+            
+            # Sätt standard-parametrar och aktivering baserat på preset
+            if preset == "P":
+                self.kp_var.set("2.0")
+                self.ti_var.set("999999")  # Mycket stor Ti = ingen I-verkan
+                self.td_var.set("0.0")
+                self.i_active_var.set(False)
+                self.d_active_var.set(False)
+            elif preset == "PI":
+                self.kp_var.set("2.0")
+                self.ti_var.set("10.0")
+                self.td_var.set("0.0")
+                self.i_active_var.set(True)
+                self.d_active_var.set(False)
+            elif preset == "PID":
+                self.kp_var.set("2.0")
+                self.ti_var.set("10.0")
+                self.td_var.set("1.0")
+                self.i_active_var.set(True)
+                self.d_active_var.set(True)
+        
+        # Uppdatera On/Off-regulator
+        self.on_onoff_change()
+        
+    def on_onoff_change(self):
+        """Uppdaterar On/Off-regulator-parametrar"""
+        self.onoff_controller.hysteresis_type = self.onoff_hysteresis_type.get()
+        self.onoff_controller.hysteresis_high = self.parse_float(self.onoff_hysteresis_high)
+        self.onoff_controller.hysteresis_low = self.parse_float(self.onoff_hysteresis_low)
+        
+    def on_disturbance_change(self):
+        """Aktiverar/inaktiverar signalstörningar"""
+        if self.signal_disturbance_var.get():
+            # Aktivera störningar - sätt till rimliga värden
+            self.noise_std_var.set(0.5)
+        else:
+            # Inaktivera störningar
+            self.noise_std_var.set(0.0)
+            self.pulse_active = False
+            self.pulse_steps_left = 0
     
     def on_percent_mode_change(self):
         """Hanterar växling till/från procentvisning"""
@@ -820,6 +989,12 @@ class PIDSimulatorApp:
             err = self.setpoint - pv
             integ = 0.0
             deriv = 0.0
+        elif self.preset_mode.get() == "OnOff":
+            # On/Off-reglering
+            ctrl = self.onoff_controller.step(self.setpoint, pv, umin=self.u_min, umax=self.u_max)
+            err = self.setpoint - pv
+            integ = 0.0
+            deriv = 0.0
         else:
             # Automatiskt läge - PID-beräkning med skydd mot division med noll
             try:
@@ -847,6 +1022,23 @@ class PIDSimulatorApp:
             # Manuellt läge - visa enklare information
             formel = "MANUELLT LÄGE\n"
             res = f"Manuell utsignal = {ctrl:.3f}%\n"
+            res += f"Fel (BV-PV) = {err:.3f}\n"
+            res += f"Processvärde = {pv:.3f}"
+        elif self.preset_mode.get() == "OnOff":
+            # On/Off-reglering
+            formel = "ON/OFF REGLERING\n"
+            hyst_type = self.onoff_hysteresis_type.get()
+            hyst_high = self.parse_float(self.onoff_hysteresis_high)
+            hyst_low = self.parse_float(self.onoff_hysteresis_low)
+            
+            if hyst_type == "upper":
+                res = f"Hysteresis: Över BV +{hyst_high:.1f}\n"
+            elif hyst_type == "lower":
+                res = f"Hysteresis: Under BV -{hyst_low:.1f}\n"
+            else:
+                res = f"Hysteresis: BV ±{hyst_high:.1f}/±{hyst_low:.1f}\n"
+                
+            res += f"Utsignal = {ctrl:.0f}% ({'PÅ' if ctrl > 50 else 'AV'})\n"
             res += f"Fel (BV-PV) = {err:.3f}\n"
             res += f"Processvärde = {pv:.3f}"
         else:
@@ -942,6 +1134,11 @@ class PIDSimulatorApp:
             self.axs[1].plot(t, u, label='Manuell styrsignal')
             # Använd endast u-värden för skalning
             all_y = np.array(u)
+        elif self.preset_mode.get() == "OnOff":
+            # On/Off-läge - visa styrsignal med tydlig on/off-karaktär
+            self.axs[1].step(t, u, where='post', label='On/Off styrsignal', linewidth=2)
+            # Använd endast u-värden för skalning
+            all_y = np.array(u)
         else:
             # Automatiskt läge - visa PID-ut och summa
             self.axs[1].plot(t, u, label='PID-ut (begränsad)')
@@ -983,8 +1180,8 @@ class PIDSimulatorApp:
         self.axs[1].legend()
 
         # Nedersta: P, I, D-bidrag var för sig (endast i automatläge)
-        if self.manual_mode_var.get():
-            # Manuellt läge - dölj tredje grafen genom att inte plotta något
+        if self.manual_mode_var.get() or self.preset_mode.get() == "OnOff":
+            # Manuellt läge eller On/Off - dölj tredje grafen
             self.axs[2].set_visible(False)
             # Aktivera x-axel tick labels på andra grafen när tredje är dold
             self.axs[1].tick_params(axis='x', labelbottom=True)
@@ -1098,8 +1295,8 @@ class PIDSimulatorApp:
             lbl.config(text=perf_lines[i])
         # Rita om och justera layout
         # Anpassa figur-layouten beroende på om vi visar 2 eller 3 plottar
-        if self.manual_mode_var.get():
-            # Manuellt läge - justera layout för endast 2 plottar
+        if self.manual_mode_var.get() or self.preset_mode.get() == "OnOff":
+            # Manuellt läge eller On/Off - justera layout för endast 2 plottar
             self.fig.subplots_adjust(hspace=0.3)
         else:
             # Automatiskt läge - normal layout för 3 plottar
