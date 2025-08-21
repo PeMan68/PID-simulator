@@ -707,15 +707,15 @@ class PIDSimulatorApp:
         
         if preset == "OnOff":
             # Visa On/Off-kontroller, dölj PID-parametrar och irrelevanta kontroller
-            self.onoff_frame.grid(row=2, column=0, columnspan=8, sticky="ew", padx=5, pady=2)
+            self.onoff_frame.grid()
             self.pid_params_frame.grid_remove()
             self.checkbox_frame.grid_remove()
                 
         else:
             # Dölj On/Off-kontroller, visa PID-parametrar
             self.onoff_frame.grid_remove()
-            self.pid_params_frame.grid(row=1, column=0, columnspan=8, sticky="ew", padx=5, pady=2)
-            self.checkbox_frame.grid(row=3, column=0, columnspan=8, sticky="w", padx=5, pady=2)
+            self.pid_params_frame.grid()
+            self.checkbox_frame.grid()
             
             # Sätt standard-parametrar och aktivering baserat på preset
             if preset == "P":
