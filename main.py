@@ -277,7 +277,7 @@ class PIDSimulatorApp:
         
         # Preset-kontroller
         self.preset_mode = tk.StringVar(value="PID")  # "OnOff", "P", "PI", "PID"
-        self.signal_disturbance_var = tk.BooleanVar(value=True)
+        self.signal_disturbance_var = tk.BooleanVar(value=False)
         
         # On/Off regulator-parametrar
         self.onoff_hysteresis_type = tk.StringVar(value="both")  # "upper", "lower", "both"
@@ -427,10 +427,20 @@ class PIDSimulatorApp:
         self.matområde_max_entry = ttk.Entry(pid_frame, textvariable=self.matområde_max_var, width=6)
         self.matområde_max_entry.grid(row=0, column=6)
         ttk.Label(pid_frame, text="(°C)").grid(row=0, column=7)
-        
+
+        # Utsignal min/max
+        ttk.Label(pid_frame, text="Utsignal min (%)").grid(row=1, column=0, padx=(0,2))
+        self.u_min_var = tk.DoubleVar(value=0.0)
+        self.u_min_entry = ttk.Entry(pid_frame, textvariable=self.u_min_var, width=6)
+        self.u_min_entry.grid(row=1, column=1)
+        ttk.Label(pid_frame, text="max (%)").grid(row=1, column=2, padx=(10,2))
+        self.u_max_var = tk.DoubleVar(value=100.0)
+        self.u_max_entry = ttk.Entry(pid_frame, textvariable=self.u_max_var, width=6)
+        self.u_max_entry.grid(row=1, column=3)
+
         # Andra raden - PID-parametrar
         self.pid_params_frame = ttk.Frame(pid_frame)
-        self.pid_params_frame.grid(row=1, column=0, columnspan=8, sticky="ew", padx=5, pady=2)
+        self.pid_params_frame.grid(row=2, column=0, columnspan=8, sticky="ew", padx=5, pady=2)
         
         ttk.Label(self.pid_params_frame, text="Kp").grid(row=0, column=0)
         self.kp_var = tk.StringVar(value=str(self.pid.Kp))
@@ -624,17 +634,21 @@ class PIDSimulatorApp:
 
     def validate_T_value(self, show_warning=True):
         """Validerar T-värdet och visar varning om det är <= 0"""
+        dt = 1.0  # Simuleringssteg, hårdkodat i denna version
+        T_min = dt
         T_value = self.parse_float(self.proc_t_var)
-        if T_value <= 0:
-            corrected_value = 1e-6
-            # Uppdatera GUI-värdet
-            self.proc_t_var.set(str(corrected_value))
+        if T_value < T_min:
+            self.proc_t_var.set(str(T_min))
             if show_warning:
                 import tkinter.messagebox as msgbox
-                msgbox.showwarning("Ogiltigt T-värde", 
-                                 f"Tidskonstanten T kan inte vara {T_value}.\n"
-                                 f"Värdet har automatiskt ändrats till {corrected_value:.0e} för att undvika instabilitet.")
-            return corrected_value
+                msgbox.showerror(
+                    "Felaktig tidskonstant",
+                    f"Tidskonstanten T måste vara minst dt = {dt} sekund(er) för stabil simulering.\n"
+                    f"Simuleringen har stoppats och T har satts till {T_min}.\n\n"
+                    "För snabba system (liten T) krävs mindre tidssteg dt.\n"
+                    "Vill du simulera ännu snabbare system, kontakta utvecklaren för att göra dt justerbar."
+                )
+            return T_min
         return T_value
 
     def window_back(self):
@@ -1462,7 +1476,7 @@ class PIDSimulatorApp:
             self.tooltip.place_forget()
         self.update_plot()
         self.update_percent_status()  # Uppdatera procentstatus efter reset
-
+ 
 import sys
 
 def on_closing(root):
