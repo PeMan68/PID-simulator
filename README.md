@@ -6,6 +6,34 @@ Detta program demonstrerar och simulerar PID-reglering för processindustriella 
 ## Starta programmet
 Kör `main.py` med Python 3.8+ och nödvändiga paket installerade (tkinter, matplotlib, numpy).
 
+
+### Detaljer
+
+1. Skapa en virtuell miljö (venv):
+   ```powershell
+   python -m venv venv
+   ```
+2. Aktivera venv:
+   ```powershell
+   .\venv\Scripts\Activate.ps1
+   ```
+   (Om du får fel om "Execution Policy", se PowerShells dokumentation eller kör  
+   `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` i PowerShell som administratör.)
+3. Installera nödvändiga paket:
+   ```powershell
+   pip install -r requirements.txt
+   ```
+4. Starta programmet:
+   ```powershell
+   python PID-simulator/main.py
+   ```
+
+Paket som behövs finns i requirements.txt och är:
+- matplotlib
+- numpy
+- scipy
+- tkinter
+
 ## Gränssnitt och funktioner
 
 ### Regulator-presets (NYT i v1.4)
