@@ -316,97 +316,106 @@ class PIDSimulatorApp:
         # Preset-kontroller (överst)
         preset_frame = ttk.LabelFrame(frame, text="Regulator-presets")
         preset_frame.pack(fill=tk.X, padx=5, pady=5)
-        
+            
         # Preset-val (radiobuttons)
-        preset_row1 = ttk.Frame(preset_frame)
+        preset_row1 = ttk.Frame(preset_frame) 
         preset_row1.pack(fill=tk.X, padx=5, pady=2)
-        
+            
         ttk.Radiobutton(preset_row1, text="On/Off", variable=self.preset_mode, value="OnOff", command=self.on_preset_change).pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(preset_row1, text="P-reglering", variable=self.preset_mode, value="P", command=self.on_preset_change).pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(preset_row1, text="PI-reglering", variable=self.preset_mode, value="PI", command=self.on_preset_change).pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(preset_row1, text="PID-reglering", variable=self.preset_mode, value="PID", command=self.on_preset_change).pack(side=tk.LEFT, padx=5)
-        
-        # Signalstörning
-        preset_row2 = ttk.Frame(preset_frame)
-        preset_row2.pack(fill=tk.X, padx=5, pady=2)
-        
-        self.signal_disturbance_check = ttk.Checkbutton(preset_row2, text="Signalstörning", variable=self.signal_disturbance_var, command=self.on_disturbance_change)
-        self.signal_disturbance_check.pack(side=tk.LEFT, padx=5)
-        
+
         # Systemparametrar
         sys_frame = ttk.LabelFrame(frame, text="Systemparametrar")
         sys_frame.pack(fill=tk.X, padx=5, pady=5)
         self.sys_frame = sys_frame  # Spara referens
-        
+
         # Första raden - Grundparametrar
-        ttk.Label(sys_frame, text="K").grid(row=0, column=0)
+        sys_row1 = ttk.Frame(sys_frame) 
+        sys_row1.pack(fill=tk.X, padx=5, pady=2)
+        ttk.Checkbutton(sys_row1, text="Enhetslös K", variable=self.enhetslös_K_var, command=self.on_enhetslös_K_change).pack(side=tk.LEFT, padx=5)
+        ttk.Label(sys_row1, text="K").pack(side=tk.LEFT, padx=5)
         self.proc_k_var = tk.StringVar(value=str(self.process.K))
-        ttk.Entry(sys_frame, textvariable=self.proc_k_var, width=6).grid(row=0, column=1)
-        ttk.Label(sys_frame, text="T").grid(row=0, column=2)
+        ttk.Entry(sys_row1, textvariable=self.proc_k_var, width=6).pack(side=tk.LEFT, padx=5)
+        ttk.Label(sys_row1, text="T").pack(side=tk.LEFT, padx=5)
         self.proc_t_var = tk.StringVar(value=str(self.process.T))
-        ttk.Entry(sys_frame, textvariable=self.proc_t_var, width=6).grid(row=0, column=3)
-        ttk.Label(sys_frame, text="Dötid").grid(row=0, column=4)
+        ttk.Entry(sys_row1, textvariable=self.proc_t_var, width=6).pack(side=tk.LEFT, padx=5)
+        ttk.Label(sys_row1, text="Dötid").pack(side=tk.LEFT, padx=5)
         self.proc_dead_var = tk.StringVar(value=str(self.process.dead_time))
-        ttk.Entry(sys_frame, textvariable=self.proc_dead_var, width=6).grid(row=0, column=5)
+        ttk.Entry(sys_row1, textvariable=self.proc_dead_var, width=6).pack(side=tk.LEFT, padx=5)
         
-        # Utflöde (visas endast för integrerande processer)
-        self.utflode_label = ttk.Label(sys_frame, text="Utflöde")
-        self.proc_fout_var = tk.StringVar(value=str(self.process.Fout))
-        self.utflode_entry = ttk.Entry(sys_frame, textvariable=self.proc_fout_var, width=6)
+        # ttk.Entry(sys_frame, textvariable=self.proc_k_var, width=6).grid(row=0, column=1)
+        # ttk.Label(sys_frame, text="T").grid(row=0, column=2)
+        # ttk.Entry(sys_frame, textvariable=self.proc_t_var, width=6).grid(row=0, column=3)
+        # ttk.Label(sys_frame, text="Dötid").grid(row=0, column=4)
+        # ttk.Entry(sys_frame, textvariable=self.proc_dead_var, width=6).grid(row=0, column=5)
         
         # Integrerande checkbox och normalvärde
         self.integrerande_var = tk.BooleanVar(value=self.process.integrerande)
-        self.integrerande_check = ttk.Checkbutton(sys_frame, text="Integrerande", variable=self.integrerande_var, command=self.on_integrerande_change)
-        self.integrerande_check.grid(row=0, column=6, padx=5)
+        self.integrerande_check = ttk.Checkbutton(sys_row1, text="Integrerande", variable=self.integrerande_var, command=self.on_integrerande_change)
+        self.integrerande_check.pack(side=tk.LEFT, padx=5)
         
-        # Normalvärde (flyttat från börvärde-ramen)
-        ttk.Label(sys_frame, text="Normalvärde").grid(row=0, column=7)
-        self.nv_entry = ttk.Entry(sys_frame, textvariable=self.nv_var, width=6)
-        self.nv_entry.grid(row=0, column=8)
-        ttk.Button(sys_frame, text="Sätt NV", command=self.set_nv).grid(row=0, column=9, padx=2)
+        # Utflöde (visas endast för integrerande processer)
+        self.utflode_label = ttk.Label(sys_row1, text="Utflöde")
+        self.utflode_label.pack(side=tk.LEFT, padx=5)
+        self.proc_fout_var = tk.StringVar(value=str(self.process.Fout))
+        self.utflode_entry = ttk.Entry(sys_row1, textvariable=self.proc_fout_var, width=6)
+        self.utflode_entry.pack(side=tk.LEFT, padx=5)
         
-        # Andra raden - Störningar (döljs när signalstörning är av)
+        # Andra raden - Normalvärde
+        sys_row2 = ttk.Frame(sys_frame) 
+        sys_row2.pack(fill=tk.X, padx=5, pady=2)
+        ttk.Label(sys_row2, text="Normalvärde").pack(side=tk.LEFT, padx=5)
+        self.nv_entry = ttk.Entry(sys_row2, textvariable=self.nv_var, width=6).pack(side=tk.LEFT, padx=5)
+        ttk.Button(sys_row2, text="Sätt NV", command=self.set_nv).pack(side=tk.LEFT, padx=5)
+        
+        # Tredje raden - Störningar
+        sys_row3 = ttk.Frame(sys_frame) 
+        sys_row3.pack(fill=tk.X, padx=5, pady=2)
+        self.signal_disturbance_check = ttk.Checkbutton(sys_row3, text="Signalstörning", variable=self.signal_disturbance_var, command=self.on_disturbance_change).pack(side=tk.LEFT, padx=5)
+        
+        # Störningar (döljs när signalstörning är av)
         self.disturbance_widgets = []
         
-        brus_label = ttk.Label(sys_frame, text="Brus std")
-        brus_label.grid(row=1, column=0)
+        brus_label = ttk.Label(sys_row3, text="Brus std")
+        brus_label.pack(side=tk.LEFT, padx=5)
         self.disturbance_widgets.append(brus_label)
         
         self.noise_std_var = tk.DoubleVar(value=0.0)
-        self.noise_scale = ttk.Scale(sys_frame, from_=0.0, to=5.0, variable=self.noise_std_var, orient=tk.HORIZONTAL, length=100)
-        self.noise_scale.grid(row=1, column=1, columnspan=2, sticky="we", padx=2)
+        self.noise_scale = ttk.Scale(sys_row3, from_=0.0, to=5.0, variable=self.noise_std_var, orient=tk.HORIZONTAL, length=100)
+        self.noise_scale.pack(side=tk.LEFT, padx=5)
         self.disturbance_widgets.append(self.noise_scale)
         
-        self.noise_entry = ttk.Entry(sys_frame, textvariable=self.noise_std_var, width=5)
-        self.noise_entry.grid(row=1, column=3)
+        self.noise_entry = ttk.Entry(sys_row3, textvariable=self.noise_std_var, width=5)
+        self.noise_entry.pack(side=tk.LEFT, padx=5)
         self.disturbance_widgets.append(self.noise_entry)
         
-        puls_label = ttk.Label(sys_frame, text="Puls (storlek)")
-        puls_label.grid(row=1, column=4)
+        puls_label = ttk.Label(sys_row3, text="Puls (storlek)")
+        puls_label.pack(side=tk.LEFT, padx=5)
         self.disturbance_widgets.append(puls_label)
         
         self.pulse_mag_var = tk.DoubleVar(value=10.0)
-        self.pulse_entry = ttk.Entry(sys_frame, textvariable=self.pulse_mag_var, width=5)
-        self.pulse_entry.grid(row=1, column=5)
+        self.pulse_entry = ttk.Entry(sys_row3, textvariable=self.pulse_mag_var, width=5)
+        self.pulse_entry.pack(side=tk.LEFT, padx=5)
         self.disturbance_widgets.append(self.pulse_entry)
         
-        steg_label = ttk.Label(sys_frame, text="(steg)")
-        steg_label.grid(row=1, column=6)
+        steg_label = ttk.Label(sys_row3, text="(steg)")
+        steg_label.pack(side=tk.LEFT, padx=5)
         self.disturbance_widgets.append(steg_label)
         
         self.pulse_dur_var = tk.IntVar(value=3)
-        self.pulse_dur_entry = ttk.Entry(sys_frame, textvariable=self.pulse_dur_var, width=3)
-        self.pulse_dur_entry.grid(row=1, column=7)
+        self.pulse_dur_entry = ttk.Entry(sys_row3, textvariable=self.pulse_dur_var, width=3)
+        self.pulse_dur_entry.pack(side=tk.LEFT, padx=5)
         self.disturbance_widgets.append(self.pulse_dur_entry)
         
         self.pulse_active = False
         self.pulse_steps_left = 0
-        self.pulse_button = ttk.Button(sys_frame, text="Pulsstörning", command=self.trigger_pulse)
-        self.pulse_button.grid(row=1, column=8, padx=2)
+        self.pulse_button = ttk.Button(sys_row3, text="Pulsstörning", command=self.trigger_pulse)
+        self.pulse_button.pack(side=tk.LEFT, padx=5)
         self.disturbance_widgets.append(self.pulse_button)
         
         # Tredje raden - Enhetslös K
-        ttk.Checkbutton(sys_frame, text="Enhetslös K", variable=self.enhetslös_K_var, command=self.on_enhetslös_K_change).grid(row=2, column=0, columnspan=2, padx=2)
 
         # Regulatorparametrar (utökad med börvärde, mätområde och On/Off-parametrar)
         pid_frame = ttk.LabelFrame(frame, text="Regulatorparametrar")
@@ -756,7 +765,7 @@ class PIDSimulatorApp:
             
             # Visa alla störningswidgets
             for widget in self.disturbance_widgets:
-                widget.grid()
+                widget.pack(side=tk.LEFT)
         else:
             # Inaktivera störningar
             self.noise_std_var.set(0.0)
@@ -765,7 +774,7 @@ class PIDSimulatorApp:
             
             # Dölj alla störningswidgets
             for widget in self.disturbance_widgets:
-                widget.grid_remove()
+                widget.pack_forget()
     
     def on_integrerande_change(self):
         """Hantera när integrerande-checkbox ändras - visa/dölj utflöde"""
@@ -773,11 +782,11 @@ class PIDSimulatorApp:
         
         # Visa/dölj utflöde-kontroller baserat på integrerande-status
         if integrerande:
-            self.utflode_label.grid(row=0, column=6)
-            self.utflode_entry.grid(row=0, column=7)
+            self.utflode_label.pack(side=tk.LEFT)
+            self.utflode_entry.pack(side=tk.LEFT)
         else:
-            self.utflode_label.grid_remove()
-            self.utflode_entry.grid_remove()
+            self.utflode_label.pack_forget()
+            self.utflode_entry.pack_forget()
     
     def on_percent_mode_change(self):
         """Hanterar växling till/från procentvisning"""
