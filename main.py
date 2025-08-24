@@ -415,59 +415,75 @@ class PIDSimulatorApp:
         self.pulse_button.pack(side=tk.LEFT, padx=5)
         self.disturbance_widgets.append(self.pulse_button)
         
-        # Tredje raden - Enhetslös K
-
-        # Regulatorparametrar (utökad med börvärde, mätområde och On/Off-parametrar)
+        # Regulatorparametrar
         pid_frame = ttk.LabelFrame(frame, text="Regulatorparametrar")
         pid_frame.pack(fill=tk.X, padx=5, pady=5)
         self.pid_frame = pid_frame  # Spara referens för att komma åt children
         
-        # Första raden - Börvärde (flyttat från egen ram)
-        ttk.Label(pid_frame, text="Börvärde").grid(row=0, column=0)
+        
+        # Första raden
+        pid_row1 = ttk.Frame(pid_frame) 
+        pid_row1.pack(fill=tk.X, padx=5, pady=2)
+        
+        ttk.Label(pid_row1, text="Börvärde").pack(side=tk.LEFT, padx=5)
         self.sp_var = tk.StringVar(value=str(self.setpoint))
-        ttk.Entry(pid_frame, textvariable=self.sp_var, width=8).grid(row=0, column=1)
-        ttk.Button(pid_frame, text="Sätt BV", command=self.set_setpoint).grid(row=0, column=2, padx=5)
+        ttk.Entry(pid_row1, textvariable=self.sp_var, width=8).pack(side=tk.LEFT, padx=5)
+        ttk.Button(pid_row1, text="Sätt BV", command=self.set_setpoint).pack(side=tk.LEFT, padx=5)
         
-        # Mätområde (flyttat från systemparametrar)
-        ttk.Label(pid_frame, text="Mätområde Min").grid(row=0, column=3, padx=(20,2))
-        self.matområde_min_entry = ttk.Entry(pid_frame, textvariable=self.matområde_min_var, width=6)
-        self.matområde_min_entry.grid(row=0, column=4)
-        ttk.Label(pid_frame, text="Max").grid(row=0, column=5)
-        self.matområde_max_entry = ttk.Entry(pid_frame, textvariable=self.matområde_max_var, width=6)
-        self.matområde_max_entry.grid(row=0, column=6)
-        ttk.Label(pid_frame, text="(°C)").grid(row=0, column=7)
+        # Andra raden
+        pid_row2 = ttk.Frame(pid_frame) 
+        pid_row2.pack(fill=tk.X, padx=5, pady=2)
+        
+        # Mätområde
+        ttk.Label(pid_row2, text="Mätområde Min").pack(side=tk.LEFT, padx=5)
+        self.matområde_min_entry = ttk.Entry(pid_row2, textvariable=self.matområde_min_var, width=6)
+        self.matområde_min_entry.pack(side=tk.LEFT, padx=5)
+        ttk.Label(pid_row2, text="Max").pack(side=tk.LEFT, padx=5)
+        self.matområde_max_entry = ttk.Entry(pid_row2, textvariable=self.matområde_max_var, width=6)
+        self.matområde_max_entry.pack(side=tk.LEFT, padx=5)
 
+        # Tredje raden
+        pid_row3 = ttk.Frame(pid_frame) 
+        pid_row3.pack(fill=tk.X, padx=5, pady=2)
         # Utsignal min/max
-        ttk.Label(pid_frame, text="Utsignal min (%)").grid(row=1, column=0, padx=(0,2))
+        ttk.Label(pid_row3, text="Utsignal min (%)").pack(side=tk.LEFT, padx=5)
         self.u_min_var = tk.DoubleVar(value=0.0)
-        self.u_min_entry = ttk.Entry(pid_frame, textvariable=self.u_min_var, width=6)
-        self.u_min_entry.grid(row=1, column=1)
-        ttk.Label(pid_frame, text="max (%)").grid(row=1, column=2, padx=(10,2))
+        self.u_min_entry = ttk.Entry(pid_row3, textvariable=self.u_min_var, width=6)
+        self.u_min_entry.pack(side=tk.LEFT, padx=5)
+        ttk.Label(pid_row3, text="max (%)").pack(side=tk.LEFT, padx=5)
         self.u_max_var = tk.DoubleVar(value=100.0)
-        self.u_max_entry = ttk.Entry(pid_frame, textvariable=self.u_max_var, width=6)
-        self.u_max_entry.grid(row=1, column=3)
+        self.u_max_entry = ttk.Entry(pid_row3, textvariable=self.u_max_var, width=6)
+        self.u_max_entry.pack(side=tk.LEFT, padx=5)
 
-        # Andra raden - PID-parametrar
-        self.pid_params_frame = ttk.Frame(pid_frame)
-        self.pid_params_frame.grid(row=2, column=0, columnspan=8, sticky="ew", padx=5, pady=2)
+        # Fjärde raden
+        pid_row4 = ttk.Frame(pid_frame)
+        pid_row4.pack(fill=tk.X, padx=5, pady=2)
+        # PID-parametrar
+        self.pid_params_frame = ttk.Frame(pid_row4)
+        self.pid_params_frame.pack(fill=tk.X, padx=5, pady=2)
         
-        ttk.Label(self.pid_params_frame, text="Kp").grid(row=0, column=0)
+        ttk.Label(self.pid_params_frame, text="Kp").pack(side=tk.LEFT, padx=5)
         self.kp_var = tk.StringVar(value=str(self.pid.Kp))
         self.kp_entry = ttk.Entry(self.pid_params_frame, textvariable=self.kp_var, width=6)
-        self.kp_entry.grid(row=0, column=1)
+        self.kp_entry.pack(side=tk.LEFT, padx=5)
         
-        ttk.Label(self.pid_params_frame, text="Ti").grid(row=0, column=2)
+        ttk.Label(self.pid_params_frame, text="Ti").pack(side=tk.LEFT, padx=5)
         self.ti_var = tk.StringVar(value=str(self.pid.Ti))
         self.ti_entry = ttk.Entry(self.pid_params_frame, textvariable=self.ti_var, width=6)
-        self.ti_entry.grid(row=0, column=3)
+        self.ti_entry.pack(side=tk.LEFT, padx=5)
         
-        ttk.Label(self.pid_params_frame, text="Td").grid(row=0, column=4)
+        ttk.Label(self.pid_params_frame, text="Td").pack(side=tk.LEFT, padx=5)
         self.td_var = tk.StringVar(value=str(self.pid.Td))
         self.td_entry = ttk.Entry(self.pid_params_frame, textvariable=self.td_var, width=6)
-        self.td_entry.grid(row=0, column=5)
+        self.td_entry.pack(side=tk.LEFT, padx=5)
         
-        # Tredje raden - On/Off hysteresis-kontroller (flyttat från preset-ramen)
-        self.onoff_frame = ttk.Frame(pid_frame)
+        # Femte raden 
+        pid_row5 = ttk.Frame(pid_frame)
+        pid_row5.pack(fill=tk.X, padx=5, pady=2)
+        
+        # On/Off hysteresis-kontroller
+        self.onoff_frame = ttk.Frame(pid_row5)
+        self.onoff_frame.pack(fill=tk.X, padx=5, pady=2)
         
         ttk.Label(self.onoff_frame, text="Hysteresis:").grid(row=0, column=0, padx=2)
         ttk.Radiobutton(self.onoff_frame, text="Över", variable=self.onoff_hysteresis_type, value="upper", command=self.on_onoff_change).grid(row=0, column=1, padx=2)
@@ -482,20 +498,20 @@ class PIDSimulatorApp:
         self.onoff_low_entry = ttk.Entry(self.onoff_frame, textvariable=self.onoff_hysteresis_low, width=4)
         self.onoff_low_entry.grid(row=0, column=7)
         
-        # Fjärde raden - Checkboxar
-        self.checkbox_frame = ttk.Frame(pid_frame)
-        self.checkbox_frame.grid(row=3, column=0, columnspan=8, sticky="w", padx=5, pady=2)
+        # Sjätte raden - Checkboxar
+        pid_row6 = ttk.Frame(pid_frame)
+        pid_row6.pack(fill=tk.X, padx=5, pady=2)
         
         # Anti-windup checkbox
-        self.antiwindup_check = ttk.Checkbutton(self.checkbox_frame, text="Anti-windup", variable=self.antiwindup_var)
+        self.antiwindup_check = ttk.Checkbutton(pid_row6, text="Anti-windup", variable=self.antiwindup_var)
         self.antiwindup_check.pack(side=tk.LEFT, padx=(0,20))
  
         # Manuellt läge
-        self.manual_check = ttk.Checkbutton(self.checkbox_frame, text="Manuellt läge", variable=self.manual_mode_var, command=self.on_manual_mode_change)
+        self.manual_check = ttk.Checkbutton(pid_row6, text="Manuellt läge", variable=self.manual_mode_var, command=self.on_manual_mode_change)
         self.manual_check.pack(side=tk.LEFT, padx=(0,10))
         
-        ttk.Label(self.checkbox_frame, text="Manuell ut (%):").pack(side=tk.LEFT)
-        self.manual_entry = ttk.Entry(self.checkbox_frame, textvariable=self.manual_output_var, width=6)
+        ttk.Label(pid_row6, text="Manuell ut (%):").pack(side=tk.LEFT)
+        self.manual_entry = ttk.Entry(pid_row6, textvariable=self.manual_output_var, width=6)
         self.manual_entry.pack(side=tk.LEFT, padx=5)
         self.manual_entry.configure(state="disabled")  # Inaktiverad från början
 
@@ -718,13 +734,11 @@ class PIDSimulatorApp:
             # Visa On/Off-kontroller, dölj PID-parametrar och irrelevanta kontroller
             self.onoff_frame.grid()
             self.pid_params_frame.grid_remove()
-            self.checkbox_frame.grid_remove()
                 
         else:
             # Dölj On/Off-kontroller, visa PID-parametrar
             self.onoff_frame.grid_remove()
             self.pid_params_frame.grid()
-            self.checkbox_frame.grid()
             
             # Sätt standard-parametrar och aktivering baserat på preset
             if preset == "P":
