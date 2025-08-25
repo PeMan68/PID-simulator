@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.2] - 2025-08-25
+
+### Bugfix
+- Hysteresis-gränser i On/Off-regulatorn uppdateras nu korrekt från GUI och påverkar simuleringen som förväntat.
+
 ## [1.4.1] - 2025-08-25
 
 ### Förbättringar och ändringar
