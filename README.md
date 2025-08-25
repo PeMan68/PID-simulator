@@ -4,7 +4,36 @@
 Detta program demonstrerar och simulerar PID-reglering för processindustriella system, med pedagogisk visualisering av process- och regulatorns signaler. Stöder flera regulator-typer: On/Off, P, PI och PID, samt två processmodeller: självreglerande och integrerande.
 
 ## Starta programmet
-Kör `main.py` med Python 3.8+ och nödvändiga paket installerade (tkinter, matplotlib, numpy).
+Kör `main.py` med Python 3.8+ och nödvändiga paket installerade (matplotlib, numpy, scipy). 
+
+**Obs!** Programmet kräver att Python är installerat med stöd för tkinter (vanligtvis ingår detta i standardinstallationen). Om du får felmeddelandet "No module named 'tkinter'", installera om Python och se till att "tcl/tk and IDLE" är aktiverat vid installationen.
+
+
+### Detaljer
+
+1. Skapa en virtuell miljö (venv):
+   ```powershell
+   python -m venv venv
+   ```
+2. Aktivera venv:
+   ```powershell
+   .\venv\Scripts\Activate.ps1
+   ```
+   (Om du får fel om "Execution Policy", se PowerShells dokumentation eller kör  
+   `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` i PowerShell som administratör.)
+3. Installera nödvändiga paket:
+   ```powershell
+   pip install -r requirements.txt
+   ```
+4. Starta programmet:
+   ```powershell
+   python PID-simulator/main.py
+   ```
+
+Paket som behövs finns i requirements.txt och är:
+- matplotlib
+- numpy
+- scipy
 
 ## Gränssnitt och funktioner
 
