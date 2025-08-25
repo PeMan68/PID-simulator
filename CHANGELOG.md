@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.1] - 2025-08-25
+
+### Förbättringar och ändringar
+- Omstrukturering av GUI: widgets och parametrar har flyttats och grupperats för bättre layout och dynamisk visning/döljning.
+- Signalstörningskontroll flyttad till systemparametrar.
+- Utflöde, normalvärde och mätområde placeras på egna rader för tydligare gränssnitt.
+- Dynamisk visning av Ti och Td beroende på vald regulator.
+- Manuellt läge och manuell ut visas/döljs enligt val.
+- Flera layout- och stabilitetsförbättringar i tkinter-grids.
+
 ## [1.4.0] - 2025-08-20
 
 ### Nya funktioner
