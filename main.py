@@ -38,6 +38,10 @@ class Process:
         self.u_hist.append(u)
         u_delayed = self.u_hist.pop(0)
         
+        # Skydda mot division med noll
+        if self.T <= 0:
+            self.T = 1e-6  # Minimal tidskonstant
+        
         if self.enhetslös_K:
             # Enhetslös K: Konvertera y till %, beräkna i %, konvertera tillbaka
             y_pct = self.to_percent(self.y)
@@ -273,7 +277,7 @@ class PIDSimulatorApp:
         
         # Preset-kontroller
         self.preset_mode = tk.StringVar(value="PID")  # "OnOff", "P", "PI", "PID"
-        self.signal_disturbance_var = tk.BooleanVar(value=True)
+        self.signal_disturbance_var = tk.BooleanVar(value=False)
         
         # On/Off regulator-parametrar
         self.onoff_hysteresis_type = tk.StringVar(value="both")  # "upper", "lower", "both"
@@ -312,138 +316,204 @@ class PIDSimulatorApp:
         # Preset-kontroller (överst)
         preset_frame = ttk.LabelFrame(frame, text="Regulator-presets")
         preset_frame.pack(fill=tk.X, padx=5, pady=5)
-        
+            
         # Preset-val (radiobuttons)
-        preset_row1 = ttk.Frame(preset_frame)
+        preset_row1 = ttk.Frame(preset_frame) 
         preset_row1.pack(fill=tk.X, padx=5, pady=2)
-        
+            
         ttk.Radiobutton(preset_row1, text="On/Off", variable=self.preset_mode, value="OnOff", command=self.on_preset_change).pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(preset_row1, text="P-reglering", variable=self.preset_mode, value="P", command=self.on_preset_change).pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(preset_row1, text="PI-reglering", variable=self.preset_mode, value="PI", command=self.on_preset_change).pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(preset_row1, text="PID-reglering", variable=self.preset_mode, value="PID", command=self.on_preset_change).pack(side=tk.LEFT, padx=5)
-        
-        # Signalstörning och On/Off-inställningar
-        preset_row2 = ttk.Frame(preset_frame)
-        preset_row2.pack(fill=tk.X, padx=5, pady=2)
-        
-        ttk.Checkbutton(preset_row2, text="Signalstörning", variable=self.signal_disturbance_var, command=self.on_disturbance_change).pack(side=tk.LEFT, padx=5)
-        
-        # On/Off hysteresis-kontroller (visas endast när On/Off är valt)
-        self.onoff_frame = ttk.Frame(preset_row2)
-        self.onoff_frame.pack(side=tk.LEFT, padx=(20,5))
-        
-        ttk.Label(self.onoff_frame, text="Hysteresis:").pack(side=tk.LEFT, padx=2)
-        ttk.Radiobutton(self.onoff_frame, text="Över", variable=self.onoff_hysteresis_type, value="upper", command=self.on_onoff_change).pack(side=tk.LEFT, padx=2)
-        ttk.Radiobutton(self.onoff_frame, text="Under", variable=self.onoff_hysteresis_type, value="lower", command=self.on_onoff_change).pack(side=tk.LEFT, padx=2)
-        ttk.Radiobutton(self.onoff_frame, text="Båda", variable=self.onoff_hysteresis_type, value="both", command=self.on_onoff_change).pack(side=tk.LEFT, padx=2)
-        
-        ttk.Label(self.onoff_frame, text="Hög:").pack(side=tk.LEFT, padx=(10,2))
-        self.onoff_high_entry = ttk.Entry(self.onoff_frame, textvariable=self.onoff_hysteresis_high, width=4)
-        self.onoff_high_entry.pack(side=tk.LEFT)
-        
-        ttk.Label(self.onoff_frame, text="Låg:").pack(side=tk.LEFT, padx=(5,2))
-        self.onoff_low_entry = ttk.Entry(self.onoff_frame, textvariable=self.onoff_hysteresis_low, width=4)
-        self.onoff_low_entry.pack(side=tk.LEFT)
-        
+
         # Systemparametrar
         sys_frame = ttk.LabelFrame(frame, text="Systemparametrar")
         sys_frame.pack(fill=tk.X, padx=5, pady=5)
-        ttk.Label(sys_frame, text="K").grid(row=0, column=0)
+        self.sys_frame = sys_frame  # Spara referens
+
+        # Första raden - Grundparametrar
+        sys_row1 = ttk.Frame(sys_frame) 
+        sys_row1.pack(fill=tk.X, padx=5, pady=2)
+        ttk.Checkbutton(sys_row1, text="Enhetslös K", variable=self.enhetslös_K_var, command=self.on_enhetslös_K_change).pack(side=tk.LEFT, padx=5)
+        ttk.Label(sys_row1, text="K").pack(side=tk.LEFT, padx=5)
         self.proc_k_var = tk.StringVar(value=str(self.process.K))
-        ttk.Entry(sys_frame, textvariable=self.proc_k_var, width=6).grid(row=0, column=1)
-        ttk.Label(sys_frame, text="T").grid(row=0, column=2)
+        ttk.Entry(sys_row1, textvariable=self.proc_k_var, width=6).pack(side=tk.LEFT, padx=5)
+        ttk.Label(sys_row1, text="T").pack(side=tk.LEFT, padx=5)
         self.proc_t_var = tk.StringVar(value=str(self.process.T))
-        ttk.Entry(sys_frame, textvariable=self.proc_t_var, width=6).grid(row=0, column=3)
-        ttk.Label(sys_frame, text="Dötid").grid(row=0, column=4)
+        ttk.Entry(sys_row1, textvariable=self.proc_t_var, width=6).pack(side=tk.LEFT, padx=5)
+        ttk.Label(sys_row1, text="Dötid").pack(side=tk.LEFT, padx=5)
         self.proc_dead_var = tk.StringVar(value=str(self.process.dead_time))
-        ttk.Entry(sys_frame, textvariable=self.proc_dead_var, width=6).grid(row=0, column=5)
-        ttk.Label(sys_frame, text="Utflöde").grid(row=0, column=6)
-        self.proc_fout_var = tk.StringVar(value=str(self.process.Fout))
-        ttk.Entry(sys_frame, textvariable=self.proc_fout_var, width=6).grid(row=0, column=7)
+        ttk.Entry(sys_row1, textvariable=self.proc_dead_var, width=6).pack(side=tk.LEFT, padx=5)
+        
+        # ttk.Entry(sys_frame, textvariable=self.proc_k_var, width=6).grid(row=0, column=1)
+        # ttk.Label(sys_frame, text="T").grid(row=0, column=2)
+        # ttk.Entry(sys_frame, textvariable=self.proc_t_var, width=6).grid(row=0, column=3)
+        # ttk.Label(sys_frame, text="Dötid").grid(row=0, column=4)
+        # ttk.Entry(sys_frame, textvariable=self.proc_dead_var, width=6).grid(row=0, column=5)
+        
+        # Integrerande checkbox och normalvärde
         self.integrerande_var = tk.BooleanVar(value=self.process.integrerande)
-        ttk.Checkbutton(sys_frame, text="Integrerande", variable=self.integrerande_var).grid(row=0, column=8, columnspan=2)
+        self.integrerande_check = ttk.Checkbutton(sys_row1, text="Integrerande", variable=self.integrerande_var, command=self.on_integrerande_change)
+        self.integrerande_check.pack(side=tk.LEFT, padx=5)
         
-        # --- Mätområde och enhetslös K (ny rad) ---
-        ttk.Checkbutton(sys_frame, text="Enhetslös K", variable=self.enhetslös_K_var, command=self.on_enhetslös_K_change).grid(row=2, column=0, columnspan=2, padx=2)
-        ttk.Label(sys_frame, text="Mätområde Min").grid(row=2, column=2)
-        self.matområde_min_entry = ttk.Entry(sys_frame, textvariable=self.matområde_min_var, width=6)
-        self.matområde_min_entry.grid(row=2, column=3)
-        ttk.Label(sys_frame, text="Max").grid(row=2, column=4)
-        self.matområde_max_entry = ttk.Entry(sys_frame, textvariable=self.matområde_max_var, width=6)
-        self.matområde_max_entry.grid(row=2, column=5)
-        ttk.Label(sys_frame, text="(°C)").grid(row=2, column=6)
+        # Utflöde (visas endast för integrerande processer)
+        self.utflode_label = ttk.Label(sys_row1, text="Utflöde")
+        self.utflode_label.pack(side=tk.LEFT, padx=5)
+        self.proc_fout_var = tk.StringVar(value=str(self.process.Fout))
+        self.utflode_entry = ttk.Entry(sys_row1, textvariable=self.proc_fout_var, width=6)
+        self.utflode_entry.pack(side=tk.LEFT, padx=5)
         
-        # --- Brusreglage ---
-        ttk.Label(sys_frame, text="Brus std").grid(row=1, column=0)
+        # Andra raden - Normalvärde
+        sys_row2 = ttk.Frame(sys_frame) 
+        sys_row2.pack(fill=tk.X, padx=5, pady=2)
+        ttk.Label(sys_row2, text="Normalvärde").pack(side=tk.LEFT, padx=5)
+        self.nv_entry = ttk.Entry(sys_row2, textvariable=self.nv_var, width=6).pack(side=tk.LEFT, padx=5)
+        ttk.Button(sys_row2, text="Sätt NV", command=self.set_nv).pack(side=tk.LEFT, padx=5)
+        
+        # Tredje raden - Störningar
+        sys_row3 = ttk.Frame(sys_frame) 
+        sys_row3.pack(fill=tk.X, padx=5, pady=2)
+        self.signal_disturbance_check = ttk.Checkbutton(sys_row3, text="Signalstörning", variable=self.signal_disturbance_var, command=self.on_disturbance_change).pack(side=tk.LEFT, padx=5)
+        
+        # Störningar (döljs när signalstörning är av)
+        self.disturbance_widgets = []
+        
+        brus_label = ttk.Label(sys_row3, text="Brus std")
+        brus_label.pack(side=tk.LEFT, padx=5)
+        self.disturbance_widgets.append(brus_label)
+        
         self.noise_std_var = tk.DoubleVar(value=0.0)
-        self.noise_scale = ttk.Scale(sys_frame, from_=0.0, to=5.0, variable=self.noise_std_var, orient=tk.HORIZONTAL, length=100)
-        self.noise_scale.grid(row=1, column=1, columnspan=2, sticky="we", padx=2)
-        self.noise_entry = ttk.Entry(sys_frame, textvariable=self.noise_std_var, width=5)
-        self.noise_entry.grid(row=1, column=3)
-        # --- Pulsstörning ---
-        ttk.Label(sys_frame, text="Puls (storlek)").grid(row=1, column=4)
+        self.noise_scale = ttk.Scale(sys_row3, from_=0.0, to=5.0, variable=self.noise_std_var, orient=tk.HORIZONTAL, length=100)
+        self.noise_scale.pack(side=tk.LEFT, padx=5)
+        self.disturbance_widgets.append(self.noise_scale)
+        
+        self.noise_entry = ttk.Entry(sys_row3, textvariable=self.noise_std_var, width=5)
+        self.noise_entry.pack(side=tk.LEFT, padx=5)
+        self.disturbance_widgets.append(self.noise_entry)
+        
+        puls_label = ttk.Label(sys_row3, text="Puls (storlek)")
+        puls_label.pack(side=tk.LEFT, padx=5)
+        self.disturbance_widgets.append(puls_label)
+        
         self.pulse_mag_var = tk.DoubleVar(value=10.0)
-        self.pulse_entry = ttk.Entry(sys_frame, textvariable=self.pulse_mag_var, width=5)
-        self.pulse_entry.grid(row=1, column=5)
-        ttk.Label(sys_frame, text="(steg)").grid(row=1, column=6)
+        self.pulse_entry = ttk.Entry(sys_row3, textvariable=self.pulse_mag_var, width=5)
+        self.pulse_entry.pack(side=tk.LEFT, padx=5)
+        self.disturbance_widgets.append(self.pulse_entry)
+        
+        steg_label = ttk.Label(sys_row3, text="(steg)")
+        steg_label.pack(side=tk.LEFT, padx=5)
+        self.disturbance_widgets.append(steg_label)
+        
         self.pulse_dur_var = tk.IntVar(value=3)
-        self.pulse_dur_entry = ttk.Entry(sys_frame, textvariable=self.pulse_dur_var, width=3)
-        self.pulse_dur_entry.grid(row=1, column=7)
+        self.pulse_dur_entry = ttk.Entry(sys_row3, textvariable=self.pulse_dur_var, width=3)
+        self.pulse_dur_entry.pack(side=tk.LEFT, padx=5)
+        self.disturbance_widgets.append(self.pulse_dur_entry)
+        
         self.pulse_active = False
         self.pulse_steps_left = 0
-        ttk.Button(sys_frame, text="Pulsstörning", command=self.trigger_pulse).grid(row=1, column=8, padx=2)
-
+        self.pulse_button = ttk.Button(sys_row3, text="Pulsstörning", command=self.trigger_pulse)
+        self.pulse_button.pack(side=tk.LEFT, padx=5)
+        self.disturbance_widgets.append(self.pulse_button)
+        
         # Regulatorparametrar
         pid_frame = ttk.LabelFrame(frame, text="Regulatorparametrar")
         pid_frame.pack(fill=tk.X, padx=5, pady=5)
         self.pid_frame = pid_frame  # Spara referens för att komma åt children
         
+        
+        # Första raden
+        pid_row1 = ttk.Frame(pid_frame) 
+        pid_row1.pack(fill=tk.X, padx=5, pady=2)
+        
+        ttk.Label(pid_row1, text="Börvärde").pack(side=tk.LEFT, padx=5)
+        self.sp_var = tk.StringVar(value=str(self.setpoint))
+        ttk.Entry(pid_row1, textvariable=self.sp_var, width=8).pack(side=tk.LEFT, padx=5)
+        ttk.Button(pid_row1, text="Sätt BV", command=self.set_setpoint).pack(side=tk.LEFT, padx=5)
+        
+        # Andra raden
+        pid_row2 = ttk.Frame(pid_frame) 
+        pid_row2.pack(fill=tk.X, padx=5, pady=2)
+        
+        # Mätområde
+        ttk.Label(pid_row2, text="Mätområde Min").pack(side=tk.LEFT, padx=5)
+        self.matområde_min_entry = ttk.Entry(pid_row2, textvariable=self.matområde_min_var, width=6)
+        self.matområde_min_entry.pack(side=tk.LEFT, padx=5)
+        ttk.Label(pid_row2, text="Max").pack(side=tk.LEFT, padx=5)
+        self.matområde_max_entry = ttk.Entry(pid_row2, textvariable=self.matområde_max_var, width=6)
+        self.matområde_max_entry.pack(side=tk.LEFT, padx=5)
+
+        # Tredje raden
+        pid_row3 = ttk.Frame(pid_frame) 
+        pid_row3.pack(fill=tk.X, padx=5, pady=2)
+        # Utsignal min/max
+        ttk.Label(pid_row3, text="Utsignal min (%)").pack(side=tk.LEFT, padx=5)
+        self.u_min_var = tk.DoubleVar(value=0.0)
+        self.u_min_entry = ttk.Entry(pid_row3, textvariable=self.u_min_var, width=6)
+        self.u_min_entry.pack(side=tk.LEFT, padx=5)
+        ttk.Label(pid_row3, text="max (%)").pack(side=tk.LEFT, padx=5)
+        self.u_max_var = tk.DoubleVar(value=100.0)
+        self.u_max_entry = ttk.Entry(pid_row3, textvariable=self.u_max_var, width=6)
+        self.u_max_entry.pack(side=tk.LEFT, padx=5)
+
+        # Fjärde raden
+        pid_row4 = ttk.Frame(pid_frame)
+        pid_row4.pack(fill=tk.X, padx=5, pady=2)
         # PID-parametrar
-        self.pid_params_frame = ttk.Frame(pid_frame)
+        self.pid_params_frame = ttk.Frame(pid_row4)
         self.pid_params_frame.pack(fill=tk.X, padx=5, pady=2)
         
-        ttk.Label(self.pid_params_frame, text="Kp").grid(row=0, column=0)
+        ttk.Label(self.pid_params_frame, text="Kp").pack(side=tk.LEFT, padx=5)
         self.kp_var = tk.StringVar(value=str(self.pid.Kp))
         self.kp_entry = ttk.Entry(self.pid_params_frame, textvariable=self.kp_var, width=6)
-        self.kp_entry.grid(row=0, column=1)
+        self.kp_entry.pack(side=tk.LEFT, padx=5)
         
-        ttk.Label(self.pid_params_frame, text="Ti").grid(row=0, column=2)
+        ttk.Label(self.pid_params_frame, text="Ti").pack(side=tk.LEFT, padx=5)
         self.ti_var = tk.StringVar(value=str(self.pid.Ti))
         self.ti_entry = ttk.Entry(self.pid_params_frame, textvariable=self.ti_var, width=6)
-        self.ti_entry.grid(row=0, column=3)
+        self.ti_entry.pack(side=tk.LEFT, padx=5)
         
-        ttk.Label(self.pid_params_frame, text="Td").grid(row=0, column=4)
+        ttk.Label(self.pid_params_frame, text="Td").pack(side=tk.LEFT, padx=5)
         self.td_var = tk.StringVar(value=str(self.pid.Td))
         self.td_entry = ttk.Entry(self.pid_params_frame, textvariable=self.td_var, width=6)
-        self.td_entry.grid(row=0, column=5)
+        self.td_entry.pack(side=tk.LEFT, padx=5)
+        
+        # Femte raden 
+        pid_row5 = ttk.Frame(pid_frame)
+        pid_row5.pack(fill=tk.X, padx=5, pady=2)
+        
+        # On/Off hysteresis-kontroller
+        self.onoff_frame = ttk.Frame(pid_row5)
+        self.onoff_frame.pack(fill=tk.X, padx=5, pady=2)
+        
+        ttk.Label(self.onoff_frame, text="Hysteresis:").grid(row=0, column=0, padx=2)
+        ttk.Radiobutton(self.onoff_frame, text="Över", variable=self.onoff_hysteresis_type, value="upper", command=self.on_onoff_change).grid(row=0, column=1, padx=2)
+        ttk.Radiobutton(self.onoff_frame, text="Under", variable=self.onoff_hysteresis_type, value="lower", command=self.on_onoff_change).grid(row=0, column=2, padx=2)
+        ttk.Radiobutton(self.onoff_frame, text="Båda", variable=self.onoff_hysteresis_type, value="both", command=self.on_onoff_change).grid(row=0, column=3, padx=2)
+        
+        ttk.Label(self.onoff_frame, text="Hög:").grid(row=0, column=4, padx=(10,2))
+        self.onoff_high_entry = ttk.Entry(self.onoff_frame, textvariable=self.onoff_hysteresis_high, width=4)
+        self.onoff_high_entry.grid(row=0, column=5)
+        
+        ttk.Label(self.onoff_frame, text="Låg:").grid(row=0, column=6, padx=(5,2))
+        self.onoff_low_entry = ttk.Entry(self.onoff_frame, textvariable=self.onoff_hysteresis_low, width=4)
+        self.onoff_low_entry.grid(row=0, column=7)
+        
+        # Sjätte raden - Checkboxar
+        pid_row6 = ttk.Frame(pid_frame)
+        pid_row6.pack(fill=tk.X, padx=5, pady=2)
         
         # Anti-windup checkbox
-        self.antiwindup_check = ttk.Checkbutton(pid_frame, text="Anti-windup", variable=self.antiwindup_var)
-        self.antiwindup_check.pack(anchor="w", padx=5, pady=2)
+        self.antiwindup_check = ttk.Checkbutton(pid_row6, text="Anti-windup", variable=self.antiwindup_var)
+        self.antiwindup_check.pack(side=tk.LEFT, padx=(0,20))
  
         # Manuellt läge
-        self.manual_check = ttk.Checkbutton(pid_frame, text="Manuellt läge", variable=self.manual_mode_var, command=self.on_manual_mode_change)
-        self.manual_check.pack(anchor="w", padx=5, pady=2)
+        self.manual_check = ttk.Checkbutton(pid_row6, text="Manuellt läge", variable=self.manual_mode_var, command=self.on_manual_mode_change)
+        self.manual_check.pack(side=tk.LEFT, padx=(0,10))
         
-        self.manual_frame = ttk.Frame(pid_frame)
-        self.manual_frame.pack(fill=tk.X, padx=5, pady=2)
-        ttk.Label(self.manual_frame, text="Manuell ut (%):").pack(side=tk.LEFT)
-        self.manual_entry = ttk.Entry(self.manual_frame, textvariable=self.manual_output_var, width=6)
+        ttk.Label(pid_row6, text="Manuell ut (%):").pack(side=tk.LEFT)
+        self.manual_entry = ttk.Entry(pid_row6, textvariable=self.manual_output_var, width=6)
         self.manual_entry.pack(side=tk.LEFT, padx=5)
         self.manual_entry.configure(state="disabled")  # Inaktiverad från början
-        # Börvärde
-        bv_frame = ttk.LabelFrame(frame, text="Börvärde och Normalvärde")
-        bv_frame.pack(fill=tk.X, padx=5, pady=5)
-        self.sp_var = tk.StringVar(value=str(self.setpoint))
-        # Börvärde (vänster)
-        ttk.Label(bv_frame, text="Börvärde").pack(side=tk.LEFT, padx=(5,2))
-        ttk.Entry(bv_frame, textvariable=self.sp_var, width=8).pack(side=tk.LEFT)
-        ttk.Button(bv_frame, text="Sätt BV", command=self.set_setpoint).pack(side=tk.LEFT, padx=5)
-        # Normalvärde (höger)
-        ttk.Label(bv_frame, text="Normalvärde").pack(side=tk.LEFT, padx=(20,2))
-        self.nv_entry = ttk.Entry(bv_frame, textvariable=self.nv_var, width=8)
-        self.nv_entry.pack(side=tk.LEFT)
-        ttk.Button(bv_frame, text="Sätt NV", command=self.set_nv).pack(side=tk.LEFT, padx=5)
 
         # Stegsvarsanalys och enhetsväxling
         analysis_frame = ttk.LabelFrame(frame, text="Stegsvarsanalys och visning")
@@ -530,6 +600,11 @@ class PIDSimulatorApp:
         # Koppla musrörelse till canvas (måste ske efter att self.canvas skapats)
         self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
         self.canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        
+        # Sätt initiala tillstånd för synlighet
+        self.on_preset_change()  # Sätt korrekt synlighet för regulator-kontroller
+        self.on_disturbance_change()  # Sätt korrekt synlighet för störningskontroller
+        self.on_integrerande_change()  # Sätt korrekt synlighet för utflöde
 
     def trigger_pulse(self):
         # Aktivera puls-störning
@@ -581,6 +656,25 @@ class PIDSimulatorApp:
             return float(str(var.get()).replace(",", "."))
         except Exception:
             return 0.0
+
+    def validate_T_value(self, show_warning=True):
+        """Validerar T-värdet och visar varning om det är <= 0"""
+        dt = 1.0  # Simuleringssteg, hårdkodat i denna version
+        T_min = dt
+        T_value = self.parse_float(self.proc_t_var)
+        if T_value < T_min:
+            self.proc_t_var.set(str(T_min))
+            if show_warning:
+                import tkinter.messagebox as msgbox
+                msgbox.showerror(
+                    "Felaktig tidskonstant",
+                    f"Tidskonstanten T måste vara minst dt = {dt} sekund(er) för stabil simulering.\n"
+                    f"Simuleringen har stoppats och T har satts till {T_min}.\n\n"
+                    "För snabba system (liten T) krävs mindre tidssteg dt.\n"
+                    "Vill du simulera ännu snabbare system, kontakta utvecklaren för att göra dt justerbar."
+                )
+            return T_min
+        return T_value
 
     def window_back(self):
         if self.window_mode.get() == "window":
@@ -638,30 +732,13 @@ class PIDSimulatorApp:
         
         if preset == "OnOff":
             # Visa On/Off-kontroller, dölj PID-parametrar och irrelevanta kontroller
-            self.onoff_frame.pack(side=tk.LEFT, padx=(20,5))
-            self.pid_params_frame.pack_forget()
-            
-            # Dölj kontroller som inte är relevanta för On/Off
-            self.antiwindup_check.pack_forget()
-            self.manual_check.pack_forget()
-            self.manual_frame.pack_forget()
+            self.onoff_frame.grid()
+            self.pid_params_frame.grid_remove()
                 
         else:
             # Dölj On/Off-kontroller, visa PID-parametrar
-            self.onoff_frame.pack_forget()
-            self.pid_params_frame.pack(fill=tk.X, padx=5, pady=2)
-            
-            # Visa kontroller baserat på preset-typ
-            if preset == "P":
-                # P-reglering: Dölj anti-windup (mindre relevant utan integral)
-                self.antiwindup_check.pack_forget()
-            else:
-                # PI och PID: Visa anti-windup
-                self.antiwindup_check.pack(anchor="w", padx=5, pady=2)
-            
-            # Visa manuellt läge för alla PID-varianter
-            self.manual_check.pack(anchor="w", padx=5, pady=2)
-            self.manual_frame.pack(fill=tk.X, padx=5, pady=2)
+            self.onoff_frame.grid_remove()
+            self.pid_params_frame.grid()
             
             # Sätt standard-parametrar och aktivering baserat på preset
             if preset == "P":
@@ -693,15 +770,37 @@ class PIDSimulatorApp:
         self.onoff_controller.hysteresis_low = self.parse_float(self.onoff_hysteresis_low)
         
     def on_disturbance_change(self):
-        """Aktiverar/inaktiverar signalstörningar"""
-        if self.signal_disturbance_var.get():
+        """Aktiverar/inaktiverar signalstörningar och visar/döljer kontroller"""
+        enabled = self.signal_disturbance_var.get()
+        
+        if enabled:
             # Aktivera störningar - sätt till rimliga värden
             self.noise_std_var.set(0.5)
+            
+            # Visa alla störningswidgets
+            for widget in self.disturbance_widgets:
+                widget.pack(side=tk.LEFT)
         else:
             # Inaktivera störningar
             self.noise_std_var.set(0.0)
             self.pulse_active = False
             self.pulse_steps_left = 0
+            
+            # Dölj alla störningswidgets
+            for widget in self.disturbance_widgets:
+                widget.pack_forget()
+    
+    def on_integrerande_change(self):
+        """Hantera när integrerande-checkbox ändras - visa/dölj utflöde"""
+        integrerande = self.integrerande_var.get()
+        
+        # Visa/dölj utflöde-kontroller baserat på integrerande-status
+        if integrerande:
+            self.utflode_label.pack(side=tk.LEFT)
+            self.utflode_entry.pack(side=tk.LEFT)
+        else:
+            self.utflode_label.pack_forget()
+            self.utflode_entry.pack_forget()
     
     def on_percent_mode_change(self):
         """Hanterar växling till/från procentvisning"""
@@ -876,15 +975,37 @@ class PIDSimulatorApp:
     def step_once(self):
         self.running = False
         self.update_buttons()
+        T_min = 0.01
+        T_value = self.parse_float(self.proc_t_var)
+        if T_value < T_min:
+            self.proc_t_var.set(str(T_min))
+            import tkinter.messagebox as msgbox
+            msgbox.showerror(
+                "Felaktig tidskonstant",
+                f"Tidskonstanten T måste vara minst {T_min}.\n"
+                f"Simuleringen har stoppats och T har satts till {T_min}."
+            )
+            return
         self.simulate(step=True)
 
     def reset(self):
         self.running = False
         self._auto_paused = False
         self.current_step = 0
+        T_min = 0.01
+        T_value = self.parse_float(self.proc_t_var)
+        if T_value < T_min:
+            self.proc_t_var.set(str(T_min))
+            import tkinter.messagebox as msgbox
+            msgbox.showerror(
+                "Felaktig tidskonstant",
+                f"Tidskonstanten T måste vara minst {T_min}.\n"
+                f"Simuleringen har stoppats och T har satts till {T_min}."
+            )
+            return
         self.process = Process(
             K=self.parse_float(self.proc_k_var),
-            T=self.parse_float(self.proc_t_var),
+            T=T_value,
             dead_time=self.parse_float(self.proc_dead_var),
             integrerande=self.integrerande_var.get(),
             Fout=self.parse_float(self.proc_fout_var),
@@ -928,6 +1049,29 @@ class PIDSimulatorApp:
             self.reset_btn.state(["!disabled"])
 
     def simulate(self, step=False):
+        # Kontrollera numerisk instabilitet: PV utanför ±2×mätområdets gränser
+        mat_min = self.parse_float(self.matområde_min_var)
+        mat_max = self.parse_float(self.matområde_max_var)
+        pv = self.process.y
+        if pv < mat_min - abs(mat_max-mat_min)*2 or pv > mat_max + abs(mat_max-mat_min)*2:
+            self.running = False
+            self._auto_paused = False
+            self.update_buttons()
+            import tkinter.messagebox as msgbox
+            msgbox.showerror(
+                "Numerisk instabilitet",
+                f"Processvärdet (PV) har gått utanför rimliga gränser.\n\n"
+                f"PV = {pv:.3g}, mätområde = [{mat_min}, {mat_max}]\n\n"
+                "Möjliga orsaker:\n"
+                "- För liten tidskonstant T\n"
+                "- För stort tidssteg dt\n"
+                "- Extremt höga regulatorparametrar (Kp, Ti, Td)\n\n"
+                "Åtgärder:\n"
+                "- Öka T\n"
+                "- Minska dt (hastighet)\n"
+                "- Justera Kp, Ti, Td till rimliga värden"
+            )
+            return
         if self.current_step >= self.n_steps:
             self.running = False
             self._auto_paused = False
@@ -958,7 +1102,7 @@ class PIDSimulatorApp:
         self.pid.Ti = Ti if Ti != 0 else 1e12  # undvik div 0, men ingen I-del om inaktiv
         self.pid.Td = Td
         self.process.K = self.parse_float(self.proc_k_var)
-        self.process.T = self.parse_float(self.proc_t_var)
+        self.process.T = self.validate_T_value(show_warning=False)  # Ingen varning under simulering
         self.process.dead_time = self.parse_float(self.proc_dead_var)
         self.process.integrerande = self.integrerande_var.get()
         self.process.Fout = self.parse_float(self.proc_fout_var)
@@ -1335,7 +1479,7 @@ class PIDSimulatorApp:
         self._just_reset = True
         self.running = False
         self.current_step = 0
-        self.process = Process(K=self.parse_float(self.proc_k_var), T=self.parse_float(self.proc_t_var), dead_time=self.parse_float(self.proc_dead_var), integrerande=self.integrerande_var.get(), normalvarde=self.nv_var.get())
+        self.process = Process(K=self.parse_float(self.proc_k_var), T=self.validate_T_value(show_warning=True), dead_time=self.parse_float(self.proc_dead_var), integrerande=self.integrerande_var.get(), normalvarde=self.nv_var.get())
         self.pid = PID(Kp=self.parse_float(self.kp_var), Ti=self.parse_float(self.ti_var), Td=self.parse_float(self.td_var), dt=self.dt)
         try:
             self.setpoint = float(str(self.sp_var.get()).replace(",", "."))
@@ -1355,7 +1499,7 @@ class PIDSimulatorApp:
             self.tooltip.place_forget()
         self.update_plot()
         self.update_percent_status()  # Uppdatera procentstatus efter reset
-
+ 
 import sys
 
 def on_closing(root):

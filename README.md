@@ -4,7 +4,9 @@
 Detta program demonstrerar och simulerar PID-reglering för processindustriella system, med pedagogisk visualisering av process- och regulatorns signaler. Stöder flera regulator-typer: On/Off, P, PI och PID, samt två processmodeller: självreglerande och integrerande.
 
 ## Starta programmet
-Kör `main.py` med Python 3.8+ och nödvändiga paket installerade (tkinter, matplotlib, numpy).
+Kör `main.py` med Python 3.8+ och nödvändiga paket installerade (matplotlib, numpy, scipy). 
+
+**Obs!** Programmet kräver att Python är installerat med stöd för tkinter (vanligtvis ingår detta i standardinstallationen). Om du får felmeddelandet "No module named 'tkinter'", installera om Python och se till att "tcl/tk and IDLE" är aktiverat vid installationen.
 
 
 ### Detaljer
@@ -32,7 +34,6 @@ Paket som behövs finns i requirements.txt och är:
 - matplotlib
 - numpy
 - scipy
-- tkinter
 
 ## Gränssnitt och funktioner
 
