@@ -221,7 +221,7 @@ class PIDSimulatorApp:
         self.tooltip.place(x=x_root, y=y_root)
     def __init__(self, root):
         self.root = root
-        root.title("PID-simulator v1.4.1")
+        root.title("PID-simulator v1.4.2")
         # Öka fönsterbredd för att ge plats åt tooltip
         root.geometry("1100x700")
         root.minsize(1000, 600)
@@ -497,6 +497,7 @@ class PIDSimulatorApp:
         ttk.Label(self.onoff_frame, text="Låg:").grid(row=0, column=6, padx=(5,2))
         self.onoff_low_entry = ttk.Entry(self.onoff_frame, textvariable=self.onoff_hysteresis_low, width=4)
         self.onoff_low_entry.grid(row=0, column=7)
+        ttk.Button(self.onoff_frame, text="Uppdatera", command=self.on_onoff_change).grid(row=0, column=8, padx=2)
         
         # Sjätte raden - Checkboxar
         pid_row6 = ttk.Frame(pid_frame)
@@ -766,8 +767,8 @@ class PIDSimulatorApp:
     def on_onoff_change(self):
         """Uppdaterar On/Off-regulator-parametrar"""
         self.onoff_controller.hysteresis_type = self.onoff_hysteresis_type.get()
-        self.onoff_controller.hysteresis_high = self.parse_float(self.onoff_hysteresis_high)
-        self.onoff_controller.hysteresis_low = self.parse_float(self.onoff_hysteresis_low)
+        self.onoff_controller.hysteresis_high = float(self.onoff_hysteresis_high.get())
+        self.onoff_controller.hysteresis_low = float(self.onoff_hysteresis_low.get())
         
     def on_disturbance_change(self):
         """Aktiverar/inaktiverar signalstörningar och visar/döljer kontroller"""
