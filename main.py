@@ -287,19 +287,41 @@ class PIDSimulatorApp:
         
         # Enhetsväxling (True = %, False = verkliga värden)
         self.percent_mode_var = tk.BooleanVar(value=False)
-        self.process_min = tk.DoubleVar(value=0.0)   # Sätts intelligent baserat på normalvärde
-        self.process_max = tk.DoubleVar(value=100.0) # Sätts intelligent baserat på normalvärde
         
-        # Sätt intelligenta Min/Max-värden baserat på normalvärde och förväntat börvärde
-        nv = self.nv_var.get()
-        # Skapa ett rimligt intervall runt normalvärdet och börvärdet
-        min_val = min(nv, self.setpoint) - 20
-        max_val = max(nv, self.setpoint) + 30
-        self.process_min.set(min_val)
-        self.process_max.set(max_val)
+        # Sätt skalning till samma som mätområdet som default
+        self.process_min = tk.DoubleVar(value=self.matområde_min_var.get())
+        self.process_max = tk.DoubleVar(value=self.matområde_max_var.get())
+        
+        # Processenhet för y-axeletiketter
+        self.process_unit_var = tk.StringVar(value="°C")  # Default temperatur
+        
+        # Variabler för att spåra osparade ändringar
+        self.unsaved_changes = False
+        self.changed_widgets = set()  # Set för att spåra vilka widgets som ändrats
+        self.highlight_labels = {}  # Spara referenser till highlight-labels
+        
+        # Sparade parametrar som används under simulering (uppdateras endast vid "Spara ändringar")
+        self.saved_params = {
+            'kp': self.pid.Kp,
+            'ti': self.pid.Ti, 
+            'td': self.pid.Td,
+            'i_active': self.i_active_var.get(),
+            'd_active': self.d_active_var.get(),
+            'setpoint': self.setpoint,
+            'nv': self.nv_var.get(),
+            'matområde_min': self.matområde_min_var.get(),
+            'matområde_max': self.matområde_max_var.get(),
+            'proc_k': self.process.K,
+            'proc_t': self.process.T,
+            'proc_dead_time': self.process.dead_time,
+            'u_min': self.u_min,
+            'u_max': self.u_max
+        }
         
         # GUI
         self.create_widgets()
+        # Lägg till change callbacks EFTER att widgets skapats
+        self.setup_change_tracking()
         # Tooltip och markör
         self.tooltip = None
         self.cursor_line = None  # For vertical marker
@@ -310,6 +332,24 @@ class PIDSimulatorApp:
         self.update_plot()
 
     def create_widgets(self):
+        # Konfigurera ttk styles för highlighting
+        style = ttk.Style()
+        try:
+            # Skapa en highlighted style för Entry widgets med orange ram
+            style.configure('Highlighted.TEntry', 
+                          fieldbackground='lightyellow',
+                          borderwidth=4,
+                          relief='solid',
+                          bordercolor='orange',
+                          lightcolor='orange',
+                          darkcolor='orange')
+            # Även när focused
+            style.map('Highlighted.TEntry',
+                     fieldbackground=[('focus', 'lightyellow')],
+                     bordercolor=[('focus', 'red')])
+        except Exception:
+            pass  # Ignorera om style inte kan sättas
+            
         frame = ttk.Frame(self.root)
         frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
@@ -337,13 +377,16 @@ class PIDSimulatorApp:
         ttk.Checkbutton(sys_row1, text="Enhetslös K", variable=self.enhetslös_K_var, command=self.on_enhetslös_K_change).pack(side=tk.LEFT, padx=5)
         ttk.Label(sys_row1, text="K").pack(side=tk.LEFT, padx=5)
         self.proc_k_var = tk.StringVar(value=str(self.process.K))
-        ttk.Entry(sys_row1, textvariable=self.proc_k_var, width=6).pack(side=tk.LEFT, padx=5)
+        self.proc_k_entry = ttk.Entry(sys_row1, textvariable=self.proc_k_var, width=6)
+        self.proc_k_entry.pack(side=tk.LEFT, padx=5)
         ttk.Label(sys_row1, text="T").pack(side=tk.LEFT, padx=5)
         self.proc_t_var = tk.StringVar(value=str(self.process.T))
-        ttk.Entry(sys_row1, textvariable=self.proc_t_var, width=6).pack(side=tk.LEFT, padx=5)
+        self.proc_t_entry = ttk.Entry(sys_row1, textvariable=self.proc_t_var, width=6)
+        self.proc_t_entry.pack(side=tk.LEFT, padx=5)
         ttk.Label(sys_row1, text="Dötid").pack(side=tk.LEFT, padx=5)
         self.proc_dead_var = tk.StringVar(value=str(self.process.dead_time))
-        ttk.Entry(sys_row1, textvariable=self.proc_dead_var, width=6).pack(side=tk.LEFT, padx=5)
+        self.proc_dead_entry = ttk.Entry(sys_row1, textvariable=self.proc_dead_var, width=6)
+        self.proc_dead_entry.pack(side=tk.LEFT, padx=5)
         
         # ttk.Entry(sys_frame, textvariable=self.proc_k_var, width=6).grid(row=0, column=1)
         # ttk.Label(sys_frame, text="T").grid(row=0, column=2)
@@ -367,7 +410,8 @@ class PIDSimulatorApp:
         sys_row2 = ttk.Frame(sys_frame) 
         sys_row2.pack(fill=tk.X, padx=5, pady=2)
         ttk.Label(sys_row2, text="Normalvärde").pack(side=tk.LEFT, padx=5)
-        self.nv_entry = ttk.Entry(sys_row2, textvariable=self.nv_var, width=6).pack(side=tk.LEFT, padx=5)
+        self.nv_entry = ttk.Entry(sys_row2, textvariable=self.nv_var, width=6)
+        self.nv_entry.pack(side=tk.LEFT, padx=5)
         ttk.Button(sys_row2, text="Sätt NV", command=self.set_nv).pack(side=tk.LEFT, padx=5)
         
         # Tredje raden - Störningar
@@ -427,8 +471,16 @@ class PIDSimulatorApp:
         
         ttk.Label(pid_row1, text="Börvärde").pack(side=tk.LEFT, padx=5)
         self.sp_var = tk.StringVar(value=str(self.setpoint))
-        ttk.Entry(pid_row1, textvariable=self.sp_var, width=8).pack(side=tk.LEFT, padx=5)
-        ttk.Button(pid_row1, text="Sätt BV", command=self.set_setpoint).pack(side=tk.LEFT, padx=5)
+        self.sp_entry = ttk.Entry(pid_row1, textvariable=self.sp_var, width=8)
+        self.sp_entry.pack(side=tk.LEFT, padx=5)
+        
+        # Enhetsetikett för börvärde
+        if self.percent_mode_var.get():
+            initial_unit = "%"
+        else:
+            initial_unit = self.process_unit_var.get()
+        self.sp_unit_label = ttk.Label(pid_row1, text=initial_unit)
+        self.sp_unit_label.pack(side=tk.LEFT, padx=2)
         
         # Andra raden
         pid_row2 = ttk.Frame(pid_frame) 
@@ -497,7 +549,6 @@ class PIDSimulatorApp:
         ttk.Label(self.onoff_frame, text="Låg:").grid(row=0, column=6, padx=(5,2))
         self.onoff_low_entry = ttk.Entry(self.onoff_frame, textvariable=self.onoff_hysteresis_low, width=4)
         self.onoff_low_entry.grid(row=0, column=7)
-        ttk.Button(self.onoff_frame, text="Uppdatera", command=self.on_onoff_change).grid(row=0, column=8, padx=2)
         
         # Sjätte raden - Checkboxar
         pid_row6 = ttk.Frame(pid_frame)
@@ -516,6 +567,12 @@ class PIDSimulatorApp:
         self.manual_entry.pack(side=tk.LEFT, padx=5)
         self.manual_entry.configure(state="disabled")  # Inaktiverad från början
 
+        # Sjunde raden - Spara ändringar knapp
+        pid_row7 = ttk.Frame(pid_frame)
+        pid_row7.pack(fill=tk.X, padx=5, pady=10)
+        
+        ttk.Button(pid_row7, text="Spara ändringar", command=self.save_regulator_changes).pack(side=tk.RIGHT, padx=5)
+
         # Stegsvarsanalys och enhetsväxling
         analysis_frame = ttk.LabelFrame(frame, text="Stegsvarsanalys och visning")
         analysis_frame.pack(fill=tk.X, padx=5, pady=5)
@@ -526,16 +583,23 @@ class PIDSimulatorApp:
         
         ttk.Checkbutton(row1_frame, text="Visa i procent (%)", variable=self.percent_mode_var, command=self.on_percent_mode_change).pack(side=tk.LEFT, padx=5)
         
-        # Skalning för procentvisning
-        ttk.Label(row1_frame, text="Skalning - Min:").pack(side=tk.LEFT, padx=(20,2))
+        # Enhetsval
+        ttk.Label(row1_frame, text="Enhet:").pack(side=tk.LEFT, padx=(15,2))
+        unit_combo = ttk.Combobox(row1_frame, textvariable=self.process_unit_var, width=6, values=["°C", "bar", "m³/h", "kg/h", "rpm", "%", "V", "A"])
+        unit_combo.pack(side=tk.LEFT, padx=(0,15))
+        unit_combo.bind("<<ComboboxSelected>>", self.on_unit_change)
+        
+        # Graf-skalning (för inzoomning av y-axel)
+        ttk.Label(row1_frame, text="Graf-skala - Min:").pack(side=tk.LEFT, padx=(20,2))
         self.min_entry = ttk.Entry(row1_frame, textvariable=self.process_min, width=6)
         self.min_entry.pack(side=tk.LEFT)
+        
         ttk.Label(row1_frame, text="Max:").pack(side=tk.LEFT, padx=(5,2))
         self.max_entry = ttk.Entry(row1_frame, textvariable=self.process_max, width=6)
         self.max_entry.pack(side=tk.LEFT)
         
-        # Knapp för att återställa skalning
-        ttk.Button(row1_frame, text="Auto-skala", command=self.auto_scale).pack(side=tk.LEFT, padx=(5,0))
+        # Knapp för att återställa skalning till mätområdet
+        ttk.Button(row1_frame, text="Återställ", command=self.reset_scale).pack(side=tk.LEFT, padx=(5,0))
         
         # Andra raden - Status och export
         row2_frame = ttk.Frame(analysis_frame)
@@ -805,23 +869,339 @@ class PIDSimulatorApp:
     
     def on_percent_mode_change(self):
         """Hanterar växling till/från procentvisning"""
+        # Konvertera börvärdet mellan procent och fysiska enheter
+        try:
+            current_setpoint = float(str(self.sp_var.get()).replace(",", "."))
+        except ValueError:
+            current_setpoint = self.setpoint
+        
+        try:
+            if self.percent_mode_var.get():
+                # Växla till procentläge: konvertera från fysisk enhet till procent
+                # Använd mätområdet för korrekt procentberäkning
+                new_setpoint = (current_setpoint - self.matområde_min_var.get()) / (self.matområde_max_var.get() - self.matområde_min_var.get()) * 100
+                self.sp_var.set(f"{new_setpoint:.1f}")
+                self.sp_unit_label.config(text="%")
+            else:
+                # Växla från procentläge: konvertera från procent till fysisk enhet
+                # Använd mätområdet för korrekt fysisk enhetsberäkning
+                new_setpoint = self.matområde_min_var.get() + (current_setpoint / 100) * (self.matområde_max_var.get() - self.matområde_min_var.get())
+                self.sp_var.set(f"{new_setpoint:.1f}")
+                self.sp_unit_label.config(text=self.process_unit_var.get())
+        except ZeroDivisionError:
+            pass  # Undvik division med noll om max == min
+        
         self.update_plot()
         self.update_percent_status()
         
-    def auto_scale(self):
-        """Sätter automatisk skalning baserat på aktuella värden"""
-        if len(self.y) > 1:
-            # Använd faktiska min/max från data
-            min_val = min(min(self.y), min(self.sp)) - 5
-            max_val = max(max(self.y), max(self.sp)) + 5
-        else:
-            # Använd normalvärde och börvärde
-            nv = self.nv_var.get()
-            min_val = min(nv, self.setpoint) - 20
-            max_val = max(nv, self.setpoint) + 30
+    def on_unit_change(self, event=None):
+        """Hanterar ändringar av processenhet"""
+        # Uppdatera börvärde-etiketten om vi inte är i procentläge
+        if not self.percent_mode_var.get():
+            self.sp_unit_label.config(text=self.process_unit_var.get())
+        self.update_plot()
         
-        self.process_min.set(min_val)
-        self.process_max.set(max_val)
+    def on_scale_change(self, *args):
+        """Hanterar ändringar av mätområdet (min/max)"""
+        # Om vi är i procentläge behöver börvärdet uppdateras när mätområdet ändras
+        if self.percent_mode_var.get():
+            try:
+                # Hämta aktuella mätområdesvärden
+                min_val = self.matområde_min_var.get()
+                max_val = self.matområde_max_var.get()
+                
+                # Konvertera nuvarande setpoint till procent med nya mätområdet
+                current_setpoint_physical = self.setpoint  # Detta är det fysiska värdet
+                if max_val != min_val:  # Undvik division med noll
+                    new_setpoint_percent = (current_setpoint_physical - min_val) / (max_val - min_val) * 100
+                    self.sp_var.set(f"{new_setpoint_percent:.1f}")
+            except (ValueError, ZeroDivisionError, tk.TclError):
+                pass  # Undvik fel vid ogiltiga värden eller division med noll
+        
+        # Uppdatera grafen efter en kort fördröjning för att undvika spam
+        self.root.after(100, self.update_plot)
+        
+    def update_scale(self):
+        """Uppdaterar mätområdet och börvärdet när användaren klickar på Uppdatera-knappen"""
+        # Om vi är i procentläge behöver börvärdet uppdateras när mätområdet ändras
+        if self.percent_mode_var.get():
+            try:
+                # Hämta aktuella mätområdesvärden
+                min_val = self.matområde_min_var.get()
+                max_val = self.matområde_max_var.get()
+                
+                # Konvertera nuvarande setpoint till procent med nya mätområdet
+                current_setpoint_physical = self.setpoint  # Detta är det fysiska värdet
+                if max_val != min_val:  # Undvik division med noll
+                    new_setpoint_percent = (current_setpoint_physical - min_val) / (max_val - min_val) * 100
+                    self.sp_var.set(f"{new_setpoint_percent:.1f}")
+            except (ValueError, ZeroDivisionError, tk.TclError):
+                pass  # Undvik fel vid ogiltiga värden eller division med noll
+        
+        # Uppdatera grafen direkt
+        self.update_plot()
+        
+    def on_measurement_range_change(self, *args):
+        """Hanterar ändringar av mätområdet - uppdaterar skalning till samma värden"""
+        try:
+            # Sätt skalning till samma som mätområdet
+            self.process_min.set(self.matområde_min_var.get())
+            self.process_max.set(self.matområde_max_var.get())
+        except (ValueError, tk.TclError):
+            pass  # Undvik fel vid ogiltiga värden
+        
+    def setup_change_tracking(self):
+        """Sätter upp spårning av ändringar för alla fält i Regulatorparametrar-ramen"""
+        # Lista över alla tkinter-variabler i Regulatorparametrar-ramen
+        regulator_vars = [
+            self.sp_var, self.nv_var, self.kp_var, self.ti_var, self.td_var,
+            self.matområde_min_var, self.matområde_max_var, 
+            self.proc_k_var, self.proc_t_var, self.proc_dead_var, self.process_unit_var,
+            self.i_active_var, self.d_active_var, self.preset_mode
+        ]
+        
+        # Lägg till change callbacks för alla variabler
+        for var in regulator_vars:
+            var.trace_add('write', self.on_regulator_change)
+    
+    def on_regulator_change(self, *args):
+        """Anropas när någon parameter i Regulatorparametrar-ramen ändras"""
+        # Kontrollera om något verkligen har ändrats
+        if self.has_unsaved_changes():
+            self.highlight_unsaved_changes()
+        else:
+            self.clear_unsaved_highlights()
+    
+    def clear_unsaved_highlights(self):
+        """Återställer alla entry-fält till normal textfärg"""
+        # Lista över alla entry-widgets
+        entry_widgets = [
+            self.sp_entry, self.nv_entry, self.kp_entry, self.ti_entry, self.td_entry,
+            self.matområde_min_entry, self.matområde_max_entry,
+            self.proc_k_entry, self.proc_t_entry, self.proc_dead_entry
+        ]
+        
+        for widget in entry_widgets:
+            try:
+                # Återställ till normal svart textfärg
+                widget.configure(foreground='black')
+            except Exception as e:
+                pass
+
+    def highlight_unsaved_changes(self):
+        """Markerar endast de fält som faktiskt ändrats med röd textfärg"""
+        # Lista över alla entry-widgets och deras motsvarande sparade värden
+        widgets_and_params = [
+            (self.sp_entry, 'setpoint'),
+            (self.nv_entry, 'nv'),
+            (self.kp_entry, 'kp'),
+            (self.ti_entry, 'ti'),
+            (self.td_entry, 'td'),
+            (self.matområde_min_entry, 'matområde_min'),
+            (self.matområde_max_entry, 'matområde_max'),
+            (self.proc_k_entry, 'proc_k'),
+            (self.proc_t_entry, 'proc_t'),
+            (self.proc_dead_entry, 'proc_dead_time')
+        ]
+        
+        for widget, param_name in widgets_and_params:
+            try:
+                # Hämta aktuellt värde från widget
+                current_value = widget.get().strip()
+                # Hämta sparat värde och konvertera till samma format
+                saved_value = str(self.saved_params.get(param_name, '')).strip()
+                
+                # Normalisera värden för jämförelse (hantera float vs string)
+                try:
+                    # Försök konvertera båda till float för numerisk jämförelse
+                    if current_value == '':
+                        current_float = 0.0
+                    else:
+                        current_float = float(current_value.replace(',', '.'))
+                    saved_float = float(saved_value) if saved_value else 0.0
+                    
+                    # Jämför som float med en liten tolerans
+                    values_equal = abs(current_float - saved_float) < 0.0001
+                except ValueError:
+                    # Om någon inte kan konverteras till float, jämför som strängar
+                    values_equal = current_value == saved_value
+                
+                if not values_equal:
+                    # Värdet har ändrats - röd text
+                    widget.configure(foreground='red')
+                else:
+                    # Värdet är oförändrat - normal text
+                    widget.configure(foreground='black')
+                    
+            except Exception as e:
+                pass
+            except Exception:
+                pass
+            
+            try:
+                # Metod 2: Ändra direkt på widget (backup)
+                widget.configure(background='lightyellow', foreground='red', insertbackground='red')
+            except Exception:
+                pass
+                
+            try:
+                # Metod 3: Ändra parent frame för ram-effekt
+                parent = widget.master
+                parent.configure(bg='orange', relief='solid', bd=2)
+            except Exception:
+                pass
+                
+            # Metod 4: Fokus-trick för att aktivera highlight
+            try:
+                widget.selection_range(0, tk.END)  # Markera all text
+            except Exception:
+                pass
+        return False
+
+    def has_unsaved_changes(self):
+        """Kontrollerar om det finns osparade ändringar"""
+        # Lista över alla entry-widgets och deras motsvarande sparade värden
+        widgets_and_params = [
+            (self.sp_entry, 'setpoint'),
+            (self.nv_entry, 'nv'), 
+            (self.kp_entry, 'kp'),
+            (self.ti_entry, 'ti'),
+            (self.td_entry, 'td'),
+            (self.matområde_min_entry, 'matområde_min'),
+            (self.matområde_max_entry, 'matområde_max'),
+            (self.proc_k_entry, 'proc_k'),
+            (self.proc_t_entry, 'proc_t'),
+            (self.proc_dead_entry, 'proc_dead_time')
+        ]
+        
+        for widget, param_name in widgets_and_params:
+            try:
+                current_value = widget.get().strip()
+                saved_value = str(self.saved_params.get(param_name, '')).strip()
+                
+                # Normalisera värden för jämförelse (hantera float vs string)
+                try:
+                    # Försök konvertera båda till float för numerisk jämförelse
+                    if current_value == '':
+                        current_float = 0.0
+                    else:
+                        current_float = float(current_value.replace(',', '.'))
+                    saved_float = float(saved_value) if saved_value else 0.0
+                    
+                    # Jämför som float med en liten tolerans
+                    if abs(current_float - saved_float) >= 0.0001:
+                        return True
+                except ValueError:
+                    # Om någon inte kan konverteras till float, jämför som strängar
+                    if current_value != saved_value:
+                        return True
+            except Exception:
+                pass
+        return False
+    
+    def clear_unsaved_highlights(self):
+        """Återställer normal appearance för alla entry-fält"""
+        entry_widgets = [
+            self.sp_entry, self.nv_entry, self.kp_entry, self.ti_entry, self.td_entry,
+            self.matområde_min_entry, self.matområde_max_entry,
+            self.proc_k_entry, self.proc_t_entry, self.proc_dead_entry
+        ]
+        
+        # Återställ allt till normal
+        for widget in entry_widgets:
+            try:
+                # Återställ ttk style
+                widget.configure(style='TEntry')
+            except Exception:
+                pass
+                
+            try:
+                # Återställ direkta färger
+                widget.configure(background='white', foreground='black', insertbackground='black')
+            except Exception:
+                pass
+                
+            try:
+                # Återställ parent frame
+                parent = widget.master
+                parent.configure(bg='SystemButtonFace', relief='flat', bd=1)
+            except Exception:
+                pass
+                
+            try:
+                # Ta bort textmarkering
+                widget.selection_clear()
+            except Exception:
+                pass
+        
+        self.unsaved_changes = False
+        
+    def save_regulator_changes(self):
+        """Sparar alla ändringar i Regulatorparametrar-ramen"""
+        # Uppdatera sparade parametrar från GUI-värdena
+        self.saved_params['kp'] = self.parse_float(self.kp_var)
+        self.saved_params['ti'] = self.parse_float(self.ti_var)
+        self.saved_params['td'] = self.parse_float(self.td_var)
+        self.saved_params['i_active'] = self.i_active_var.get()
+        self.saved_params['d_active'] = self.d_active_var.get()
+        
+        # Uppdatera börvärde
+        try:
+            self.saved_params['setpoint'] = float(str(self.sp_var.get()).replace(",", "."))
+            self.setpoint = self.saved_params['setpoint']
+        except ValueError:
+            self.saved_params['setpoint'] = 0.0
+            self.setpoint = 0.0
+        
+        # Uppdatera mätområde
+        self.saved_params['matområde_min'] = self.matområde_min_var.get()
+        self.saved_params['matområde_max'] = self.matområde_max_var.get()
+        
+        # Uppdatera normalvärde
+        self.saved_params['nv'] = self.nv_var.get()
+        
+        # Uppdatera processparametrar
+        self.saved_params['proc_k'] = self.parse_float(self.proc_k_var)
+        self.saved_params['proc_t'] = self.parse_float(self.proc_t_var)
+        self.saved_params['proc_dead_time'] = self.parse_float(self.proc_dead_var)
+        
+        # Uppdatera utsignal gränser
+        self.saved_params['u_min'] = self.u_min_var.get()
+        self.saved_params['u_max'] = self.u_max_var.get()
+        self.u_min = self.saved_params['u_min'] 
+        self.u_max = self.saved_params['u_max']
+        
+        # Applicera sparade parametrar till PID-regulatorn
+        self.pid.Kp = self.saved_params['kp']
+        self.pid.Ti = self.saved_params['ti'] if self.saved_params['i_active'] else 1e6
+        self.pid.Td = self.saved_params['td'] if self.saved_params['d_active'] else 0.0
+        
+        # Uppdatera processmodellen
+        self.process.K = self.saved_params['proc_k']
+        self.process.T = self.saved_params['proc_t'] 
+        self.process.dead_time = self.saved_params['proc_dead_time']
+        self.process.normalvarde = self.saved_params['nv']
+        self.process.matområde_min = self.saved_params['matområde_min']
+        self.process.matområde_max = self.saved_params['matområde_max']
+        
+        # Uppdatera On/Off hysteresis
+        self.on_onoff_change()
+        
+        # Uppdatera manuellt läge
+        if self.manual_mode_var.get():
+            self.manual_output = self.parse_float(self.manual_output_var)
+        
+        # Nu när alla saved_params är uppdaterade, kör highlight för att återställa färgerna korrekt
+        self.highlight_unsaved_changes()
+        
+        # Uppdatera plot (utan att resetta historiken)
+        self.update_plot()
+        
+    def reset_scale(self):
+        """Återställer skalning till mätområdet"""
+        # Sätt skalning till samma som mätområdet
+        self.process_min.set(self.matområde_min_var.get())
+        self.process_max.set(self.matområde_max_var.get())
         self.update_plot()
         self.update_percent_status()
         
@@ -945,17 +1325,17 @@ class PIDSimulatorApp:
                 messagebox.showerror("Fel", f"Kunde inte spara data:\n{str(e)}")
                 
     def to_percent(self, value):
-        """Konvertera värde till procent baserat på min/max-skalning"""
-        min_val = self.process_min.get()
-        max_val = self.process_max.get()
+        """Konvertera värde till procent baserat på mätområdet"""
+        min_val = self.matområde_min_var.get()
+        max_val = self.matområde_max_var.get()
         if max_val == min_val:
             return 0.0
         return 100.0 * (value - min_val) / (max_val - min_val)
         
     def from_percent(self, percent):
-        """Konvertera från procent till verkligt värde"""
-        min_val = self.process_min.get()
-        max_val = self.process_max.get()
+        """Konvertera från procent till verkligt värde baserat på mätområdet"""
+        min_val = self.matområde_min_var.get()
+        max_val = self.matområde_max_var.get()
         return min_val + (max_val - min_val) * percent / 100.0
 
     def start(self):
@@ -1096,21 +1476,23 @@ class PIDSimulatorApp:
                         self._auto_paused = True
                         self.update_buttons()
                         return
-        # Hämta parametrar och hantera decimalkomma
-        self.pid.Kp = self.parse_float(self.kp_var)
-        Ti = self.parse_float(self.ti_var) if self.i_active_var.get() else 0.0
-        Td = self.parse_float(self.td_var) if self.d_active_var.get() else 0.0
+        # Hämta parametrar från sparade värden (inte GUI) 
+        self.pid.Kp = self.saved_params['kp']
+        Ti = self.saved_params['ti'] if self.saved_params['i_active'] else 0.0
+        Td = self.saved_params['td'] if self.saved_params['d_active'] else 0.0
         self.pid.Ti = Ti if Ti != 0 else 1e12  # undvik div 0, men ingen I-del om inaktiv
         self.pid.Td = Td
-        self.process.K = self.parse_float(self.proc_k_var)
-        self.process.T = self.validate_T_value(show_warning=False)  # Ingen varning under simulering
-        self.process.dead_time = self.parse_float(self.proc_dead_var)
+        # Använd sparat börvärde (inte GUI-värdet)
+        current_setpoint = self.saved_params['setpoint']
+        self.process.K = self.saved_params['proc_k']
+        self.process.T = self.saved_params['proc_t']
+        self.process.dead_time = self.saved_params['proc_dead_time']
         self.process.integrerande = self.integrerande_var.get()
         self.process.Fout = self.parse_float(self.proc_fout_var)
-        self.process.normalvarde = self.nv_var.get()  # Uppdatera normalvärdet varje steg
-        # Uppdatera mätområde och enhetslös K-inställningar
-        self.process.matområde_min = self.matområde_min_var.get()
-        self.process.matområde_max = self.matområde_max_var.get()
+        self.process.normalvarde = self.saved_params['nv']
+        # Uppdatera mätområde från sparade värden
+        self.process.matområde_min = self.saved_params['matområde_min']
+        self.process.matområde_max = self.saved_params['matområde_max']
         self.process.enhetslös_K = self.enhetslös_K_var.get()
         # --- Störningar ---
         noise_std = self.noise_std_var.get()
@@ -1131,21 +1513,21 @@ class PIDSimulatorApp:
             # Begränsa till 0-100%
             ctrl = max(0.0, min(100.0, ctrl))
             # Sätt PID-värden till 0 i manuellt läge
-            err = self.setpoint - pv
+            err = current_setpoint - pv
             integ = 0.0
             deriv = 0.0
         elif self.preset_mode.get() == "OnOff":
             # On/Off-reglering
-            ctrl = self.onoff_controller.step(self.setpoint, pv, umin=self.u_min, umax=self.u_max)
-            err = self.setpoint - pv
+            ctrl = self.onoff_controller.step(current_setpoint, pv, umin=self.saved_params['u_min'], umax=self.saved_params['u_max'])
+            err = current_setpoint - pv
             integ = 0.0
             deriv = 0.0
         else:
             # Automatiskt läge - PID-beräkning med skydd mot division med noll
             try:
                 ctrl, err, integ, deriv = self.pid.step(
-                    self.setpoint, pv,
-                    umin=self.u_min, umax=self.u_max,
+                    current_setpoint, pv,
+                    umin=self.saved_params['u_min'], umax=self.saved_params['u_max'],
                     antiwindup=self.antiwindup_var.get()
                 )
             except ZeroDivisionError:
@@ -1160,7 +1542,7 @@ class PIDSimulatorApp:
         self.e.append(err)
         self.i.append(integ if self.i_active_var.get() else None)
         self.d.append(deriv if self.d_active_var.get() else None)
-        self.sp.append(self.setpoint)
+        self.sp.append(current_setpoint)
         
         # Visa formel och resultat med delmoment
         if self.manual_mode_var.get():
@@ -1241,30 +1623,23 @@ class PIDSimulatorApp:
         if self.percent_mode_var.get():
             y_plot = [self.to_percent(val) for val in y]
             sp_plot = [self.to_percent(val) for val in sp]
+            # För procentvisning, använd alltid 0-100% skala
+            ymin, ymax = 0, 100
             ylabel = 'Processvärde (%)'
-            # För procentvisning, använd alltid 0-100% skala eller anpassa efter data
-            if len(y_plot) > 0:
-                data_min = min(min(y_plot), min(sp_plot) if sp_plot else 0)
-                data_max = max(max(y_plot), max(sp_plot) if sp_plot else 100)
-                # Lägg till marginal
-                margin = (data_max - data_min) * 0.1
-                ymin = max(-10, data_min - margin)  # Inte under -10%
-                ymax = min(110, data_max + margin)  # Inte över 110%
-            else:
-                ymin, ymax = 0, 100
         else:
             y_plot = y
             sp_plot = sp
-            ylabel = 'Processvärde'
-            # Vanlig skalning för verkliga värden
-            all_y = y_plot if len(y_plot) > 1 else [0, 1]
-            ymin, ymax = min(all_y), max(all_y)
-            if ymin == ymax:
-                ymin -= 1
-                ymax += 1
+            # För fysiska enheter, använd mätområdet som y-axel skala
+            ymin, ymax = self.process_min.get(), self.process_max.get()
+            ylabel = f'Processvärde ({self.process_unit_var.get()})'
             
         # Plotta
-        self.axs[0].plot(t, sp_plot, 'k--', label='Börvärde')
+        if self.percent_mode_var.get():
+            bv_label = 'Börvärde (%)'
+        else:
+            bv_label = f'Börvärde ({self.process_unit_var.get()})'
+        
+        self.axs[0].plot(t, sp_plot, 'k--', label=bv_label)
         self.axs[0].plot(t, y_plot, label='Är-värde')
         
         # Visa hysteresis-gränser för On/Off-reglering
@@ -1346,10 +1721,10 @@ class PIDSimulatorApp:
             self.axs[1].axhline(uu, color='gray', linewidth=0.3, alpha=0.5, zorder=0)
         self.axs[1].set_ylim(umin, umax)
         if self.manual_mode_var.get():
-            self.axs[1].set_ylabel('Styrsignal (%)')
+            self.axs[1].set_ylabel('Manuell styrsignal (%)')
             self.axs[1].set_xlabel('Tid')  # Visa x-axel i manuellt läge
         else:
-            self.axs[1].set_ylabel('Regulatorut')
+            self.axs[1].set_ylabel('Styrsignal (%)')
         self.axs[1].legend()
 
         # Nedersta: P, I, D-bidrag var för sig (endast i automatläge)
@@ -1400,7 +1775,13 @@ class PIDSimulatorApp:
             for vv in vticks:
                 self.axs[2].axhline(vv, color='gray', linewidth=0.3, alpha=0.5, zorder=0)
             self.axs[2].set_ylim(vmin, vmax)
-            self.axs[2].set_ylabel('Bidrag till u')
+            
+            # Förbättrad ylabel med enhetsinformation
+            if self.process_unit_var.get() == "Procent (%)":
+                self.axs[2].set_ylabel('PID-bidrag (%)')
+            else:
+                self.axs[2].set_ylabel(f'PID-bidrag ({self.process_unit_var.get()})')
+            
             self.axs[2].set_xlabel('Tid')
             self.axs[2].legend()
         # --- Prestandamått ---

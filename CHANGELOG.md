@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased] - 2025-09-01
+
+### Nya funktioner
+- **Visuell feedback för osparade ändringar**: Parameterfält som ändrats visas nu med röd textfärg för att tydligt markera osparade ändringar. Färgen återgår till svart när ändringar sparas.
+- **Smart jämförelse av parametervärden**: Systemet hanterar numeriska jämförelser korrekt (t.ex. "45" = "45.0") för att undvika falska varningar.
+- **Förbättrad användarupplevelse**: Sparknappen uppdaterar nu simuleringen utan att avbryta den, samtidigt som all visuell feedback återställs korrekt.
+
 ## [1.4.2] - 2025-08-25
 
 ### Bugfix
