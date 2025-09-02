@@ -1,11 +1,23 @@
 # Changelog
 
-## [Unreleased] - 2025-09-01
+## [Unreleased] - 2025-09-02
 
 ### Nya funktioner
-- **Visuell feedback för osparade ändringar**: Parameterfält som ändrats visas nu med röd textfärg för att tydligt markera osparade ändringar. Färgen återgår till svart när ändringar sparas.
-- **Smart jämförelse av parametervärden**: Systemet hanterar numeriska jämförelser korrekt (t.ex. "45" = "45.0") för att undvika falska varningar.
-- **Förbättrad användarupplevelse**: Sparknappen uppdaterar nu simuleringen utan att avbryta den, samtidigt som all visuell feedback återställs korrekt.
+- **Separerade sparfunktioner**: Implementerat separata "Spara"-knappar för Regulatorparametrar och Systemparametrar för bättre kontroll över vilka ändringar som sparas.
+- **Smart enhetskonvertering**: Automatisk växling mellan procent (%) och fysiska enheter triggar inte längre falska varningar om osparade ändringar.
+- **Korrekt beräkningslogik**: Börvärdet konverteras nu alltid till rätt enheter för PID-beräkningarna, oavsett om GUI visar procent eller fysiska enheter.
+
+### Förbättringar
+- **Förbättrad change tracking**: Visuell feedback för osparade ändringar fungerar nu korrekt vid alla enhetsväxlingar.
+- **Robust parameterhantering**: `saved_params` uppdateras automatiskt vid enhetskonverteringar för att säkerställa korrekt beteende.
+- **Pedagogisk korrekthet**: Användaren ser konsekvent information i vald enhet medan beräkningarna sker i korrekta enheter.
+
+### Tekniska förändringar
+- Ny `save_regulator_changes()` funktion för regulatorparametrar
+- Ny `save_system_changes()` funktion för systemparametrar  
+- Förbättrad `on_percent_mode_change()` med `_ignore_changes` flagga
+- Automatisk setpoint-konvertering i `simulate()` funktionen
+- Uppdaterad `saved_params` hantering för enhetskonverteringar
 
 ## [1.4.2] - 2025-08-25
 
