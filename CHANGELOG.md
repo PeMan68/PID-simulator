@@ -34,6 +34,12 @@
 - Förbättrad preset-hantering med dynamisk widget-visning
 - Graf-container för bättre layout av grafer och export-knappar
 
+### Bugfixar
+- **Preset-växling fix**: Automatisk sparning vid byte mellan P/PI/PID-preset för att säkerställa att GUI och simulation är synkroniserade.
+- **Ti=0 hantering**: P-reglering använder nu Ti=0 istället för 999999, med korrekt hantering i PID-algoritmen för att undvika division med noll.
+- **Simulationsnoggranhet**: Beräknade och faktiska utsignaler stämmer nu överens vid preset-växlingar.
+- **Graf-skala spara**: Spara-knappen för graf-skala återställer nu korrekt röd textmarkering.
+
 ## [1.4.2] - 2025-08-25
 
 ### Bugfix

@@ -120,7 +120,14 @@ class PID:
         # Beräkna preliminär integral
         integral_candidate = self.integral + error * self.dt
         derivative = (pv - self.prev_pv) / self.dt
-        u_unclamped = self.Kp * (error + (1/self.Ti)*integral_candidate - self.Td*derivative)
+        
+        # Hantera integral term - om Ti är 0 eller mycket liten, inaktivera I-verkan
+        if self.Ti > 0.001:  # Undvik division med noll
+            i_term = (1/self.Ti) * integral_candidate
+        else:
+            i_term = 0.0
+            
+        u_unclamped = self.Kp * (error + i_term - self.Td*derivative)
         # Begränsa utsignal
         u = max(umin, min(umax, u_unclamped))
         # Anti-windup: endast integrera om utsignalen inte är mättad, eller om antiwindup är av
@@ -825,7 +832,7 @@ class PIDSimulatorApp:
                 self.ti_frame.pack_forget()
                 self.td_frame.pack_forget()
                 self.kp_var.set("2.0")
-                self.ti_var.set("999999")  # Mycket stor Ti = ingen I-verkan
+                self.ti_var.set("0.0")  # Sätt Ti till 0 (mer pedagogiskt tydligt än 999999)
                 self.td_var.set("0.0")
                 self.i_active_var.set(False)
                 self.d_active_var.set(False)
@@ -847,6 +854,9 @@ class PIDSimulatorApp:
                 self.td_var.set("1.0")
                 self.i_active_var.set(True)
                 self.d_active_var.set(True)
+        
+        # Automatiskt spara ändringar vid preset-växling för att nya värden ska träda i kraft direkt
+        self.save_regulator_changes()
         
         # Uppdatera On/Off-regulator
         self.on_onoff_change()
