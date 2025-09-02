@@ -316,7 +316,9 @@ class PIDSimulatorApp:
             'proc_t': self.process.T,
             'proc_dead_time': self.process.dead_time,
             'u_min': self.u_min,
-            'u_max': self.u_max
+            'u_max': self.u_max,
+            'onoff_hysteresis_high': self.onoff_hysteresis_high.get(),
+            'onoff_hysteresis_low': self.onoff_hysteresis_low.get()
         }
         
         # GUI
@@ -516,19 +518,26 @@ class PIDSimulatorApp:
         self.pid_params_frame = ttk.Frame(pid_row4)
         self.pid_params_frame.pack(fill=tk.X, padx=5, pady=2)
         
+        # Kp (alltid synlig för P, PI, PID)
         ttk.Label(self.pid_params_frame, text="Kp").pack(side=tk.LEFT, padx=5)
         self.kp_var = tk.StringVar(value=str(self.pid.Kp))
         self.kp_entry = ttk.Entry(self.pid_params_frame, textvariable=self.kp_var, width=6)
         self.kp_entry.pack(side=tk.LEFT, padx=5)
         
-        ttk.Label(self.pid_params_frame, text="Ti").pack(side=tk.LEFT, padx=5)
+        # Ti (synlig för PI och PID)
+        self.ti_frame = ttk.Frame(self.pid_params_frame)
+        self.ti_frame.pack(side=tk.LEFT)
+        ttk.Label(self.ti_frame, text="Ti").pack(side=tk.LEFT, padx=5)
         self.ti_var = tk.StringVar(value=str(self.pid.Ti))
-        self.ti_entry = ttk.Entry(self.pid_params_frame, textvariable=self.ti_var, width=6)
+        self.ti_entry = ttk.Entry(self.ti_frame, textvariable=self.ti_var, width=6)
         self.ti_entry.pack(side=tk.LEFT, padx=5)
         
-        ttk.Label(self.pid_params_frame, text="Td").pack(side=tk.LEFT, padx=5)
+        # Td (synlig för PID)
+        self.td_frame = ttk.Frame(self.pid_params_frame)
+        self.td_frame.pack(side=tk.LEFT)
+        ttk.Label(self.td_frame, text="Td").pack(side=tk.LEFT, padx=5)
         self.td_var = tk.StringVar(value=str(self.pid.Td))
-        self.td_entry = ttk.Entry(self.pid_params_frame, textvariable=self.td_var, width=6)
+        self.td_entry = ttk.Entry(self.td_frame, textvariable=self.td_var, width=6)
         self.td_entry.pack(side=tk.LEFT, padx=5)
         
         # On/Off hysteresis-kontroller (samma rad som PID-parametrar)
@@ -567,7 +576,7 @@ class PIDSimulatorApp:
         
         # Spara regulatorparametrar knapp (flyttad upp för att spara utrymme)
         ttk.Button(pid_row5, text="Spara regulatorparametrar", command=self.save_regulator_changes).pack(side=tk.RIGHT, padx=5)
-
+ 
         # Stegsvarsanalys och enhetsväxling
         analysis_frame = ttk.LabelFrame(frame, text="Stegsvarsanalys och visning")
         analysis_frame.pack(fill=tk.X, padx=5, pady=5)
@@ -798,20 +807,29 @@ class PIDSimulatorApp:
             self.onoff_frame.pack_forget()
             self.pid_params_frame.pack(fill=tk.X, padx=5, pady=2)
             
-            # Sätt standard-parametrar och aktivering baserat på preset
+            # Visa/dölj Ti och Td baserat på preset
             if preset == "P":
+                # P-reglering: Visa bara Kp
+                self.ti_frame.pack_forget()
+                self.td_frame.pack_forget()
                 self.kp_var.set("2.0")
                 self.ti_var.set("999999")  # Mycket stor Ti = ingen I-verkan
                 self.td_var.set("0.0")
                 self.i_active_var.set(False)
                 self.d_active_var.set(False)
             elif preset == "PI":
+                # PI-reglering: Visa Kp och Ti
+                self.ti_frame.pack(side=tk.LEFT)
+                self.td_frame.pack_forget()
                 self.kp_var.set("2.0")
                 self.ti_var.set("10.0")
                 self.td_var.set("0.0")
                 self.i_active_var.set(True)
                 self.d_active_var.set(False)
             elif preset == "PID":
+                # PID-reglering: Visa alla parametrar
+                self.ti_frame.pack(side=tk.LEFT)
+                self.td_frame.pack(side=tk.LEFT)
                 self.kp_var.set("2.0")
                 self.ti_var.set("10.0")
                 self.td_var.set("1.0")
@@ -824,8 +842,8 @@ class PIDSimulatorApp:
     def on_onoff_change(self):
         """Uppdaterar On/Off-regulator-parametrar"""
         self.onoff_controller.hysteresis_type = self.onoff_hysteresis_type.get()
-        self.onoff_controller.hysteresis_high = float(self.onoff_hysteresis_high.get())
-        self.onoff_controller.hysteresis_low = float(self.onoff_hysteresis_low.get())
+        self.onoff_controller.hysteresis_high = self.onoff_hysteresis_high.get()
+        self.onoff_controller.hysteresis_low = self.onoff_hysteresis_low.get()
         
     def on_disturbance_change(self):
         """Aktiverar/inaktiverar signalstörningar och visar/döljer kontroller"""
@@ -910,6 +928,13 @@ class PIDSimulatorApp:
             self.saved_params['matområde_max'] = new_max_value
         except ValueError:
             pass
+            
+        # Uppdatera även hysteresis-parametrar så de inte blir röda efter enhetskonvertering
+        try:
+            self.saved_params['onoff_hysteresis_high'] = self.onoff_hysteresis_high.get()
+            self.saved_params['onoff_hysteresis_low'] = self.onoff_hysteresis_low.get()
+        except ValueError:
+            pass
         
         # Uppdatera highlighting för att säkerställa rätt färger
         self.highlight_unsaved_changes()
@@ -992,7 +1017,9 @@ class PIDSimulatorApp:
             self.sp_var, self.nv_var, self.kp_var, self.ti_var, self.td_var,
             self.matområde_min_var, self.matområde_max_var, 
             self.proc_k_var, self.proc_t_var, self.proc_dead_var, self.process_unit_var,
-            self.i_active_var, self.d_active_var, self.preset_mode
+            self.i_active_var, self.d_active_var, self.preset_mode,
+            self.onoff_hysteresis_high, self.onoff_hysteresis_low,
+            self.u_min_var, self.u_max_var
         ]
         
         # Lägg till change callbacks för alla variabler
@@ -1017,7 +1044,8 @@ class PIDSimulatorApp:
         entry_widgets = [
             self.sp_entry, self.nv_entry, self.kp_entry, self.ti_entry, self.td_entry,
             self.matområde_min_entry, self.matområde_max_entry,
-            self.proc_k_entry, self.proc_t_entry, self.proc_dead_entry
+            self.proc_k_entry, self.proc_t_entry, self.proc_dead_entry,
+            self.onoff_high_entry, self.onoff_low_entry
         ]
         
         for widget in entry_widgets:
@@ -1040,7 +1068,11 @@ class PIDSimulatorApp:
             (self.matområde_max_entry, 'matområde_max'),
             (self.proc_k_entry, 'proc_k'),
             (self.proc_t_entry, 'proc_t'),
-            (self.proc_dead_entry, 'proc_dead_time')
+            (self.proc_dead_entry, 'proc_dead_time'),
+            (self.onoff_high_entry, 'onoff_hysteresis_high'),
+            (self.onoff_low_entry, 'onoff_hysteresis_low'),
+            (self.u_min_entry, 'u_min'),
+            (self.u_max_entry, 'u_max')
         ]
         
         for widget, param_name in widgets_and_params:
@@ -1072,30 +1104,8 @@ class PIDSimulatorApp:
                     # Värdet är oförändrat - normal text
                     widget.configure(foreground='black')
                     
-            except Exception as e:
-                pass
             except Exception:
                 pass
-            
-            try:
-                # Metod 2: Ändra direkt på widget (backup)
-                widget.configure(background='lightyellow', foreground='red', insertbackground='red')
-            except Exception:
-                pass
-                
-            try:
-                # Metod 3: Ändra parent frame för ram-effekt
-                parent = widget.master
-                parent.configure(bg='orange', relief='solid', bd=2)
-            except Exception:
-                pass
-                
-            # Metod 4: Fokus-trick för att aktivera highlight
-            try:
-                widget.selection_range(0, tk.END)  # Markera all text
-            except Exception:
-                pass
-        return False
 
     def has_unsaved_changes(self):
         """Kontrollerar om det finns osparade ändringar"""
@@ -1110,7 +1120,11 @@ class PIDSimulatorApp:
             (self.matområde_max_entry, 'matområde_max'),
             (self.proc_k_entry, 'proc_k'),
             (self.proc_t_entry, 'proc_t'),
-            (self.proc_dead_entry, 'proc_dead_time')
+            (self.proc_dead_entry, 'proc_dead_time'),
+            (self.onoff_high_entry, 'onoff_hysteresis_high'),
+            (self.onoff_low_entry, 'onoff_hysteresis_low'),
+            (self.u_min_entry, 'u_min'),
+            (self.u_max_entry, 'u_max')
         ]
         
         for widget, param_name in widgets_and_params:
@@ -1143,7 +1157,9 @@ class PIDSimulatorApp:
         entry_widgets = [
             self.sp_entry, self.nv_entry, self.kp_entry, self.ti_entry, self.td_entry,
             self.matområde_min_entry, self.matområde_max_entry,
-            self.proc_k_entry, self.proc_t_entry, self.proc_dead_entry
+            self.proc_k_entry, self.proc_t_entry, self.proc_dead_entry,
+            self.onoff_high_entry, self.onoff_low_entry,
+            self.u_min_entry, self.u_max_entry
         ]
         
         # Återställ allt till normal
@@ -1213,6 +1229,10 @@ class PIDSimulatorApp:
         self.saved_params['u_max'] = self.u_max_var.get()
         self.u_min = self.saved_params['u_min'] 
         self.u_max = self.saved_params['u_max']
+        
+        # Uppdatera OnOff hysteresis-parametrar
+        self.saved_params['onoff_hysteresis_high'] = self.onoff_hysteresis_high.get()
+        self.saved_params['onoff_hysteresis_low'] = self.onoff_hysteresis_low.get()
         
         # Applicera sparade parametrar till PID-regulatorn
         self.pid.Kp = self.saved_params['kp']
