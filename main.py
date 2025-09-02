@@ -1542,8 +1542,19 @@ class PIDSimulatorApp:
         Td = self.saved_params['td'] if self.saved_params['d_active'] else 0.0
         self.pid.Ti = Ti if Ti != 0 else 1e12  # undvik div 0, men ingen I-del om inaktiv
         self.pid.Td = Td
-        # Använd sparat börvärde (inte GUI-värdet)
+        # Använd sparat börvärde och konvertera vid behov
         current_setpoint = self.saved_params['setpoint']
+        
+        # Konvertera setpoint till fysiska enheter om GUI visar procent
+        # (Processen arbetar alltid internt med fysiska enheter)
+        if self.percent_mode_var.get():
+            # Börvärdet är sparat som %, konvertera till fysisk enhet för beräkning
+            try:
+                mat_min = self.saved_params['matområde_min']
+                mat_max = self.saved_params['matområde_max']
+                current_setpoint = mat_min + (current_setpoint / 100.0) * (mat_max - mat_min)
+            except (ValueError, ZeroDivisionError):
+                pass  # Behåll originalvärdet om konvertering misslyckas
         self.process.K = self.saved_params['proc_k']
         self.process.T = self.saved_params['proc_t']
         self.process.dead_time = self.saved_params['proc_dead_time']
