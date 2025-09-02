@@ -4,20 +4,35 @@
 
 ### Nya funktioner
 - **Separerade sparfunktioner**: Implementerat separata "Spara"-knappar för Regulatorparametrar och Systemparametrar för bättre kontroll över vilka ändringar som sparas.
+- **Graf-skala sparfunktion**: Lagt till "Spara"-knapp för graf-skala med samma funktionalitet som andra parametrar - ändringar påverkar inte visningen förrän de sparas.
 - **Smart enhetskonvertering**: Automatisk växling mellan procent (%) och fysiska enheter triggar inte längre falska varningar om osparade ändringar.
 - **Korrekt beräkningslogik**: Börvärdet konverteras nu alltid till rätt enheter för PID-beräkningarna, oavsett om GUI visar procent eller fysiska enheter.
+- **Optimerad layout**: OnOff-preset som standard, kompakt parametervisning på en rad, export-knappar flyttade under graferna.
 
 ### Förbättringar
-- **Förbättrad change tracking**: Visuell feedback för osparade ändringar fungerar nu korrekt vid alla enhetsväxlingar.
+- **Förbättrad change tracking**: Visuell feedback för osparade ändringar fungerar nu korrekt för alla fält (hysteresis, utsignal min/max, graf-skala).
+- **Konsekvent sparlogik**: Alla parameterfält använder samma change tracking-system med röd text för osparade ändringar.
 - **Robust parameterhantering**: `saved_params` uppdateras automatiskt vid enhetskonverteringar för att säkerställa korrekt beteende.
 - **Pedagogisk korrekthet**: Användaren ser konsekvent information i vald enhet medan beräkningarna sker i korrekta enheter.
+- **Förbättrad hysteresis-hantering**: Hysteresis-plott och beräkningar uppdateras bara vid spara, inte i realtid.
+
+### UI/UX-förbättringar
+- **Standardpreset**: OnOff-regulator visas som standard för enklare introduktion
+- **Dynamisk parametervisning**: Ti/Td visas bara för relevanta presets (PI/PID)
+- **Kompakt layout**: Regulatorparametrar visas på en rad istället för flera
+- **Bättre organisation**: Export-funktioner flyttade under graferna för logisk gruppering
+- **Konsekvent textfeedback**: Alla entry-fält blir röda vid ändringar och svarta vid spara
 
 ### Tekniska förändringar
 - Ny `save_regulator_changes()` funktion för regulatorparametrar
 - Ny `save_system_changes()` funktion för systemparametrar  
+- Ny `save_graph_changes()` funktion för graf-skala
 - Förbättrad `on_percent_mode_change()` med `_ignore_changes` flagga
 - Automatisk setpoint-konvertering i `simulate()` funktionen
 - Uppdaterad `saved_params` hantering för enhetskonverteringar
+- Integrerad change tracking för alla parameterfält
+- Förbättrad preset-hantering med dynamisk widget-visning
+- Graf-container för bättre layout av grafer och export-knappar
 
 ## [1.4.2] - 2025-08-25
 
