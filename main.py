@@ -299,6 +299,7 @@ class PIDSimulatorApp:
         self.unsaved_changes = False
         self.changed_widgets = set()  # Set för att spåra vilka widgets som ändrats
         self.highlight_labels = {}  # Spara referenser till highlight-labels
+        self._ignore_changes = False  # Flagga för att ignorera automatiska ändringar
         
         # Sparade parametrar som används under simulering (uppdateras endast vid "Spara ändringar")
         self.saved_params = {
@@ -412,7 +413,7 @@ class PIDSimulatorApp:
         ttk.Label(sys_row2, text="Normalvärde").pack(side=tk.LEFT, padx=5)
         self.nv_entry = ttk.Entry(sys_row2, textvariable=self.nv_var, width=6)
         self.nv_entry.pack(side=tk.LEFT, padx=5)
-        ttk.Button(sys_row2, text="Sätt NV", command=self.set_nv).pack(side=tk.LEFT, padx=5)
+        ttk.Button(sys_row2, text="Spara systemparametrar", command=self.save_system_changes).pack(side=tk.RIGHT, padx=5)
         
         # Tredje raden - Störningar
         sys_row3 = ttk.Frame(sys_frame) 
@@ -566,12 +567,9 @@ class PIDSimulatorApp:
         self.manual_entry = ttk.Entry(pid_row6, textvariable=self.manual_output_var, width=6)
         self.manual_entry.pack(side=tk.LEFT, padx=5)
         self.manual_entry.configure(state="disabled")  # Inaktiverad från början
-
-        # Sjunde raden - Spara ändringar knapp
-        pid_row7 = ttk.Frame(pid_frame)
-        pid_row7.pack(fill=tk.X, padx=5, pady=10)
         
-        ttk.Button(pid_row7, text="Spara ändringar", command=self.save_regulator_changes).pack(side=tk.RIGHT, padx=5)
+        # Spara regulatorparametrar knapp (flyttad upp för att spara utrymme)
+        ttk.Button(pid_row6, text="Spara regulatorparametrar", command=self.save_regulator_changes).pack(side=tk.RIGHT, padx=5)
 
         # Stegsvarsanalys och enhetsväxling
         analysis_frame = ttk.LabelFrame(frame, text="Stegsvarsanalys och visning")
@@ -778,8 +776,6 @@ class PIDSimulatorApp:
             # Uppdatera hela dötidshistoriken med nya normalvärdet
             self.process.y_hist = [self.nv_var.get()] * len(self.process.y_hist)
             # Uppdatera den första punkten i plot-historiken
-            if len(self.y) > 0:
-                self.y[0] = self.nv_var.get()
         self.update_plot()
 
     def on_manual_mode_change(self):
@@ -869,6 +865,10 @@ class PIDSimulatorApp:
     
     def on_percent_mode_change(self):
         """Hanterar växling till/från procentvisning"""
+        
+        # Aktivera ignore-flagga under enhetskonvertering
+        self._ignore_changes = True
+        
         # Konvertera börvärdet mellan procent och fysiska enheter
         try:
             current_setpoint = float(str(self.sp_var.get()).replace(",", "."))
@@ -891,6 +891,32 @@ class PIDSimulatorApp:
         except ZeroDivisionError:
             pass  # Undvik division med noll om max == min
         
+        # Återaktivera change tracking
+        self._ignore_changes = False
+        
+        # Uppdatera saved_params för alla fält som påverkas av enhetskonvertering
+        # så att de nya konverterade värdena betraktas som "sparade"
+        try:
+            new_setpoint_value = float(str(self.sp_var.get()).replace(",", "."))
+            self.saved_params['setpoint'] = new_setpoint_value
+        except ValueError:
+            pass
+            
+        try:
+            new_min_value = self.matområde_min_var.get()
+            self.saved_params['matområde_min'] = new_min_value
+        except ValueError:
+            pass
+            
+        try:
+            new_max_value = self.matområde_max_var.get()
+            self.saved_params['matområde_max'] = new_max_value
+        except ValueError:
+            pass
+        
+        # Uppdatera highlighting för att säkerställa rätt färger
+        self.highlight_unsaved_changes()
+        
         self.update_plot()
         self.update_percent_status()
         
@@ -905,6 +931,9 @@ class PIDSimulatorApp:
         """Hanterar ändringar av mätområdet (min/max)"""
         # Om vi är i procentläge behöver börvärdet uppdateras när mätområdet ändras
         if self.percent_mode_var.get():
+            # Tillfälligt inaktivera change tracking under automatisk konvertering
+            self._ignore_changes = True
+            
             try:
                 # Hämta aktuella mätområdesvärden
                 min_val = self.matområde_min_var.get()
@@ -917,6 +946,9 @@ class PIDSimulatorApp:
                     self.sp_var.set(f"{new_setpoint_percent:.1f}")
             except (ValueError, ZeroDivisionError, tk.TclError):
                 pass  # Undvik fel vid ogiltiga värden eller division med noll
+            
+            # Återaktivera change tracking
+            self._ignore_changes = False
         
         # Uppdatera grafen efter en kort fördröjning för att undvika spam
         self.root.after(100, self.update_plot)
@@ -925,6 +957,9 @@ class PIDSimulatorApp:
         """Uppdaterar mätområdet och börvärdet när användaren klickar på Uppdatera-knappen"""
         # Om vi är i procentläge behöver börvärdet uppdateras när mätområdet ändras
         if self.percent_mode_var.get():
+            # Tillfälligt inaktivera change tracking under automatisk konvertering
+            self._ignore_changes = True
+            
             try:
                 # Hämta aktuella mätområdesvärden
                 min_val = self.matområde_min_var.get()
@@ -937,6 +972,9 @@ class PIDSimulatorApp:
                     self.sp_var.set(f"{new_setpoint_percent:.1f}")
             except (ValueError, ZeroDivisionError, tk.TclError):
                 pass  # Undvik fel vid ogiltiga värden eller division med noll
+            
+            # Återaktivera change tracking
+            self._ignore_changes = False
         
         # Uppdatera grafen direkt
         self.update_plot()
@@ -966,6 +1004,10 @@ class PIDSimulatorApp:
     
     def on_regulator_change(self, *args):
         """Anropas när någon parameter i Regulatorparametrar-ramen ändras"""
+        # Ignorera ändringar under automatiska konverteringar
+        if getattr(self, '_ignore_changes', False):
+            return
+            
         # Kontrollera om något verkligen har ändrats
         if self.has_unsaved_changes():
             self.highlight_unsaved_changes()
@@ -1137,8 +1179,8 @@ class PIDSimulatorApp:
         self.unsaved_changes = False
         
     def save_regulator_changes(self):
-        """Sparar alla ändringar i Regulatorparametrar-ramen"""
-        # Uppdatera sparade parametrar från GUI-värdena
+        """Sparar ändringar i Regulatorparametrar (Kp, Ti, Td, börvärde, mätområde, utsignal)"""
+        # Uppdatera sparade parametrar från GUI-värdena - endast regulatorparametrar
         self.saved_params['kp'] = self.parse_float(self.kp_var)
         self.saved_params['ti'] = self.parse_float(self.ti_var)
         self.saved_params['td'] = self.parse_float(self.td_var)
@@ -1154,16 +1196,20 @@ class PIDSimulatorApp:
             self.setpoint = 0.0
         
         # Uppdatera mätområde
+        old_matområde_min = self.saved_params.get('matområde_min', self.matområde_min_var.get())
+        old_matområde_max = self.saved_params.get('matområde_max', self.matområde_max_var.get())
         self.saved_params['matområde_min'] = self.matområde_min_var.get()
         self.saved_params['matområde_max'] = self.matområde_max_var.get()
         
-        # Uppdatera normalvärde
-        self.saved_params['nv'] = self.nv_var.get()
-        
-        # Uppdatera processparametrar
-        self.saved_params['proc_k'] = self.parse_float(self.proc_k_var)
-        self.saved_params['proc_t'] = self.parse_float(self.proc_t_var)
-        self.saved_params['proc_dead_time'] = self.parse_float(self.proc_dead_var)
+        # Kontrollera om mätområdet har ändrats och uppdatera graf-skalan automatiskt
+        if (old_matområde_min != self.saved_params['matområde_min'] or 
+            old_matområde_max != self.saved_params['matområde_max']):
+            # Återställ graf-skalan till det nya mätområdet
+            self.process_min.set(self.saved_params['matområde_min'])
+            self.process_max.set(self.saved_params['matområde_max'])
+            # Uppdatera processmodellen
+            self.process.matområde_min = self.saved_params['matområde_min']
+            self.process.matområde_max = self.saved_params['matområde_max']
         
         # Uppdatera utsignal gränser
         self.saved_params['u_min'] = self.u_min_var.get()
@@ -1176,20 +1222,34 @@ class PIDSimulatorApp:
         self.pid.Ti = self.saved_params['ti'] if self.saved_params['i_active'] else 1e6
         self.pid.Td = self.saved_params['td'] if self.saved_params['d_active'] else 0.0
         
-        # Uppdatera processmodellen
-        self.process.K = self.saved_params['proc_k']
-        self.process.T = self.saved_params['proc_t'] 
-        self.process.dead_time = self.saved_params['proc_dead_time']
-        self.process.normalvarde = self.saved_params['nv']
-        self.process.matområde_min = self.saved_params['matområde_min']
-        self.process.matområde_max = self.saved_params['matområde_max']
-        
         # Uppdatera On/Off hysteresis
         self.on_onoff_change()
         
         # Uppdatera manuellt läge
         if self.manual_mode_var.get():
             self.manual_output = self.parse_float(self.manual_output_var)
+        
+        # Nu när alla saved_params är uppdaterade, kör highlight för att återställa färgerna korrekt
+        self.highlight_unsaved_changes()
+        
+        # Uppdatera plot (utan att resetta historiken)
+        self.update_plot()
+    
+    def save_system_changes(self):
+        """Sparar ändringar i Systemparametrar (normalvärde, processparametrar)"""
+        # Uppdatera normalvärde
+        self.saved_params['nv'] = self.nv_var.get()
+        
+        # Uppdatera processparametrar
+        self.saved_params['proc_k'] = self.parse_float(self.proc_k_var)
+        self.saved_params['proc_t'] = self.parse_float(self.proc_t_var)
+        self.saved_params['proc_dead_time'] = self.parse_float(self.proc_dead_var)
+        
+        # Uppdatera processmodellen
+        self.process.K = self.saved_params['proc_k']
+        self.process.T = self.saved_params['proc_t'] 
+        self.process.dead_time = self.saved_params['proc_dead_time']
+        self.process.normalvarde = self.saved_params['nv']
         
         # Nu när alla saved_params är uppdaterade, kör highlight för att återställa färgerna korrekt
         self.highlight_unsaved_changes()
@@ -1784,6 +1844,7 @@ class PIDSimulatorApp:
             
             self.axs[2].set_xlabel('Tid')
             self.axs[2].legend()
+        
         # --- Prestandamått ---
         # Spara prestandamått i en lista för framtida jämförelser
         if not hasattr(self, 'performance_history'):
