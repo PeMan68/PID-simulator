@@ -276,7 +276,7 @@ class PIDSimulatorApp:
         self.manual_output_var = tk.DoubleVar(value=0.0)
         
         # Preset-kontroller
-        self.preset_mode = tk.StringVar(value="PID")  # "OnOff", "P", "PI", "PID"
+        self.preset_mode = tk.StringVar(value="OnOff")  # "OnOff", "P", "PI", "PID"
         self.signal_disturbance_var = tk.BooleanVar(value=False)
         
         # On/Off regulator-parametrar
@@ -508,9 +508,10 @@ class PIDSimulatorApp:
         self.u_max_entry = ttk.Entry(pid_row3, textvariable=self.u_max_var, width=6)
         self.u_max_entry.pack(side=tk.LEFT, padx=5)
 
-        # Fjärde raden
+        # Fjärde raden - Alla regulatorparametrar
         pid_row4 = ttk.Frame(pid_frame)
         pid_row4.pack(fill=tk.X, padx=5, pady=2)
+        
         # PID-parametrar
         self.pid_params_frame = ttk.Frame(pid_row4)
         self.pid_params_frame.pack(fill=tk.X, padx=5, pady=2)
@@ -530,12 +531,8 @@ class PIDSimulatorApp:
         self.td_entry = ttk.Entry(self.pid_params_frame, textvariable=self.td_var, width=6)
         self.td_entry.pack(side=tk.LEFT, padx=5)
         
-        # Femte raden 
-        pid_row5 = ttk.Frame(pid_frame)
-        pid_row5.pack(fill=tk.X, padx=5, pady=2)
-        
-        # On/Off hysteresis-kontroller
-        self.onoff_frame = ttk.Frame(pid_row5)
+        # On/Off hysteresis-kontroller (samma rad som PID-parametrar)
+        self.onoff_frame = ttk.Frame(pid_row4)
         self.onoff_frame.pack(fill=tk.X, padx=5, pady=2)
         
         ttk.Label(self.onoff_frame, text="Hysteresis:").grid(row=0, column=0, padx=2)
@@ -550,26 +547,26 @@ class PIDSimulatorApp:
         ttk.Label(self.onoff_frame, text="Låg:").grid(row=0, column=6, padx=(5,2))
         self.onoff_low_entry = ttk.Entry(self.onoff_frame, textvariable=self.onoff_hysteresis_low, width=4)
         self.onoff_low_entry.grid(row=0, column=7)
-        
-        # Sjätte raden - Checkboxar
-        pid_row6 = ttk.Frame(pid_frame)
-        pid_row6.pack(fill=tk.X, padx=5, pady=2)
+
+        # Femte raden - Checkboxar
+        pid_row5 = ttk.Frame(pid_frame)
+        pid_row5.pack(fill=tk.X, padx=5, pady=2)
         
         # Anti-windup checkbox
-        self.antiwindup_check = ttk.Checkbutton(pid_row6, text="Anti-windup", variable=self.antiwindup_var)
+        self.antiwindup_check = ttk.Checkbutton(pid_row5, text="Anti-windup", variable=self.antiwindup_var)
         self.antiwindup_check.pack(side=tk.LEFT, padx=(0,20))
  
         # Manuellt läge
-        self.manual_check = ttk.Checkbutton(pid_row6, text="Manuellt läge", variable=self.manual_mode_var, command=self.on_manual_mode_change)
+        self.manual_check = ttk.Checkbutton(pid_row5, text="Manuellt läge", variable=self.manual_mode_var, command=self.on_manual_mode_change)
         self.manual_check.pack(side=tk.LEFT, padx=(0,10))
         
-        ttk.Label(pid_row6, text="Manuell ut (%):").pack(side=tk.LEFT)
-        self.manual_entry = ttk.Entry(pid_row6, textvariable=self.manual_output_var, width=6)
+        ttk.Label(pid_row5, text="Manuell ut (%):").pack(side=tk.LEFT)
+        self.manual_entry = ttk.Entry(pid_row5, textvariable=self.manual_output_var, width=6)
         self.manual_entry.pack(side=tk.LEFT, padx=5)
         self.manual_entry.configure(state="disabled")  # Inaktiverad från början
         
         # Spara regulatorparametrar knapp (flyttad upp för att spara utrymme)
-        ttk.Button(pid_row6, text="Spara regulatorparametrar", command=self.save_regulator_changes).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(pid_row5, text="Spara regulatorparametrar", command=self.save_regulator_changes).pack(side=tk.RIGHT, padx=5)
 
         # Stegsvarsanalys och enhetsväxling
         analysis_frame = ttk.LabelFrame(frame, text="Stegsvarsanalys och visning")
@@ -793,13 +790,13 @@ class PIDSimulatorApp:
         
         if preset == "OnOff":
             # Visa On/Off-kontroller, dölj PID-parametrar och irrelevanta kontroller
-            self.onoff_frame.grid()
-            self.pid_params_frame.grid_remove()
+            self.onoff_frame.pack(fill=tk.X, padx=5, pady=2)
+            self.pid_params_frame.pack_forget()
                 
         else:
             # Dölj On/Off-kontroller, visa PID-parametrar
-            self.onoff_frame.grid_remove()
-            self.pid_params_frame.grid()
+            self.onoff_frame.pack_forget()
+            self.pid_params_frame.pack(fill=tk.X, padx=5, pady=2)
             
             # Sätt standard-parametrar och aktivering baserat på preset
             if preset == "P":
