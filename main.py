@@ -5,6 +5,109 @@ import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+import os
+
+# --- Tooltip-klass för hjälpsystem ---
+class ToolTip:
+    """
+    Skapar tooltips som visas vid hover över widgets.
+    """
+    def __init__(self, widget, text, delay=1000):
+        self.widget = widget
+        self.text = text
+        self.delay = delay
+        self.tooltip_window = None
+        self.timer_id = None
+        
+        # Bind events
+        self.widget.bind("<Enter>", self.on_enter)
+        self.widget.bind("<Leave>", self.on_leave)
+        self.widget.bind("<Motion>", self.on_motion)
+    
+    def on_enter(self, event=None):
+        """Startar timer när musen kommer över widget"""
+        self.cancel_timer()
+        self.timer_id = self.widget.after(self.delay, self.show_tooltip)
+    
+    def on_leave(self, event=None):
+        """Döljer tooltip när musen lämnar widget"""
+        self.cancel_timer()
+        self.hide_tooltip()
+    
+    def on_motion(self, event=None):
+        """Återstartar timer vid musrörelse"""
+        self.cancel_timer()
+        self.timer_id = self.widget.after(self.delay, self.show_tooltip)
+    
+    def cancel_timer(self):
+        """Avbryter pending timer"""
+        if self.timer_id:
+            self.widget.after_cancel(self.timer_id)
+            self.timer_id = None
+    
+    def show_tooltip(self):
+        """Visar tooltip-rutan"""
+        if self.tooltip_window:
+            return
+            
+        x = self.widget.winfo_rootx() + 25
+        y = self.widget.winfo_rooty() + 25
+        
+        self.tooltip_window = tw = tk.Toplevel(self.widget)
+        tw.wm_overrideredirect(True)
+        tw.wm_geometry(f"+{x}+{y}")
+        
+        # Skapa tooltip-innehåll
+        frame = tk.Frame(tw, background="#ffffe0", relief="solid", borderwidth=1)
+        frame.pack()
+        
+        label = tk.Label(frame, text=self.text, background="#ffffe0", 
+                        font=("Arial", "9"), wraplength=300, justify="left")
+        label.pack(padx=2, pady=2)
+    
+    def hide_tooltip(self):
+        """Döljer tooltip-rutan"""
+        if self.tooltip_window:
+            self.tooltip_window.destroy()
+            self.tooltip_window = None
+
+# --- Hjälptextsystem ---
+HELP_TEXTS = {
+    # Regulatorparametrar
+    "kp": "Proportionalförstärkning - hur kraftigt regulatorn reagerar på avvikelser från börvärdet.",
+    "ti": "Integreringstid - hur snabbt regulatorn eliminerar kvarstående fel. Lägre värde = snabbare elimination.",
+    "td": "Deriveringstid - hur regulatorn förutser förändringar. Motverkar snabba förändringar i processvärdet.",
+    "preset": "Välj regulatortyp: OnOff (tvånivå), P (bara proportionell), PI (P+I), PID (alla komponenter).",
+    "setpoint": "Börvärde - det värde som processen ska regleras mot.",
+    "umin": "Minsta utsignal från regulatorn (%).",
+    "umax": "Största utsignal från regulatorn (%).",
+    "antiwindup": "Förhindrar att integratorn 'vindar upp' när utsignalen är mättad (på min/max).",
+    "manuellt": "Manuellt läge - regulatorn är frånkopplad, utsignalen styrs manuellt.",
+    "manual_out": "Manuell utsignal när manuellt läge är aktiverat.",
+    
+    # On/Off specifikt
+    "hysteresis_mode": "Var hysteresisen ska tillämpas: Över börvärdet, Under börvärdet, eller Båda sidorna.",
+    "hysteresis_high": "Hysteresis över börvärdet - hur mycket över börvärdet processen får gå innan avstängning.",
+    "hysteresis_low": "Hysteresis under börvärdet - hur mycket under börvärdet processen får gå innan påslagning.",
+    
+    # Systemparametrar
+    "process_k": "Processförstärkning - hur mycket processvärdet ändras när styrsignalen ändras.",
+    "process_t": "Tidskonstant - hur snabbt processen reagerar på förändringar i styrsignalen.",
+    "process_dead": "Dötid - fördröjning innan processen börjar reagera på styrsignalförändringar.",
+    "integrerande": "Integrerande process - processvariabler som naturligt ackumulerar (ex. nivå i tank).",
+    "fout": "Utflöde från processen (för integrerande processer som nivåreglering).",
+    "normalvarde": "Normalvärde - det värde processen har vid 0% styrsignal.",
+    "matområde_min": "Nedre gräns för mätområdet i fysiska enheter.",
+    "matområde_max": "Övre gräns för mätområdet i fysiska enheter.",
+    "enhetslös_k": "Enhetslös K - använd industristandard (%/%) istället för traditionell (°C/%) förstärkning.",
+    "percent_mode": "Visa parametrar i procent av mätområdet istället för fysiska enheter.",
+    "signalstörning": "Aktivera/inaktivera alla typer av signalstörningar på processen.",
+    
+    # Graf och export
+    "graf_skala": "Min och max för värde-axeln.",
+    "export_graf": "Exportera aktuella grafer som PNG-bild.",
+    "export_data": "Exportera simuleringsdata som CSV-fil för vidare analys."
+}
 
 # --- Processmodeller ---
 class Process:
@@ -362,7 +465,20 @@ class PIDSimulatorApp:
         except Exception:
             pass  # Ignorera om style inte kan sättas
             
-        frame = ttk.Frame(self.root)
+        # Huvudcontainer med notebook för flikar
+        self.notebook = ttk.Notebook(self.root)
+        self.notebook.pack(fill=tk.BOTH, expand=True)
+        
+        # Simulator-flik
+        self.simulator_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.simulator_frame, text="Simulator")
+        
+        # Hjälp-flik
+        self.help_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.help_frame, text="Hjälp")
+        
+        # Skapa simulator-innehåll i vänster panel
+        frame = ttk.Frame(self.simulator_frame)
         frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
         # Preset-kontroller (överst)
@@ -672,8 +788,8 @@ class PIDSimulatorApp:
         ttk.Button(window_frame, text="<", command=self.window_back).pack(side=tk.LEFT, padx=2)
         ttk.Button(window_frame, text=">", command=self.window_forward).pack(side=tk.LEFT, padx=2)
         
-        # Skapa en container för grafer och export-knappar
-        graph_container = ttk.Frame(self.root)
+        # Skapa en container för grafer och export-knappar (i simulator-fliken)
+        graph_container = ttk.Frame(self.simulator_frame)
         graph_container.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         
         # Plott
@@ -693,6 +809,214 @@ class PIDSimulatorApp:
         self.on_preset_change()  # Sätt korrekt synlighet för regulator-kontroller
         self.on_disturbance_change()  # Sätt korrekt synlighet för störningskontroller
         self.on_integrerande_change()  # Sätt korrekt synlighet för utflöde
+        
+        # Skapa hjälp-innehåll
+        self.create_help_content()
+        
+        # Skapa tooltips för viktiga fält
+        self.create_tooltips()
+
+    def create_tooltips(self):
+        """Skapar tooltips för alla viktiga widgets"""
+        # Regulatorparametrar
+        ToolTip(self.kp_entry, HELP_TEXTS["kp"])
+        ToolTip(self.ti_entry, HELP_TEXTS["ti"])
+        ToolTip(self.td_entry, HELP_TEXTS["td"])
+        ToolTip(self.sp_entry, HELP_TEXTS["setpoint"])
+        
+        # Systemparametrar
+        ToolTip(self.proc_k_entry, HELP_TEXTS["process_k"])
+        ToolTip(self.proc_t_entry, HELP_TEXTS["process_t"])
+        ToolTip(self.proc_dead_entry, HELP_TEXTS["process_dead"])
+        ToolTip(self.nv_entry, HELP_TEXTS["normalvarde"])
+        
+        # Utsignal-begränsningar
+        ToolTip(self.u_min_entry, HELP_TEXTS["umin"])
+        ToolTip(self.u_max_entry, HELP_TEXTS["umax"])
+        
+        # OnOff-specifika kontroller
+        ToolTip(self.onoff_high_entry, HELP_TEXTS["hysteresis_high"])
+        ToolTip(self.onoff_low_entry, HELP_TEXTS["hysteresis_low"])
+        
+        # Graf-skala
+        ToolTip(self.min_entry, HELP_TEXTS["graf_skala"])
+        ToolTip(self.max_entry, HELP_TEXTS["graf_skala"])
+        
+        # Manual output
+        ToolTip(self.manual_entry, HELP_TEXTS["manual_out"])
+        
+        # Checkboxes och viktiga val
+        for widget in self.root.winfo_children():
+            self._add_tooltips_recursive(widget)
+    
+    def _add_tooltips_recursive(self, widget):
+        """Hjälpmetod för att hitta widgets rekursivt och lägga till tooltips"""
+        widget_text = ""
+        try:
+            if hasattr(widget, 'cget'):
+                widget_text = widget.cget('text').lower()
+        except:
+            pass
+            
+        # Lägg till tooltips baserat på widget-text
+        if 'anti-windup' in widget_text:
+            ToolTip(widget, HELP_TEXTS["antiwindup"])
+        elif 'manuellt läge' in widget_text:
+            ToolTip(widget, HELP_TEXTS["manuellt"])
+        elif 'enhetslös k' in widget_text:
+            ToolTip(widget, HELP_TEXTS["enhetslös_k"])
+        elif 'integrerande' in widget_text:
+            ToolTip(widget, HELP_TEXTS["integrerande"])
+        elif 'signalstörning' in widget_text:
+            ToolTip(widget, HELP_TEXTS["signalstörning"])
+        elif 'exportera grafer' in widget_text:
+            ToolTip(widget, HELP_TEXTS["export_graf"])
+        elif 'spara data' in widget_text:
+            ToolTip(widget, HELP_TEXTS["export_data"])
+        elif 'över börvärdet' in widget_text:
+            ToolTip(widget, "Hysteresis tillämpas endast över börvärdet - processen stängs av när den överskrider börvärdet + hysteresis.")
+        elif 'under börvärdet' in widget_text:
+            ToolTip(widget, "Hysteresis tillämpas endast under börvärdet - processen startas när den underskrider börvärdet - hysteresis.")
+        elif 'båda sidorna' in widget_text:
+            ToolTip(widget, "Hysteresis tillämpas på båda sidorna av börvärdet för maximal stabilitet.")
+        elif any(preset in widget_text for preset in ['on/off', 'p-reglering', 'pi-reglering', 'pid-reglering']):
+            ToolTip(widget, HELP_TEXTS["preset"])
+            
+        # Rekursivt genom alla barn-widgets
+        for child in widget.winfo_children():
+            self._add_tooltips_recursive(child)
+
+    def create_help_content(self):
+        """Skapar hjälpinnehållet i hjälp-fliken"""
+        # Scrollbar för hjälptext
+        help_canvas = tk.Canvas(self.help_frame)
+        help_scrollbar = ttk.Scrollbar(self.help_frame, orient="vertical", command=help_canvas.yview)
+        help_content_frame = ttk.Frame(help_canvas)
+        
+        help_content_frame.bind(
+            "<Configure>",
+            lambda e: help_canvas.configure(scrollregion=help_canvas.bbox("all"))
+        )
+        
+        help_canvas.create_window((0, 0), window=help_content_frame, anchor="nw")
+        help_canvas.configure(yscrollcommand=help_scrollbar.set)
+        
+        help_canvas.pack(side="left", fill="both", expand=True)
+        help_scrollbar.pack(side="right", fill="y")
+        
+        # Läs hjälpfil om den finns
+        help_file_path = os.path.join(os.path.dirname(__file__), "help.md")
+        help_content = ""
+        
+        try:
+            with open(help_file_path, 'r', encoding='utf-8') as f:
+                help_content = f.read()
+                # Ta bort alla potentiellt problematiska unicode-tecken
+                import re
+                help_content = re.sub(r'[^\u0000-\uFFFF]', '', help_content)
+        except FileNotFoundError:
+            help_content = "# Hjälpfil hittades inte\n\nAnvänd tooltips genom att hovra över fält för snabb hjälp."
+        
+        # Enkel markdown-parsing för visning
+        self.display_markdown(help_content_frame, help_content)
+        
+        # Bind mushjul till scrollning - behöver bindas till alla widgets
+        def _on_mousewheel(event):
+            help_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        # Rekursiv binding av mushjul till alla widgets i hjälp-framen
+        def bind_mousewheel_recursive(widget):
+            widget.bind("<MouseWheel>", _on_mousewheel)
+            for child in widget.winfo_children():
+                bind_mousewheel_recursive(child)
+        
+        bind_mousewheel_recursive(self.help_frame)
+        
+    def display_markdown(self, parent, markdown_text):
+        """Enkel markdown-renderer för hjälptext"""
+        lines = markdown_text.split('\n')
+        
+        for line in lines:
+            line = line.strip()
+            
+            if not line:
+                # Tom rad
+                ttk.Label(parent, text="").pack(anchor="w", pady=2)
+                continue
+                
+            if line.startswith('# '):
+                # Huvudrubrik
+                title = line[2:]
+                label = tk.Label(parent, text=title, font=("Arial", 16, "bold"), fg="blue")
+                label.pack(anchor="w", pady=(10, 5))
+                
+            elif line.startswith('## '):
+                # Underrubrik
+                subtitle = line[3:]
+                label = tk.Label(parent, text=subtitle, font=("Arial", 14, "bold"), fg="darkblue")
+                label.pack(anchor="w", pady=(8, 3))
+                
+            elif line.startswith('### '):
+                # Mindre rubrik
+                subsubtitle = line[4:]
+                label = tk.Label(parent, text=subsubtitle, font=("Arial", 12, "bold"), fg="darkgreen")
+                label.pack(anchor="w", pady=(5, 2))
+                
+            elif line.startswith('#### '):
+                # Minsta rubrik
+                small_title = line[5:]
+                label = tk.Label(parent, text=small_title, font=("Arial", 10, "bold"), fg="darkred")
+                label.pack(anchor="w", pady=(3, 1))
+                
+            elif line.startswith('- ') or line.startswith('* '):
+                # Listpunkt (hantera fetstil inom listpunkter)
+                bullet_text = line[2:]
+                self.create_mixed_text_label(parent, f"• {bullet_text}", padx=20, pady=1)
+                
+            elif '**' in line:
+                # Fetstil (hantera blandad text)
+                self.create_mixed_text_label(parent, line, padx=0, pady=1)
+                
+            elif line.startswith('```'):
+                # Kodblock (ignorera för nu)
+                continue
+                
+            else:
+                # Vanlig text
+                label = tk.Label(parent, text=line, wraplength=700, justify="left", font=("Arial", 9))
+                label.pack(anchor="w", pady=1)
+
+    def create_mixed_text_label(self, parent, text, padx=0, pady=1):
+        """Skapar en label med blandad text (normal + fetstil)"""
+        # Skapa en frame för att hålla text-delar
+        text_frame = tk.Frame(parent)
+        text_frame.pack(anchor="w", padx=padx, pady=pady, fill="x")
+        
+        # Dela upp texten i delar baserat på **
+        parts = text.split('**')
+        current_row = tk.Frame(text_frame)
+        current_row.pack(anchor="w", fill="x")
+        
+        for i, part in enumerate(parts):
+            if part:  # Hoppa över tomma delar
+                if i % 2 == 1:  # Udda index = mellan ** ** (fet text)
+                    font = ("Arial", 9, "bold")
+                else:  # Jämn index = vanlig text
+                    font = ("Arial", 9)
+                
+                # Hantera radbrytningar inom texten
+                if '\n' in part:
+                    lines = part.split('\n')
+                    for j, line_part in enumerate(lines):
+                        if line_part:
+                            label = tk.Label(current_row, text=line_part, font=font)
+                            label.pack(side="left")
+                        if j < len(lines) - 1:  # Inte sista delen
+                            current_row = tk.Frame(text_frame)
+                            current_row.pack(anchor="w", fill="x")
+                else:
+                    label = tk.Label(current_row, text=part, font=font)
+                    label.pack(side="left")
 
     def trigger_pulse(self):
         # Aktivera puls-störning

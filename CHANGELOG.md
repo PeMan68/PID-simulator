@@ -3,6 +3,11 @@
 ## [Unreleased] - 2025-09-02
 
 ### Nya funktioner
+- **Hjälpsystem med tooltips**: Hover-tooltips på alla viktiga fält med 1 sekunds fördröjning för pedagogisk guidning.
+- **Hjälp-flik**: Inbyggd hjälpdokumentation med omfattande förklaringar av alla parametrar och koncept.
+- **Avancerad markdown-rendering**: Formaterad hjälptext med rubriker, listor och korrekt partiell fetstil för blandad text.
+- **Mushjuls-scrollning**: Responsiv scrollning i hjälp-fliken oavsett var musen befinner sig.
+- **Kontextuell hjälp**: Tooltips anpassade för nybörjare inom reglerteknik med förklaringar av komplicerade begrepp.
 - **Separerade sparfunktioner**: Implementerat separata "Spara"-knappar för Regulatorparametrar och Systemparametrar för bättre kontroll över vilka ändringar som sparas.
 - **Graf-skala sparfunktion**: Lagt till "Spara"-knapp för graf-skala med samma funktionalitet som andra parametrar - ändringar påverkar inte visningen förrän de sparas.
 - **Smart enhetskonvertering**: Automatisk växling mellan procent (%) och fysiska enheter triggar inte längre falska varningar om osparade ändringar.
@@ -24,6 +29,12 @@
 - **Konsekvent textfeedback**: Alla entry-fält blir röda vid ändringar och svarta vid spara
 
 ### Tekniska förändringar
+- Ny `ToolTip`-klass för hover-hjälp med konfigurerbar fördröjning
+- Ny `create_help_content()` funktion med markdown-rendering
+- Ny `help.md` fil med omfattande pedagogisk dokumentation
+- Notebook-interface med separata flikar för Simulator och Hjälp
+- Rekursiv tooltip-sökning för automatisk hjälp-koppling
+- Scrollbar-stöd för hjälpinnehåll med mushjuls-navigation
 - Ny `save_regulator_changes()` funktion för regulatorparametrar
 - Ny `save_system_changes()` funktion för systemparametrar  
 - Ny `save_graph_changes()` funktion för graf-skala
