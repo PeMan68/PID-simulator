@@ -6,6 +6,16 @@ matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import os
+import sys
+
+def resource_path(relative_path):
+    """Får sökväg till resource, fungerar både för dev och PyInstaller .exe"""
+    try:
+        # PyInstaller skapar en temp folder och lagrar sökvägen i _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 # --- Tooltip-klass för hjälpsystem ---
 class ToolTip:
@@ -922,7 +932,7 @@ class PIDSimulatorApp:
         help_scrollbar.pack(side="right", fill="y")
         
         # Läs hjälpfil om den finns
-        help_file_path = os.path.join(os.path.dirname(__file__), "help.md")
+        help_file_path = resource_path("help.md")
         help_content = ""
         
         try:
@@ -968,7 +978,7 @@ class PIDSimulatorApp:
         theory_scrollbar.pack(side="right", fill="y")
         
         # Läs teorifil om den finns
-        theory_file_path = os.path.join(os.path.dirname(__file__), "teori-och-bakgrund.md")
+        theory_file_path = resource_path("teori-och-bakgrund.md")
         theory_content = ""
         
         try:
