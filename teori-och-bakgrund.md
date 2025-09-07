@@ -63,7 +63,7 @@ Där:
 
 ### Konvertering till procent
 ```
-PV% = 100 × (PV - PVmin) / (PVmax - PVmin)
+PV% = 100 · (PV - PVmin) / (PVmax - PVmin)
 ```
 
 ### Exempel
@@ -71,8 +71,8 @@ Samma värmeprocess med mätområde -10°C till 120°C:
 
 **Steg 1: Konvertera processvärden till procent**
 ```
-PV1% = 100 × (20°C - (-10°C)) / (120°C - (-10°C)) = 100 × 30/130 = 23,08%
-PV2% = 100 × (40°C - (-10°C)) / (120°C - (-10°C)) = 100 × 50/130 = 38,46%
+PV1% = 100 · (20°C - (-10°C)) / (120°C - (-10°C)) = 100 · 30/130 = 23,08%
+PV2% = 100 · (40°C - (-10°C)) / (120°C - (-10°C)) = 100 · 50/130 = 38,46%
 ```
 
 **Steg 2: Beräkna enhetslös förstärkning**
@@ -91,34 +91,6 @@ K = (38,46% - 23,08%) / (50% - 0%) = 15,38% / 50% = 0,31
 - ❌ Mätområdet påverkar K-värdet
 - ❌ Mindre intuitiv för nybörjare
 
-## Jämförelse av metoderna
-
-*📝 Obs: Tabellen nedan visas bäst i en markdown-läsare - öppna teori-och-bakgrund.md för optimal formatering*
-
-| Aspekt | Traditionell (°C/%) | Enhetslös (%/%) |
-|--------|-------------------|-----------------|
-| K-värde för exemplet | 0,4 °C/% | 0,31 |
-| Enheter | Ja | Nej |
-| Mätområdets påverkan | Ingen | Stor |
-| Industriell användning | Läroböcker | Praktisk tillämpning |
-| Intuitivitet | Hög | Medel |
-
-## Praktisk tillämpning i simulatorn
-
-### Traditionell metod
-```python
-# Direkt beräkning i ingenjörsenheter
-dy = (-(y - normalvärde) + K * u) * dt / T
-```
-
-### Enhetslös metod
-```python
-# Konvertera till procent, beräkna, konvertera tillbaka
-y_pct = to_percent(y)
-nv_pct = to_percent(normalvärde)
-dy_pct = (-(y_pct - nv_pct) + K * u) * dt / T
-y_new = from_percent(y_pct + dy_pct)
-```
 
 ## När ska man använda vilken metod?
 
@@ -139,13 +111,13 @@ y_new = from_percent(y_pct + dy_pct)
 Om du har K i traditionell form och vill konvertera:
 
 ```
-K_enhetslös = K_traditionell × (PVmax - PVmin) / 100
-
-Exempel:
-K_enhetslös = 0,4 °C/% × (120°C - (-10°C)) / 100 = 0,4 × 130/100 = 0,52
+K_enhetslös = K_traditionell · (PVmax - PVmin) / 100
 ```
 
-**Obs!** Detta värde (0,52) skiljer sig från vårt exempel (0,31) eftersom det antar linjär skalning över hela mätområdet, medan vårt exempel använder specifika arbetspunkter.
+Exempel:
+```
+K_enhetslös = (0,4 °C/% / (120°C - (-10°C))) · 100 = (0,4 / 130) · 100 ≈ 0,31
+```
 
 ## Pedagogiska tips
 
@@ -221,36 +193,62 @@ Om processens parametrar (K, T, dötid) är kända kan du använda lambda-metode
 
 #### Princip
 Välj önskad sluten tidskonstant (λ, "lambda"), t.ex. 1–3 gånger processens tidskonstant T:
-- **Liten λ**: Snabb reglering men risk för översläng
-- **Stor λ**: Långsammare men stabilare reglering
 
-#### För en process av typen: G(s) = K / (T·s + 1) · e^(-L·s)
+#### För en självreglerande process av typen: G(s) = K / (T · s + 1) · e^(-L · s)
 
 **PI-regulator (vanligast i industrin)**:
-- Kp = T / (K · (λ + L))
-- Ti = T
+```
+Kp = T / (K · (λ + L) )
+Ti = T
+```
 
 **PID-regulator**:
-- Kp = (T + 0.5·L) / (K · (λ + 0.5·L))
-- Ti = T + 0.5·L  
-- Td = (T·L) / (2T + L)
+```
+Kp = (T + 0,5 · L) / (K · (λ + 0,5 · L))
+Ti = T + 0,5 · L  
+Td = (T · L) / (2T + L)
+```
 
 #### Exempel
 För en process med K = 2, T = 10, L = 2, och λ = 10:
 
 **PI-inställning**:
-- Kp = 10 / (2·(10+2)) = 10/24 ≈ 0.42
-- Ti = 10
+```
+Kp = 10 / (2 · (10 + 2)) = 10 / 24 ≈ 0,42
+Ti = 10
+```
 
 **PID-inställning**:
-- Kp = (10+1) / (2·(10+1)) = 11/22 ≈ 0.5
-- Ti = 11
-- Td = (10·2)/(20+2) ≈ 0.91
+```
+Kp = (10 + 1) / (2 · (10 + 1)) = 11 / 22 ≈ 0.5
+Ti = 11
+Td = (10 · 2) / (20 + 2) ≈ 0.91
+```
 
 **Fördelar**: Systematisk, robust, pedagogisk
 **Nackdelar**: Kräver kännedom om processparametrar
 
----
+
+#### För en integrerande process av typen: G(s) = K / s · e^(-L · s)
+
+**PI-regulator (vanligast i industrin):**
+```
+Kp = λ / (K · (L + 0.5 · λ))
+Ti = λ
+```
+
+- Där λ (lambda) är önskad sluten tidskonstant, ofta 3–5 gånger dötiden L.
+- **Ingen D-del används** för integrerande processer.
+
+**Exempel:**
+För en process med K = 1, L = 4, och λ = 12:
+```
+Kp = 12 / (1 · (4 + 0.5 · 12)) = 12 / (4 + 6) = 12 / 10 = 1.2
+Ti = 12
+```
+
+**Fördelar:** Robust och enkel inställning även för processer utan naturlig jämviktspunkt.  
+**Nackdelar:** Kräver uppskattning av dötid L.
 
 ## Matematisk bakgrund och formler
 
@@ -258,10 +256,8 @@ För en process med K = 2, T = 10, L = 2, och λ = 10:
 
 Den kontinuerliga PID-regulatorn beskrivs av:
 
-*📐 Obs: Matematiska formler visas bäst i markdown-läsare - öppna teori-och-bakgrund.md för korrekt notation*
-
 ```
-u(t) = Kp * [e(t) + (1/Ti)*∫e(t)dt + Td*de(t)/dt]
+u(t) = Kp · [e(t) + (1 / Ti) · ∫e(t)dt + Td · de(t) / dt]
 ```
 
 Där:
@@ -272,19 +268,17 @@ Där:
 - **Td** = Deriveringstid [s]
 
 #### Komponenternas bidrag:
-- **P-delen**: Kp·e(t) - Omedelbar reaktion på aktuellt fel
-- **I-delen**: Kp·(1/Ti)·∫e(t)dt - Eliminerar kvarstående fel över tid
-- **D-delen**: Kp·Td·de(t)/dt - Förutser och motverkar snabba förändringar
+- **P-delen**: Kp · e(t) - Omedelbar reaktion på aktuellt fel
+- **I-delen**: Kp · (1 / Ti) · ∫e(t)dt - Eliminerar kvarstående fel över tid
+- **D-delen**: Kp · Td · de(t) / dt - Förutser och motverkar snabba förändringar
 
 ### Processmodeller
 
 #### Första ordningens process med dötid
 Den vanligaste processmodellen inom processindustrin:
 
-*📐 Obs: För korrekt exponential- och symbolnotation, öppna teori-och-bakgrund.md*
-
 ```
-G(s) = K * e^(-s*L) / (T*s + 1)
+G(s) = K · e^(-s*L) / (T*s + 1)
 ```
 
 Där:
@@ -296,10 +290,8 @@ Där:
 #### Integrerande process
 För processer som nivåreglering:
 
-*📐 Obs: För korrekt exponential- och symbolnotation, öppna teori-och-bakgrund.md*
-
 ```
-G(s) = K * e^(-s*L) / (T*s^2 + s)
+G(s) = K · e^(-s · L) / (T · s^2 + s)
 ```
 
 Denna process har ingen naturlig jämviktspunkt utan extern kontroll.
@@ -307,8 +299,6 @@ Denna process har ingen naturlig jämviktspunkt utan extern kontroll.
 ### On/Off-reglering med hysteresis
 
 Matematisk beskrivning av tvånivåreglering:
-
-*📐 Obs: För korrekt matematisk notation, öppna teori-och-bakgrund.md*
 
 ```
 u(t) = {
@@ -344,6 +334,9 @@ Där:
 - **Anti-windup strategier**: Detaljerad analys av olika metoder
 - **Diskret reglering**: Z-transform och samplingseffekter
 - **Robust reglering**: Osäkerhetshantering och H∞-design
+
+### Kända begränsningar som ska åtgärdas:
+- **Integrerande processer**: Simuleringen av integrerande processer är inte helt korrekt implementerad i nuvarande version. Detta kommer att förbättras i kommande releaser för att bättre återspegla verklig nivåreglering och andra integrerande processer.
 
 ## Vidare läsning
 

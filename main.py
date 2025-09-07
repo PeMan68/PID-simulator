@@ -511,7 +511,8 @@ class PIDSimulatorApp:
         self.proc_k_var = tk.StringVar(value=str(self.process.K))
         self.proc_k_entry = ttk.Entry(sys_row1, textvariable=self.proc_k_var, width=6)
         self.proc_k_entry.pack(side=tk.LEFT, padx=5)
-        ttk.Label(sys_row1, text="T").pack(side=tk.LEFT, padx=5)
+        self.proc_t_label = ttk.Label(sys_row1, text="T")
+        self.proc_t_label.pack(side=tk.LEFT, padx=5)
         self.proc_t_var = tk.StringVar(value=str(self.process.T))
         self.proc_t_entry = ttk.Entry(sys_row1, textvariable=self.proc_t_var, width=6)
         self.proc_t_entry.pack(side=tk.LEFT, padx=5)
@@ -834,6 +835,7 @@ class PIDSimulatorApp:
         
         # Systemparametrar
         ToolTip(self.proc_k_entry, HELP_TEXTS["process_k"])
+        ToolTip(self.proc_t_label, HELP_TEXTS["process_t"])
         ToolTip(self.proc_t_entry, HELP_TEXTS["process_t"])
         ToolTip(self.proc_dead_entry, HELP_TEXTS["process_dead"])
         ToolTip(self.nv_entry, HELP_TEXTS["normalvarde"])
@@ -1016,10 +1018,10 @@ class PIDSimulatorApp:
                 continue
             
             if in_code_block:
-                # Kodrad - visa med monospace-font
+                # Kodrad - visa med monospace-font, vänsterjusterad
                 label = tk.Label(parent, text=original_line, font=("Courier New", 9), 
-                               bg="#f5f5f5", fg="darkblue", justify="left")
-                label.pack(anchor="w", pady=1, padx=20, fill="x")
+                               bg="#f5f5f5", fg="darkblue", justify="left", anchor="w")
+                label.pack(anchor="w", pady=1, padx=20)
                 continue
             
             if line.startswith('# '):
@@ -1060,6 +1062,12 @@ class PIDSimulatorApp:
                 label = tk.Label(parent, text=line, wraplength=700, justify="left", font=("Arial", 9))
                 label.pack(anchor="w", pady=1)
 
+    def is_mathematical_expression(self, line):
+        """Identifierar om en rad innehåller matematiska uttryck"""
+        # Enkel regel: Kodblock (```) hanteras redan av markdown-renderaren
+        # Ingen ytterligare identifiering behövs - låt kodblock vara matematik
+        return False
+
     def create_mixed_text_label(self, parent, text, padx=0, pady=1):
         """Skapar en label med blandad text (normal + fetstil + kursiv)"""
         # Skapa en frame för att hålla text-delar
@@ -1068,6 +1076,9 @@ class PIDSimulatorApp:
         
         current_row = tk.Frame(text_frame)
         current_row.pack(anchor="w", fill="x")
+        
+        # Använd alltid Arial för vanlig text med formatering
+        base_font_family = "Arial"
         
         # Enkel parsing av markdown-formatering
         import re
@@ -1081,7 +1092,7 @@ class PIDSimulatorApp:
                 continue
                 
             if i % 2 == 1:  # Udda index = fetstil
-                font = ("Arial", 9, "bold")
+                font = (base_font_family, 9, "bold")
                 label = tk.Label(current_row, text=part, font=font)
                 label.pack(side="left")
             else:
@@ -1092,9 +1103,9 @@ class PIDSimulatorApp:
                         continue
                     
                     if j % 2 == 1:  # Udda index = kursiv
-                        font = ("Arial", 9, "italic")
+                        font = (base_font_family, 9, "italic")
                     else:  # Jämn index = normal text
-                        font = ("Arial", 9)
+                        font = (base_font_family, 9)
                     
                     # Hantera radbrytningar
                     if '\n' in italic_part:
@@ -1304,16 +1315,22 @@ class PIDSimulatorApp:
                 widget.pack_forget()
     
     def on_integrerande_change(self):
-        """Hantera när integrerande-checkbox ändras - visa/dölj utflöde"""
+        """Hantera när integrerande-checkbox ändras - visa/dölj utflöde och T-parameter"""
         integrerande = self.integrerande_var.get()
         
         # Visa/dölj utflöde-kontroller baserat på integrerande-status
         if integrerande:
             self.utflode_label.pack(side=tk.LEFT)
             self.utflode_entry.pack(side=tk.LEFT)
+            # Dölj T-parameter för integrerande processer
+            self.proc_t_label.pack_forget()
+            self.proc_t_entry.pack_forget()
         else:
             self.utflode_label.pack_forget()
             self.utflode_entry.pack_forget()
+            # Visa T-parameter för självreglerande processer - sätt in före integrerande-kryssrutan
+            self.proc_t_label.pack(side=tk.LEFT, padx=5, before=self.integrerande_check)
+            self.proc_t_entry.pack(side=tk.LEFT, padx=5, before=self.integrerande_check)
     
     def on_percent_mode_change(self):
         """Hanterar växling till/från procentvisning"""
