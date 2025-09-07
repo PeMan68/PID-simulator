@@ -181,5 +181,5 @@ Detta verktyg är utvecklat för pedagogiska ändamål inom reglerteknik.
 
 **Tips**: Teori-fliken visar vad som finns tillgängligt, externa filen ger optimal läsbarhet!
 
-**Version**: 1.4.2+
+**Version**: 1.5.0
 **Senast uppdaterad**: September 2025
