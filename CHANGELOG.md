@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased] - 2025-09-07
+
+### Dokumentationsförbättringar
+- **Omstrukturerad README**: Fokus på projektöversikt, installation och snabbstart istället för detaljerad manual
+- **Förbättrad help.md**: Fokus på praktisk användning med snabbguider och användartips (~150 rader)
+- **Utökad teori-och-bakgrund.md**: Tidigare `processförstärkning-förklaring.md` med avancerade inställningsmetoder och matematisk bakgrund (~300+ rader)
+- **Ny Teori-flik**: Inbyggd teorivisning direkt i applikationen för smidig navigation mellan praktik och teori
+- **Förbättrad användarupplevelse**: Tre flikar (Simulator, Hjälp, Teori) ger optimal informationsstruktur
+- **Eliminerade pseudo-länkar**: Korrekta referenser till flikar istället för filnamn som ser ut som länkar
+- **Förbättrad navigation**: Smarta korsreferenser mellan flikar för effektiv kunskapsbyggnad
+
 ## [Unreleased] - 2025-09-02
 
 ### Nya funktioner

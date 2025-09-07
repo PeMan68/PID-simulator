@@ -477,6 +477,10 @@ class PIDSimulatorApp:
         self.help_frame = ttk.Frame(self.notebook)
         self.notebook.add(self.help_frame, text="Hjälp")
         
+        # Teori-flik  
+        self.theory_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.theory_frame, text="Teori")
+        
         # Skapa simulator-innehåll i vänster panel
         frame = ttk.Frame(self.simulator_frame)
         frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -710,7 +714,8 @@ class PIDSimulatorApp:
         row1_frame = ttk.Frame(analysis_frame)
         row1_frame.pack(fill=tk.X, padx=5, pady=2)
         
-        ttk.Checkbutton(row1_frame, text="Visa i procent (%)", variable=self.percent_mode_var, command=self.on_percent_mode_change).pack(side=tk.LEFT, padx=5)
+        self.percent_mode_check = ttk.Checkbutton(row1_frame, text="Visa i procent (%)", variable=self.percent_mode_var, command=self.on_percent_mode_change)
+        self.percent_mode_check.pack(side=tk.LEFT, padx=5)
         
         # Enhetsval
         ttk.Label(row1_frame, text="Enhet:").pack(side=tk.LEFT, padx=(15,2))
@@ -813,6 +818,9 @@ class PIDSimulatorApp:
         # Skapa hjälp-innehåll
         self.create_help_content()
         
+        # Skapa teori-innehåll
+        self.create_theory_content()
+        
         # Skapa tooltips för viktiga fält
         self.create_tooltips()
 
@@ -830,6 +838,10 @@ class PIDSimulatorApp:
         ToolTip(self.proc_dead_entry, HELP_TEXTS["process_dead"])
         ToolTip(self.nv_entry, HELP_TEXTS["normalvarde"])
         
+        # Mätområde
+        ToolTip(self.matområde_min_entry, HELP_TEXTS["matområde_min"])
+        ToolTip(self.matområde_max_entry, HELP_TEXTS["matområde_max"])
+        
         # Utsignal-begränsningar
         ToolTip(self.u_min_entry, HELP_TEXTS["umin"])
         ToolTip(self.u_max_entry, HELP_TEXTS["umax"])
@@ -844,6 +856,9 @@ class PIDSimulatorApp:
         
         # Manual output
         ToolTip(self.manual_entry, HELP_TEXTS["manual_out"])
+        
+        # Visa i procent checkbox
+        ToolTip(self.percent_mode_check, HELP_TEXTS["percent_mode"])
         
         # Checkboxes och viktiga val
         for widget in self.root.winfo_children():
@@ -932,18 +947,81 @@ class PIDSimulatorApp:
         
         bind_mousewheel_recursive(self.help_frame)
         
+    def create_theory_content(self):
+        """Skapar teoriinnehållet i teori-fliken"""
+        # Scrollbar för teoritext
+        theory_canvas = tk.Canvas(self.theory_frame)
+        theory_scrollbar = ttk.Scrollbar(self.theory_frame, orient="vertical", command=theory_canvas.yview)
+        theory_content_frame = ttk.Frame(theory_canvas)
+        
+        theory_content_frame.bind(
+            "<Configure>",
+            lambda e: theory_canvas.configure(scrollregion=theory_canvas.bbox("all"))
+        )
+        
+        theory_canvas.create_window((0, 0), window=theory_content_frame, anchor="nw")
+        theory_canvas.configure(yscrollcommand=theory_scrollbar.set)
+        
+        theory_canvas.pack(side="left", fill="both", expand=True)
+        theory_scrollbar.pack(side="right", fill="y")
+        
+        # Läs teorifil om den finns
+        theory_file_path = os.path.join(os.path.dirname(__file__), "teori-och-bakgrund.md")
+        theory_content = ""
+        
+        try:
+            with open(theory_file_path, 'r', encoding='utf-8') as f:
+                theory_content = f.read()
+                # Ta bort alla potentiellt problematiska unicode-tecken
+                import re
+                theory_content = re.sub(r'[^\u0000-\uFFFF]', '', theory_content)
+        except FileNotFoundError:
+            theory_content = "# Teorifil hittades inte\n\nTeoridokumentet (teori-och-bakgrund.md) kunde inte hittas."
+        
+        # Enkel markdown-parsing för visning
+        self.display_markdown(theory_content_frame, theory_content)
+        
+        # Bind mushjul till scrollning
+        def _on_mousewheel_theory(event):
+            theory_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        # Rekursiv binding av mushjul till alla widgets i teori-framen
+        def bind_mousewheel_recursive_theory(widget):
+            widget.bind("<MouseWheel>", _on_mousewheel_theory)
+            for child in widget.winfo_children():
+                bind_mousewheel_recursive_theory(child)
+        
+        bind_mousewheel_recursive_theory(self.theory_frame)
+        
     def display_markdown(self, parent, markdown_text):
         """Enkel markdown-renderer för hjälptext"""
         lines = markdown_text.split('\n')
+        in_code_block = False
         
         for line in lines:
+            original_line = line
             line = line.strip()
             
             if not line:
                 # Tom rad
                 ttk.Label(parent, text="").pack(anchor="w", pady=2)
                 continue
-                
+            
+            # Hantera kodblock
+            if line.startswith('```'):
+                in_code_block = not in_code_block
+                if not in_code_block:
+                    # Avsluta kodblock med extra mellanrum
+                    ttk.Label(parent, text="").pack(anchor="w", pady=2)
+                continue
+            
+            if in_code_block:
+                # Kodrad - visa med monospace-font
+                label = tk.Label(parent, text=original_line, font=("Courier New", 9), 
+                               bg="#f5f5f5", fg="darkblue", justify="left")
+                label.pack(anchor="w", pady=1, padx=20, fill="x")
+                continue
+            
             if line.startswith('# '):
                 # Huvudrubrik
                 title = line[2:]
@@ -973,13 +1051,9 @@ class PIDSimulatorApp:
                 bullet_text = line[2:]
                 self.create_mixed_text_label(parent, f"• {bullet_text}", padx=20, pady=1)
                 
-            elif '**' in line:
-                # Fetstil (hantera blandad text)
+            elif '**' in line or '*' in line:
+                # Fetstil eller kursiv (hantera blandad text)
                 self.create_mixed_text_label(parent, line, padx=0, pady=1)
-                
-            elif line.startswith('```'):
-                # Kodblock (ignorera för nu)
-                continue
                 
             else:
                 # Vanlig text
@@ -987,36 +1061,54 @@ class PIDSimulatorApp:
                 label.pack(anchor="w", pady=1)
 
     def create_mixed_text_label(self, parent, text, padx=0, pady=1):
-        """Skapar en label med blandad text (normal + fetstil)"""
+        """Skapar en label med blandad text (normal + fetstil + kursiv)"""
         # Skapa en frame för att hålla text-delar
         text_frame = tk.Frame(parent)
         text_frame.pack(anchor="w", padx=padx, pady=pady, fill="x")
         
-        # Dela upp texten i delar baserat på **
-        parts = text.split('**')
         current_row = tk.Frame(text_frame)
         current_row.pack(anchor="w", fill="x")
         
+        # Enkel parsing av markdown-formatering
+        import re
+        
+        # Hantera både ** och * formatering
+        # Först dela på ** för fetstil
+        parts = text.split('**')
+        
         for i, part in enumerate(parts):
-            if part:  # Hoppa över tomma delar
-                if i % 2 == 1:  # Udda index = mellan ** ** (fet text)
-                    font = ("Arial", 9, "bold")
-                else:  # Jämn index = vanlig text
-                    font = ("Arial", 9)
+            if not part:
+                continue
                 
-                # Hantera radbrytningar inom texten
-                if '\n' in part:
-                    lines = part.split('\n')
-                    for j, line_part in enumerate(lines):
-                        if line_part:
-                            label = tk.Label(current_row, text=line_part, font=font)
-                            label.pack(side="left")
-                        if j < len(lines) - 1:  # Inte sista delen
-                            current_row = tk.Frame(text_frame)
-                            current_row.pack(anchor="w", fill="x")
-                else:
-                    label = tk.Label(current_row, text=part, font=font)
-                    label.pack(side="left")
+            if i % 2 == 1:  # Udda index = fetstil
+                font = ("Arial", 9, "bold")
+                label = tk.Label(current_row, text=part, font=font)
+                label.pack(side="left")
+            else:
+                # Hantera kursiv inom normal text
+                italic_parts = part.split('*')
+                for j, italic_part in enumerate(italic_parts):
+                    if not italic_part:
+                        continue
+                    
+                    if j % 2 == 1:  # Udda index = kursiv
+                        font = ("Arial", 9, "italic")
+                    else:  # Jämn index = normal text
+                        font = ("Arial", 9)
+                    
+                    # Hantera radbrytningar
+                    if '\n' in italic_part:
+                        lines = italic_part.split('\n')
+                        for k, line_part in enumerate(lines):
+                            if line_part:
+                                label = tk.Label(current_row, text=line_part, font=font)
+                                label.pack(side="left")
+                            if k < len(lines) - 1:  # Inte sista delen
+                                current_row = tk.Frame(text_frame)
+                                current_row.pack(anchor="w", fill="x")
+                    else:
+                        label = tk.Label(current_row, text=italic_part, font=font)
+                        label.pack(side="left")
 
     def trigger_pulse(self):
         # Aktivera puls-störning

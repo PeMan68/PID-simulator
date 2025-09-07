@@ -64,16 +64,12 @@ Denna simulator demonstrerar PID-reglering för processindustriella system. Prog
 #### K (Processförstärkning)
 Beskriver hur mycket processvärdet ändras när styrsignalen ändras.
 
-**Traditionell metod (°C/%)**:
-- K = ΔTemperatur / ΔStyrsignal
-- Exempel: K = 0.4 °C/% betyder att 1% ökning av styrsignal ger 0.4°C temperaturökning
-- Fysikaliskt intuitivt men har enheter
+- **Traditionell metod**: K i fysiska enheter (t.ex. 0.4 °C/%)
+- **Enhetslös metod**: K som procent av mätområdet (industristandard)
+- **Högre K**: Större påverkan av styrsignal
+- **Typiska värden**: 0.1 - 5 (beroende på metod och process)
 
-**Enhetslös metod (%/%)**:
-- Industristandard som konverterar allt till procent av mätområdet
-- K = ΔProcent_PV / ΔProcent_Styrsignal  
-- Lättare att jämföra olika processer
-- Påverkas av valt mätområde
+**Se även**: **Teori-fliken** för detaljerade beräkningsmetoder och matematisk bakgrund
 
 #### T (Tidskonstant)
 - Beskriver hur snabbt processen reagerar
@@ -158,36 +154,32 @@ Aktiverar olika typer av störningar för att testa regulatorns prestanda:
 - **Översläng**: Lägg till Td (PID-reglering)
 - **Instabilitet**: Kontrollera anti-windup och utsignalsbegränsningar
 
-## Bakgrundsteori
+## Snabbguide för regulatorinställning
 
-### PID-ekvationen
-```
-u(t) = Kp * [e(t) + (1/Ti)*∫e(t)dt + Td*de(t)/dt]
-```
+### Grundläggande steg:
+1. **Börja med P-reglering**: Sätt Ti högt (50+), Td lågt (0-1)
+2. **Öka Kp gradvis**: Tills snabb respons utan oscillation
+3. **Lägg till I-delen**: Sänk Ti för att eliminera kvarstående fel
+4. **Optimera med D-delen**: Justera Td för att minska översläng
 
-Där:
-- u(t) = Utsignal från regulator
-- e(t) = Fel (börvärde - processvärde)  
-- Kp = Proportionalförstärkning
-- Ti = Integreringstid
-- Td = Deriveringstid
+### Tumregler:
+- **Snabb process (T < 10s)**: Börja med Kp ≈ 1, Ti ≈ 2×T
+- **Långsam process (T > 30s)**: Börja med Kp ≈ 0.5, Ti ≈ T
+- **Med dötid**: Minska Kp, öka Ti proportionellt mot dötiden
 
-### Processmodell (Första ordningens process med dötid)
-```
-G(s) = K * e^(-s*L) / (T*s + 1)
-```
-
-Där:
-- K = Processförstärkning
-- T = Tidskonstant
-- L = Dötid (Dead time)
-
-### On/Off-reglering
-Enkel tvånivåreglering med hysteresis för att undvika "chattering".
+**Se även**: **Teori-fliken** innehåller avancerade inställningsmetoder (Ziegler-Nichols, Lambda-metoden) och fullständig matematisk bakgrund
 
 ## Support och vidareutveckling
 
-Detta verktyg är utvecklat för pedagogiska ändamål. För frågor eller förslag på förbättringar, kontakta utvecklaren.
+Detta verktyg är utvecklat för pedagogiska ändamål inom reglerteknik. 
+
+### Ytterligare resurser
+- **Teori-flik**: Översikt och vägledning till externt teoridokument
+- **Teorifil**: Öppna `teori-och-bakgrund.md` för korrekt formatering av tabeller och matematik
+- **Versionshistorik**: Se CHANGELOG för nya funktioner och förbättringar  
+- **Installation**: README innehåller projektöversikt och installationsinstruktioner
+
+**Tips**: Teori-fliken visar vad som finns tillgängligt, externa filen ger optimal läsbarhet!
 
 **Version**: 1.4.2+
 **Senast uppdaterad**: September 2025
