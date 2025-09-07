@@ -14,7 +14,7 @@ Denna simulator demonstrerar PID-reglering för processindustriella system. Prog
 ## Regulatorparametrar
 
 ### Regulator-presets
-- **OnOff**: Tvånivåreglering med konfigurerbar hysteresis
+- **OnOff**: Tvånivåreglering med konfigurerbar hysteres
 - **P-reglering**: Endast proportionell del aktiv
 - **PI-reglering**: Proportionell + Integral komponenter  
 - **PID-reglering**: Alla tre komponenter för optimal prestanda
@@ -122,11 +122,8 @@ Beskriver hur mycket processvärdet ändras när styrsignalen ändras.
 ### Signalstörning
 Aktiverar olika typer av störningar för att testa regulatorns prestanda:
 
-- **Stegstörning**: Plötslig förändring
-- **Rampstörning**: Gradvis förändring  
-- **Sinusstörning**: Cyklisk variation
-- **Pulsstörning**: Kort störimpuls
 - **Brusstörning**: Slumpmässig variation
+- **Pulsstörning**: Kort störimpuls
 
 ## Graf och analys
 
