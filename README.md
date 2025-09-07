@@ -101,6 +101,6 @@ Se projektets licensfil för detaljer.
 
 ---
 
-**Version**: 1.4.2+  
+**Version**: 1.5.0  
 **Utvecklat för**: Pedagogisk användning inom reglerteknik  
 **Kompatibilitet**: Python 3.8+ på Windows, macOS, Linux
