@@ -5,6 +5,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import os
 import sys
 
@@ -913,16 +914,29 @@ class PIDSimulatorApp:
         ttk.Label(current_frame, text="●", foreground="blue", font=('TkDefaultFont', 12)).pack()
         
         # Visa historiska simuleringar
-        history_frame = ttk.LabelFrame(self.legend_content_frame, text="Tidigare jämförelser", padding=5)
+        history_frame = ttk.LabelFrame(self.legend_content_frame, text="Tidigare plottar", padding=5)
         history_frame.pack(fill=tk.X, pady=5)
         
-        # Alpha-färger som matchar plotting (äldst till nyast)
-        alpha_colors = ["#CCCCCC", "#AAAAAA", "#888888", "#666666", "#444444"]
+        # Matplotlib standard färger som matchar plotting (samma ordning som plottarna)
+        plot_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # matplotlib C0-C4
+        alpha_values = [0.3, 0.4, 0.5, 0.6, 0.7]  # Samma som i plottning
         
-        for i, simulation in enumerate(reversed(self.simulation_history)):  # Visa nyast först
+        for i, simulation in enumerate(self.simulation_history):
             params = simulation['params']
-            alpha_index = min(len(self.simulation_history) - 1 - i, len(alpha_colors) - 1)
-            color = alpha_colors[alpha_index]
+            
+            # Använd samma färg som i plottning med alpha-effekt simulerad
+            base_color = plot_colors[min(i, len(plot_colors) - 1)]
+            alpha = alpha_values[min(i, len(alpha_values) - 1)]
+            
+            # Konvertera till RGB för alpha-simulering
+            rgb = mcolors.to_rgb(base_color)
+            # Simulera alpha genom att blanda med vit bakgrund
+            blended_rgb = [rgb[j] * alpha + (1 - alpha) for j in range(3)]
+            color_hex = "#{:02x}{:02x}{:02x}".format(
+                int(blended_rgb[0] * 255),
+                int(blended_rgb[1] * 255), 
+                int(blended_rgb[2] * 255)
+            )
             
             sim_frame = ttk.Frame(history_frame)
             sim_frame.pack(fill=tk.X, pady=2)
@@ -943,7 +957,7 @@ class PIDSimulatorApp:
                     param_text = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
             
             # Färgindikator och text
-            color_label = tk.Label(sim_frame, text="●", foreground=color, font=('TkDefaultFont', 10))
+            color_label = tk.Label(sim_frame, text="●", foreground=color_hex, font=('TkDefaultFont', 10))
             color_label.pack(side=tk.LEFT)
             
             param_label = ttk.Label(sim_frame, text=param_text, font=('TkDefaultFont', 8))
@@ -2221,21 +2235,64 @@ class PIDSimulatorApp:
         # Begränsa antal sparade simuleringar
         while len(self.simulation_history) > self.max_history_size:
             self.simulation_history.pop(0)
+            
+        # Rensa nuvarande data för att starta en ny simulering
+        self.reset_current_simulation_data()
+        
+        # Uppdatera legend-display efter historikändring
+        self.update_legend_display()
+    
+    def reset_current_simulation_data(self):
+        """Rensar nuvarande simuleringsdata för att börja en ny jämförelse"""
+        self.t = []
+        self.y = []
+        self.sp = []
+        self.u = []
+        self.e = []
+        self.i = []
+        self.d = []
+        self.current_step = 0
+        
+        # Återställ PID-regulator (skapa ny instans för att rensa integrerat fel och derivata minne)
+        self.pid = PID(Kp=self.parse_float(self.kp_var), Ti=self.parse_float(self.ti_var), Td=self.parse_float(self.td_var), dt=self.dt)
+        
+        # Återställ process till initialvärde (skapa ny instans)
+        self.process = Process(
+            K=self.parse_float(self.proc_k_var),
+            T=self.validate_T_value(show_warning=False),
+            dead_time=self.parse_float(self.proc_dead_var),
+            integrerande=self.integrerande_var.get(),
+            Fout=self.parse_float(self.proc_fout_var),
+            normalvarde=self.nv_var.get(),
+            matområde_min=self.matområde_min_var.get(),
+            matområde_max=self.matområde_max_var.get(),
+            enhetslös_K=self.enhetslös_K_var.get()
+        )
+        
+        # Stoppa simuleringen om den körs
+        self.running = False
+        self.update_buttons()
     
     def clear_simulation_history(self):
         """Rensar simulation historik (anropas vid processparameterändringar)"""
         self.simulation_history.clear()
+        
+        # Uppdatera legend-display efter historikändring
+        self.update_legend_display()
     
     def _plot_simulation_history(self):
         """Plottar historiska simuleringar med progressiv transparens"""
         if not self.simulation_history:
             return
             
-        # Alpha-värden för progressiv transparens (nyast först)
+        # Alpha-värden för progressiv transparens
         alpha_values = [0.3, 0.4, 0.5, 0.6, 0.7]  # Äldst till nyast
+        # Matplotlib standard färger som matchar legend
+        plot_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # C0-C4
         
         for i, simulation in enumerate(self.simulation_history):
             alpha = alpha_values[min(i, len(alpha_values)-1)]
+            color = plot_colors[min(i, len(plot_colors)-1)]
             data = simulation['data']
             params = simulation['params']
             
@@ -2268,13 +2325,9 @@ class PIDSimulatorApp:
                 else:  # PID
                     label_suffix = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
             
-            # Plotta processvärde och börvärde (första grafen)
+            # Plotta processvärde och börvärde (första grafen) - utan label för legend
             self.axs[0].plot(t_hist, sp_plot_hist, 'k--', alpha=alpha, linewidth=1)
-            self.axs[0].plot(t_hist, y_plot_hist, alpha=alpha, linewidth=1, 
-                           label=f'Tidigare: {label_suffix}')
-            
-            # Plotta styrsignal (andra grafen)
-            self.axs[1].plot(t_hist, u_hist, alpha=alpha, linewidth=1)
+            self.axs[0].plot(t_hist, y_plot_hist, color=color, alpha=alpha, linewidth=1)
 
     def simulate(self, step=False):
         # Kontrollera numerisk instabilitet: PV utanför ±2×mätområdets gränser
@@ -2501,8 +2554,10 @@ class PIDSimulatorApp:
         else:
             bv_label = f'Börvärde ({self.process_unit_var.get()})'
         
-        self.axs[0].plot(t, sp_plot, 'k--', label=bv_label, linewidth=2)
-        self.axs[0].plot(t, y_plot, label='Nuvarande är-värde', linewidth=2)
+        # Plotta endast om vi har data
+        if len(t) > 0:
+            self.axs[0].plot(t, sp_plot, 'k--', label=bv_label, linewidth=2)
+            self.axs[0].plot(t, y_plot, label='Nuvarande är-värde', linewidth=2)
         
         # Visa hysteresis-gränser för On/Off-reglering
         if self.preset_mode.get() == "OnOff" and len(t) > 0:
@@ -2538,21 +2593,26 @@ class PIDSimulatorApp:
             self.axs[0].axhline(yy, color='gray', linewidth=0.3, alpha=0.5, zorder=0)
         self.axs[0].set_ylim(ymin, ymax)
         self.axs[0].set_ylabel(ylabel)
-        self.axs[0].legend()
+        # Visa legend endast om det finns data att plotta
+        if len(t) > 0:
+            self.axs[0].legend()
 
         if self.manual_mode_var.get():
             # Manuellt läge - visa endast styrsignal
-            self.axs[1].plot(t, u, label='Nuvarande manuell styrsignal', linewidth=2)
+            if len(t) > 0:
+                self.axs[1].plot(t, u, label='Nuvarande manuell styrsignal', linewidth=2)
             # Använd endast u-värden för skalning
             all_y = np.array(u)
         elif self.preset_mode.get() == "OnOff":
             # On/Off-läge - visa styrsignal med tydlig on/off-karaktär
-            self.axs[1].step(t, u, where='post', label='Nuvarande On/Off styrsignal', linewidth=2)
+            if len(t) > 0:
+                self.axs[1].step(t, u, where='post', label='Nuvarande On/Off styrsignal', linewidth=2)
             # Använd endast u-värden för skalning
             all_y = np.array(u)
         else:
             # Automatiskt läge - visa PID-ut och summa
-            self.axs[1].plot(t, u, label='Nuvarande PID-ut (begränsad)', linewidth=2)
+            if len(t) > 0:
+                self.axs[1].plot(t, u, label='Nuvarande PID-ut (begränsad)', linewidth=2)
             # Summan av P+I+D (utan begränsning)
             kp = self.parse_float(self.kp_var)
             ti = self.parse_float(self.ti_var) if self.i_active_var.get() else 0.0
@@ -2569,16 +2629,24 @@ class PIDSimulatorApp:
                 d_vals = np.array([-kp*td*v if v is not None else np.nan for v in d])
                 pid_components.append(d_vals)
             # Summa
-            min_len = min([len(comp) for comp in pid_components])
-            sum_vals = np.nansum([comp[:min_len] for comp in pid_components], axis=0)
-            self.axs[1].plot(t[:min_len], sum_vals, label='Summa (P+I+D)', linestyle='--', color='black', alpha=0.7)
-            # Utöka y-axeln så att både u och summagrafen syns
-            all_y = np.concatenate([np.array(u)[:min_len], sum_vals])
+            if len(pid_components) > 0 and len(pid_components[0]) > 0:
+                min_len = min([len(comp) for comp in pid_components])
+                sum_vals = np.nansum([comp[:min_len] for comp in pid_components], axis=0)
+                if len(t) > 0:
+                    self.axs[1].plot(t[:min_len], sum_vals, label='Summa (P+I+D)', linestyle='--', color='black', alpha=0.7)
+                # Utöka y-axeln så att både u och summagrafen syns
+                all_y = np.concatenate([np.array(u)[:min_len], sum_vals])
+            else:
+                all_y = np.array(u)
         # Utöka y-axeln så att både u och summagrafen syns
-        umin, umax = np.nanmin(all_y), np.nanmax(all_y)
-        if umin == umax:
-            umin -= 1
-            umax += 1
+        if len(all_y) > 0:
+            umin, umax = np.nanmin(all_y), np.nanmax(all_y)
+            if umin == umax:
+                umin -= 1
+                umax += 1
+        else:
+            # Tom data - använd standardvärden
+            umin, umax = 0, 100
         uticks = np.linspace(umin, umax, num=8)
         for uu in uticks:
             self.axs[1].axhline(uu, color='gray', linewidth=0.3, alpha=0.5, zorder=0)
@@ -2588,7 +2656,9 @@ class PIDSimulatorApp:
             self.axs[1].set_xlabel('Tid')  # Visa x-axel i manuellt läge
         else:
             self.axs[1].set_ylabel('Styrsignal (%)')
-        self.axs[1].legend()
+        # Visa legend endast om det finns data att plotta
+        if len(t) > 0:
+            self.axs[1].legend()
 
         # Nedersta: P, I, D-bidrag var för sig (endast i automatläge)
         if self.manual_mode_var.get() or self.preset_mode.get() == "OnOff":
@@ -2618,14 +2688,15 @@ class PIDSimulatorApp:
                 d_vals = np.array([-kp*td*v if v is not None else np.nan for v in d])
                 pid_components.append(d_vals)
                 
-            self.axs[2].plot(t, p_vals, label='P-bidrag')
-            idx = 0
-            if self.i_active_var.get():
-                self.axs[2].plot(t, i_vals, label='I-bidrag')
-                idx += 1
-            if self.d_active_var.get():
-                self.axs[2].plot(t, d_vals, label='D-bidrag')
-                idx += 1
+            if len(t) > 0:
+                self.axs[2].plot(t, p_vals, label='P-bidrag')
+                idx = 0
+                if self.i_active_var.get():
+                    self.axs[2].plot(t, i_vals, label='I-bidrag')
+                    idx += 1
+                if self.d_active_var.get():
+                    self.axs[2].plot(t, d_vals, label='D-bidrag')
+                    idx += 1
             # Skala och etiketter
             all_vals = np.concatenate([comp[~np.isnan(comp)] if np.any(~np.isnan(comp)) else np.array([0.0]) for comp in pid_components])
             if len(all_vals) == 0:
@@ -2646,7 +2717,9 @@ class PIDSimulatorApp:
                 self.axs[2].set_ylabel(f'PID-bidrag ({self.process_unit_var.get()})')
             
             self.axs[2].set_xlabel('Tid')
-            self.axs[2].legend()
+            # Visa legend endast om det finns data att plotta
+            if len(t) > 0:
+                self.axs[2].legend()
         
         # --- Prestandamått ---
         # Spara prestandamått i en lista för framtida jämförelser
@@ -2721,9 +2794,6 @@ class PIDSimulatorApp:
             self.fig.subplots_adjust(hspace=0.4)
         self.fig.tight_layout()
         self.canvas.draw()
-        
-        # Uppdatera legend-display
-        self.update_legend_display()
     def reset(self):
         self._just_reset = True
         self.running = False
