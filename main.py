@@ -812,13 +812,46 @@ class PIDSimulatorApp:
         graph_container = ttk.Frame(self.simulator_frame)
         graph_container.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         
-        # Plott
+        # Skapa huvudlayout för grafer och legend
+        main_graph_frame = ttk.Frame(graph_container)
+        main_graph_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Plott (vänstra sidan)
+        plot_frame = ttk.Frame(main_graph_frame)
+        plot_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
         self.fig, self.axs = plt.subplots(3, 1, sharex=True, figsize=(7,6))
-        self.canvas = FigureCanvasTkAgg(self.fig, master=graph_container)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
         # Koppla musrörelse till canvas (måste ske efter att self.canvas skapats)
         self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         
+        # Legend-område (högra sidan)
+        self.legend_frame = ttk.LabelFrame(main_graph_frame, text="Jämförelse-historik", padding=10)
+        self.legend_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=(10, 0))
+        
+        # Scrollbar för legend om det blir många simuleringar
+        legend_canvas = tk.Canvas(self.legend_frame, width=250, height=400)
+        legend_scrollbar = ttk.Scrollbar(self.legend_frame, orient="vertical", command=legend_canvas.yview)
+        self.legend_content_frame = ttk.Frame(legend_canvas)
+        
+        legend_canvas.configure(yscrollcommand=legend_scrollbar.set)
+        legend_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        legend_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Bind mousewheel till legend scrolling
+        def on_legend_mousewheel(event):
+            legend_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        legend_canvas.bind("<MouseWheel>", on_legend_mousewheel)
+        
+        # Lägg legend_content_frame i canvas
+        legend_canvas.create_window((0, 0), window=self.legend_content_frame, anchor="nw")
+        
+        # Uppdatera scroll region när innehållet ändras
+        def configure_legend_scroll(event):
+            legend_canvas.configure(scrollregion=legend_canvas.bbox("all"))
+        self.legend_content_frame.bind("<Configure>", configure_legend_scroll)
+
         # Export-knappar under graferna
         export_frame = ttk.Frame(graph_container)
         export_frame.pack(fill=tk.X, pady=5)
@@ -838,6 +871,88 @@ class PIDSimulatorApp:
         
         # Skapa tooltips för viktiga fält
         self.create_tooltips()
+        
+        # Initiera legend-innehåll
+        self.update_legend_display()
+
+    def update_legend_display(self):
+        """Uppdaterar legend-området med information om aktuella och historiska simuleringar"""
+        # Rensa befintligt innehåll
+        for widget in self.legend_content_frame.winfo_children():
+            widget.destroy()
+        
+        if not self.simulation_history:
+            # Ingen historik - visa info om detta
+            ttk.Label(self.legend_content_frame, 
+                     text="Inga sparade jämförelser än.\n\nÄndra regulatorparametrar och tryck 'Spara' för att skapa jämförelser.",
+                     wraplength=220,
+                     font=('TkDefaultFont', 9)).pack(pady=10)
+            return
+        
+        # Visa nuvarande simulering först
+        current_frame = ttk.LabelFrame(self.legend_content_frame, text="Nuvarande", padding=5)
+        current_frame.pack(fill=tk.X, pady=5)
+        
+        # Hämta nuvarande parametrar
+        preset = self.preset_mode.get()
+        if preset == 'OnOff':
+            current_text = "OnOff-regulator"
+        else:
+            kp = self.parse_float(self.kp_var)
+            ti = self.parse_float(self.ti_var) if self.i_active_var.get() else 0
+            td = self.parse_float(self.td_var) if self.d_active_var.get() else 0
+            
+            if preset == 'P':
+                current_text = f"P: Kp={kp:.1f}"
+            elif preset == 'PI':
+                current_text = f"PI: Kp={kp:.1f}, Ti={ti:.1f}"
+            else:  # PID
+                current_text = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
+        
+        ttk.Label(current_frame, text=current_text, font=('TkDefaultFont', 9, 'bold')).pack()
+        ttk.Label(current_frame, text="●", foreground="blue", font=('TkDefaultFont', 12)).pack()
+        
+        # Visa historiska simuleringar
+        history_frame = ttk.LabelFrame(self.legend_content_frame, text="Tidigare jämförelser", padding=5)
+        history_frame.pack(fill=tk.X, pady=5)
+        
+        # Alpha-färger som matchar plotting (äldst till nyast)
+        alpha_colors = ["#CCCCCC", "#AAAAAA", "#888888", "#666666", "#444444"]
+        
+        for i, simulation in enumerate(reversed(self.simulation_history)):  # Visa nyast först
+            params = simulation['params']
+            alpha_index = min(len(self.simulation_history) - 1 - i, len(alpha_colors) - 1)
+            color = alpha_colors[alpha_index]
+            
+            sim_frame = ttk.Frame(history_frame)
+            sim_frame.pack(fill=tk.X, pady=2)
+            
+            # Skapa parametertext
+            preset = params.get('preset', 'PID')
+            if preset == 'OnOff':
+                param_text = "OnOff"
+            else:
+                kp = params.get('Kp', 0)
+                ti = params.get('Ti', 0)
+                td = params.get('Td', 0)
+                if preset == 'P':
+                    param_text = f"P: Kp={kp:.1f}"
+                elif preset == 'PI':
+                    param_text = f"PI: Kp={kp:.1f}, Ti={ti:.1f}"
+                else:  # PID
+                    param_text = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
+            
+            # Färgindikator och text
+            color_label = tk.Label(sim_frame, text="●", foreground=color, font=('TkDefaultFont', 10))
+            color_label.pack(side=tk.LEFT)
+            
+            param_label = ttk.Label(sim_frame, text=param_text, font=('TkDefaultFont', 8))
+            param_label.pack(side=tk.LEFT, padx=(5, 0))
+        
+        # Uppdatera scroll region
+        self.legend_content_frame.update_idletasks()
+        legend_canvas = self.legend_content_frame.master
+        legend_canvas.configure(scrollregion=legend_canvas.bbox("all"))
 
     def create_tooltips(self):
         """Skapar tooltips för alla viktiga widgets"""
@@ -2606,6 +2721,9 @@ class PIDSimulatorApp:
             self.fig.subplots_adjust(hspace=0.4)
         self.fig.tight_layout()
         self.canvas.draw()
+        
+        # Uppdatera legend-display
+        self.update_legend_display()
     def reset(self):
         self._just_reset = True
         self.running = False
