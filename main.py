@@ -379,6 +379,10 @@ class PIDSimulatorApp:
         self.i = [0]
         self.d = [0]
         self.sp = [self.setpoint]
+        
+        # Simulation history för jämförelser
+        self.simulation_history = []
+        self.max_history_size = 5
         # Tidsfönster
         self.window_mode = tk.StringVar(value="all")  # "all" eller "window"
         self.window_size = tk.IntVar(value=30)
@@ -1152,29 +1156,42 @@ class PIDSimulatorApp:
         pass
 
     def speed_faster(self):
-        # Minska delay = snabbare simulering
+        # Utökad hastighetsrange: 5ms minimum (60x snabbare än normal)
         current = self.speed_var.get()
-        if current > 50:  # Minimum 50ms delay
-            new_speed = max(50, current - 50)
+        if current > 5:  # Minimum 5ms delay = MAX hastighet
+            if current > 50:
+                new_speed = max(5, current - 50)  # Stora steg först
+            elif current > 10:
+                new_speed = max(5, current - 5)   # Mindre steg när vi närmar oss max
+            else:
+                new_speed = max(5, current - 1)   # Finjustering vid MAX
             self.speed_var.set(new_speed)
             self.update_speed_label()
 
     def speed_slower(self):
-        # Öka delay = långsammare simulering
+        # Utökad hastighetsrange: upp till 2000ms
         current = self.speed_var.get()
-        if current < 1000:  # Maximum 1000ms delay
-            new_speed = min(1000, current + 50)
+        if current < 2000:  # Maximum 2000ms delay
+            if current < 10:
+                new_speed = min(2000, current + 1)   # Finjustering från MAX
+            elif current < 50:
+                new_speed = min(2000, current + 5)   # Mindre steg
+            else:
+                new_speed = min(2000, current + 50)  # Stora steg
             self.speed_var.set(new_speed)
             self.update_speed_label()
 
     def update_speed_label(self):
-        # Beräkna hastighets-multiplikator (300ms = 1x)
+        # Förbättrad hastighetsetikett med MAX-indikering
         delay = self.speed_var.get()
-        speed_factor = 300 / delay
-        if speed_factor >= 1:
-            self.speed_label.config(text=f"{speed_factor:.1f}x")
+        if delay <= 5:
+            self.speed_label.config(text="MAX")
         else:
-            self.speed_label.config(text=f"1/{1/speed_factor:.1f}x")
+            speed_factor = 300 / delay
+            if speed_factor >= 1:
+                self.speed_label.config(text=f"{speed_factor:.0f}x")
+            else:
+                self.speed_label.config(text=f"1/{1/speed_factor:.0f}x")
 
     def parse_float(self, var):
         try:
@@ -1327,6 +1344,9 @@ class PIDSimulatorApp:
     def on_integrerande_change(self):
         """Hantera när integrerande-checkbox ändras - visa/dölj utflöde och T-parameter"""
         integrerande = self.integrerande_var.get()
+        
+        # Rensa simulation historik eftersom processtyp har ändrats
+        self.clear_simulation_history()
         
         # Visa/dölj utflöde-kontroller baserat på integrerande-status
         if integrerande:
@@ -1783,6 +1803,10 @@ class PIDSimulatorApp:
         # Nu när alla saved_params är uppdaterade, kör highlight för att återställa färgerna korrekt
         self.highlight_unsaved_changes()
         
+        # Spara nuvarande simulering till historik om vi har data
+        if len(self.t) > 10:
+            self.save_current_simulation_to_history()
+        
         # Uppdatera plot (utan att resetta historiken)
         self.update_plot()
     
@@ -1804,6 +1828,9 @@ class PIDSimulatorApp:
         
         # Nu när alla saved_params är uppdaterade, kör highlight för att återställa färgerna korrekt
         self.highlight_unsaved_changes()
+        
+        # Rensa simulation historik eftersom processparametrar har ändrats
+        self.clear_simulation_history()
         
         # Uppdatera plot (utan att resetta historiken)
         self.update_plot()
@@ -2048,6 +2075,92 @@ class PIDSimulatorApp:
             self.step_btn.state(["!disabled"])
             self.reset_btn.state(["!disabled"])
 
+    def save_current_simulation_to_history(self):
+        """Sparar nuvarande simulering till historik för jämförelse"""
+        if len(self.t) < 10:  # Bara spara om vi har tillräckligt med data
+            return
+            
+        # Skapa kopia av nuvarande data
+        simulation_data = {
+            'data': {
+                't': self.t.copy(),
+                'y': self.y.copy(),
+                'u': self.u.copy(),
+                'sp': self.sp.copy(),
+                'e': self.e.copy(),
+                'i': self.i.copy(),
+                'd': self.d.copy()
+            },
+            'params': {
+                'Kp': self.saved_params['kp'],
+                'Ti': self.saved_params['ti'],
+                'Td': self.saved_params['td'],
+                'preset': self.preset_mode.get(),
+                'timestamp': len(self.simulation_history)
+            }
+        }
+        
+        # Lägg till i historik
+        self.simulation_history.append(simulation_data)
+        
+        # Begränsa antal sparade simuleringar
+        while len(self.simulation_history) > self.max_history_size:
+            self.simulation_history.pop(0)
+    
+    def clear_simulation_history(self):
+        """Rensar simulation historik (anropas vid processparameterändringar)"""
+        self.simulation_history.clear()
+    
+    def _plot_simulation_history(self):
+        """Plottar historiska simuleringar med progressiv transparens"""
+        if not self.simulation_history:
+            return
+            
+        # Alpha-värden för progressiv transparens (nyast först)
+        alpha_values = [0.3, 0.4, 0.5, 0.6, 0.7]  # Äldst till nyast
+        
+        for i, simulation in enumerate(self.simulation_history):
+            alpha = alpha_values[min(i, len(alpha_values)-1)]
+            data = simulation['data']
+            params = simulation['params']
+            
+            # Konvertera till samma format som nuvarande plotting
+            t_hist = data['t']
+            y_hist = data['y']
+            u_hist = data['u']
+            sp_hist = data['sp']
+            
+            # Konvertera till procent om valt
+            if self.percent_mode_var.get():
+                y_plot_hist = [self.to_percent(val) for val in y_hist]
+                sp_plot_hist = [self.to_percent(val) for val in sp_hist]
+            else:
+                y_plot_hist = y_hist
+                sp_plot_hist = sp_hist
+            
+            # Skapa label med parametrar
+            preset = params.get('preset', 'PID')
+            if preset == 'OnOff':
+                label_suffix = f"OnOff"
+            else:
+                kp = params.get('Kp', 0)
+                ti = params.get('Ti', 0)
+                td = params.get('Td', 0)
+                if preset == 'P':
+                    label_suffix = f"P: Kp={kp:.1f}"
+                elif preset == 'PI':
+                    label_suffix = f"PI: Kp={kp:.1f}, Ti={ti:.1f}"
+                else:  # PID
+                    label_suffix = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
+            
+            # Plotta processvärde och börvärde (första grafen)
+            self.axs[0].plot(t_hist, sp_plot_hist, 'k--', alpha=alpha, linewidth=1)
+            self.axs[0].plot(t_hist, y_plot_hist, alpha=alpha, linewidth=1, 
+                           label=f'Tidigare: {label_suffix}')
+            
+            # Plotta styrsignal (andra grafen)
+            self.axs[1].plot(t_hist, u_hist, alpha=alpha, linewidth=1)
+
     def simulate(self, step=False):
         # Kontrollera numerisk instabilitet: PV utanför ±2×mätområdets gränser
         mat_min = self.parse_float(self.matområde_min_var)
@@ -2229,7 +2342,11 @@ class PIDSimulatorApp:
             ax.clear()
         # Återställ markör så att den skapas på nytt vid nästa mouse-over
         self.cursor_line = None
-        # Välj datafönster
+        
+        # Rita historik först (med progressiv transparens)
+        self._plot_simulation_history()
+        
+        # Välj datafönster för nuvarande simulering
         if self.window_mode.get() == "window":
             size = self.window_size.get()
             start = self.window_start
@@ -2269,8 +2386,8 @@ class PIDSimulatorApp:
         else:
             bv_label = f'Börvärde ({self.process_unit_var.get()})'
         
-        self.axs[0].plot(t, sp_plot, 'k--', label=bv_label)
-        self.axs[0].plot(t, y_plot, label='Är-värde')
+        self.axs[0].plot(t, sp_plot, 'k--', label=bv_label, linewidth=2)
+        self.axs[0].plot(t, y_plot, label='Nuvarande är-värde', linewidth=2)
         
         # Visa hysteresis-gränser för On/Off-reglering
         if self.preset_mode.get() == "OnOff" and len(t) > 0:
@@ -2310,17 +2427,17 @@ class PIDSimulatorApp:
 
         if self.manual_mode_var.get():
             # Manuellt läge - visa endast styrsignal
-            self.axs[1].plot(t, u, label='Manuell styrsignal')
+            self.axs[1].plot(t, u, label='Nuvarande manuell styrsignal', linewidth=2)
             # Använd endast u-värden för skalning
             all_y = np.array(u)
         elif self.preset_mode.get() == "OnOff":
             # On/Off-läge - visa styrsignal med tydlig on/off-karaktär
-            self.axs[1].step(t, u, where='post', label='On/Off styrsignal', linewidth=2)
+            self.axs[1].step(t, u, where='post', label='Nuvarande On/Off styrsignal', linewidth=2)
             # Använd endast u-värden för skalning
             all_y = np.array(u)
         else:
             # Automatiskt läge - visa PID-ut och summa
-            self.axs[1].plot(t, u, label='PID-ut (begränsad)')
+            self.axs[1].plot(t, u, label='Nuvarande PID-ut (begränsad)', linewidth=2)
             # Summan av P+I+D (utan begränsning)
             kp = self.parse_float(self.kp_var)
             ti = self.parse_float(self.ti_var) if self.i_active_var.get() else 0.0
