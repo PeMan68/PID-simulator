@@ -133,6 +133,57 @@ Aktiverar olika typer av störningar för att testa regulatorns prestanda:
 - **Exportera grafer**: Spara som PNG-bild
 - **Spara data**: Exportera som CSV för analys i Excel
 
+## Jämförelsefunktion (Simuleringshistorik)
+
+### Översikt
+Simulatorn sparar automatiskt upp till 5 simuleringar för jämförelse, vilket gör det enkelt att analysera effekten av olika regulatorinställningar.
+
+### Automatisk sparning
+Simuleringar sparas automatiskt till historik när du:
+- **Byter regulatortyp**: Från OnOff till P, P till PI, etc.
+- **Sparar regulatorparametrar**: Efter att ha ändrat Kp, Ti, Td eller andra regulatorinställningar
+- **Ändrar viktiga parametrar**: Börvärde, utsignalgränser, hysteresis
+
+### Visuell representation
+- **Färgkodning**: Varje simulering får en unik färg som behålls konsekvent
+- **Progressiv transparens**: Äldre simuleringar blir mer transparenta (30-70% genomskinlighet)
+- **Historik bara för processvärde**: Endast den övre grafen visar historik för tydlighetens skull
+- **Nuvarande simulering**: Visas alltid med full opacitet och tjockare linje
+
+### Historikpanel
+En dedikerad panel till höger visar:
+- **Nuvarande inställning**: Aktuella parametrar som används
+- **Tidigare plottar**: Lista över sparade simuleringar med:
+  - Reglertyp (OnOff, P, PI, PID)
+  - Huvudparametrar (Kp, Ti, Td, hysteresis)
+  - Utsignalgränser (U:)
+  - Färgkodad indikator
+  - Radera-knapp (×) för individuell borttagning
+
+### Praktisk användning
+**För undervisning**:
+- Visa "före och efter" vid parameterändringar
+- Jämför olika regulatortyper side-by-side
+- Demonstrera effekten av Kp, Ti, Td individuellt
+- Analysera kompromisser mellan snabbhet och stabilitet
+
+**För lärande**:
+- Experimentera utan att förlora tidigare resultat
+- Enkelt återgå till tidigare inställningar genom att studera historiken
+- Förstå parametereffekter genom visuell jämförelse
+
+### Hantering av historik
+- **Automatisk begränsning**: Max 5 simuleringar (äldsta tas bort automatiskt)
+- **Smart rensning**: Historik rensas endast vid processparameterändringar (K, T, dötid)
+- **Manuell borttagning**: Klicka × för att ta bort specifika simuleringar
+- **Bevaras vid**: Reset, störningar, och grafändringar påverkar inte historiken
+
+### Tips för bästa resultat
+1. **Kör tillräckligt länge**: Minst 10 datapunkter krävs för sparning
+2. **Låt systemet stabilisera**: Kör simuleringen tillräckligt länge för att se full respons
+3. **Systematiska jämförelser**: Ändra en parameter i taget för tydliga jämförelser
+4. **Använd konsekvent tidsram**: Samma simuleringslängd ger bättre jämförelser
+
 ## Användartips
 
 ### För nybörjare

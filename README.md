@@ -9,6 +9,8 @@ Denna simulator är utformad för utbildning i reglerteknik och visar hur olika 
 ### Huvudfunktioner
 - **Flera regulatortyper**: On/Off, P, PI och PID med fördefinierade presets
 - **Realistiska processmodeller**: Självreglerande och integrerande processer
+- **Simuleringshistorik**: Jämför upp till 5 olika regulatorinställningar samtidigt
+- **Interaktiv visualisering**: Progressiv transparens och färgkodning för historisk data
 - **Pedagogisk design**: Steg-för-steg visualisering av regulatorberäkningar
 - **Interaktiv hjälp**: Inbyggda tooltips och omfattande hjälpdokumentation
 - **Störningstester**: Brus och pulsstörningar för robusthetsutvärdering
@@ -40,7 +42,15 @@ Denna simulator är utformad för utbildning i reglerteknik och visar hur olika 
 1. Starta med **OnOff-preset** för enklaste introduktion
 2. Experimentera med **P-reglering** för grundläggande förståelse
 3. Utforska **PI** och **PID** för avancerade tillämpningar
-4. Använd **Hjälp-fliken** för detaljerade förklaringar
+4. **Jämför regulatorinställningar** genom historikfunktionen
+5. Använd **Hjälp-fliken** för detaljerade förklaringar
+
+### Jämförelsefunktion
+Simulatorn sparar automatiskt upp till 5 simuleringar för jämförelse:
+- **Automatisk sparning**: Vid byte av regulatortyp eller viktiga parameterändringar
+- **Visuell feedback**: Historiska kurvor visas med progressiv transparens
+- **Färgkodning**: Varje simulering har en unik färg med detaljerad parameterinfo
+- **Enkel hantering**: Ta bort specifika simuleringar från historiken individuellt
 
 ## Beroenden
 
@@ -74,7 +84,15 @@ PID-simulator/
 2. **Proportionell reglering**: Visa effekten av Kp-parameter
 3. **PI-reglering**: Demonstrera eliminering av stationärt fel
 4. **PID-reglering**: Fullständig kontroll med D-del för optimering
-5. **Störningstester**: Utvärdera regulatorprestanda
+5. **Parameterjämförelse**: Använd historikfunktionen för att visa effekten av olika inställningar
+6. **Störningstester**: Utvärdera regulatorprestanda
+
+### Jämförelsefunktionen i undervisning
+Den inbyggda historikfunktionen gör det enkelt att:
+- **Visa före och efter**: Demonstrera effekten av parameterändringar
+- **Jämföra regulatortyper**: P vs PI vs PID side-by-side
+- **Analysera prestanda**: Översläng, insvängningstid och steady-state fel
+- **Diskutera kompromisser**: Snabbhet vs stabilitet
 
 ## Teknisk information
 
