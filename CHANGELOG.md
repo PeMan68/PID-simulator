@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.6.0] - 2025-09-21
+
+### Nya funktioner
+- **Simuleringshistorik**: Jämför upp till 5 olika regulatorinställningar samtidigt
+- **Automatisk sparning**: Simuleringar sparas automatiskt vid reglertyp-byten och viktiga parameterändringar
+- **Visuell jämförelse**: Progressiv transparens (30-70%) för historiska kurvor med färgkodning
+- **Dedikerad historikpanel**: Scrollbar panel till höger med detaljerad parameterinfo för varje sparad simulering
+- **Individuell hantering**: Ta bort specifika simuleringar från historiken med ×-knapp
+- **Smart historikhantering**: Historik bevaras vid reset och störningar, rensas endast vid processparameterändringar
+- **Förbättrade hastighetskontroller**: Utökad hastighetsrange från 6x till 60x (5ms-2000ms) för snabbare demonstration
+- **Konsekvent färghantering**: Permanent färg-ID system säkerställer konsekvent färgkodning även efter borttagning
+
+### Tekniska förbättringar
+- **Optimerad rendering**: Historisk data visas endast för processvärde-grafen för tydlighetens skull
+- **Parametersynkronisering**: Fixad timing för korrekt parameterlagring vid reglertyp-växling
+- **Legend-uppdatering**: Automatisk uppdatering av parametervisning vid alla ändringar
+- **Prestanda-optimering**: Effektiv hantering av upp till 5 samtidiga simuleringar
+
+### Dokumentationsförbättringar
+- **Utökad README**: Beskrivning av jämförelsefunktion och pedagogisk användning
+- **Förbättrad help.md**: Ny sektion om simuleringshistorik med praktiska användningstips
+- **Användarguider**: Detaljerade instruktioner för optimal användning av jämförelsefunktionen
+
 ## [1.5.0] - 2025-09-07
 
 ### Nya funktioner
