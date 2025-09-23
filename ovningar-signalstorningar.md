@@ -3,11 +3,17 @@
 
 ## Inledning
 
-Dessa övningar fokuserar på att förstå hur olika regulatorinställningar hanterar signalstörningar i verkliga system. Du kommer att använda simulatorns historikfunktion för att jämföra olika strategier och analysera robusthet.
+Dessa övningar fokuserar på att förstå hur olika regulatorinställningar hanterar signalstörningar i verkliga system. De förbättrade historikfunktionerna gör det enkelt att jämföra olika strategier och analysera robusthet.
 
 **Förkunskaper:** Grundläggande förståelse för P-, I- och D-parametrarnas funktion.
 
 **Mål:** Förstå hur regulatorer presterar under realistiska förhållanden med störningar.
+
+**Tips för historikhantering:**
+- Spara-knappen aktiveras automatiskt när simuleringen pausas
+- Använd beskrivande namn som "P-reglering med brus" eller "PID låg Td"
+- Både tekniska parametrar och ditt anpassade namn visas i legenden
+- Rensa historik mellan olika övningsdelar för tydligare jämförelser
 
 ---
 

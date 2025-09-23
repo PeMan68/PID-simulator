@@ -3,11 +3,25 @@
 
 ## Inledning
 
-Denna övningssamling fokuserar på systematisk optimering av regulatorparametrar och fördjupad förståelse för hur olika systemegenskaper påverkar regulatorprestanda. Historikfunktionen används för att bygga upp en databas av prestandajämförelser.
+Denna övningssamling fokuserar på systematisk optimering av regulatorparametrar och fördjupad förståelse för hur olika systemegenskaper påverkar regulatorprestanda. De nya historikfunktionerna gör det möjligt att spara och namnge simuleringar för detaljerad jämförelse.
 
 **Förkunskaper:** Genomförda övningar i signalstörningar, grundläggande PID-förståelse.
 
 **Mål:** Utveckla systematisk approach för regulatordesign och optimering.
+
+**Användning av historikfunktioner:**
+- **"Spara" knappen**: Aktiv endast när simuleringen är pausad/stoppad
+- **Namngivning**: Du kan antingen använda det föreslagna namnet eller skriva ditt eget
+- **Visning**: Tekniska parametrar visas alltid, ditt anpassade namn som extra etikett
+- **"Rensa historik"**: Tar bort alla sparade simuleringar med bekräftelse
+
+**Exempel på arbetsflöde:**
+1. Ställ in parametrar (ex: P-reglering, Kp=1.5)
+2. Kör simulering tills den stabiliserat sig
+3. Pausa eller låt simuleringen avslutas
+4. Tryck "Spara" → programmet föreslår "P(Kp=1.5)"
+5. Ändra till "P på integrerande" → Klicka OK
+6. I historikpanelen visas: tekniska parametrar + [P på integrerande]
 
 ---
 
