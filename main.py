@@ -446,6 +446,7 @@ class PIDSimulatorApp:
             'u_max': self.u_max,
             'onoff_hysteresis_high': self.onoff_hysteresis_high.get(),
             'onoff_hysteresis_low': self.onoff_hysteresis_low.get(),
+            'onoff_hysteresis_type': self.onoff_hysteresis_type.get(),
             'graph_min': self.matområde_min_var.get(),  # Graf-skala min
             'graph_max': self.matområde_max_var.get()   # Graf-skala max
         }
@@ -885,9 +886,44 @@ class PIDSimulatorApp:
             widget.destroy()
         
         if not self.simulation_history:
-            # Ingen historik - visa info om detta
+            # Ingen historik - visa nuvarande simulering ändå
+            current_frame = ttk.LabelFrame(self.legend_content_frame, text="Nuvarande", padding=5)
+            current_frame.pack(fill=tk.X, pady=5)
+            
+            # Hämta nuvarande parametrar
+            preset = self.preset_mode.get()
+            if preset == 'OnOff':
+                hyst_type = self.onoff_hysteresis_type.get()
+                hyst_high = self.onoff_hysteresis_high.get()
+                hyst_low = self.onoff_hysteresis_low.get()
+                current_text = f"OnOff: {hyst_type}\nHyst: +{hyst_high:.1f}/-{hyst_low:.1f}"
+            else:
+                kp = self.parse_float(self.kp_var)
+                ti = self.parse_float(self.ti_var) if self.i_active_var.get() else 0
+                td = self.parse_float(self.td_var) if self.d_active_var.get() else 0
+                
+                if preset == 'P':
+                    current_text = f"P: Kp={kp:.1f}"
+                elif preset == 'PI':
+                    current_text = f"PI: Kp={kp:.1f}, Ti={ti:.1f}"
+                else:  # PID
+                    current_text = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
+            
+            # Lägg till utsignalgränser för alla typer
+            u_min = self.u_min_var.get()
+            u_max = self.u_max_var.get()
+            current_text += f"\nUt: {u_min:.0f}-{u_max:.0f}%"
+            
+            ttk.Label(current_frame, text=current_text, font=('TkDefaultFont', 9, 'bold')).pack()
+            
+            # Använd samma färgsystem som plotting
+            plot_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # C0-C4
+            current_color = plot_colors[self.next_color_id % len(plot_colors)]
+            ttk.Label(current_frame, text="●", foreground=current_color, font=('TkDefaultFont', 12)).pack()
+            
+            # Informationstext
             ttk.Label(self.legend_content_frame, 
-                     text="Inga sparade jämförelser än.\n\nÄndra regulatorparametrar och tryck 'Spara' för att skapa jämförelser.",
+                     text="\nÄndra regulatorparametrar och tryck 'Spara' för att skapa jämförelser.",
                      wraplength=220,
                      font=('TkDefaultFont', 9)).pack(pady=10)
             return
@@ -921,7 +957,11 @@ class PIDSimulatorApp:
         current_text += f"\nUt: {u_min:.0f}-{u_max:.0f}%"
         
         ttk.Label(current_frame, text=current_text, font=('TkDefaultFont', 9, 'bold')).pack()
-        ttk.Label(current_frame, text="●", foreground="blue", font=('TkDefaultFont', 12)).pack()
+        
+        # Använd samma färgsystem som plotting
+        plot_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # C0-C4
+        current_color = plot_colors[self.next_color_id % len(plot_colors)]
+        ttk.Label(current_frame, text="●", foreground=current_color, font=('TkDefaultFont', 12)).pack()
         
         # Visa historiska simuleringar 
         history_frame = ttk.LabelFrame(self.legend_content_frame, text="Tidigare plottar", padding=5)
@@ -1647,6 +1687,7 @@ class PIDSimulatorApp:
         try:
             self.saved_params['onoff_hysteresis_high'] = self.onoff_hysteresis_high.get()
             self.saved_params['onoff_hysteresis_low'] = self.onoff_hysteresis_low.get()
+            self.saved_params['onoff_hysteresis_type'] = self.onoff_hysteresis_type.get()
         except ValueError:
             pass
         
@@ -2020,6 +2061,7 @@ class PIDSimulatorApp:
         # Uppdatera OnOff hysteresis-parametrar
         self.saved_params['onoff_hysteresis_high'] = self.onoff_hysteresis_high.get()
         self.saved_params['onoff_hysteresis_low'] = self.onoff_hysteresis_low.get()
+        self.saved_params['onoff_hysteresis_type'] = self.onoff_hysteresis_type.get()
         
         # Applicera sparade parametrar till PID-regulatorn
         self.pid.Kp = self.saved_params['kp']
@@ -2326,7 +2368,7 @@ class PIDSimulatorApp:
                 'preset': self.preset_mode.get(),
                 'onoff_hysteresis_high': self.saved_params.get('onoff_hysteresis_high', 0),
                 'onoff_hysteresis_low': self.saved_params.get('onoff_hysteresis_low', 0),
-                'onoff_hysteresis_type': self.onoff_hysteresis_type.get(),
+                'onoff_hysteresis_type': self.saved_params.get('onoff_hysteresis_type', 'both'),
                 'u_min': self.saved_params.get('u_min', 0),
                 'u_max': self.saved_params.get('u_max', 100),
                 'color_id': self.next_color_id,  # Permanent färg-ID
@@ -2691,8 +2733,12 @@ class PIDSimulatorApp:
         
         # Plotta endast om vi har data
         if len(t) > 0:
+            # Använd samma färgsystem som historiken
+            plot_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # C0-C4
+            current_color = plot_colors[self.next_color_id % len(plot_colors)]
+            
             self.axs[0].plot(t, sp_plot, 'k--', label=bv_label, linewidth=2)
-            self.axs[0].plot(t, y_plot, label='Nuvarande är-värde', linewidth=2)
+            self.axs[0].plot(t, y_plot, color=current_color, label='Nuvarande är-värde', linewidth=2)
         
         # Visa hysteresis-gränser för On/Off-reglering
         if self.preset_mode.get() == "OnOff" and len(t) > 0:

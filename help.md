@@ -193,4 +193,4 @@ Detta verktyg är utvecklat för pedagogiska ändamål inom reglerteknik.
 - **teori-och-bakgrund.md** för fullständig teknisk dokumentation
 - **CHANGELOG.md** för versionshistorik
 
-**Version**: 1.7.0
+**Version**: 1.6.0
