@@ -62,14 +62,12 @@ Denna simulator demonstrerar PID-reglering för processindustriella system. Prog
 ### Processmodell
 
 #### K (Processförstärkning)
-Beskriver hur mycket processvärdet ändras när styrsignalen ändras.
-
-- **Traditionell metod**: K i fysiska enheter (t.ex. 0.4 °C/%)
-- **Enhetslös metod**: K som procent av mätområdet (industristandard)
+- **Vad det gör**: Beskriver hur mycket processvärdet ändras vid ändring av styrsignalen
 - **Högre K**: Större påverkan av styrsignal
-- **Typiska värden**: 0.1 - 5 (beroende på metod och process)
+- **Lägre K**: Mindre påverkan av styrsignal
+- **Typiska värden**: 0.1 - 5 
 
-**Se även**: **Teori-fliken** för detaljerade beräkningsmetoder och matematisk bakgrund
+**För tekniska detaljer och beräkningsmetoder**: Se **teori-och-bakgrund.md**
 
 #### T (Tidskonstant)
 - Beskriver hur snabbt processen reagerar
@@ -129,9 +127,31 @@ Aktiverar olika typer av störningar för att testa regulatorns prestanda:
 - Kortare skala = mer detaljer
 - Längre skala = överblick
 
+### Simuleringshastighet
+- **Hastighetskontroller**: Högerpil (>>) ökar hastighet, vänsterpil (<<) minskar hastighet
+- **Jämna hastighetsändringar**: 15 förutbestämda nivåer från 0.17x till 58x
+- **Användning**: Anpassa simuleringshastighet för optimal demonstration och analys
+
 ### Export
 - **Exportera grafer**: Spara som PNG-bild
 - **Spara data**: Exportera som CSV för analys i Excel
+
+## Jämförelsefunktion (Simuleringshistorik)
+
+Simulatorn sparar automatiskt upp till 5 simuleringar för jämförelse av olika regulatorinställningar.
+
+### Automatisk sparning
+Simuleringar sparas när du byter regulatortyp eller sparar parametrar.
+
+### Praktisk användning
+- **Undervisning**: Visa "före och efter" vid parameterändringar
+- **Jämförelse**: Olika regulatortyper side-by-side  
+- **Analys**: Effekten av olika parametrar
+
+### Tips
+- Kör tillräckligt länge (minst 10 datapunkter)
+- Låt systemet stabilisera
+- Ändra en parameter i taget för tydliga jämförelser
 
 ## Användartips
 
@@ -162,24 +182,15 @@ Aktiverar olika typer av störningar för att testa regulatorns prestanda:
 3. **Lägg till I-delen**: Sänk Ti för att eliminera kvarstående fel
 4. **Optimera med D-delen**: Justera Td för att minska översläng
 
-### Tumregler:
-- **Snabb process (T < 10s)**: Börja med Kp ≈ 1, Ti ≈ 2×T
-- **Långsam process (T > 30s)**: Börja med Kp ≈ 0.5, Ti ≈ T
-- **Med dötid**: Minska Kp, öka Ti proportionellt mot dötiden
-
-**Se även**: **Teori-fliken** innehåller avancerade inställningsmetoder (Ziegler-Nichols, Lambda-metoden) och fullständig matematisk bakgrund
+**För avancerade inställningsmetoder**: Se **teori-och-bakgrund.md**
 
 ## Support och vidareutveckling
 
 Detta verktyg är utvecklat för pedagogiska ändamål inom reglerteknik. 
 
 ### Ytterligare resurser
-- **Teori-flik**: Översikt och vägledning till externt teoridokument
-- **Teorifil**: Öppna `teori-och-bakgrund.md` för korrekt formatering av tabeller och matematik
-- **Versionshistorik**: Se CHANGELOG för nya funktioner och förbättringar  
-- **Installation**: README innehåller projektöversikt och installationsinstruktioner
+- **Teori-fliken** i programmet för vägledning till teoridokument
+- **teori-och-bakgrund.md** för fullständig teknisk dokumentation
+- **CHANGELOG.md** för versionshistorik
 
-**Tips**: Teori-fliken visar vad som finns tillgängligt, externa filen ger optimal läsbarhet!
-
-**Version**: 1.5.0
-**Senast uppdaterad**: September 2025
+**Version**: 1.6.0

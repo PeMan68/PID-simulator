@@ -5,7 +5,18 @@ import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import os
+import sys
+
+def resource_path(relative_path):
+    """Får sökväg till resource, fungerar både för dev och PyInstaller .exe"""
+    try:
+        # PyInstaller skapar en temp folder och lagrar sökvägen i _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 # --- Tooltip-klass för hjälpsystem ---
 class ToolTip:
@@ -331,7 +342,7 @@ class PIDSimulatorApp:
         self.tooltip.place(x=x_root, y=y_root)
     def __init__(self, root):
         self.root = root
-        root.title("PID-simulator v1.5.0")
+        root.title("PID-simulator v1.6.0")
         # Öka fönsterbredd för att ge plats åt tooltip
         root.geometry("1100x700")
         root.minsize(1000, 600)
@@ -369,6 +380,11 @@ class PIDSimulatorApp:
         self.i = [0]
         self.d = [0]
         self.sp = [self.setpoint]
+        
+        # Simulation history för jämförelser
+        self.simulation_history = []
+        self.max_history_size = 5
+        self.next_color_id = 0  # Räknare för permanenta färg-ID
         # Tidsfönster
         self.window_mode = tk.StringVar(value="all")  # "all" eller "window"
         self.window_size = tk.IntVar(value=30)
@@ -418,6 +434,7 @@ class PIDSimulatorApp:
             'td': self.pid.Td,
             'i_active': self.i_active_var.get(),
             'd_active': self.d_active_var.get(),
+            'preset': self.preset_mode.get(),  # Spara initial preset-typ
             'setpoint': self.setpoint,
             'nv': self.nv_var.get(),
             'matområde_min': self.matområde_min_var.get(),
@@ -429,6 +446,7 @@ class PIDSimulatorApp:
             'u_max': self.u_max,
             'onoff_hysteresis_high': self.onoff_hysteresis_high.get(),
             'onoff_hysteresis_low': self.onoff_hysteresis_low.get(),
+            'onoff_hysteresis_type': self.onoff_hysteresis_type.get(),
             'graph_min': self.matområde_min_var.get(),  # Graf-skala min
             'graph_max': self.matområde_max_var.get()   # Graf-skala max
         }
@@ -798,13 +816,46 @@ class PIDSimulatorApp:
         graph_container = ttk.Frame(self.simulator_frame)
         graph_container.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         
-        # Plott
+        # Skapa huvudlayout för grafer och legend
+        main_graph_frame = ttk.Frame(graph_container)
+        main_graph_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Plott (vänstra sidan)
+        plot_frame = ttk.Frame(main_graph_frame)
+        plot_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
         self.fig, self.axs = plt.subplots(3, 1, sharex=True, figsize=(7,6))
-        self.canvas = FigureCanvasTkAgg(self.fig, master=graph_container)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
         # Koppla musrörelse till canvas (måste ske efter att self.canvas skapats)
         self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         
+        # Legend-område (högra sidan)
+        self.legend_frame = ttk.LabelFrame(main_graph_frame, text="Jämförelse-historik", padding=10)
+        self.legend_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=(10, 0))
+        
+        # Scrollbar för legend om det blir många simuleringar
+        legend_canvas = tk.Canvas(self.legend_frame, width=250, height=400)
+        legend_scrollbar = ttk.Scrollbar(self.legend_frame, orient="vertical", command=legend_canvas.yview)
+        self.legend_content_frame = ttk.Frame(legend_canvas)
+        
+        legend_canvas.configure(yscrollcommand=legend_scrollbar.set)
+        legend_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        legend_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Bind mousewheel till legend scrolling
+        def on_legend_mousewheel(event):
+            legend_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        legend_canvas.bind("<MouseWheel>", on_legend_mousewheel)
+        
+        # Lägg legend_content_frame i canvas
+        legend_canvas.create_window((0, 0), window=self.legend_content_frame, anchor="nw")
+        
+        # Uppdatera scroll region när innehållet ändras
+        def configure_legend_scroll(event):
+            legend_canvas.configure(scrollregion=legend_canvas.bbox("all"))
+        self.legend_content_frame.bind("<Configure>", configure_legend_scroll)
+
         # Export-knappar under graferna
         export_frame = ttk.Frame(graph_container)
         export_frame.pack(fill=tk.X, pady=5)
@@ -824,6 +875,177 @@ class PIDSimulatorApp:
         
         # Skapa tooltips för viktiga fält
         self.create_tooltips()
+        
+        # Initiera legend-innehåll
+        self.update_legend_display()
+
+    def update_legend_display(self):
+        """Uppdaterar legend-området med information om aktuella och historiska simuleringar"""
+        # Rensa befintligt innehåll
+        for widget in self.legend_content_frame.winfo_children():
+            widget.destroy()
+        
+        if not self.simulation_history:
+            # Ingen historik - visa nuvarande simulering ändå
+            current_frame = ttk.LabelFrame(self.legend_content_frame, text="Nuvarande", padding=5)
+            current_frame.pack(fill=tk.X, pady=5)
+            
+            # Hämta nuvarande parametrar
+            preset = self.preset_mode.get()
+            if preset == 'OnOff':
+                hyst_type = self.onoff_hysteresis_type.get()
+                hyst_high = self.onoff_hysteresis_high.get()
+                hyst_low = self.onoff_hysteresis_low.get()
+                current_text = f"OnOff: {hyst_type}\nHyst: +{hyst_high:.1f}/-{hyst_low:.1f}"
+            else:
+                kp = self.parse_float(self.kp_var)
+                ti = self.parse_float(self.ti_var) if self.i_active_var.get() else 0
+                td = self.parse_float(self.td_var) if self.d_active_var.get() else 0
+                
+                if preset == 'P':
+                    current_text = f"P: Kp={kp:.1f}"
+                elif preset == 'PI':
+                    current_text = f"PI: Kp={kp:.1f}, Ti={ti:.1f}"
+                else:  # PID
+                    current_text = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
+            
+            # Lägg till utsignalgränser för alla typer
+            u_min = self.u_min_var.get()
+            u_max = self.u_max_var.get()
+            current_text += f"\nUt: {u_min:.0f}-{u_max:.0f}%"
+            
+            ttk.Label(current_frame, text=current_text, font=('TkDefaultFont', 9, 'bold')).pack()
+            
+            # Använd samma färgsystem som plotting
+            plot_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # C0-C4
+            current_color = plot_colors[self.next_color_id % len(plot_colors)]
+            ttk.Label(current_frame, text="●", foreground=current_color, font=('TkDefaultFont', 12)).pack()
+            
+            # Informationstext
+            ttk.Label(self.legend_content_frame, 
+                     text="\nÄndra regulatorparametrar och tryck 'Spara' för att skapa jämförelser.",
+                     wraplength=220,
+                     font=('TkDefaultFont', 9)).pack(pady=10)
+            return
+        
+        # Visa nuvarande simulering först
+        current_frame = ttk.LabelFrame(self.legend_content_frame, text="Nuvarande", padding=5)
+        current_frame.pack(fill=tk.X, pady=5)
+        
+        # Hämta nuvarande parametrar
+        preset = self.preset_mode.get()
+        if preset == 'OnOff':
+            hyst_type = self.onoff_hysteresis_type.get()
+            hyst_high = self.onoff_hysteresis_high.get()
+            hyst_low = self.onoff_hysteresis_low.get()
+            current_text = f"OnOff: {hyst_type}\nHyst: +{hyst_high:.1f}/-{hyst_low:.1f}"
+        else:
+            kp = self.parse_float(self.kp_var)
+            ti = self.parse_float(self.ti_var) if self.i_active_var.get() else 0
+            td = self.parse_float(self.td_var) if self.d_active_var.get() else 0
+            
+            if preset == 'P':
+                current_text = f"P: Kp={kp:.1f}"
+            elif preset == 'PI':
+                current_text = f"PI: Kp={kp:.1f}, Ti={ti:.1f}"
+            else:  # PID
+                current_text = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
+        
+        # Lägg till utsignalgränser för alla typer
+        u_min = self.u_min_var.get()
+        u_max = self.u_max_var.get()
+        current_text += f"\nUt: {u_min:.0f}-{u_max:.0f}%"
+        
+        ttk.Label(current_frame, text=current_text, font=('TkDefaultFont', 9, 'bold')).pack()
+        
+        # Använd samma färgsystem som plotting
+        plot_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # C0-C4
+        current_color = plot_colors[self.next_color_id % len(plot_colors)]
+        ttk.Label(current_frame, text="●", foreground=current_color, font=('TkDefaultFont', 12)).pack()
+        
+        # Visa historiska simuleringar 
+        history_frame = ttk.LabelFrame(self.legend_content_frame, text="Tidigare plottar", padding=5)
+        history_frame.pack(fill=tk.X, pady=5)
+        
+        # Matplotlib standard färger som matchar plotting (samma ordning som plottarna)
+        plot_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # matplotlib C0-C4
+        alpha_values = [0.3, 0.4, 0.5, 0.6, 0.7]  # Samma som i plottning
+        
+        for i, simulation in enumerate(self.simulation_history):
+            params = simulation['params']
+            
+            # Använd det permanenta färg-ID istället för nuvarande position
+            color_id = params.get('color_id')
+            if color_id is None:
+                # Fallback för äldre simuleringar utan color_id - tilldela baserat på ordning
+                color_id = i
+                params['color_id'] = color_id
+            base_color = plot_colors[color_id % len(plot_colors)]
+            alpha = alpha_values[min(i, len(alpha_values) - 1)]
+            
+            # Konvertera till RGB för alpha-simulering
+            rgb = mcolors.to_rgb(base_color)
+            # Simulera alpha genom att blanda med vit bakgrund
+            blended_rgb = [rgb[j] * alpha + (1 - alpha) for j in range(3)]
+            color_hex = "#{:02x}{:02x}{:02x}".format(
+                int(blended_rgb[0] * 255),
+                int(blended_rgb[1] * 255), 
+                int(blended_rgb[2] * 255)
+            )
+            
+            sim_frame = ttk.Frame(history_frame)
+            sim_frame.pack(fill=tk.X, pady=2)
+            
+            # Vänster del: färgindikator och huvudtext
+            left_frame = ttk.Frame(sim_frame)
+            left_frame.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            
+            # Höger del: raderingsknapp
+            right_frame = ttk.Frame(sim_frame)
+            right_frame.pack(side=tk.RIGHT)
+            
+            # Skapa detaljerad parametertext
+            preset = params.get('preset', 'PID')
+            if preset == 'OnOff':
+                hyst_type = params.get('onoff_hysteresis_type', 'both')
+                hyst_high = params.get('onoff_hysteresis_high', 0)
+                hyst_low = params.get('onoff_hysteresis_low', 0)
+                param_text = f"OnOff: {hyst_type}\nHyst: +{hyst_high:.1f}/-{hyst_low:.1f}"
+            else:
+                kp = params.get('Kp', 0)
+                ti = params.get('Ti', 0)
+                td = params.get('Td', 0)
+                if preset == 'P':
+                    param_text = f"P: Kp={kp:.1f}"
+                elif preset == 'PI':
+                    param_text = f"PI: Kp={kp:.1f}, Ti={ti:.1f}"
+                else:  # PID
+                    param_text = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
+            
+            # Lägg till utsignalgränser
+            u_min = params.get('u_min', 0)
+            u_max = params.get('u_max', 100)
+            param_text += f"\nUt: {u_min:.0f}-{u_max:.0f}%"
+            
+            # Färgindikator och text
+            indicator_frame = ttk.Frame(left_frame)
+            indicator_frame.pack(side=tk.TOP, anchor=tk.W)
+            
+            color_label = tk.Label(indicator_frame, text="●", foreground=color_hex, font=('TkDefaultFont', 10))
+            color_label.pack(side=tk.LEFT)
+            
+            param_label = ttk.Label(indicator_frame, text=param_text, font=('TkDefaultFont', 8), justify=tk.LEFT)
+            param_label.pack(side=tk.LEFT, padx=(5, 0))
+            
+            # Raderingsknapp
+            delete_btn = ttk.Button(right_frame, text="✕", width=3, 
+                                  command=lambda idx=i: self.remove_simulation_from_history(idx))
+            delete_btn.pack()
+        
+        # Uppdatera scroll region
+        self.legend_content_frame.update_idletasks()
+        legend_canvas = self.legend_content_frame.master
+        legend_canvas.configure(scrollregion=legend_canvas.bbox("all"))
 
     def create_tooltips(self):
         """Skapar tooltips för alla viktiga widgets"""
@@ -922,7 +1144,7 @@ class PIDSimulatorApp:
         help_scrollbar.pack(side="right", fill="y")
         
         # Läs hjälpfil om den finns
-        help_file_path = os.path.join(os.path.dirname(__file__), "help.md")
+        help_file_path = resource_path("help.md")
         help_content = ""
         
         try:
@@ -968,7 +1190,7 @@ class PIDSimulatorApp:
         theory_scrollbar.pack(side="right", fill="y")
         
         # Läs teorifil om den finns
-        theory_file_path = os.path.join(os.path.dirname(__file__), "teori-och-bakgrund.md")
+        theory_file_path = resource_path("teori-och-bakgrund.md")
         theory_content = ""
         
         try:
@@ -1142,29 +1364,82 @@ class PIDSimulatorApp:
         pass
 
     def speed_faster(self):
-        # Minska delay = snabbare simulering
+        # Logaritmisk hastighetsändring med 1.5x multiplikator (minska delay = öka hastighet)
+        # Delay-värden sorterade från långsam till snabb
+        speed_levels = [1800, 1200, 750, 430, 300, 200, 150, 100, 60, 40, 27, 18, 12, 8, 5]
         current = self.speed_var.get()
-        if current > 50:  # Minimum 50ms delay
-            new_speed = max(50, current - 50)
-            self.speed_var.set(new_speed)
-            self.update_speed_label()
+        
+        # Hitta nuvarande position eller närmaste position
+        current_index = -1
+        
+        # Första försök: hitta exakt match
+        for i, level in enumerate(speed_levels):
+            if current == level:
+                current_index = i
+                break
+        
+        # Om exakt match, gå till nästa snabbare nivå
+        if current_index >= 0:
+            if current_index < len(speed_levels) - 1:  # Inte redan snabbast
+                self.speed_var.set(speed_levels[current_index + 1])
+        else:
+            # Om ingen exakt match, hitta rätt position att hoppa till
+            for i, level in enumerate(speed_levels):
+                if current > level:
+                    self.speed_var.set(level)
+                    break
+        
+        self.update_speed_label()
 
     def speed_slower(self):
-        # Öka delay = långsammare simulering
+        # Logaritmisk hastighetsändring med 1.5x multiplikator (öka delay = minska hastighet)
+        speed_levels = [1800, 1200, 750, 430, 300, 200, 150, 100, 60, 40, 27, 18, 12, 8, 5]
         current = self.speed_var.get()
-        if current < 1000:  # Maximum 1000ms delay
-            new_speed = min(1000, current + 50)
-            self.speed_var.set(new_speed)
-            self.update_speed_label()
+        
+        # Hitta nuvarande position eller närmaste position
+        current_index = -1
+        
+        # Första försök: hitta exakt match
+        for i, level in enumerate(speed_levels):
+            if current == level:
+                current_index = i
+                break
+        
+        # Om exakt match, gå till nästa långsammare nivå
+        if current_index >= 0:
+            if current_index > 0:  # Inte redan långsammast
+                self.speed_var.set(speed_levels[current_index - 1])
+        else:
+            # Om ingen exakt match, hitta rätt position att hoppa till
+            for i in range(len(speed_levels) - 1, -1, -1):
+                if current < speed_levels[i]:
+                    self.speed_var.set(speed_levels[i])
+                    break
+        
+        self.update_speed_label()
 
     def update_speed_label(self):
-        # Beräkna hastighets-multiplikator (300ms = 1x)
+        # Hastighetsvisning med 1.5x multiplikator baserat på 300ms = 1x
         delay = self.speed_var.get()
-        speed_factor = 300 / delay
-        if speed_factor >= 1:
-            self.speed_label.config(text=f"{speed_factor:.1f}x")
+        
+        # Exakta mappningar för de förutbestämda nivåerna
+        speed_map = {
+            1800: "0.17x", 1200: "0.25x", 750: "0.4x", 430: "0.7x", 
+            300: "1x", 200: "1.5x", 150: "2x", 100: "3x", 
+            60: "5x", 40: "7.5x", 27: "11x", 18: "17x", 
+            12: "25x", 8: "38x", 5: "58x"
+        }
+        
+        # Använd exakt mappning om tillgänglig
+        if delay in speed_map:
+            self.speed_label.config(text=speed_map[delay])
         else:
-            self.speed_label.config(text=f"1/{1/speed_factor:.1f}x")
+            # Fallback: beräkna baserat på 300ms = 1x
+            speed_factor = 300 / delay
+            if speed_factor >= 1:
+                self.speed_label.config(text=f"{speed_factor:.1f}x")
+            else:
+                self.speed_label.config(text=f"{speed_factor:.2f}x")
 
     def parse_float(self, var):
         try:
@@ -1241,6 +1516,24 @@ class PIDSimulatorApp:
     
     def on_preset_change(self):
         """Hanterar växling mellan regulator-presets"""
+        # Spara nuvarande simulering till historik INNAN vi ändrar parametrarna
+        # Använd den sparade preset-typen som faktiskt användes för simuleringen
+        if len(self.t) > 10:
+            old_params = {
+                'Kp': self.saved_params['kp'],
+                'Ti': self.saved_params['ti'],
+                'Td': self.saved_params['td'],
+                'preset': self.saved_params.get('preset', 'OnOff'),  # Använd sparad preset
+                'onoff_hysteresis_high': self.saved_params.get('onoff_hysteresis_high', 0),
+                'onoff_hysteresis_low': self.saved_params.get('onoff_hysteresis_low', 0),
+                'onoff_hysteresis_type': self.onoff_hysteresis_type.get(),
+                'u_min': self.saved_params.get('u_min', 0),
+                'u_max': self.saved_params.get('u_max', 100),
+                'color_id': self.next_color_id,  # Permanent färg-ID
+                'timestamp': len(self.simulation_history)
+            }
+            self.save_current_simulation_to_history(override_params=old_params)
+            
         preset = self.preset_mode.get()
         
         if preset == "OnOff":
@@ -1283,7 +1576,11 @@ class PIDSimulatorApp:
                 self.d_active_var.set(True)
         
         # Automatiskt spara ändringar vid preset-växling för att nya värden ska träda i kraft direkt
-        self.save_regulator_changes()
+        # (save_to_history=False eftersom vi redan sparade i början av metoden)
+        self.save_regulator_changes(save_to_history=False)
+        
+        # Uppdatera legend-display för att visa nya parametrar direkt
+        self.update_legend_display()
         
         # Uppdatera On/Off-regulator
         self.on_onoff_change()
@@ -1317,6 +1614,9 @@ class PIDSimulatorApp:
     def on_integrerande_change(self):
         """Hantera när integrerande-checkbox ändras - visa/dölj utflöde och T-parameter"""
         integrerande = self.integrerande_var.get()
+        
+        # Rensa simulation historik eftersom processtyp har ändrats
+        self.clear_simulation_history()
         
         # Visa/dölj utflöde-kontroller baserat på integrerande-status
         if integrerande:
@@ -1387,6 +1687,7 @@ class PIDSimulatorApp:
         try:
             self.saved_params['onoff_hysteresis_high'] = self.onoff_hysteresis_high.get()
             self.saved_params['onoff_hysteresis_low'] = self.onoff_hysteresis_low.get()
+            self.saved_params['onoff_hysteresis_type'] = self.onoff_hysteresis_type.get()
         except ValueError:
             pass
         
@@ -1713,14 +2014,19 @@ class PIDSimulatorApp:
         # Uppdatera plotten med nya skalningsvärden
         self.update_plot()
         
-    def save_regulator_changes(self):
+    def save_regulator_changes(self, save_to_history=True):
         """Sparar ändringar i Regulatorparametrar (Kp, Ti, Td, börvärde, mätområde, utsignal)"""
+        # Spara nuvarande simulering till historik INNAN vi uppdaterar parametrarna
+        if save_to_history and len(self.t) > 10:
+            self.save_current_simulation_to_history()
+            
         # Uppdatera sparade parametrar från GUI-värdena - endast regulatorparametrar
         self.saved_params['kp'] = self.parse_float(self.kp_var)
         self.saved_params['ti'] = self.parse_float(self.ti_var)
         self.saved_params['td'] = self.parse_float(self.td_var)
         self.saved_params['i_active'] = self.i_active_var.get()
         self.saved_params['d_active'] = self.d_active_var.get()
+        self.saved_params['preset'] = self.preset_mode.get()  # Spara aktuell preset-typ
         
         # Uppdatera börvärde
         try:
@@ -1755,6 +2061,7 @@ class PIDSimulatorApp:
         # Uppdatera OnOff hysteresis-parametrar
         self.saved_params['onoff_hysteresis_high'] = self.onoff_hysteresis_high.get()
         self.saved_params['onoff_hysteresis_low'] = self.onoff_hysteresis_low.get()
+        self.saved_params['onoff_hysteresis_type'] = self.onoff_hysteresis_type.get()
         
         # Applicera sparade parametrar till PID-regulatorn
         self.pid.Kp = self.saved_params['kp']
@@ -1772,6 +2079,9 @@ class PIDSimulatorApp:
         
         # Nu när alla saved_params är uppdaterade, kör highlight för att återställa färgerna korrekt
         self.highlight_unsaved_changes()
+        
+        # Uppdatera legend-display för att visa de nya parametrarna
+        self.update_legend_display()
         
         # Uppdatera plot (utan att resetta historiken)
         self.update_plot()
@@ -1794,6 +2104,9 @@ class PIDSimulatorApp:
         
         # Nu när alla saved_params är uppdaterade, kör highlight för att återställa färgerna korrekt
         self.highlight_unsaved_changes()
+        
+        # Rensa simulation historik eftersom processparametrar har ändrats
+        self.clear_simulation_history()
         
         # Uppdatera plot (utan att resetta historiken)
         self.update_plot()
@@ -2038,6 +2351,161 @@ class PIDSimulatorApp:
             self.step_btn.state(["!disabled"])
             self.reset_btn.state(["!disabled"])
 
+    def save_current_simulation_to_history(self, override_params=None):
+        """Sparar nuvarande simulering till historik för jämförelse"""
+        if len(self.t) < 10:  # Bara spara om vi har tillräckligt med data
+            return
+            
+        # Skapa kopia av nuvarande data
+        # Använd override_params om de finns, annars hämta från aktuella inställningar
+        if override_params:
+            params = override_params
+        else:
+            params = {
+                'Kp': self.saved_params['kp'],
+                'Ti': self.saved_params['ti'],
+                'Td': self.saved_params['td'],
+                'preset': self.preset_mode.get(),
+                'onoff_hysteresis_high': self.saved_params.get('onoff_hysteresis_high', 0),
+                'onoff_hysteresis_low': self.saved_params.get('onoff_hysteresis_low', 0),
+                'onoff_hysteresis_type': self.saved_params.get('onoff_hysteresis_type', 'both'),
+                'u_min': self.saved_params.get('u_min', 0),
+                'u_max': self.saved_params.get('u_max', 100),
+                'color_id': self.next_color_id,  # Permanent färg-ID
+                'timestamp': len(self.simulation_history)
+            }
+            
+        simulation_data = {
+            'data': {
+                't': self.t.copy(),
+                'y': self.y.copy(),
+                'u': self.u.copy(),
+                'sp': self.sp.copy(),
+                'e': self.e.copy(),
+                'i': self.i.copy(),
+                'd': self.d.copy()
+            },
+            'params': params
+        }
+        
+        # Lägg till i historik
+        self.simulation_history.append(simulation_data)
+        
+        # Öka färg-ID för nästa simulering
+        self.next_color_id += 1
+        
+        # Begränsa antal sparade simuleringar
+        while len(self.simulation_history) > self.max_history_size:
+            self.simulation_history.pop(0)
+            
+        # Rensa nuvarande data för att starta en ny simulering
+        self.reset_current_simulation_data()
+        
+        # Uppdatera legend-display efter historikändring
+        self.update_legend_display()
+    
+    def reset_current_simulation_data(self):
+        """Rensar nuvarande simuleringsdata för att börja en ny jämförelse"""
+        self.t = []
+        self.y = []
+        self.sp = []
+        self.u = []
+        self.e = []
+        self.i = []
+        self.d = []
+        self.current_step = 0
+        
+        # Återställ PID-regulator (skapa ny instans för att rensa integrerat fel och derivata minne)
+        self.pid = PID(Kp=self.parse_float(self.kp_var), Ti=self.parse_float(self.ti_var), Td=self.parse_float(self.td_var), dt=self.dt)
+        
+        # Återställ process till initialvärde (skapa ny instans)
+        self.process = Process(
+            K=self.parse_float(self.proc_k_var),
+            T=self.validate_T_value(show_warning=False),
+            dead_time=self.parse_float(self.proc_dead_var),
+            integrerande=self.integrerande_var.get(),
+            Fout=self.parse_float(self.proc_fout_var),
+            normalvarde=self.nv_var.get(),
+            matområde_min=self.matområde_min_var.get(),
+            matområde_max=self.matområde_max_var.get(),
+            enhetslös_K=self.enhetslös_K_var.get()
+        )
+        
+        # Stoppa simuleringen om den körs
+        self.running = False
+        self.update_buttons()
+    
+    def clear_simulation_history(self):
+        """Rensar simulation historik (anropas vid processparameterändringar)"""
+        self.simulation_history.clear()
+        
+        # Uppdatera legend-display efter historikändring
+        self.update_legend_display()
+    
+    def remove_simulation_from_history(self, index):
+        """Tar bort en specifik simulering från historiken"""
+        if 0 <= index < len(self.simulation_history):
+            self.simulation_history.pop(index)
+            # Uppdatera legend-display efter ändring
+            self.update_legend_display()
+            # Uppdatera plot för att reflektera ändringen
+            self.update_plot()
+    
+    def _plot_simulation_history(self):
+        """Plottar historiska simuleringar med progressiv transparens"""
+        if not self.simulation_history:
+            return
+            
+        # Alpha-värden för progressiv transparens
+        alpha_values = [0.3, 0.4, 0.5, 0.6, 0.7]  # Äldst till nyast
+        # Matplotlib standard färger som matchar legend
+        plot_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # C0-C4
+        
+        for i, simulation in enumerate(self.simulation_history):
+            alpha = alpha_values[min(i, len(alpha_values)-1)]
+            # Använd det permanenta färg-ID istället för nuvarande position
+            color_id = simulation['params'].get('color_id')
+            if color_id is None:
+                # Fallback för äldre simuleringar utan color_id - tilldela baserat på ordning
+                color_id = i
+                simulation['params']['color_id'] = color_id
+            color = plot_colors[color_id % len(plot_colors)]
+            data = simulation['data']
+            params = simulation['params']
+            
+            # Konvertera till samma format som nuvarande plotting
+            t_hist = data['t']
+            y_hist = data['y']
+            u_hist = data['u']
+            sp_hist = data['sp']
+            
+            # Konvertera till procent om valt
+            if self.percent_mode_var.get():
+                y_plot_hist = [self.to_percent(val) for val in y_hist]
+                sp_plot_hist = [self.to_percent(val) for val in sp_hist]
+            else:
+                y_plot_hist = y_hist
+                sp_plot_hist = sp_hist
+            
+            # Skapa label med parametrar
+            preset = params.get('preset', 'PID')
+            if preset == 'OnOff':
+                label_suffix = f"OnOff"
+            else:
+                kp = params.get('Kp', 0)
+                ti = params.get('Ti', 0)
+                td = params.get('Td', 0)
+                if preset == 'P':
+                    label_suffix = f"P: Kp={kp:.1f}"
+                elif preset == 'PI':
+                    label_suffix = f"PI: Kp={kp:.1f}, Ti={ti:.1f}"
+                else:  # PID
+                    label_suffix = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
+            
+            # Plotta processvärde och börvärde (första grafen) - utan label för legend
+            self.axs[0].plot(t_hist, sp_plot_hist, 'k--', alpha=alpha, linewidth=1)
+            self.axs[0].plot(t_hist, y_plot_hist, color=color, alpha=alpha, linewidth=1)
+
     def simulate(self, step=False):
         # Kontrollera numerisk instabilitet: PV utanför ±2×mätområdets gränser
         mat_min = self.parse_float(self.matområde_min_var)
@@ -2219,7 +2687,11 @@ class PIDSimulatorApp:
             ax.clear()
         # Återställ markör så att den skapas på nytt vid nästa mouse-over
         self.cursor_line = None
-        # Välj datafönster
+        
+        # Rita historik först (med progressiv transparens)
+        self._plot_simulation_history()
+        
+        # Välj datafönster för nuvarande simulering
         if self.window_mode.get() == "window":
             size = self.window_size.get()
             start = self.window_start
@@ -2259,8 +2731,14 @@ class PIDSimulatorApp:
         else:
             bv_label = f'Börvärde ({self.process_unit_var.get()})'
         
-        self.axs[0].plot(t, sp_plot, 'k--', label=bv_label)
-        self.axs[0].plot(t, y_plot, label='Är-värde')
+        # Plotta endast om vi har data
+        if len(t) > 0:
+            # Använd samma färgsystem som historiken
+            plot_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]  # C0-C4
+            current_color = plot_colors[self.next_color_id % len(plot_colors)]
+            
+            self.axs[0].plot(t, sp_plot, 'k--', label=bv_label, linewidth=2)
+            self.axs[0].plot(t, y_plot, color=current_color, label='Nuvarande är-värde', linewidth=2)
         
         # Visa hysteresis-gränser för On/Off-reglering
         if self.preset_mode.get() == "OnOff" and len(t) > 0:
@@ -2296,21 +2774,26 @@ class PIDSimulatorApp:
             self.axs[0].axhline(yy, color='gray', linewidth=0.3, alpha=0.5, zorder=0)
         self.axs[0].set_ylim(ymin, ymax)
         self.axs[0].set_ylabel(ylabel)
-        self.axs[0].legend()
+        # Visa legend endast om det finns data att plotta
+        if len(t) > 0:
+            self.axs[0].legend()
 
         if self.manual_mode_var.get():
             # Manuellt läge - visa endast styrsignal
-            self.axs[1].plot(t, u, label='Manuell styrsignal')
+            if len(t) > 0:
+                self.axs[1].plot(t, u, label='Nuvarande manuell styrsignal', linewidth=2)
             # Använd endast u-värden för skalning
             all_y = np.array(u)
         elif self.preset_mode.get() == "OnOff":
             # On/Off-läge - visa styrsignal med tydlig on/off-karaktär
-            self.axs[1].step(t, u, where='post', label='On/Off styrsignal', linewidth=2)
+            if len(t) > 0:
+                self.axs[1].step(t, u, where='post', label='Nuvarande On/Off styrsignal', linewidth=2)
             # Använd endast u-värden för skalning
             all_y = np.array(u)
         else:
             # Automatiskt läge - visa PID-ut och summa
-            self.axs[1].plot(t, u, label='PID-ut (begränsad)')
+            if len(t) > 0:
+                self.axs[1].plot(t, u, label='Nuvarande PID-ut (begränsad)', linewidth=2)
             # Summan av P+I+D (utan begränsning)
             kp = self.parse_float(self.kp_var)
             ti = self.parse_float(self.ti_var) if self.i_active_var.get() else 0.0
@@ -2327,16 +2810,24 @@ class PIDSimulatorApp:
                 d_vals = np.array([-kp*td*v if v is not None else np.nan for v in d])
                 pid_components.append(d_vals)
             # Summa
-            min_len = min([len(comp) for comp in pid_components])
-            sum_vals = np.nansum([comp[:min_len] for comp in pid_components], axis=0)
-            self.axs[1].plot(t[:min_len], sum_vals, label='Summa (P+I+D)', linestyle='--', color='black', alpha=0.7)
-            # Utöka y-axeln så att både u och summagrafen syns
-            all_y = np.concatenate([np.array(u)[:min_len], sum_vals])
+            if len(pid_components) > 0 and len(pid_components[0]) > 0:
+                min_len = min([len(comp) for comp in pid_components])
+                sum_vals = np.nansum([comp[:min_len] for comp in pid_components], axis=0)
+                if len(t) > 0:
+                    self.axs[1].plot(t[:min_len], sum_vals, label='Summa (P+I+D)', linestyle='--', color='black', alpha=0.7)
+                # Utöka y-axeln så att både u och summagrafen syns
+                all_y = np.concatenate([np.array(u)[:min_len], sum_vals])
+            else:
+                all_y = np.array(u)
         # Utöka y-axeln så att både u och summagrafen syns
-        umin, umax = np.nanmin(all_y), np.nanmax(all_y)
-        if umin == umax:
-            umin -= 1
-            umax += 1
+        if len(all_y) > 0:
+            umin, umax = np.nanmin(all_y), np.nanmax(all_y)
+            if umin == umax:
+                umin -= 1
+                umax += 1
+        else:
+            # Tom data - använd standardvärden
+            umin, umax = 0, 100
         uticks = np.linspace(umin, umax, num=8)
         for uu in uticks:
             self.axs[1].axhline(uu, color='gray', linewidth=0.3, alpha=0.5, zorder=0)
@@ -2346,7 +2837,9 @@ class PIDSimulatorApp:
             self.axs[1].set_xlabel('Tid')  # Visa x-axel i manuellt läge
         else:
             self.axs[1].set_ylabel('Styrsignal (%)')
-        self.axs[1].legend()
+        # Visa legend endast om det finns data att plotta
+        if len(t) > 0:
+            self.axs[1].legend()
 
         # Nedersta: P, I, D-bidrag var för sig (endast i automatläge)
         if self.manual_mode_var.get() or self.preset_mode.get() == "OnOff":
@@ -2376,14 +2869,15 @@ class PIDSimulatorApp:
                 d_vals = np.array([-kp*td*v if v is not None else np.nan for v in d])
                 pid_components.append(d_vals)
                 
-            self.axs[2].plot(t, p_vals, label='P-bidrag')
-            idx = 0
-            if self.i_active_var.get():
-                self.axs[2].plot(t, i_vals, label='I-bidrag')
-                idx += 1
-            if self.d_active_var.get():
-                self.axs[2].plot(t, d_vals, label='D-bidrag')
-                idx += 1
+            if len(t) > 0:
+                self.axs[2].plot(t, p_vals, label='P-bidrag')
+                idx = 0
+                if self.i_active_var.get():
+                    self.axs[2].plot(t, i_vals, label='I-bidrag')
+                    idx += 1
+                if self.d_active_var.get():
+                    self.axs[2].plot(t, d_vals, label='D-bidrag')
+                    idx += 1
             # Skala och etiketter
             all_vals = np.concatenate([comp[~np.isnan(comp)] if np.any(~np.isnan(comp)) else np.array([0.0]) for comp in pid_components])
             if len(all_vals) == 0:
@@ -2404,7 +2898,9 @@ class PIDSimulatorApp:
                 self.axs[2].set_ylabel(f'PID-bidrag ({self.process_unit_var.get()})')
             
             self.axs[2].set_xlabel('Tid')
-            self.axs[2].legend()
+            # Visa legend endast om det finns data att plotta
+            if len(t) > 0:
+                self.axs[2].legend()
         
         # --- Prestandamått ---
         # Spara prestandamått i en lista för framtida jämförelser
@@ -2512,6 +3008,7 @@ def on_closing(root):
 
 if __name__ == "__main__":
     root = tk.Tk()
+    root.state('zoomed')  # Maximera fönstret på Windows
     app = PIDSimulatorApp(root)
     root.protocol("WM_DELETE_WINDOW", lambda: on_closing(root))
     root.mainloop()

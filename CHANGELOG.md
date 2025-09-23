@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.6.0] - 2025-09-23
+
+### Nya funktioner
+- **Simuleringshistorik**: Jämför upp till 5 olika regulatorinställningar samtidigt
+- **Automatisk sparning**: Simuleringar sparas automatiskt vid reglertyp-byten och viktiga parameterändringar
+- **Visuell jämförelse**: Progressiv transparens (30-70%) för historiska kurvor med färgkodning
+- **Dedikerad historikpanel**: Scrollbar panel till höger med detaljerad parameterinfo för varje sparad simulering
+- **Individuell hantering**: Ta bort specifika simuleringar från historiken med ×-knapp
+- **Smart historikhantering**: Historik bevaras vid reset och störningar, rensas endast vid processparameterändringar
+- **Maximerat startfönster**: Programmet startar automatiskt i maximerat läge för optimal skärmutnyttjande
+- **Logaritmiska hastighetskontroller**: Nya 1,5x multiplikator-baserade hastighetssteg för jämnare acceleration
+- **Förbättrad hastighetsvisning**: 15 förutbestämda hastighetsnivåer från 0.17x till 58x med tydlig märkning
+
+### Tekniska förbättringar
+- **Optimerad rendering**: Historisk data visas endast för processvärde-grafen för tydlighetens skull
+- **Parametersynkronisering**: Fixad timing för korrekt parameterlagring vid reglertyp-växling
+- **Legend-uppdatering**: Automatisk uppdatering av parametervisning vid alla ändringar
+- **Prestanda-optimering**: Effektiv hantering av upp till 5 samtidiga simuleringar
+- **Konsekvent färghantering**: Permanent färg-ID system säkerställer konsekvent färgkodning även efter borttagning
+- **Korrigerad kontrollriktning**: Högerpil (>>) ökar hastighet, vänsterpil (<<) minskar hastighet som förväntat
+- **Jämn hastighetsprogresssion**: Varje steg är exakt 1,5x snabbare/långsammare än föregående
+- **Optimerad användarupplevelse**: Intuitivare hastighetsnavigering med förutsägbara steg
+
+### Bugfixar
+- **Hysteresis-synkronisering**: Fixat problem där hysteresis-typ (upper/lower/both) inte synkades korrekt till historiken
+- **Konsekvent färgvisning**: Nuvarande simulering visas nu med samma färg som den kommer att få i historiken
+- **Förbättrad parameterhantering**: Alla hysteresis-parametrar sparas nu konsekvent i saved_params
+
+### Användarupplevelse
+- **Färgkonsistens**: Eliminerat förvirrande färgbyten när simuleringar sparas till historik
+- **Bättre visuell feedback**: Nuvarande simulering och dess framtida historiska representation använder identiska färger
+- **Tydligare jämförelser**: Konsekvent färghantering gör det enklare att följa simuleringar från start till historik
+
+### Hastighetsnivåer
+Nya logaritmiska hastighetssteg: **0.17x → 0.25x → 0.4x → 0.7x → 1x → 1.5x → 2x → 3x → 5x → 7.5x → 11x → 17x → 25x → 38x → 58x**
+
+### Dokumentationsförbättringar
+- **Utökad README**: Beskrivning av jämförelsefunktion och pedagogisk användning
+- **Förbättrad help.md**: Ny sektion om simuleringshistorik med praktiska användningstips
+- **Användarguider**: Detaljerade instruktioner för optimal användning av jämförelsefunktionen
+
 ## [1.5.0] - 2025-09-07
 
 ### Nya funktioner
