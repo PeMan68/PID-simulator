@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.6.1] - 2025-09-23
+
+### Nya funktioner
+- **Manuell historikssparning**: Ny "Spara" knapp i historikpanelen med centrerad namngivningsdialog
+- **Anpassade historiknamn**: Föreslagna namn baserat på regulatorparametrar, full flexibilitet för egna etiketter
+- **Manuell historikrensning**: "Rensa historik" knapp med bekräftelsedialog
+- **Förbättrad historiklegend**: Visar anpassade namn som tilläggsetiketter till tekniska parametrar
+- **Pedagogisk optimering**: Designad specifikt för stöd av strukturerade övningsuppgifter
+
+### Användargränssnitt
+- **Optimerad knappplacering**: Historikknappar placerade högst upp i historikpanelen för logisk gruppering
+- **Centrerade dialoger**: Alla dialoger (spara, rensa, export, meddelanden) centreras över huvudfönstret
+- **Strömlinjeformat arbetsflöde**: Borttaget överflödigt "sparat"-meddelande för smidigare interaktion
+- **Egen centrerad input-dialog**: Ersatt systemets standard dialog med anpassad, perfekt centrerad variant
+
+### Tekniska förbättringar
+- **Flexibel namngivning**: Stöd för `custom_name` parameter i historikstrukturen
+- **Robust dialoghantering**: Säker hantering av användarinput och avbrytningar
+- **Unicode-kompatibilitet**: Fixat emoji-krascher i äldre Python/Tcl-versioner genom att ersätta med kompatibla symboler
+- **Förbättrad metodstruktur**: Renare separation mellan automatisk och manuell historikssparning
+- **Modal dialogdesign**: Korrekt transient och grab_set för professionella dialoger
+
+### Bugfixar
+- **Unicode emoji-fix**: Ersatt 📝 (U+1F4DD) med [brackets] för Python 3.7/Tcl-kompatibilitet
+- **Dialog-positionering**: Lösning för simpledialog.askstring position-problem med egen implementation
+- **Knappstatus-hantering**: "Spara" knapp aktiveras endast när simulation är pausad och data finns tillgänglig
+
+### Dokumentation
+- **Uppdaterade övningar**: Både övningssamlingar uppdaterade för v1.6.1 funktionalitet med nya arbetsflöden
+- **Kompatibilitet**: Alla övningsscenarier nu fullt genomförbara med optimerade användargränssnitt
+
 ## [1.6.0] - 2025-09-23
 
 ### Nya funktioner

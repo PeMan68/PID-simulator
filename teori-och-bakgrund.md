@@ -348,5 +348,5 @@ För mer fördjupning inom reglerteknik, se:
 
 ---
 
-**Författad för PID-simulator v1.6.0**  
+**Författad för PID-simulator v1.6.1**  
 **Del av pedagogiskt material för reglerteknikutbildning**
