@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.6.1] - 2025-09-23
+
+### Nya funktioner
+- **Manuell historikssparning**: Ny "Spara" knapp i simuleringspanelen med namngivningsdialog
+- **Anpassade historiknamn**: Föreslagna namn baserat på regulatorparametrar, full flexibilitet för egna etiketter
+- **Manuell historikrensning**: "Rensa historik" knapp med bekräftelsedialog
+- **Förbättrad historiklegend**: Visar anpassade namn istället för enbart tekniska parametrar
+- **Pedagogisk optimering**: Designad specifikt för stöd av strukturerade övningsuppgifter
+
+### Tekniska förbättringar
+- **Flexibel namngivning**: Stöd för `custom_name` parameter i historikstrukturen
+- **Robust dialoghantering**: Säker hantering av användarinput och avbrytningar
+- **Förbättrad metodstruktur**: Renare separation mellan automatisk och manuell historikssparning
+
+### Dokumentation
+- **Uppdaterade övningar**: Både övningssamlingar uppdaterade för v1.6.1 funktionalitet
+- **Kompatibilitet**: Alla övningsscenarier nu fullt genomförbara med nya funktioner
+
 ## [1.6.0] - 2025-09-23
 
 ### Nya funktioner

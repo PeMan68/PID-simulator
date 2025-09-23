@@ -1,5 +1,5 @@
 # Övningsuppgifter: Signalstörningar och Robusthet
-*PID-simulator v1.6.0 - Pedagogiska övningar med historikjämförelse*
+*PID-simulator v1.6.1 - Pedagogiska övningar med historikjämförelse*
 
 ## Inledning
 

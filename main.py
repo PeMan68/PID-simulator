@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, simpledialog, messagebox
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
@@ -342,7 +342,7 @@ class PIDSimulatorApp:
         self.tooltip.place(x=x_root, y=y_root)
     def __init__(self, root):
         self.root = root
-        root.title("PID-simulator v1.6.0")
+        root.title("PID-simulator v1.6.1")
         # Öka fönsterbredd för att ge plats åt tooltip
         root.geometry("1100x700")
         root.minsize(1000, 600)
@@ -791,6 +791,11 @@ class PIDSimulatorApp:
         self.step_btn.pack(side=tk.LEFT, padx=2)
         self.reset_btn = ttk.Button(sim_frame, text="Återställ", command=self.reset)
         self.reset_btn.pack(side=tk.LEFT, padx=2)
+        
+        # Historik-knappar
+        ttk.Button(sim_frame, text="Spara", command=self.save_to_history_dialog).pack(side=tk.LEFT, padx=(10,2))
+        ttk.Button(sim_frame, text="Rensa historik", command=self.clear_history_dialog).pack(side=tk.LEFT, padx=2)
+        
         ttk.Checkbutton(sim_frame, text="Autopaus", variable=self.autopause_var).pack(side=tk.LEFT, padx=10)
         
         # Hastighetskontroller
@@ -1005,27 +1010,32 @@ class PIDSimulatorApp:
             right_frame.pack(side=tk.RIGHT)
             
             # Skapa detaljerad parametertext
-            preset = params.get('preset', 'PID')
-            if preset == 'OnOff':
-                hyst_type = params.get('onoff_hysteresis_type', 'both')
-                hyst_high = params.get('onoff_hysteresis_high', 0)
-                hyst_low = params.get('onoff_hysteresis_low', 0)
-                param_text = f"OnOff: {hyst_type}\nHyst: +{hyst_high:.1f}/-{hyst_low:.1f}"
+            # Använd custom_name om det finns, annars standardformat
+            custom_name = params.get('custom_name')
+            if custom_name:
+                param_text = custom_name
             else:
-                kp = params.get('Kp', 0)
-                ti = params.get('Ti', 0)
-                td = params.get('Td', 0)
-                if preset == 'P':
-                    param_text = f"P: Kp={kp:.1f}"
-                elif preset == 'PI':
-                    param_text = f"PI: Kp={kp:.1f}, Ti={ti:.1f}"
-                else:  # PID
-                    param_text = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
-            
-            # Lägg till utsignalgränser
-            u_min = params.get('u_min', 0)
-            u_max = params.get('u_max', 100)
-            param_text += f"\nUt: {u_min:.0f}-{u_max:.0f}%"
+                preset = params.get('preset', 'PID')
+                if preset == 'OnOff':
+                    hyst_type = params.get('onoff_hysteresis_type', 'both')
+                    hyst_high = params.get('onoff_hysteresis_high', 0)
+                    hyst_low = params.get('onoff_hysteresis_low', 0)
+                    param_text = f"OnOff: {hyst_type}\nHyst: +{hyst_high:.1f}/-{hyst_low:.1f}"
+                else:
+                    kp = params.get('Kp', 0)
+                    ti = params.get('Ti', 0)
+                    td = params.get('Td', 0)
+                    if preset == 'P':
+                        param_text = f"P: Kp={kp:.1f}"
+                    elif preset == 'PI':
+                        param_text = f"PI: Kp={kp:.1f}, Ti={ti:.1f}"
+                    else:  # PID
+                        param_text = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
+                
+                # Lägg till utsignalgränser för automatiskt genererade namn
+                u_min = params.get('u_min', 0)
+                u_max = params.get('u_max', 100)
+                param_text += f"\nUt: {u_min:.0f}-{u_max:.0f}%"
             
             # Färgindikator och text
             indicator_frame = ttk.Frame(left_frame)
@@ -1532,7 +1542,7 @@ class PIDSimulatorApp:
                 'color_id': self.next_color_id,  # Permanent färg-ID
                 'timestamp': len(self.simulation_history)
             }
-            self.save_current_simulation_to_history(override_params=old_params)
+            self.save_simulation_to_history(override_params=old_params)
             
         preset = self.preset_mode.get()
         
@@ -2018,7 +2028,7 @@ class PIDSimulatorApp:
         """Sparar ändringar i Regulatorparametrar (Kp, Ti, Td, börvärde, mätområde, utsignal)"""
         # Spara nuvarande simulering till historik INNAN vi uppdaterar parametrarna
         if save_to_history and len(self.t) > 10:
-            self.save_current_simulation_to_history()
+            self.save_simulation_to_history()
             
         # Uppdatera sparade parametrar från GUI-värdena - endast regulatorparametrar
         self.saved_params['kp'] = self.parse_float(self.kp_var)
@@ -2351,7 +2361,7 @@ class PIDSimulatorApp:
             self.step_btn.state(["!disabled"])
             self.reset_btn.state(["!disabled"])
 
-    def save_current_simulation_to_history(self, override_params=None):
+    def save_simulation_to_history(self, override_params=None):
         """Sparar nuvarande simulering till historik för jämförelse"""
         if len(self.t) < 10:  # Bara spara om vi har tillräckligt med data
             return
@@ -2451,6 +2461,73 @@ class PIDSimulatorApp:
             # Uppdatera plot för att reflektera ändringen
             self.update_plot()
     
+    def save_to_history_dialog(self):
+        """Dialog för att spara nuvarande simulering till historik med namn"""
+        if not self.t or len(self.t) == 0:
+            messagebox.showwarning("Ingen simulering", "Det finns ingen simuleringsdata att spara.\nKör en simulering först.")
+            return
+            
+        # Föreslå automatiskt namn baserat på nuvarande parametrar
+        preset = self.preset_mode.get()
+        if preset == "P":
+            suggested_name = f"P(Kp={self.saved_params['kp']})"
+        elif preset == "PI":
+            suggested_name = f"PI(Kp={self.saved_params['kp']}, Ti={self.saved_params['ti']})"
+        elif preset == "PID":
+            suggested_name = f"PID(Kp={self.saved_params['kp']}, Ti={self.saved_params['ti']}, Td={self.saved_params['td']})"
+        else:
+            suggested_name = f"{preset}"
+            
+        # Begär namn från användaren
+        name = simpledialog.askstring(
+            "Spara till historik", 
+            "Ange namn för denna simulering:",
+            initialvalue=suggested_name
+        )
+        
+        if name:  # Om användaren inte tryckte Cancel
+            self.save_current_simulation_with_name(custom_name=name)
+            messagebox.showinfo("Sparat", f"Simulering sparad som '{name}'")
+    
+    def clear_history_dialog(self):
+        """Dialog för att bekräfta rensning av historik"""
+        if not self.simulation_history:
+            messagebox.showinfo("Tom historik", "Historiken är redan tom.")
+            return
+            
+        result = messagebox.askyesno(
+            "Rensa historik", 
+            f"Är du säker på att du vill rensa alla {len(self.simulation_history)} sparade simuleringar?"
+        )
+        
+        if result:
+            self.clear_simulation_history()
+            messagebox.showinfo("Historik rensad", "Alla sparade simuleringar har tagits bort.")
+    
+    def save_current_simulation_with_name(self, custom_name=None):
+        """Sparar nuvarande simulering till historik med möjlighet att ange eget namn"""
+        if not self.t or len(self.t) == 0:
+            return  # Ingen data att spara
+            
+        # Skapa override_params med custom_name om det finns
+        override_params = {
+            'Kp': self.saved_params['kp'],
+            'Ti': self.saved_params['ti'],
+            'Td': self.saved_params['td'],
+            'preset': self.preset_mode.get(),
+            'onoff_hysteresis_high': self.saved_params.get('onoff_hysteresis_high', 0),
+            'onoff_hysteresis_low': self.saved_params.get('onoff_hysteresis_low', 0),
+            'onoff_hysteresis_type': self.saved_params.get('onoff_hysteresis_type', 'both'),
+            'u_min': self.saved_params.get('u_min', 0),
+            'u_max': self.saved_params.get('u_max', 100),
+            'color_id': self.next_color_id,
+            'timestamp': len(self.simulation_history),
+            'custom_name': custom_name  # Lägg till custom namn
+        }
+        
+        # Använd befintlig metod men med vårt override
+        self.save_simulation_to_history(override_params)
+
     def _plot_simulation_history(self):
         """Plottar historiska simuleringar med progressiv transparens"""
         if not self.simulation_history:

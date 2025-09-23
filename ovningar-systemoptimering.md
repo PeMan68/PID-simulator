@@ -1,5 +1,5 @@
 # Övningsuppgifter: Systemoptimering och Parameterjämförelser
-*PID-simulator v1.6.0 - Avancerade övningar med historikanalys*
+*PID-simulator v1.6.1 - Avancerade övningar med historikanalys*
 
 ## Inledning
 
