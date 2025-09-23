@@ -446,6 +446,7 @@ class PIDSimulatorApp:
             'u_max': self.u_max,
             'onoff_hysteresis_high': self.onoff_hysteresis_high.get(),
             'onoff_hysteresis_low': self.onoff_hysteresis_low.get(),
+            'onoff_hysteresis_type': self.onoff_hysteresis_type.get(),
             'graph_min': self.matområde_min_var.get(),  # Graf-skala min
             'graph_max': self.matområde_max_var.get()   # Graf-skala max
         }
@@ -1647,6 +1648,7 @@ class PIDSimulatorApp:
         try:
             self.saved_params['onoff_hysteresis_high'] = self.onoff_hysteresis_high.get()
             self.saved_params['onoff_hysteresis_low'] = self.onoff_hysteresis_low.get()
+            self.saved_params['onoff_hysteresis_type'] = self.onoff_hysteresis_type.get()
         except ValueError:
             pass
         
@@ -2020,6 +2022,7 @@ class PIDSimulatorApp:
         # Uppdatera OnOff hysteresis-parametrar
         self.saved_params['onoff_hysteresis_high'] = self.onoff_hysteresis_high.get()
         self.saved_params['onoff_hysteresis_low'] = self.onoff_hysteresis_low.get()
+        self.saved_params['onoff_hysteresis_type'] = self.onoff_hysteresis_type.get()
         
         # Applicera sparade parametrar till PID-regulatorn
         self.pid.Kp = self.saved_params['kp']
@@ -2326,7 +2329,7 @@ class PIDSimulatorApp:
                 'preset': self.preset_mode.get(),
                 'onoff_hysteresis_high': self.saved_params.get('onoff_hysteresis_high', 0),
                 'onoff_hysteresis_low': self.saved_params.get('onoff_hysteresis_low', 0),
-                'onoff_hysteresis_type': self.onoff_hysteresis_type.get(),
+                'onoff_hysteresis_type': self.saved_params.get('onoff_hysteresis_type', 'both'),
                 'u_min': self.saved_params.get('u_min', 0),
                 'u_max': self.saved_params.get('u_max', 100),
                 'color_id': self.next_color_id,  # Permanent färg-ID
