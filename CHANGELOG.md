@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.7.0] - 2025-09-23
+
+### Nya funktioner
+- **Maximerat startfönster**: Programmet startar automatiskt i maximerat läge för optimal skärmutnyttjande
+- **Logaritmiska hastighetskontroller**: Nya 1,5x multiplikator-baserade hastighetssteg för jämnare acceleration
+- **Förbättrad hastighetsvisning**: 15 förutbestämda hastighetsnivåer från 0.17x till 58x med tydlig märkning
+
+### Tekniska förbättringar
+- **Korrigerad kontrollriktning**: Högerpil (>>) ökar hastighet, vänsterpil (<<) minskar hastighet som förväntat
+- **Jämn hastighetsprogresssion**: Varje steg är exakt 1,5x snabbare/långsammare än föregående
+- **Optimerad användarupplevelse**: Intuitivare hastighetsnavigering med förutsägbara steg
+
+### Hastighetsnivåer
+Nya logaritmiska hastighetssteg: **0.17x → 0.25x → 0.4x → 0.7x → 1x → 1.5x → 2x → 3x → 5x → 7.5x → 11x → 17x → 25x → 38x → 58x**
+
 ## [1.6.0] - 2025-09-21
 
 ### Nya funktioner
