@@ -1324,42 +1324,82 @@ class PIDSimulatorApp:
         pass
 
     def speed_faster(self):
-        # Utökad hastighetsrange: 5ms minimum (60x snabbare än normal)
+        # Logaritmisk hastighetsändring med 1.5x multiplikator (minska delay = öka hastighet)
+        # Delay-värden sorterade från långsam till snabb
+        speed_levels = [1800, 1200, 750, 430, 300, 200, 150, 100, 60, 40, 27, 18, 12, 8, 5]
         current = self.speed_var.get()
-        if current > 5:  # Minimum 5ms delay = MAX hastighet
-            if current > 50:
-                new_speed = max(5, current - 50)  # Stora steg först
-            elif current > 10:
-                new_speed = max(5, current - 5)   # Mindre steg när vi närmar oss max
-            else:
-                new_speed = max(5, current - 1)   # Finjustering vid MAX
-            self.speed_var.set(new_speed)
-            self.update_speed_label()
+        
+        # Hitta nuvarande position eller närmaste position
+        current_index = -1
+        
+        # Första försök: hitta exakt match
+        for i, level in enumerate(speed_levels):
+            if current == level:
+                current_index = i
+                break
+        
+        # Om exakt match, gå till nästa snabbare nivå
+        if current_index >= 0:
+            if current_index < len(speed_levels) - 1:  # Inte redan snabbast
+                self.speed_var.set(speed_levels[current_index + 1])
+        else:
+            # Om ingen exakt match, hitta rätt position att hoppa till
+            for i, level in enumerate(speed_levels):
+                if current > level:
+                    self.speed_var.set(level)
+                    break
+        
+        self.update_speed_label()
 
     def speed_slower(self):
-        # Utökad hastighetsrange: upp till 2000ms
+        # Logaritmisk hastighetsändring med 1.5x multiplikator (öka delay = minska hastighet)
+        speed_levels = [1800, 1200, 750, 430, 300, 200, 150, 100, 60, 40, 27, 18, 12, 8, 5]
         current = self.speed_var.get()
-        if current < 2000:  # Maximum 2000ms delay
-            if current < 10:
-                new_speed = min(2000, current + 1)   # Finjustering från MAX
-            elif current < 50:
-                new_speed = min(2000, current + 5)   # Mindre steg
-            else:
-                new_speed = min(2000, current + 50)  # Stora steg
-            self.speed_var.set(new_speed)
-            self.update_speed_label()
+        
+        # Hitta nuvarande position eller närmaste position
+        current_index = -1
+        
+        # Första försök: hitta exakt match
+        for i, level in enumerate(speed_levels):
+            if current == level:
+                current_index = i
+                break
+        
+        # Om exakt match, gå till nästa långsammare nivå
+        if current_index >= 0:
+            if current_index > 0:  # Inte redan långsammast
+                self.speed_var.set(speed_levels[current_index - 1])
+        else:
+            # Om ingen exakt match, hitta rätt position att hoppa till
+            for i in range(len(speed_levels) - 1, -1, -1):
+                if current < speed_levels[i]:
+                    self.speed_var.set(speed_levels[i])
+                    break
+        
+        self.update_speed_label()
 
     def update_speed_label(self):
-        # Förbättrad hastighetsetikett med MAX-indikering
+        # Hastighetsvisning med 1.5x multiplikator baserat på 300ms = 1x
         delay = self.speed_var.get()
-        if delay <= 5:
-            self.speed_label.config(text="MAX")
+        
+        # Exakta mappningar för de förutbestämda nivåerna
+        speed_map = {
+            1800: "0.17x", 1200: "0.25x", 750: "0.4x", 430: "0.7x", 
+            300: "1x", 200: "1.5x", 150: "2x", 100: "3x", 
+            60: "5x", 40: "7.5x", 27: "11x", 18: "17x", 
+            12: "25x", 8: "38x", 5: "58x"
+        }
+        
+        # Använd exakt mappning om tillgänglig
+        if delay in speed_map:
+            self.speed_label.config(text=speed_map[delay])
         else:
+            # Fallback: beräkna baserat på 300ms = 1x
             speed_factor = 300 / delay
             if speed_factor >= 1:
-                self.speed_label.config(text=f"{speed_factor:.0f}x")
+                self.speed_label.config(text=f"{speed_factor:.1f}x")
             else:
-                self.speed_label.config(text=f"1/{1/speed_factor:.0f}x")
+                self.speed_label.config(text=f"{speed_factor:.2f}x")
 
     def parse_float(self, var):
         try:
@@ -2922,6 +2962,7 @@ def on_closing(root):
 
 if __name__ == "__main__":
     root = tk.Tk()
+    root.state('zoomed')  # Maximera fönstret på Windows
     app = PIDSimulatorApp(root)
     root.protocol("WM_DELETE_WINDOW", lambda: on_closing(root))
     root.mainloop()
