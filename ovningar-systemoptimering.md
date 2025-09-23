@@ -347,6 +347,6 @@ Efter genomförda övningar, svara på:
 - Diskutera verkliga applikationer och industristandards
 - Använd som grund för avancerade reglerkurser
 
-**Version:** 1.0 för PID-simulator v1.6.0  
+**Version:** 1.0 för PID-simulator v1.6.1  
 **Tidsåtgång:** 4-6 timmar (inklusive projektuppgift)  
 **Svårighetsgrad:** Medel-Avancerad

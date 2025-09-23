@@ -138,20 +138,27 @@ Aktiverar olika typer av störningar för att testa regulatorns prestanda:
 
 ## Jämförelsefunktion (Simuleringshistorik)
 
-Simulatorn sparar automatiskt upp till 5 simuleringar för jämförelse av olika regulatorinställningar.
+Simulatorn sparar automatiskt och manuellt upp till 5 simuleringar för jämförelse av olika regulatorinställningar.
 
 ### Automatisk sparning
-Simuleringar sparas när du byter regulatortyp eller sparar parametrar.
+Simuleringar sparas automatiskt när du byter regulatortyp eller sparar parametrar.
+
+### Manuell sparning (v1.6.1)
+- **"Spara" knapp**: Manuell sparning med anpassade namn i historikpanelen
+- **Anpassade etiketter**: Föreslagna namn baserat på parametrar, eller skriv egna
+- **"Rensa historik" knapp**: Ta bort alla sparade simuleringar med bekräftelse
 
 ### Praktisk användning
 - **Undervisning**: Visa "före och efter" vid parameterändringar
-- **Jämförelse**: Olika regulatortyper side-by-side  
-- **Analys**: Effekten av olika parametrar
+- **Jämförelse**: Olika regulatortyper side-by-side med beskrivande namn
+- **Analys**: Effekten av olika parametrar med tydlig märkning
+- **Övningar**: Strukturerade jämförelser med pedagogiska etiketter
 
 ### Tips
 - Kör tillräckligt länge (minst 10 datapunkter)
 - Låt systemet stabilisera
-- Ändra en parameter i taget för tydliga jämförelser
+- Använd beskrivande namn för tydliga jämförelser
+- "Spara" knappen är endast aktiv när simuleringen är pausad
 
 ## Användartips
 
@@ -193,4 +200,4 @@ Detta verktyg är utvecklat för pedagogiska ändamål inom reglerteknik.
 - **teori-och-bakgrund.md** för fullständig teknisk dokumentation
 - **CHANGELOG.md** för versionshistorik
 
-**Version**: 1.6.0
+**Version**: 1.6.1

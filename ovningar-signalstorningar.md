@@ -227,6 +227,6 @@ Designa en regulator som fungerar acceptabelt även med 50% högre störningsniv
 - Diskutera verkliga exempel från olika industrier
 - Använd som grund för mer avancerade reglerteknikkurser
 
-**Version:** 1.0 för PID-simulator v1.6.0  
+**Version:** 1.0 för PID-simulator v1.6.1  
 **Tidsåtgång:** 3-4 timmar (beroende på fördjupningsnivå)  
 **Svårighetsgrad:** Medel (efter grundkurs i reglerteknik)
