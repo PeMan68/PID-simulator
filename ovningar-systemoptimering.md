@@ -1,6 +1,8 @@
 # Övningsuppgifter: Systemoptimering och Parameterjämförelser
 *PID-simulator v1.6.1 - Avancerade övningar med historikanalys*
 
+> **⚠️ Viktigt meddelande**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
+
 ## Inledning
 
 Denna övningssamling fokuserar på systematisk optimering av regulatorparametrar och fördjupad förståelse för hur olika systemegenskaper påverkar regulatorprestanda. De nya historikfunktionerna gör det möjligt att spara och namnge simuleringar för detaljerad jämförelse.

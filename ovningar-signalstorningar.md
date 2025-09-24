@@ -1,6 +1,8 @@
 # Övningsuppgifter: Signalstörningar och Robusthet
 *PID-simulator v1.6.1 - Pedagogiska övningar med historikjämförelse*
 
+> **⚠️ Viktigt meddelande**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
+
 ## Inledning
 
 Dessa övningar fokuserar på att förstå hur olika regulatorinställningar hanterar signalstörningar i verkliga system. De förbättrade historikfunktionerna gör det enkelt att jämföra olika strategier och analysera robusthet.
@@ -140,14 +142,22 @@ Dessa övningar fokuserar på att förstå hur olika regulatorinställningar han
 3. **Rensa historik**
 
 #### Steg 2: Jämför regulatortyper
-1. P-reglering (Kp=2.0) med brusstörning → **Spara**
-2. PI-reglering (Kp=2.0, Ti=8s) med brusstörning → **Spara**
-3. PID-reglering (Kp=2.0, Ti=8s, Td=1s) med brusstörning → **Spara**
+1. P-reglering (Kp=2.0) med brusstörning → Kör **minst 200s** → **Spara** (märk: "P på integrerande")
+2. PI-reglering (Kp=2.0, Ti=8s) med brusstörning → **Spara** (märk: "PI på integrerande")
+3. PID-reglering (Kp=2.0, Ti=8s, Td=1s) med brusstörning → **Spara** (märk: "PID på integrerande")
+
+#### Steg 3: Demonstrera P-regulatorns problem
+1. **Koppla från brus** tillfälligt
+2. P-reglering (Kp=1.0) → Ändra setpoint från 50 till 60
+3. Kör simulering i **300s** och observera långtidsbeteende
+4. **Spara** (märk: "P-regulator långtid")
 
 **Reflektion 3.1:**
 - Vilken skillnad ser du mellan självreglerande och integrerande processer?
-- Varför är P-reglering problematisk för integrerande processer?
+- Varför är P-reglering problematisk för integrerande processer? 
+  *(Svar: P-regulator ger konstant utsignal vid konstant fel → kontinuerlig drift i integrerande process → aldrig stabilisering)*
 - Hur påverkar störningar de olika regulatortyperna här?
+- Vad händer med P-reglering efter längre tid (>200s)?
 
 ---
 
