@@ -138,7 +138,7 @@ Dessa övningar fokuserar på att förstå hur olika regulatorinställningar han
 
 #### Steg 1: Ändra till integrerande process
 1. **Processtyp**: Integrerande
-2. **K**: 0.5, **T**: 15s, **Utflöde**: 2.0
+2. **K**: 0.5, **Dötid**: 15s, **Utflöde**: 2.0
 3. **Rensa historik**
 
 #### Steg 2: Jämför regulatortyper
