@@ -18,7 +18,7 @@ Denna övningssamling fokuserar på systematisk optimering av regulatorparametra
 - **Begränsning**: Äldsta kurva raderas automatiskt när utrymmet tar slut
 - **Användning**: För kortvariga jämförelser mellan några tester
 
-**Manual parameteranteckningar (KRITISKT):**
+**Manuella parameteranteckningar (KRITISKT):**
 - **Du måste anteckna** alla regulatorinställningar utanför programmet
 - **Anteckningsbok/dokument**: Skapa tabell för systematisk dokumentation
 - **Varje test**: Notera Kp, Ti, Td + observerade resultat
@@ -383,7 +383,7 @@ Process: K=0.8, T=25s, Dötid=5s
 3. Dokumentera stabilitet och prestanda
 
 **Reflektion 4.1:**
-- Varför fungerar inte P-reglering för integrerande processer?
+- Varför är inte P-reglering optimal för integrerande processer?
 - Hur skiljer sig parameterval från självreglerande processer?
 - Vilka verkliga system är integrerande?
 
