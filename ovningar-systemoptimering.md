@@ -162,10 +162,10 @@ Regulator: Kp=x.x, Ti=xs (optimal från tidigare övningar)
 | Test | Td(s) | Översläng(%) | Stab.tid(s) | Oscillationer | Brus-känslig? | Anteckningar |
 |------|-------|--------------|-------------|---------------|---------------|--------------|
 | 0    | 0     |              |             |               | Nej (baslinje)|              |
-| 1    | 1     |              |             |               |               |              |
-| 2    | 3     |              |             |               |               |              |
-| 3    | 5     |              |             |               |               |              |
-| 4    | 8     |              |             |               |               |              |
+| 1    | 0.2   |              |             |               |               |              |
+| 2    | 0.5   |              |             |               |               |              |
+| 3    | 1.0   |              |             |               |               |              |
+| 4    | 2.0   |              |             |               |               |              |
 ```
 
 #### Steg 2: Td-testsekvens (PID-reglering)
@@ -305,7 +305,7 @@ Med dina dokumenterade resultat från steg 1-3:
 **Syfte:** Testa regulatorns prestanda under olika driftförhållanden.
 
 #### Grundinställning
-1. **Samma process**: K=1.0, T=30s, Dötid=2s
+1. **Samma process**: K=1.3, T=15s, Dötid=0s
 2. **Din optimala PID** från övning 2.1
 3. **Rensa historik**
 
