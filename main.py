@@ -465,6 +465,8 @@ class PIDSimulatorApp:
         # Initiera preset-val
         self.on_preset_change()
         self.update_plot()
+        # Uppdatera knappar inklusive dynamisk start-knapp text
+        self.update_buttons()
 
     def create_widgets(self):
         # Konfigurera ttk styles för highlighting
@@ -2231,6 +2233,7 @@ class PIDSimulatorApp:
         
     def reset_scale(self):
         """Återställer skalning till mätområdet"""
+        print("DEBUG: reset_scale() called (GRAF-återställning, inte simulering)")
         # Sätt skalning till samma som mätområdet
         self.process_min.set(self.parse_float(self.matområde_min_var))
         self.process_max.set(self.parse_float(self.matområde_max_var))
@@ -2409,48 +2412,10 @@ class PIDSimulatorApp:
             return
         self.simulate(step=True)
 
-    def reset(self):
-        self.running = False
-        self._auto_paused = False
-        self.current_step = 0
-        T_min = 0.01
-        T_value = self.parse_float(self.proc_t_var)
-        if T_value < T_min:
-            self.proc_t_var.set(str(T_min))
-            import tkinter.messagebox as msgbox
-            msgbox.showerror(
-                "Felaktig tidskonstant",
-                f"Tidskonstanten T måste vara minst {T_min}.\n"
-                f"Simuleringen har stoppats och T har satts till {T_min}."
-            )
-            return
-        self.process = Process(
-            K=self.parse_float(self.proc_k_var),
-            T=T_value,
-            dead_time=self.parse_float(self.proc_dead_var),
-            integrerande=self.integrerande_var.get(),
-            Fout=self.parse_float(self.proc_fout_var),
-            normalvarde=self.parse_float(self.nv_var),
-            matområde_min=self.parse_float(self.matområde_min_var),
-            matområde_max=self.parse_float(self.matområde_max_var),
-            enhetslös_K=self.enhetslös_K_var.get()
-        )
-        self.pid = PID(Kp=self.parse_float(self.kp_var), Ti=self.parse_float(self.ti_var), Td=self.parse_float(self.td_var), dt=self.dt)
-        try:
-            self.setpoint = self.parse_float(self.sp_var)
-        except Exception:
-            self.setpoint = 0.0
-        self.t = [0]
-        self.y = [self.parse_float(self.nv_var)]  # Starta på normalvärdet
-        self.u = [0]
-        self.e = [0]
-        self.i = [0]
-        self.d = [0]
-        self.sp = [self.setpoint]
-        self.update_plot()
-        self.formel_label.config(text="")
-        self.update_buttons()
     def update_buttons(self):
+        # Uppdatera knapptext dynamiskt baserat på simuleringstillstånd
+        self.update_start_button_text()
+        
         # Kör-knappen inaktiv under körning, aktiv annars
         # Om auto-pausad: Kör aktiv, Paus inaktiv
         if self.running:
@@ -2475,6 +2440,20 @@ class PIDSimulatorApp:
                 self.save_btn.state(["!disabled"])
             else:
                 self.save_btn.state(["disabled"])
+
+    def update_start_button_text(self):
+        """Uppdaterar start-knappens text baserat på simuleringstillstånd"""
+        # Debug - låt oss se vad current_step är
+        print(f"DEBUG: current_step={self.current_step}, running={self.running}")
+        
+        if self.current_step == 0:
+            # Simuleringen är nollställd/återställd
+            button_text = "Starta"
+        else:
+            # Simuleringen har data och är pausad
+            button_text = "Fortsätt"
+        
+        self.start_btn.config(text=button_text)
 
     def save_simulation_to_history(self, override_params=None):
         """Sparar nuvarande simulering till historik för jämförelse"""
@@ -3232,9 +3211,12 @@ class PIDSimulatorApp:
         self.fig.tight_layout()
         self.canvas.draw()
     def reset(self):
+        print(f"DEBUG: reset() called (REAL reset method), current_step before={self.current_step}")
         self._just_reset = True
         self.running = False
+        self._auto_paused = False
         self.current_step = 0
+        print(f"DEBUG: reset() current_step after set to 0={self.current_step}")
         self.process = Process(K=self.parse_float(self.proc_k_var), T=self.validate_T_value(show_warning=True), dead_time=self.parse_float(self.proc_dead_var), integrerande=self.integrerande_var.get(), normalvarde=self.parse_float(self.nv_var))
         self.pid = PID(Kp=self.parse_float(self.kp_var), Ti=self.parse_float(self.ti_var), Td=self.parse_float(self.td_var), dt=self.dt)
         try:
@@ -3255,6 +3237,7 @@ class PIDSimulatorApp:
             self.tooltip.place_forget()
         self.update_plot()
         self.update_percent_status()  # Uppdatera procentstatus efter reset
+        self.update_buttons()  # Uppdatera knappar inklusive start-knappens text
  
 import sys
 
