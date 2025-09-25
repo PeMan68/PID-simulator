@@ -1,7 +1,7 @@
 # Övningsuppgifter: Systemoptimering och Parameterjämförelser
 *PID-simulator v1.6.1 - Avancerade övningar med historikanalys*
 
-> **⚠️ Viktigt meddelande**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
+> **⚠️ Viktigt**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
 ## Inledning
 
@@ -61,7 +61,7 @@ Process: K=1.3, T=15s, Dötid=0s, Börvärde=60
 ```
 
 #### Steg 3: Kp-testsekvens (fyll i tabellen)
-> **⚠️ KRITISKT för konsistenta resultat**: Klicka **"Återställ"** före VARJE test i denna övning för att nollställa processens tillstånd till normalvärdet.
+> **⚠️ Viktigt**: Klicka **"Återställ"** före VARJE test i denna övning för att nollställa processens tillstånd till normalvärdet.
 
 För **varje** test:
 1. **Återställ** (nollställer processen)
@@ -724,24 +724,7 @@ Från dina fas 1-4 anteckningar, välj dina **3 bästa designkandidater**:
 
 ---
 
-## Avslutande reflektion och dokumentationssäkring
-
-### KRITISK CHECKPOINT - Spara dina anteckningar!
-**🔥 VIKTIGT**: Programmets "Spara"-funktion är temporär. Säkerställ att du har:
-- [ ] **Kompletta anteckningstabeller** i separat dokument
-- [ ] **Alla optimala parametrar** dokumenterade utanför programmet  
-- [ ] **Prestandamätningar** och observationer antecknade
-- [ ] **Designbeslut och motiveringar** för framtida referens
-
-### Reflektion baserat på dina dokumenterade resultat
-
-Använd dina **handskrivna anteckningar** för att svara på:
-
-1. **Systematisk approach**: Vilken stegvis metodik (P→PI→PID) fungerade bäst?
-2. **Dokumentationens värde**: Hur kritiskt var det att anteckna VARJE test?
-3. **Parameterkompromisser**: Vilka avvägningar dokumenterade du som svårast?
-4. **Säkerhetsmarginaler**: Vilka marginaler krävdes enligt dina mätningar?
-5. **Reproducerbarhet**: Kan du återskapa dina resultat från anteckningarna?
+## Avslutande reflektion
 
 ### Framtida tillämpning (baserat på din erfarenhet)
 - **Standardiserad anteckningsmall**: Vad skulle du förbättra i din dokumentation?
