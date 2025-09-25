@@ -7,7 +7,7 @@
 
 Denna övningssamling fokuserar på systematisk optimering av regulatorparametrar och fördjupad förståelse för hur olika systemegenskaper påverkar regulatorprestanda. Historikfunktionerna gör det möjligt att spara och namnge simuleringar för detaljerad jämförelse.
 
-**Förkunskaper:** Genomförda övningar i signalstörningar, grundläggande PID-förståelse.
+**Förkunskaper:** Grundläggande PID-förståelse.
 
 **Mål:** Utveckla systematisk approach för regulatordesign och optimering.
 
