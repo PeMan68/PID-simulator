@@ -1,5 +1,24 @@
 # Changelog
 
+## [Kommande] - Planerade förbättringar
+
+### Bugfixar (Under utveckling)
+1. **Decimalhantering**: Acceptera både decimal-komma och decimalpunkt i alla inmatningsfält, autokorrigera till decimalpunkt
+2. **Dynamisk "Kör"-knapp**: Ändra label beroende på simuleringstillstånd
+   - "Starta" när simuleringen är nollställd
+   - "Fortsätt" när simuleringen är pausad
+   - "Kör" i övrigt
+3. **Tooltip för Autopaus**: Lägg till förklarande tooltip på Autopaus-knappen
+
+### Nya funktioner (Under utveckling)
+- **Stoppa vid tidpunkt**: Komplettera Simuleringskontroller med "Stoppa simulering vid: [X] sekunder" för automatisk stopp vid specificerad tid
+- **Dynamiska inställningar**: Ny ram för börvärde och signalstörningar med egen "Utför/Aktivera"-knapp
+  - Flytta börvärde till separat ram med egen aktiveringsknapp
+  - Flytta signalstörningar till samma ram
+  - Gemensam "Utför" eller "Aktivera"-knapp för tydlighet
+  - Båda inställningarna påverkar pågående simulering utan återställning
+  - Säker inmatning - ändringar aktiveras först vid knapptryck
+
 ## [1.6.1] - 2025-09-23
 
 ### Nya funktioner
