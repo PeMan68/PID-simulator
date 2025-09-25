@@ -29,9 +29,10 @@ Denna övningssamling fokuserar på systematisk optimering av regulatorparametra
 2. Ställ in parametrar (ex: Kp=1.5, Ti=OFF, Td=OFF)
 3. **Anteckna inställningar** i din tabell INNAN test
 4. Kör simulering och observera beteende
-5. **Anteckna resultat** (stabiliseringstid, översläng, etc.)
-6. Vid intressanta resultat: "Spara" för kortvarig jämförelse
-7. **Behåll alltid** dina handskrivna anteckningar som huvuddokumentation
+5. Om **"Autopaus"** är aktiverat kan det hända att simuleringen stannar för tidigt. Avmarkera "Autopaus" och fortsätt simuleringen med "Kör"
+6. **Anteckna resultat** (stabiliseringstid, översläng, etc.)
+7. Vid intressanta resultat: "Spara" för kortvarig jämförelse
+8. **Behåll alltid** dina handskrivna anteckningar som huvuddokumentation
 
 ---
 
@@ -72,7 +73,6 @@ För **varje** test:
    - Översläng i % över börvärde  
    - Kvarvarande stationärt fel
    - Ja/Nej för oscillationer
-5. **Spara kurva** endast om du vill jämföra med nästa test
 
 #### Steg 4: Analys från dina anteckningar
 Använd din ifyllda tabell för att bestämma:
@@ -101,16 +101,16 @@ Nu när du har identifierat 2-3 intressanta kandidater från din tabell:
 #### Steg 1: Anteckningsmall för Ti-variation
 Skapa ny tabell i ditt dokument:
 ```
-Process: K=1.0, T=25s, Dötid=0s, Börvärde=60
-Regulator: Kp=2.0 (från övning 1.1), Td=OFF
+Process: K=1.3, T=15s, Dötid=0s, Börvärde=60
+Regulator: Kp=x.x (från övning 1.1), Td=OFF
 
 | Test | Ti(s) | Tid till fel=0 | Oscillationer | Stabilitet | Anteckningar |
 |------|-------|----------------|---------------|------------|--------------|
-| 1    | 5     |                |               |            |              |
-| 2    | 10    |                |               |            |              |
+| 1    | 100   |                |               |            |              |
+| 2    | 40    |                |               |            |              |
 | 3    | 20    |                |               |            |              |
-| 4    | 40    |                |               |            |              |
-| 5    | 100   |                |               |            |              |
+| 4    | 10    |                |               |            |              |
+| 5    | 5     |                |               |            |              |
 ```
 
 #### Steg 2: Ti-testsekvens (PI-reglering)
@@ -127,8 +127,6 @@ För varje test:
    - Oscillationsbeteende (ingen/mild/stark)
    - Övergripande stabilitet (1-5 skala)
 5. **Spara** endast intressanta kurvor för jämförelse
-
-**Testsekvens:** Ti = 5s → 10s → 20s → 40s → 100s
 
 #### Steg 3: Analys och kandidatval
 Från din anteckningstabell, identifiera:
@@ -158,8 +156,8 @@ Med dina 3 bästa kandidater från anteckningarna:
 #### Steg 1: Anteckningsmall för Td-variation
 Skapa ny tabell i ditt dokument:
 ```
-Process: K=1.0, T=25s, Dötid=0s, Börvärde=60
-Regulator: Kp=2.8, Ti=15s (från tidigare övningar)
+Process: K=1.3, T=15s, Dötid=0s, Börvärde=60
+Regulator: Kp=x.x, Ti=xs (optimal från tidigare övningar)
 
 | Test | Td(s) | Översläng(%) | Stab.tid(s) | Oscillationer | Brus-känslig? | Anteckningar |
 |------|-------|--------------|-------------|---------------|---------------|--------------|
@@ -182,8 +180,6 @@ För varje test:
 4. **Anteckna** översläng, stabiliseringstid, oscillationsbeteende
 5. **Aktivera brus** (amplitud 1.5), observera utsignal-variation
 6. **Anteckna** bruskänslighet (Ja/Nej/Måttlig)
-
-**Testsekvens:** Td = 0s → 1s → 3s → 5s → 8s
 
 #### Steg 3: Analys och kandidatval
 Från din anteckningstabell, identifiera:
