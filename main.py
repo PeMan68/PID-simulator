@@ -2233,7 +2233,6 @@ class PIDSimulatorApp:
         
     def reset_scale(self):
         """Återställer skalning till mätområdet"""
-        print("DEBUG: reset_scale() called (GRAF-återställning, inte simulering)")
         # Sätt skalning till samma som mätområdet
         self.process_min.set(self.parse_float(self.matområde_min_var))
         self.process_max.set(self.parse_float(self.matområde_max_var))
@@ -2443,9 +2442,6 @@ class PIDSimulatorApp:
 
     def update_start_button_text(self):
         """Uppdaterar start-knappens text baserat på simuleringstillstånd"""
-        # Debug - låt oss se vad current_step är
-        print(f"DEBUG: current_step={self.current_step}, running={self.running}")
-        
         if self.current_step == 0:
             # Simuleringen är nollställd/återställd
             button_text = "Starta"
@@ -3211,12 +3207,10 @@ class PIDSimulatorApp:
         self.fig.tight_layout()
         self.canvas.draw()
     def reset(self):
-        print(f"DEBUG: reset() called (REAL reset method), current_step before={self.current_step}")
         self._just_reset = True
         self.running = False
         self._auto_paused = False
         self.current_step = 0
-        print(f"DEBUG: reset() current_step after set to 0={self.current_step}")
         self.process = Process(K=self.parse_float(self.proc_k_var), T=self.validate_T_value(show_warning=True), dead_time=self.parse_float(self.proc_dead_var), integrerande=self.integrerande_var.get(), normalvarde=self.parse_float(self.nv_var))
         self.pid = PID(Kp=self.parse_float(self.kp_var), Ti=self.parse_float(self.ti_var), Td=self.parse_float(self.td_var), dt=self.dt)
         try:
