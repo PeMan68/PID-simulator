@@ -50,13 +50,13 @@ Denna övningssamling fokuserar på systematisk optimering av regulatorparametra
 ```
 Process: K=1.0, T=25s, Dötid=0s, Börvärde=60
 
-| Test | Kp | Ti | Td | Stab.tid(s) | Översläng(%) | Stationärt fel | Oscillerar? | Anteckningar |
-|------|----|----|----|-------------|--------------|----------------|-------------| -------------|
-| 1    |1.0 |OFF |OFF |             |              |                |             |              |
-| 2    |2.0 |OFF |OFF |             |              |                |             |              |
-| 3    |4.0 |OFF |OFF |             |              |                |             |              |
-| 4    |5.0 |OFF |OFF |             |              |                |             |              |
-| 5    |8.0 |OFF |OFF |             |              |                |             |              |
+| Test | Kp  | Ti | Td | Stab.tid(s) | Översläng(%) | Stationärt fel | Oscillerar? | Anteckningar |
+|------|-----|----|----|-------------|--------------|----------------|-------------| -------------|
+| 1    |1.0  |OFF |OFF |             |              |                |             |              |
+| 2    |3.0  |OFF |OFF |             |              |                |             |              |
+| 3    |6.0  |OFF |OFF |             |              |                |             |              |
+| 4    |9.0  |OFF |OFF |             |              |                |             |              |
+| 5    |12.0 |OFF |OFF |             |              |                |             |              |
 ```
 
 #### Steg 3: Kp-testsekvens (fyll i tabellen)
