@@ -1,24 +1,42 @@
 # Changelog
 
+## [1.7.0] - 2025-09-25
+
+### Nya funktioner
+- **Dynamiska inställningar**: Ny dedikerad ram för börvärde och signalstörningar med egen "Aktivera ändringar"-knapp
+  - Börvärde flyttat från regulatorparametrar till dynamiska inställningar
+  - Signalstörningar flyttade från systemparametrar till dynamiska inställningar
+  - Gemensam "Aktivera ändringar"-knapp för säker tillämpning
+  - Ändringar påverkar pågående simulering utan återställning
+  - Säker inmatning - ändringar aktiveras först vid knapptryck för att undvika oavsiktliga förändringar
+- **Stoppa vid tidpunkt**: Komplettera Simuleringskontroller med "Stoppa vid: [X] sekunder" för automatisk stopp vid specificerad tid
+- **Dynamisk "Kör"-knapp**: Knappen ändrar text beroende på simuleringstillstånd
+  - "Starta" när simuleringen är nollställd
+  - "Fortsätt" när simuleringen är pausad
+  - "Kör" i övrigt
+
+### Bugfixar
+- **Decimalhantering**: Accepterar nu både decimal-komma och decimalpunkt i alla inmatningsfält, autokorrigerar till decimalpunkt
+- **Tooltip-positionering**: Tooltips positioneras nu korrekt relativt programmets fönster istället för skärmstorlek, fungerar korrekt på utökade skärmar
+- **Förbättrad tooltip för Autopaus**: Tydligare förklarande tooltip med intelligent positionering
+
+### Användargränssnitt
+- **Ta bort Tidsfönster-kontroller**: Hela ramen med kontroller för tidsaxelvisning (hela/delar av) borttagen för att ge mer plats i GUI:t
+- **Optimerad kontrollplacering**: "Stoppa vid"-kontroller placerade logiskt mellan Autopaus och Hastighet
+- **Förbättrad GUI-struktur**: Tydligare gruppering av funktioner med dynamiska inställningar separat från fasta parametrar
+
+### Tekniska förbättringar
+- **Unified numeric input handling**: Enhetligt system för hantering av numeriska inmatningar med decimal-komma-stöd
+- **Intelligent tooltip positioning**: Avancerat positioneringssystem som tar hänsyn till programmets fönstergränser och skärmposition
+- **Kompatibilitetsstruktur**: Bevarade kompatibilitet med äldre funktioner genom dummy-variabler och kompatibilitetslagrering
+- **Säkrare ändringshantering**: Dynamiska inställningar kan förhandsgranskas innan aktivering
+
 ## [Kommande] - Planerade förbättringar
 
-### Bugfixar (Under utveckling)
-1. **Decimalhantering**: Acceptera både decimal-komma och decimalpunkt i alla inmatningsfält, autokorrigera till decimalpunkt
-2. **Dynamisk "Kör"-knapp**: Ändra label beroende på simuleringstillstånd
-   - "Starta" när simuleringen är nollställd
-   - "Fortsätt" när simuleringen är pausad
-   - "Kör" i övrigt
-3. **Tooltip för Autopaus**: Lägg till förklarande tooltip på Autopaus-knappen
-
-### Nya funktioner (Under utveckling)
-- **Stoppa vid tidpunkt**: Komplettera Simuleringskontroller med "Stoppa simulering vid: [X] sekunder" för automatisk stopp vid specificerad tid
-- **Ta bort Tidsfönster-kontroller**: Ta bort hela ramen med kontroller för att visa tidsaxel (hela/delar av) för att ge mer plats i GUI:t
-- **Dynamiska inställningar**: Ny ram för börvärde och signalstörningar med egen "Utför/Aktivera"-knapp
-  - Flytta börvärde till separat ram med egen aktiveringsknapp
-  - Flytta signalstörningar till samma ram
-  - Gemensam "Utför" eller "Aktivera"-knapp för tydlighet
-  - Båda inställningarna påverkar pågående simulering utan återställning
-  - Säker inmatning - ändringar aktiveras först vid knapptryck
+### Möjliga framtida förbättringar
+- **Förbättrad integrerande processimulering**: Lösa kända problem med integrerande processer
+- **Utökad historik-funktionalitet**: Fler jämförelsemöjligheter och exportalternativ
+- **Avancerade störningsmodeller**: Fler typer av realistiska processförändringar
 
 ## [1.6.1] - 2025-09-23
 

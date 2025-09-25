@@ -174,6 +174,9 @@ HELP_TEXTS = {
     "enhetslös_k": "Enhetslös K - använd industristandard (%/%) istället för traditionell (°C/%) förstärkning.",
     "percent_mode": "Visa parametrar i procent av mätområdet istället för fysiska enheter.",
     "signalstörning": "Aktivera/inaktivera alla typer av signalstörningar på processen.",
+    "noise_std": "Standardavvikelse för vitt brus som läggs till processvärdet (simulerar mätfel och naturliga variationer).",
+    "pulse_mag": "Storlek på pulsstörning som tillfälligt påverkar processen (simulerar lastförändringar).",
+    "pulse_dur": "Varaktighet i steg för pulsstörningen (hur länge störningen är aktiv).",
     "autopaus": "Autopaus - pausar automatiskt simuleringen när steady-state nås för att underlätta analys av resultat.",
     "stop_at_time": "Stoppa automatiskt simuleringen vid specificerad tid för kontrollerad analys av specifika tidsperioder.",
     
@@ -468,6 +471,15 @@ class PIDSimulatorApp:
         self.preset_mode = tk.StringVar(value="OnOff")  # "OnOff", "P", "PI", "PID"
         self.signal_disturbance_var = tk.BooleanVar(value=False)
         
+        # Störningsparametrar (äldre versioner för kompatibilitet)
+        self.noise_std_var = tk.DoubleVar(value=0.0)
+        self.pulse_mag_var = tk.DoubleVar(value=10.0)
+        self.pulse_dur_var = tk.IntVar(value=3)
+        self.disturbance_widgets = []  # För kompatibilitet
+        
+        # Börvärde-variabel för kompatibilitet (gammalt system)
+        self.sp_var = tk.StringVar(value=str(self.setpoint))
+        
         # On/Off regulator-parametrar
         self.onoff_hysteresis_type = tk.StringVar(value="both")  # "upper", "lower", "both"
         self.onoff_hysteresis_high = tk.DoubleVar(value=2.0)
@@ -632,50 +644,12 @@ class PIDSimulatorApp:
         self.nv_entry.pack(side=tk.LEFT, padx=5)
         ttk.Button(sys_row2, text="Spara systemparametrar", command=self.save_system_changes).pack(side=tk.RIGHT, padx=5)
         
-        # Tredje raden - Störningar
-        sys_row3 = ttk.Frame(sys_frame) 
-        sys_row3.pack(fill=tk.X, padx=5, pady=2)
-        self.signal_disturbance_check = ttk.Checkbutton(sys_row3, text="Signalstörning", variable=self.signal_disturbance_var, command=self.on_disturbance_change).pack(side=tk.LEFT, padx=5)
-        
-        # Störningar (döljs när signalstörning är av)
-        self.disturbance_widgets = []
-        
-        brus_label = ttk.Label(sys_row3, text="Brus std")
-        brus_label.pack(side=tk.LEFT, padx=5)
-        self.disturbance_widgets.append(brus_label)
-        
-        self.noise_std_var = tk.DoubleVar(value=0.0)
-        self.noise_scale = ttk.Scale(sys_row3, from_=0.0, to=5.0, variable=self.noise_std_var, orient=tk.HORIZONTAL, length=100)
-        self.noise_scale.pack(side=tk.LEFT, padx=5)
-        self.disturbance_widgets.append(self.noise_scale)
-        
-        self.noise_entry = ttk.Entry(sys_row3, textvariable=self.noise_std_var, width=5)
-        self.noise_entry.pack(side=tk.LEFT, padx=5)
-        self.disturbance_widgets.append(self.noise_entry)
-        
-        puls_label = ttk.Label(sys_row3, text="Puls (storlek)")
-        puls_label.pack(side=tk.LEFT, padx=5)
-        self.disturbance_widgets.append(puls_label)
-        
-        self.pulse_mag_var = tk.DoubleVar(value=10.0)
-        self.pulse_entry = ttk.Entry(sys_row3, textvariable=self.pulse_mag_var, width=5)
-        self.pulse_entry.pack(side=tk.LEFT, padx=5)
-        self.disturbance_widgets.append(self.pulse_entry)
-        
-        steg_label = ttk.Label(sys_row3, text="(steg)")
-        steg_label.pack(side=tk.LEFT, padx=5)
-        self.disturbance_widgets.append(steg_label)
-        
-        self.pulse_dur_var = tk.IntVar(value=3)
-        self.pulse_dur_entry = ttk.Entry(sys_row3, textvariable=self.pulse_dur_var, width=3)
-        self.pulse_dur_entry.pack(side=tk.LEFT, padx=5)
-        self.disturbance_widgets.append(self.pulse_dur_entry)
+        # Tredje raden - Störningar flyttade till Dynamiska inställningar
+        # (raderna behålls för att inte rubba systemparameter-panelen)
         
         self.pulse_active = False
         self.pulse_steps_left = 0
-        self.pulse_button = ttk.Button(sys_row3, text="Pulsstörning", command=self.trigger_pulse)
-        self.pulse_button.pack(side=tk.LEFT, padx=5)
-        self.disturbance_widgets.append(self.pulse_button)
+        # Pulsstörning-knapp flyttad till dynamiska inställningar
         
         # Regulatorparametrar
         pid_frame = ttk.LabelFrame(frame, text="Regulatorparametrar")
@@ -683,22 +657,12 @@ class PIDSimulatorApp:
         self.pid_frame = pid_frame  # Spara referens för att komma åt children
         
         
-        # Första raden
+        # Första raden - Dold börvärde-entry för kompatibilitet med change tracking
+        # (börvärdet flyttat till Dynamiska inställningar)
         pid_row1 = ttk.Frame(pid_frame) 
-        pid_row1.pack(fill=tk.X, padx=5, pady=2)
-        
-        ttk.Label(pid_row1, text="Börvärde").pack(side=tk.LEFT, padx=5)
-        self.sp_var = tk.StringVar(value=str(self.setpoint))
+        # Skapa dold sp_entry för kompatibilitet med change tracking-systemet
         self.sp_entry = ttk.Entry(pid_row1, textvariable=self.sp_var, width=8)
-        self.sp_entry.pack(side=tk.LEFT, padx=5)
-        
-        # Enhetsetikett för börvärde
-        if self.percent_mode_var.get():
-            initial_unit = "%"
-        else:
-            initial_unit = self.process_unit_var.get()
-        self.sp_unit_label = ttk.Label(pid_row1, text=initial_unit)
-        self.sp_unit_label.pack(side=tk.LEFT, padx=2)
+        # Pack inte denna entry - håll den dold
         
         # Andra raden
         pid_row2 = ttk.Frame(pid_frame) 
@@ -792,6 +756,81 @@ class PIDSimulatorApp:
         # Spara regulatorparametrar knapp (flyttad upp för att spara utrymme)
         ttk.Button(pid_row5, text="Spara regulatorparametrar", command=self.save_regulator_changes).pack(side=tk.RIGHT, padx=5)
  
+        # Dynamiska inställningar
+        self.dynamic_frame = ttk.LabelFrame(frame, text="Dynamiska inställningar")
+        self.dynamic_frame.pack(fill=tk.X, padx=5, pady=5)
+        
+        # Första raden - Börvärde
+        dyn_row1 = ttk.Frame(self.dynamic_frame)
+        dyn_row1.pack(fill=tk.X, padx=5, pady=2)
+        
+        ttk.Label(dyn_row1, text="Börvärde").pack(side=tk.LEFT, padx=5)
+        self.dyn_sp_var = tk.StringVar(value=str(self.setpoint))
+        self.dyn_sp_entry = ttk.Entry(dyn_row1, textvariable=self.dyn_sp_var, width=8)
+        self.dyn_sp_entry.pack(side=tk.LEFT, padx=5)
+        
+        # Enhetsetikett för börvärde
+        if self.percent_mode_var.get():
+            initial_unit = "%"
+        else:
+            initial_unit = self.process_unit_var.get()
+        self.dyn_sp_unit_label = ttk.Label(dyn_row1, text=initial_unit)
+        self.dyn_sp_unit_label.pack(side=tk.LEFT, padx=2)
+        
+        # Andra raden - Signalstörningar
+        dyn_row2 = ttk.Frame(self.dynamic_frame)
+        dyn_row2.pack(fill=tk.X, padx=5, pady=2)
+        
+        self.dyn_signal_disturbance_var = tk.BooleanVar(value=self.signal_disturbance_var.get())
+        self.dyn_signal_disturbance_check = ttk.Checkbutton(dyn_row2, text="Signalstörning", variable=self.dyn_signal_disturbance_var, command=self.on_dynamic_disturbance_change)
+        self.dyn_signal_disturbance_check.pack(side=tk.LEFT, padx=5)
+        
+        # Störningar (döljs när signalstörning är av)
+        self.dyn_disturbance_widgets = []
+        
+        brus_label = ttk.Label(dyn_row2, text="Brus std")
+        brus_label.pack(side=tk.LEFT, padx=5)
+        self.dyn_disturbance_widgets.append(brus_label)
+        
+        self.dyn_noise_std_var = tk.DoubleVar(value=self.noise_std_var.get())
+        self.dyn_noise_scale = ttk.Scale(dyn_row2, from_=0.0, to=5.0, variable=self.dyn_noise_std_var, orient=tk.HORIZONTAL, length=100)
+        self.dyn_noise_scale.pack(side=tk.LEFT, padx=5)
+        self.dyn_disturbance_widgets.append(self.dyn_noise_scale)
+        
+        self.dyn_noise_entry = ttk.Entry(dyn_row2, textvariable=self.dyn_noise_std_var, width=5)
+        self.dyn_noise_entry.pack(side=tk.LEFT, padx=5)
+        self.dyn_disturbance_widgets.append(self.dyn_noise_entry)
+        
+        puls_label = ttk.Label(dyn_row2, text="Puls (storlek)")
+        puls_label.pack(side=tk.LEFT, padx=5)
+        self.dyn_disturbance_widgets.append(puls_label)
+        
+        self.dyn_pulse_mag_var = tk.DoubleVar(value=self.pulse_mag_var.get())
+        self.dyn_pulse_entry = ttk.Entry(dyn_row2, textvariable=self.dyn_pulse_mag_var, width=5)
+        self.dyn_pulse_entry.pack(side=tk.LEFT, padx=5)
+        self.dyn_disturbance_widgets.append(self.dyn_pulse_entry)
+        
+        steg_label = ttk.Label(dyn_row2, text="(steg)")
+        steg_label.pack(side=tk.LEFT, padx=5)
+        self.dyn_disturbance_widgets.append(steg_label)
+        
+        self.dyn_pulse_dur_var = tk.IntVar(value=self.pulse_dur_var.get())
+        self.dyn_pulse_dur_entry = ttk.Entry(dyn_row2, textvariable=self.dyn_pulse_dur_var, width=3)
+        self.dyn_pulse_dur_entry.pack(side=tk.LEFT, padx=5)
+        self.dyn_disturbance_widgets.append(self.dyn_pulse_dur_entry)
+        
+        # Pulsstörning-knapp
+        self.dyn_pulse_button = ttk.Button(dyn_row2, text="Pulsstörning", command=self.trigger_pulse)
+        self.dyn_pulse_button.pack(side=tk.LEFT, padx=5)
+        self.dyn_disturbance_widgets.append(self.dyn_pulse_button)
+        
+        # Tredje raden - Aktivera knapp
+        dyn_row3 = ttk.Frame(self.dynamic_frame)
+        dyn_row3.pack(fill=tk.X, padx=5, pady=5)
+        
+        self.activate_btn = ttk.Button(dyn_row3, text="Aktivera ändringar", command=self.activate_dynamic_changes)
+        self.activate_btn.pack(side=tk.LEFT, padx=5)
+
         # Stegsvarsanalys och enhetsväxling
         analysis_frame = ttk.LabelFrame(frame, text="Stegsvarsanalys och visning")
         analysis_frame.pack(fill=tk.X, padx=5, pady=5)
@@ -1139,7 +1178,6 @@ class PIDSimulatorApp:
         ToolTip(self.kp_entry, HELP_TEXTS["kp"])
         ToolTip(self.ti_entry, HELP_TEXTS["ti"])
         ToolTip(self.td_entry, HELP_TEXTS["td"])
-        ToolTip(self.sp_entry, HELP_TEXTS["setpoint"])
         
         # Systemparametrar
         ToolTip(self.proc_k_entry, HELP_TEXTS["process_k"])
@@ -1166,6 +1204,14 @@ class PIDSimulatorApp:
         
         # Manual output
         ToolTip(self.manual_entry, HELP_TEXTS["manual_out"])
+        
+        # Dynamiska inställningar
+        ToolTip(self.dyn_sp_entry, HELP_TEXTS["setpoint"])
+        ToolTip(self.dyn_signal_disturbance_check, HELP_TEXTS["signalstörning"])
+        ToolTip(self.dyn_noise_entry, HELP_TEXTS["noise_std"])
+        ToolTip(self.dyn_pulse_entry, HELP_TEXTS["pulse_mag"])
+        ToolTip(self.dyn_pulse_dur_entry, HELP_TEXTS["pulse_dur"])
+        ToolTip(self.activate_btn, "Aktiverar de dynamiska inställningarna på den pågående simuleringen utan att stoppa den.")
         
         # Visa i procent checkbox
         ToolTip(self.percent_mode_check, HELP_TEXTS["percent_mode"])
@@ -1544,7 +1590,6 @@ class PIDSimulatorApp:
         """Sätter upp hantering av decimal comma för alla numeriska inmatningsfält"""
         # Lista över alla numeriska Entry-widgets och deras motsvarande tkinter-variabler
         self.numeric_fields = [
-            (self.sp_entry, self.sp_var),
             (self.nv_entry, self.nv_var),
             (self.kp_entry, self.kp_var),
             (self.ti_entry, self.ti_var),
@@ -1557,12 +1602,15 @@ class PIDSimulatorApp:
             (self.proc_t_entry, self.proc_t_var),
             (self.proc_dead_entry, self.proc_dead_var),
             (self.utflode_entry, self.proc_fout_var),
-            (self.noise_entry, self.noise_std_var),
-            (self.pulse_entry, self.pulse_mag_var),
             (self.manual_entry, self.manual_output_var),
             (self.min_entry, self.process_min),
             (self.max_entry, self.process_max),
             (self.stop_time_entry, self.stop_time_var),
+            # Dynamiska inställningar
+            (self.dyn_sp_entry, self.dyn_sp_var),
+            (self.dyn_noise_entry, self.dyn_noise_std_var),
+            (self.dyn_pulse_entry, self.dyn_pulse_mag_var),
+            (self.dyn_pulse_dur_entry, self.dyn_pulse_dur_var),
         ]
         
         # Lägg till Entry-widgets för hysteresis och andra fält om de existerar
@@ -1751,6 +1799,80 @@ class PIDSimulatorApp:
             for widget in self.disturbance_widgets:
                 widget.pack_forget()
     
+    def on_dynamic_disturbance_change(self):
+        """Aktiverar/inaktiverar dynamiska signalstörningar och visar/döljer kontroller"""
+        enabled = self.dyn_signal_disturbance_var.get()
+        
+        if enabled:
+            # Aktivera störningar - sätt till rimliga värden om de är noll
+            if self.dyn_noise_std_var.get() == 0.0:
+                self.dyn_noise_std_var.set(0.5)
+            
+            # Visa alla störningswidgets
+            for widget in self.dyn_disturbance_widgets:
+                widget.pack(side=tk.LEFT, padx=5)
+        else:
+            # Dölj alla störningswidgets
+            for widget in self.dyn_disturbance_widgets:
+                widget.pack_forget()
+    
+    def activate_dynamic_changes(self):
+        """Aktiverar ändringar från dynamiska inställningar till den aktiva simuleringen"""
+        # Uppdatera börvärde
+        try:
+            new_setpoint_value = self.parse_float(self.dyn_sp_var)
+            if self.percent_mode_var.get():
+                # Konvertera från procent till fysisk enhet
+                range_span = self.matområde_max_var.get() - self.matområde_min_var.get()
+                new_setpoint = self.matområde_min_var.get() + (new_setpoint_value / 100.0) * range_span
+            else:
+                new_setpoint = new_setpoint_value
+            
+
+            
+            # Uppdatera börvärdet direkt i simuleringen utan att stoppa den
+            self.setpoint = new_setpoint
+            
+            # VIKTIGT: Uppdatera saved_params så att simuleringen använder det nya börvärdet
+            self.saved_params['setpoint'] = new_setpoint_value  # Använd värdet i samma format som GUI
+            
+            # Uppdatera också den gamla börvärde-variabeln för konsistens
+            if hasattr(self, 'sp_var'):
+                self.sp_var.set(self.dyn_sp_var.get())
+            
+        except ValueError:
+            messagebox.showerror("Fel", "Ogiltigt börvärde")
+            return
+        
+        # Uppdatera signalstörningar
+        self.signal_disturbance_var.set(self.dyn_signal_disturbance_var.get())
+        self.noise_std_var.set(self.dyn_noise_std_var.get())
+        self.pulse_mag_var.set(self.dyn_pulse_mag_var.get())
+        self.pulse_dur_var.set(self.dyn_pulse_dur_var.get())
+        
+        # Hantera aktivering/inaktivering av störningar
+        if self.dyn_signal_disturbance_var.get():
+            # Om störningar aktiveras, visa de gamla kontrollerna (om de finns)
+            if hasattr(self, 'disturbance_widgets'):
+                for widget in self.disturbance_widgets:
+                    try:
+                        widget.pack(side=tk.LEFT, padx=5)
+                    except:
+                        pass  # Widget kanske inte finns längre
+        else:
+            # Inaktivera störningar
+            self.noise_std_var.set(0.0)
+            self.pulse_active = False
+            self.pulse_steps_left = 0
+            
+            # Dölj de gamla kontrollerna (om de finns)
+            if hasattr(self, 'disturbance_widgets'):
+                for widget in self.disturbance_widgets:
+                    try:
+                        widget.pack_forget()
+                    except:
+                        pass  # Widget kanske inte finns längre
+    
     def on_integrerande_change(self):
         """Hantera när integrerande-checkbox ändras - visa/dölj utflöde och T-parameter"""
         integrerande = self.integrerande_var.get()
@@ -1778,9 +1900,9 @@ class PIDSimulatorApp:
         # Aktivera ignore-flagga under enhetskonvertering
         self._ignore_changes = True
         
-        # Konvertera börvärdet mellan procent och fysiska enheter
+        # Konvertera börvärdet i dynamiska inställningar mellan procent och fysiska enheter  
         try:
-            current_setpoint = self.parse_float(self.sp_var)
+            current_setpoint = self.parse_float(self.dyn_sp_var)
         except ValueError:
             current_setpoint = self.setpoint
         
@@ -1791,16 +1913,16 @@ class PIDSimulatorApp:
                 mat_min = self.parse_float(self.matområde_min_var)
                 mat_max = self.parse_float(self.matområde_max_var)
                 new_setpoint = (current_setpoint - mat_min) / (mat_max - mat_min) * 100
-                self.sp_var.set(f"{new_setpoint:.1f}")
-                self.sp_unit_label.config(text="%")
+                self.dyn_sp_var.set(f"{new_setpoint:.1f}")
+                self.dyn_sp_unit_label.config(text="%")
             else:
                 # Växla från procentläge: konvertera från procent till fysisk enhet
                 # Använd mätområdet för korrekt fysisk enhetsberäkning
                 mat_min = self.parse_float(self.matområde_min_var)
                 mat_max = self.parse_float(self.matområde_max_var)
                 new_setpoint = mat_min + (current_setpoint / 100) * (mat_max - mat_min)
-                self.sp_var.set(f"{new_setpoint:.1f}")
-                self.sp_unit_label.config(text=self.process_unit_var.get())
+                self.dyn_sp_var.set(f"{new_setpoint:.1f}")
+                self.dyn_sp_unit_label.config(text=self.process_unit_var.get())
         except ZeroDivisionError:
             pass  # Undvik division med noll om max == min
         
@@ -1809,11 +1931,7 @@ class PIDSimulatorApp:
         
         # Uppdatera saved_params för alla fält som påverkas av enhetskonvertering
         # så att de nya konverterade värdena betraktas som "sparade"
-        try:
-            new_setpoint_value = self.parse_float(self.sp_var)
-            self.saved_params['setpoint'] = new_setpoint_value
-        except ValueError:
-            pass
+        # (Dynamiska inställningar hanteras separat och aktiveras genom "Aktivera"-knappen)
             
         try:
             new_min_value = self.parse_float(self.matområde_min_var)
