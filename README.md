@@ -57,5 +57,5 @@ För detaljerad hjälp och teknisk information, se:
 
 ---
 
-**Version**: 1.6.1  
+**Version**: 1.7.0  
 **Utvecklat för**: Pedagogisk användning inom reglerteknik
