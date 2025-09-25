@@ -340,11 +340,11 @@ Dokumentera för varje test:
 ```
 Process: K=0.8, T=25s, Dötid=5s
 
-| Strategi    | Kp  | Ti  | Td  | Filosofi | Förväntad prestanda |
-|-------------|-----|-----|-----|----------|-------------------|
-| Konservativ |     |     |     | Säkerhet | Stabil, långsam   |
-| Balanserad  |     |     |     | Kompromiss| Rimlig balans     |
-| Aggressiv   |     |     |     | Snabbhet | Snabb, riskabel   |
+| Strategi    | Kp  | Ti  | Td  | Filosofi  | Förväntad prestanda |
+|-------------|-----|-----|-----|-----------|---------------------|
+| Konservativ |     |     |     | Säkerhet  | Stabil, långsam     |
+| Balanserad  |     |     |     | Kompromiss| Rimlig balans       |
+| Aggressiv   |     |     |     | Snabbhet  | Snabb, riskabel     |
 ```
 
 **Utveckla strategier:**
@@ -498,13 +498,13 @@ Med dina beräknade och testade parametrar:
 
 ```
 INTEGRERANDE PROCESS-TESTNING:
-| Regulator | Kp  | Ti  | Td  | Stabilitet | Hastighet | Anteckningar |
-|-----------|-----|-----|-----|------------|-----------|--------------|
-| P         | 1.2 | OFF | OFF |            |           | Förväntat: instabil |
-| PI        | 1.0 | 10  | OFF |            |           |              |
-| PI (säker)| 0.8 | 15  | OFF |            |           |              |
-| PID       | 1.0 | 10  | 1.5 |            |           |              |
-| PID (säker)| 0.8| 15  | 1.0 |            |           |              |
+| Regulator  | Kp  | Ti  | Td  | Stabilitet | Hastighet | Anteckningar        |
+|------------|-----|-----|-----|------------|-----------|---------------------|
+| P          | 1.2 | OFF | OFF |            |           | Förväntat: instabil |
+| PI         | 1.0 | 10  | OFF |            |           |                     |
+| PI (säker) | 0.8 | 15  | OFF |            |           |                     |
+| PID        | 1.0 | 10  | 1.5 |            |           |                     |
+| PID (säker)| 0.8 | 15  | 1.0 |            |           |                     |
 ```
 
 > **⚠️ Integrerande processer**: Känsligare för överinställning. Förvänta instabilitet med P-reglering.
@@ -542,9 +542,9 @@ Från din tabell, identifiera stabila kandidater och jämför visuellt:
 BEGRÄNSNINGSANALYS:
 | Test        | Utsignal-gräns | Kp  | Ti | Td | Max utsignal | Prestanda | Anteckningar |
 |-------------|----------------|-----|----|----|--------------|-----------|--------------|
-| Standard    | 0-100%        | 1.2 | 10 | 2  |              |           |              |
-| Begränsad   | 0-80%         | 1.2 | 10 | 2  |              |           |              |
-| Anpassad    | 0-80%         | 0.8 | 15 | 1  |              |           |              |
+| Standard    | 0-100%         | 1.2 | 10 | 2  |              |           |              |
+| Begränsad   | 0-80%          | 1.2 | 10 | 2  |              |           |              |
+| Anpassad    | 0-80%          | 0.8 | 15 | 1  |              |           |              |
 ```
 
 #### Steg 2: Systematisk testning av begränsningar
