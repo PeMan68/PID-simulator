@@ -1,5 +1,5 @@
 # Övningsuppgifter: Systemoptimering och Parameterjämförelser
-*PID-simulator v1.6.1 - Avancerade övningar med historikanalys*
+*PID-simulator v1.7.0 - Avancerade övningar med historikanalys*
 
 > **⚠️ Viktigt**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
@@ -10,6 +10,10 @@ Denna övningssamling fokuserar på systematisk optimering av regulatorparametra
 **Förkunskaper:** Grundläggande PID-förståelse.
 
 **Mål:** Utveckla systematisk approach för regulatordesign och optimering.
+
+**🆕 Nya övningar i v1.7.0:**
+- **Statiskt reglerfel**: Kvantitativ studie av P-regulatorns begränsningar vid olika Kp-värden och börvärden
+- **Integratoruppvridning**: Praktisk demonstration av windup-problemet och anti-windup-funktionens betydelse
 
 **Viktigt om dokumentation och spårning:**
 
@@ -95,7 +99,75 @@ Nu när du har identifierat 2-3 intressanta kandidater från din tabell:
 
 ---
 
-### Övning 1.2: Ti-parameterns roll
+### Övning 1.2: Statiskt reglerfel - Grundläggande förståelse
+**Syfte:** Demonstrera och kvantifiera statiskt reglerfel vid olika Kp-värden och börvärden.
+
+> **💡 Teori**: P-regulatorer (endast Kp, Ti=OFF) kan ALDRIG eliminera statiskt reglerfel helt. Felet minskar med högre Kp men försvinner aldrig utan integral-del (Ti).
+
+#### Steg 1: Förberedelse - Mätning av statiskt reglerfel
+1. **Process**: Självreglerande, K=1.3, T=15s, Dötid=0s
+2. **Börvärde**: 50, **Mätområde**: 0-100
+3. **Rensa historik**
+
+#### Steg 2: Anteckningsmall för statiskt reglerfel
+Skapa tabell i ditt dokument:
+```
+Process: K=1.3, T=15s, Börvärde=50, Endast P-reglering (Ti=OFF, Td=OFF)
+
+| Test | Kp  | Slutvärde PV | Statiskt fel | Fel i % av börvärde | Anteckningar |
+|------|-----|--------------|--------------|---------------------|--------------|
+| 1    | 1.0 |              |              |                     |              |
+| 2    | 2.0 |              |              |                     |              |
+| 3    | 4.0 |              |              |                     |              |
+| 4    | 8.0 |              |              |                     |              |
+| 5    |16.0 |              |              |                     |              |
+```
+
+#### Steg 3: Mätning av statiskt reglerfel
+För **varje** Kp-värde:
+1. **Återställ** (nollställer processen)
+2. **Ställ in**: Kp enligt tabell, Ti=OFF, Td=OFF
+3. **Kör** tills systemet stabiliseras (~150s)
+4. **Läs av** slutligt processvärde (sista värdet på blå kurva)
+5. **Beräkna** statiskt fel = Börvärde - Slutligt processvärde
+6. **Beräkna** fel i % = (Statiskt fel / Börvärde) × 100%
+7. **Anteckna** alla värden i tabellen
+
+**Viktigt**: Vänta tills processens kurva blir helt horisontell innan du läser av slutvärdet!
+
+#### Steg 4: Börvärdesvariation - Demonstrera felens linjäritet
+Skapa ny tabell för samma Kp vid olika börvärden:
+```
+Process: K=1.3, T=15s, Kp=4.0 (fast), Ti=OFF, Td=OFF
+
+| Test | Börvärde | Slutvärde PV | Statiskt fel | Fel i % | Anteckningar |
+|------|----------|--------------|--------------|---------|--------------|
+| 1    | 30       |              |              |         |              |
+| 2    | 50       |              |              |         |              |
+| 3    | 70       |              |              |         |              |
+| 4    | 90       |              |              |         |              |
+```
+
+**Testprocedur** (Kp=4.0 konstant):
+1. För varje börvärde: **Återställ** → Ställ in börvärde → **Kör** → Mät slutvärde
+2. Anteckna alla värden
+
+#### Steg 5: Visuell demonstration
+1. **Rensa historik**
+2. **Välj 3 intressanta resultat** från dina tabeller
+3. **Test 1**: Lågt Kp (t.ex. Kp=1.0, börvärde=50) → **Spara** ("Stort fel")
+4. **Test 2**: Högt Kp (t.ex. Kp=8.0, börvärde=50) → **Spara** ("Litet fel") 
+5. **Test 3**: Samma Kp men annat börvärde → **Spara** ("Fel förändras")
+
+**Reflektion 1.2:**
+- Hur förändrades det statiska felet när Kp ökade?
+- Blev felet någonsin exakt noll med P-reglering?
+- Är det statiska felet proportionellt mot börvärdet? (Jämför % fel i dina tabeller)
+- Varför kan inte P-regulatorn eliminera statiskt reglerfel helt?
+
+---
+
+### Övning 1.3: Ti-parameterns roll - Elimination av statiskt reglerfel
 **Syfte:** Förstå integreringstidens påverkan på systemdynamik.
 
 #### Steg 1: Anteckningsmall för Ti-variation
@@ -148,9 +220,15 @@ Med dina 3 bästa kandidater från anteckningarna:
 - Vilken Ti-kandidat ger bästa balansen för detta system?
 - Hur skulle processbrus påverka ditt val av Ti?
 
+**Reflektion 1.3:**
+- Kunde PI-regulatorn eliminera det statiska felet helt (jämfört med P-regulatorn)?
+- Hur påverkade Ti-värdet systemets stabilitet och responssnabbhet?
+- Vilken kompromiss såg du mellan snabb elimination av statiskt fel och systemstabilitet?
+- När skulle du välja en längre Ti (t.ex. Ti>20s) i praktiken?
+
 ---
 
-### Övning 1.3: Td-parameterns optimering
+### Övning 1.4: Td-parameterns optimering
 **Syfte:** Förstå derivatadelens bidrag och begränsningar.
 
 #### Steg 1: Anteckningsmall för Td-variation
@@ -196,10 +274,92 @@ Med dina 3 bästa kandidater från anteckningarna:
 4. **Med brus**: Aktivera brus (amplitud 1.0) → Upprepa båda testerna med **Återställ** före varje
 5. **Jämför** effekten av D-delen med och utan brus
 
-**Reflektion 1.3:**
+**Reflektion 1.4:**
 - Bekräftar den visuella jämförelsen dina antecknade mätningar?
 - Vilken Td ger bästa balansen mellan snabbhet och bruskänslighet?
 - När skulle du välja att helt undvika D-delen?
+
+---
+
+### Övning 1.5: Integratoruppvridning (Windup) - Förståelse och hantering
+**Syfte:** Demonstrera integratoruppvridning vid begränsade styrsignaler och förstå anti-windup-funktionen.
+
+> **💡 Teori**: När styrsignalen når max/min-gränser fortsätter integratorn att "bygga upp" sitt bidrag eftersom felet kvarstår. Detta kallas "windup" och leder till långsam återhämtning när börvärdet ändras.
+
+#### Steg 1: System för windup-demonstration
+1. **Process**: Självreglerande, K=1.5, T=20s, Dötid=0s
+2. **Börvärde**: 80, **Mätområde**: 0-100
+3. **Utsignal**: **Min=0, Max=50** (begränsa styrsignalen!)
+4. **Anti-windup**: **AVMARKERAD** (för att visa problemet)
+5. **Rensa historik**
+
+#### Steg 2: Anteckningsmall för windup-studier
+```
+Process: K=1.5, T=20s, Börvärde=80, Utsignal: 0-50, Anti-windup=OFF
+
+Scenario 1: Börvärdessteg med windup
+| Test | Kp | Ti(s) | Steg 1→2 | Stigtid(s) | Tid till mättnad | Recovery-tid(s) | Anteckningar |
+|------|-------|------|---------|-----------|-----------------|-----------------| -------------|
+| 1    | 3.0   | 8    | 80→90   |           |                 |                 |              |
+| 2    | 3.0   | 8    | 90→70   |           |                 |                 |              |
+
+Scenario 2: Anti-windup-effekt
+| Test | Anti-windup | Börvärdessteg | Recovery-tid(s) | Förbättring | Anteckningar |
+|------|-------------|---------------|-----------------|-------------|--------------|
+| 3    | OFF         | 80→90→70      |                 | Baseline    |              |
+| 4    | ON          | 80→90→70      |                 |             |              |
+```
+
+#### Steg 3: Demonstration av windup-problemet
+**Test 1: Första börvärdessteget (80→90)**
+1. **Återställ** 
+2. **Inställningar**: Kp=3.0, Ti=8s, Td=OFF, Anti-windup=OFF
+3. **Börvärde**: 80
+4. **Kör** ~30s tills systemet stabiliseras
+5. **Byt börvärde** till 90 (under körning via dynamiska inställningar)
+6. **Aktivera ändringar** och fortsätt köra
+7. **Observera**: Styrsignalen (röd kurva) når max (50) och stannar där
+8. **Mät**: Tid tills processvärdet når 90 (stigtid)
+9. **Anteckna**: När styrsignalen blev mättad
+
+**Test 2: Återhämtning - demonstrera windup-effekten**
+1. **Fortsätt samma simulering** (eller återskapa scenariot)
+2. **När PV ≈ 90**: Byt börvärde till 70 (stor minskning)
+3. **Aktivera ändringar**
+4. **Observera**: Långsam initial respons trots stort fel
+5. **Mät**: Tid från börvärdesbyte tills PV börjar sjunka märkbart
+6. **Anteckna**: "Recovery-tid" (visar windup-effekten)
+
+#### Steg 4: Anti-windup-demonstrationen
+**Test 3: Referenstest utan anti-windup**
+1. **Återställ** och starta om hela sekvensen (80→90→70)
+2. **Anti-windup**: OFF
+3. **Dokumentera** hela förloppet, särskilt recovery-tiden vid 90→70
+
+**Test 4: Med anti-windup aktiverad**
+1. **Återställ**
+2. **Anti-windup**: **MARKERAD** (aktivera funktionen)
+3. **Upprepa** samma sekvens (80→90→70)
+4. **Jämför** recovery-tiden med Test 3
+
+#### Steg 5: Visuell jämförelse
+1. **Rensa historik**
+2. **Test A**: Återskapa "windup-problemet" (Anti-windup OFF) → **Spara** ("Windup problem")
+3. **Test B**: Återskapa "anti-windup-lösningen" (Anti-windup ON) → **Spara** ("Anti-windup")
+4. **Jämför** båda kurvorna, fokusera på recovery-fasen
+
+#### Steg 6: Extremfall - Kraftig windup
+För tydligare demonstration:
+1. **Ändra till**: Ti=4s (snabbare integrator), Utsignal Max=30 (hårdare begränsning)
+2. **Upprepa** börvärdessteget 80→95→60
+3. **Observera** ännu kraftigare windup-effekter
+
+**Reflektion 1.5:**
+- Vad hände med recovery-tiden när anti-windup aktiverades?
+- Varför blev responsen långsam vid börvärdesminskningar med windup?
+- Hur påverkade Ti-värdet (4s vs 8s) windup-problemets storlek?
+- I vilka verkliga situationer kan windup bli särskilt problematiskt?
+- När är det kritiskt att använda anti-windup i praktiken?
 
 ---
 
@@ -735,6 +895,10 @@ Från dina fas 1-4 anteckningar, välj dina **3 bästa designkandidater**:
 - Diskutera verkliga applikationer och industristandards
 - Använd som grund för avancerade reglerkurser
 
-**Version:** 1.0 för PID-simulator v1.6.1  
-**Tidsåtgång:** 4-6 timmar (inklusive projektuppgift)  
+**Version:** 2.0 för PID-simulator v1.7.0  
+**Tidsåtgång:** 5-7 timmar (inklusive nya övningar om statiskt fel och windup)  
 **Svårighetsgrad:** Medel-Avancerad
+
+**🆕 Nya i v2.0:**
+- Övning 1.2: Kvantitativ studie av statiskt reglerfel
+- Övning 1.5: Praktisk demonstration av integratoruppvridning (windup)
