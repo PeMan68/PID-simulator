@@ -11,10 +11,6 @@ Denna övningssamling fokuserar på systematisk optimering av regulatorparametra
 
 **Mål:** Utveckla systematisk approach för regulatordesign och optimering.
 
-**🆕 Nya övningar i v1.7.0:**
-- **Statiskt reglerfel**: Kvantitativ studie av P-regulatorns begränsningar vid olika Kp-värden och börvärden
-- **Integratoruppvridning**: Praktisk demonstration av windup-problemet och anti-windup-funktionens betydelse
-
 **Viktigt om dokumentation och spårning:**
 
 **Historikfunktionen i programmet:**
@@ -42,8 +38,10 @@ Denna övningssamling fokuserar på systematisk optimering av regulatorparametra
 
 ## Del 1: Parameterkänslighetsanalys
 
-### Övning 1.1: Kp-parameterns påverkan
-**Syfte:** Systematiskt utforska proportionalförstärkningens effekter.
+### Övning 1.1: Kp-parameterns påverkan och statiskt reglerfel
+**Syfte:** Systematiskt utforska proportionalförstärkningens effekter och demonstrera statiskt reglerfel.
+
+> **💡 Teori**: P-regulatorer (endast Kp, Ti=OFF) kan ALDRIG eliminera statiskt reglerfel helt. Felet minskar med högre Kp men försvinner aldrig utan integral-del (Ti).
 
 #### Steg 1: Baslinje-system
 1. **Process**: Självreglerande, K=1.3, T=15s, Dötid=0s
@@ -52,93 +50,46 @@ Denna övningssamling fokuserar på systematisk optimering av regulatorparametra
 
 #### Steg 2: Skapa anteckningstabell (i separat dokument)
 
-**Anteckningsmall för Kp-variation:**
+**Anteckningsmall för Kp-variation och statiskt reglerfel:**
 ```
-Process: K=1.3, T=15s, Dötid=0s, Börvärde=60
+Process: K=1.3, T=15s, Dötid=0s, Börvärde=60, Endast P-reglering (Ti=OFF, Td=OFF)
 
-| Test | Kp  | Ti | Td | Stab.tid(s) | Översläng(%) | Stationärt fel | Oscillerar? | Anteckningar |
-|------|-----|----|----|-------------|--------------|----------------|-------------| -------------|
-| 1    |1.0  |OFF |OFF |             |              |                |             |              |
-| 2    |3.0  |OFF |OFF |             |              |                |             |              |
-| 3    |6.0  |OFF |OFF |             |              |                |             |              |
-| 4    |9.0  |OFF |OFF |             |              |                |             |              |
-| 5    |12.0 |OFF |OFF |             |              |                |             |              |
+| Test | Kp  | Stab.tid(s) | Översläng(%) | Slutvärde PV | Statiskt fel | Fel i % | Oscillerar? | Anteckningar |
+|------|-----|-------------|--------------|--------------|--------------|---------|-------------|--------------|
+| 1    |1.0  |             |              |              |              |         |             |              |
+| 2    |2.0  |             |              |              |              |         |             |              |
+| 3    |4.0  |             |              |              |              |         |             |              |
+| 4    |8.0  |             |              |              |              |         |             |              |
+| 5    |12.0 |             |              |              |              |         |             |              |
 ```
 
 #### Steg 3: Kp-testsekvens (fyll i tabellen)
-> **⚠️ Viktigt**: Klicka **"Återställ"** före VARJE test i denna övning för att nollställa processens tillstånd till normalvärdet.
+> **⚠️ Viktigt**: Klicka **"Återställ"** före VARJE test för att nollställa processens tillstånd.
 
 För **varje** test:
 1. **Återställ** (nollställer processen)
 2. **Ställ in** Kp-värde (Ti=OFF, Td=OFF)
-3. **Kör** simulering ~100s
+3. **Kör** simulering ~150s (längre för att se statiskt fel)
 4. **Mät och anteckna** i din tabell:
    - Stabiliseringstid till ±5% av börvärde
    - Översläng i % över börvärde  
-   - Kvarvarande stationärt fel
+   - Slutligt processvärde (när kurvan blivit horisontell)
+   - Statiskt fel = Börvärde - Slutligt processvärde
+   - Fel i % = (Statiskt fel / Börvärde) × 100%
    - Ja/Nej för oscillationer
 
 #### Steg 4: Analys från dina anteckningar
 Använd din ifyllda tabell för att bestämma:
 - **Optimal Kp**: Snabbast utan oscillation
 - **Säkerhetsmarginaler**: Avstånd till instabilitetsgräns
+- **Statiskt fel-trend**: Hur påverkar Kp det kvarvarande felet?
 
-#### Steg 5: Slutlig jämförelse (visuell)
-Nu när du har identifierat 2-3 intressanta kandidater från din tabell:
+#### Steg 5: Börvärdestest med optimal Kp-kandidat
+Nu när du identifierat en optimal Kp från steg 4, testa olika börvärden:
 
-1. **Rensa historik**
-2. **Återställ** → **Kandidat 1**: Ställ in enligt ditt "optimala" resultat → Kör → **Spara** (märk: "Optimal Kp")
-3. **Återställ** → **Kandidat 2**: Ställ in enligt ditt "säkra" resultat → Kör → **Spara** (märk: "Säker Kp")  
-4. **Återställ** → **Kandidat 3**: Ställ in enligt "gränsvärde" → Kör → **Spara** (märk: "Gräns Kp")
-5. **Jämför** alla tre kurvor samtidigt i historikpanelen
-
-**Reflektion 1.1:**
-- Vilken skillnad ser du mellan kandidaterna i den visuella jämförelsen?
-- Stämmer den visuella jämförelsen med dina antecknade mätningar?
-- Vilken Kp-kandidat skulle du välja för verklig tillämpning?
-
----
-
-### Övning 1.2: Statiskt reglerfel - Grundläggande förståelse
-**Syfte:** Demonstrera och kvantifiera statiskt reglerfel vid olika Kp-värden och börvärden.
-
-> **💡 Teori**: P-regulatorer (endast Kp, Ti=OFF) kan ALDRIG eliminera statiskt reglerfel helt. Felet minskar med högre Kp men försvinner aldrig utan integral-del (Ti).
-
-#### Steg 1: Förberedelse - Mätning av statiskt reglerfel
-1. **Process**: Självreglerande, K=1.3, T=15s, Dötid=0s
-2. **Börvärde**: 50, **Mätområde**: 0-100
-3. **Rensa historik**
-
-#### Steg 2: Anteckningsmall för statiskt reglerfel
-Skapa tabell i ditt dokument:
+Skapa ny tabell:
 ```
-Process: K=1.3, T=15s, Börvärde=50, Endast P-reglering (Ti=OFF, Td=OFF)
-
-| Test | Kp  | Slutvärde PV | Statiskt fel | Fel i % av börvärde | Anteckningar |
-|------|-----|--------------|--------------|---------------------|--------------|
-| 1    | 1.0 |              |              |                     |              |
-| 2    | 2.0 |              |              |                     |              |
-| 3    | 4.0 |              |              |                     |              |
-| 4    | 8.0 |              |              |                     |              |
-| 5    |16.0 |              |              |                     |              |
-```
-
-#### Steg 3: Mätning av statiskt reglerfel
-För **varje** Kp-värde:
-1. **Återställ** (nollställer processen)
-2. **Ställ in**: Kp enligt tabell, Ti=OFF, Td=OFF
-3. **Kör** tills systemet stabiliseras (~150s)
-4. **Läs av** slutligt processvärde (sista värdet på blå kurva)
-5. **Beräkna** statiskt fel = Börvärde - Slutligt processvärde
-6. **Beräkna** fel i % = (Statiskt fel / Börvärde) × 100%
-7. **Anteckna** alla värden i tabellen
-
-**Viktigt**: Vänta tills processens kurva blir helt horisontell innan du läser av slutvärdet!
-
-#### Steg 4: Börvärdesvariation - Demonstrera felens linjäritet
-Skapa ny tabell för samma Kp vid olika börvärden:
-```
-Process: K=1.3, T=15s, Kp=4.0 (fast), Ti=OFF, Td=OFF
+Process: K=1.3, T=15s, Kp=X.X (din optimala från steg 4), Ti=OFF, Td=OFF
 
 | Test | Börvärde | Slutvärde PV | Statiskt fel | Fel i % | Anteckningar |
 |------|----------|--------------|--------------|---------|--------------|
@@ -148,26 +99,38 @@ Process: K=1.3, T=15s, Kp=4.0 (fast), Ti=OFF, Td=OFF
 | 4    | 90       |              |              |         |              |
 ```
 
-**Testprocedur** (Kp=4.0 konstant):
+**Testprocedur** (med din optimala Kp):
 1. För varje börvärde: **Återställ** → Ställ in börvärde → **Kör** → Mät slutvärde
-2. Anteckna alla värden
+2. Beräkna och anteckna statiskt fel
 
-#### Steg 5: Visuell demonstration
+#### Steg 6: Slutlig jämförelse och börvärdesdemonstration
+Nu ska du demonstrera både Kp-effekter och börvärdes-påverkan:
+
+**Del A - Kp-jämförelse:**
 1. **Rensa historik**
-2. **Välj 3 intressanta resultat** från dina tabeller
-3. **Test 1**: Lågt Kp (t.ex. Kp=1.0, börvärde=50) → **Spara** ("Stort fel")
-4. **Test 2**: Högt Kp (t.ex. Kp=8.0, börvärde=50) → **Spara** ("Litet fel") 
-5. **Test 3**: Samma Kp men annat börvärde → **Spara** ("Fel förändras")
+2. **Test 1**: Lågt Kp (t.ex. Kp=1.0, börvärde=60) → **Spara** ("Lågt Kp - stort fel")
+3. **Test 2**: Optimalt Kp (från din analys, börvärde=60) → **Spara** ("Optimalt Kp")
+4. **Test 3**: Högt Kp (t.ex. Kp=12.0, börvärde=60) → **Spara** ("Högt Kp - litet fel")
 
-**Reflektion 1.2:**
-- Hur förändrades det statiska felet när Kp ökade?
-- Blev felet någonsin exakt noll med P-reglering?
+**Del B - Börvärdestest med optimal Kp:**
+1. **Rensa historik**  
+2. **Använd dynamiska inställningar** för att demonstrera börvärdes-påverkan:
+   - Starta med börvärde=30, kör tills stabilt
+   - **Dynamiska inställningar**: Ändra börvärde till 60 → **Aktivera ändringar**  
+   - **Observera**: Hur det statiska felet förändras proportionellt
+   - **Dynamiska inställningar**: Ändra börvärde till 90 → **Aktivera ändringar**
+3. **Spara** ("Börvärdes-påverkan")
+
+**Reflektion 1.1:**
+- Hur förändrades det statiska felet när Kp ökade? Blev det någonsin noll?
 - Är det statiska felet proportionellt mot börvärdet? (Jämför % fel i dina tabeller)
+- Vilken kompromiss såg du mellan snabb respons och stort Kp-värde?
+- Vilken Kp-kandidat skulle du välja för verklig tillämpning?
 - Varför kan inte P-regulatorn eliminera statiskt reglerfel helt?
 
 ---
 
-### Övning 1.3: Ti-parameterns roll - Elimination av statiskt reglerfel
+### Övning 1.2: Ti-parameterns roll - Elimination av statiskt reglerfel
 **Syfte:** Förstå integreringstidens påverkan på systemdynamik.
 
 #### Steg 1: Anteckningsmall för Ti-variation
@@ -220,7 +183,7 @@ Med dina 3 bästa kandidater från anteckningarna:
 - Vilken Ti-kandidat ger bästa balansen för detta system?
 - Hur skulle processbrus påverka ditt val av Ti?
 
-**Reflektion 1.3:**
+**Reflektion 1.2:**
 - Kunde PI-regulatorn eliminera det statiska felet helt (jämfört med P-regulatorn)?
 - Hur påverkade Ti-värdet systemets stabilitet och responssnabbhet?
 - Vilken kompromiss såg du mellan snabb elimination av statiskt fel och systemstabilitet?
@@ -228,7 +191,7 @@ Med dina 3 bästa kandidater från anteckningarna:
 
 ---
 
-### Övning 1.4: Td-parameterns optimering
+### Övning 1.3: Td-parameterns optimering
 **Syfte:** Förstå derivatadelens bidrag och begränsningar.
 
 #### Steg 1: Anteckningsmall för Td-variation
@@ -274,14 +237,14 @@ Med dina 3 bästa kandidater från anteckningarna:
 4. **Med brus**: Aktivera brus (amplitud 1.0) → Upprepa båda testerna med **Återställ** före varje
 5. **Jämför** effekten av D-delen med och utan brus
 
-**Reflektion 1.4:**
+**Reflektion 1.3:**
 - Bekräftar den visuella jämförelsen dina antecknade mätningar?
 - Vilken Td ger bästa balansen mellan snabbhet och bruskänslighet?
 - När skulle du välja att helt undvika D-delen?
 
 ---
 
-### Övning 1.5: Integratoruppvridning (Windup) - Förståelse och hantering
+### Övning 1.4: Integratoruppvridning (Windup) - Förståelse och hantering
 **Syfte:** Demonstrera integratoruppvridning vid begränsade styrsignaler och förstå anti-windup-funktionen.
 
 > **💡 Teori**: När styrsignalen når max/min-gränser fortsätter integratorn att "bygga upp" sitt bidrag eftersom felet kvarstår. Detta kallas "windup" och leder till långsam återhämtning när börvärdet ändras.
@@ -318,7 +281,7 @@ Scenario 2: Anti-windup-effekt
 4. **Kör** ~30s tills systemet stabiliseras
 5. **Byt börvärde** till 90 (under körning via dynamiska inställningar)
 6. **Aktivera ändringar** och fortsätt köra
-7. **Observera**: Styrsignalen (röd kurva) når max (50) och stannar där
+7. **Observera**: Styrsignalen når max (50) och stannar där
 8. **Mät**: Tid tills processvärdet når 90 (stigtid)
 9. **Anteckna**: När styrsignalen blev mättad
 
@@ -354,7 +317,7 @@ För tydligare demonstration:
 2. **Upprepa** börvärdessteget 80→95→60
 3. **Observera** ännu kraftigare windup-effekter
 
-**Reflektion 1.5:**
+**Reflektion 1.4:**
 - Vad hände med recovery-tiden när anti-windup aktiverades?
 - Varför blev responsen långsam vid börvärdesminskningar med windup?
 - Hur påverkade Ti-värdet (4s vs 8s) windup-problemets storlek?
@@ -899,6 +862,7 @@ Från dina fas 1-4 anteckningar, välj dina **3 bästa designkandidater**:
 **Tidsåtgång:** 5-7 timmar (inklusive nya övningar om statiskt fel och windup)  
 **Svårighetsgrad:** Medel-Avancerad
 
-**🆕 Nya i v2.0:**
-- Övning 1.2: Kvantitativ studie av statiskt reglerfel
-- Övning 1.5: Praktisk demonstration av integratoruppvridning (windup)
+**🆕 Förbättringar i v2.0:**
+- Övning 1.1: Konsoliderad Kp-övning med statiskt reglerfel-analys
+- Övning 1.4: Ny demonstration av integratoruppvridning (windup)
+- Utnyttjande av dynamiska inställningar för realtidsbörvärdesändringar
