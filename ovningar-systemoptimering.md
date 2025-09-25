@@ -273,7 +273,7 @@ Scenario 2: Anti-windup-effekt
 1. **Återställ** 
 2. **Inställningar**: Kp=3.0, Ti=8s, Td=OFF, Anti-windup=OFF
 3. **Börvärde**: 80
-4. **Kör** ~30s tills systemet stabiliseras
+4. **Kör** ~100s tills systemet stabiliseras
 5. **Byt börvärde** till 90 (under körning via dynamiska inställningar)
 6. **Aktivera ändringar** och fortsätt köra
 7. **Observera**: Styrsignalen når max (50) och stannar där
