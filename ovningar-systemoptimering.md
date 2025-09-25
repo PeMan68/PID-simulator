@@ -40,7 +40,7 @@ Denna övningssamling fokuserar på systematisk optimering av regulatorparametra
 **Syfte:** Systematiskt utforska proportionalförstärkningens effekter.
 
 #### Steg 1: Baslinje-system
-1. **Process**: Självreglerande, K=1.0, T=25s, Dötid=0s
+1. **Process**: Självreglerande, K=1.3, T=15s, Dötid=0s
 2. **Börvärde**: 60, **Mätområde**: 0-100
 3. **Rensa historik**
 
