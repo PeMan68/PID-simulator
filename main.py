@@ -85,47 +85,52 @@ class ToolTip:
         tooltip_width = tw.winfo_reqwidth()
         tooltip_height = tw.winfo_reqheight()
         
-        # Hämta skärmstorlek
-        screen_width = tw.winfo_screenwidth()
-        screen_height = tw.winfo_screenheight()
+        # Hämta programmets huvudfönster för att få rätt gränser
+        root = self.widget.winfo_toplevel()
         
-        # Reservera utrymme för Windows aktivitetsfält (taskbar)
-        # Vanligtvis cirka 40-50 pixlar i höjd
-        taskbar_height = 50
-        usable_screen_height = screen_height - taskbar_height
+        # Hämta programmets fönsterposition och storlek
+        root.update_idletasks()  # Se till att fönstrets geometri är uppdaterad
+        window_x = root.winfo_rootx()
+        window_y = root.winfo_rooty()
+        window_width = root.winfo_width()
+        window_height = root.winfo_height()
+        
+        # Beräkna fönstergränser
+        window_right = window_x + window_width
+        window_bottom = window_y + window_height
         
         # Beräkna optimal position
         # Försök först att placera tooltip till höger om widget
         x = widget_x + widget_width + 10
         y = widget_y
         
-        # Kontrollera om tooltip hamnar utanför höger skärmkant
-        if x + tooltip_width > screen_width:
+        # Kontrollera om tooltip hamnar utanför höger fönsterkant
+        if x + tooltip_width > window_right:
             # Placera till vänster om widget istället
             x = widget_x - tooltip_width - 10
             
-        # Kontrollera om tooltip hamnar utanför vänster skärmkant
-        if x < 0:
+        # Kontrollera om tooltip hamnar utanför vänster fönsterkant
+        if x < window_x:
             # Placera ovanför widget
             x = widget_x
             y = widget_y - tooltip_height - 10
             
-        # Kontrollera om tooltip hamnar utanför nedre användbara skärmkant
-        if y + tooltip_height > usable_screen_height:
+        # Kontrollera om tooltip hamnar utanför nedre fönsterkant
+        if y + tooltip_height > window_bottom:
             # Placera ovanför widget
             y = widget_y - tooltip_height - 10
             
-        # Kontrollera om tooltip hamnar utanför övre skärmkant
-        if y < 0:
-            # Placera under widget som sista utväg, men kontrollera aktivitetsfältet
+        # Kontrollera om tooltip hamnar utanför övre fönsterkant
+        if y < window_y:
+            # Placera under widget som sista utväg
             y = widget_y + widget_height + 10
-            # Om det fortfarande inte får plats, placera så högt upp som möjligt
-            if y + tooltip_height > usable_screen_height:
-                y = usable_screen_height - tooltip_height
+            # Om det fortfarande inte får plats, placera så högt upp som möjligt inom fönstret
+            if y + tooltip_height > window_bottom:
+                y = window_bottom - tooltip_height
         
-        # Säkerställ att tooltip inte hamnar helt utanför skärmen
-        x = max(0, min(x, screen_width - tooltip_width))
-        y = max(0, min(y, usable_screen_height - tooltip_height))
+        # Säkerställ att tooltip stannar inom programmets fönster
+        x = max(window_x, min(x, window_right - tooltip_width))
+        y = max(window_y, min(y, window_bottom - tooltip_height))
         
         tw.wm_geometry(f"+{x}+{y}")
         
