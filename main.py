@@ -60,13 +60,10 @@ class ToolTip:
         """Visar tooltip-rutan"""
         if self.tooltip_window:
             return
-            
-        x = self.widget.winfo_rootx() + 25
-        y = self.widget.winfo_rooty() + 25
         
+        # Skapa tooltip-fönster först för att kunna mäta dess storlek
         self.tooltip_window = tw = tk.Toplevel(self.widget)
         tw.wm_overrideredirect(True)
-        tw.wm_geometry(f"+{x}+{y}")
         
         # Skapa tooltip-innehåll
         frame = tk.Frame(tw, background="#ffffe0", relief="solid", borderwidth=1)
@@ -75,6 +72,65 @@ class ToolTip:
         label = tk.Label(frame, text=self.text, background="#ffffe0", 
                         font=("Arial", "9"), wraplength=300, justify="left")
         label.pack(padx=2, pady=2)
+        
+        # Uppdatera geometri för att få korrekt storlek
+        tw.update_idletasks()
+        
+        # Beräkna initial position
+        widget_x = self.widget.winfo_rootx()
+        widget_y = self.widget.winfo_rooty()
+        widget_width = self.widget.winfo_width()
+        widget_height = self.widget.winfo_height()
+        
+        tooltip_width = tw.winfo_reqwidth()
+        tooltip_height = tw.winfo_reqheight()
+        
+        # Hämta skärmstorlek
+        screen_width = tw.winfo_screenwidth()
+        screen_height = tw.winfo_screenheight()
+        
+        # Reservera utrymme för Windows aktivitetsfält (taskbar)
+        # Vanligtvis cirka 40-50 pixlar i höjd
+        taskbar_height = 50
+        usable_screen_height = screen_height - taskbar_height
+        
+        # Beräkna optimal position
+        # Försök först att placera tooltip till höger om widget
+        x = widget_x + widget_width + 10
+        y = widget_y
+        
+        # Kontrollera om tooltip hamnar utanför höger skärmkant
+        if x + tooltip_width > screen_width:
+            # Placera till vänster om widget istället
+            x = widget_x - tooltip_width - 10
+            
+        # Kontrollera om tooltip hamnar utanför vänster skärmkant
+        if x < 0:
+            # Placera ovanför widget
+            x = widget_x
+            y = widget_y - tooltip_height - 10
+            
+        # Kontrollera om tooltip hamnar utanför nedre användbara skärmkant
+        if y + tooltip_height > usable_screen_height:
+            # Placera ovanför widget
+            y = widget_y - tooltip_height - 10
+            
+        # Kontrollera om tooltip hamnar utanför övre skärmkant
+        if y < 0:
+            # Placera under widget som sista utväg, men kontrollera aktivitetsfältet
+            y = widget_y + widget_height + 10
+            # Om det fortfarande inte får plats, placera så högt upp som möjligt
+            if y + tooltip_height > usable_screen_height:
+                y = usable_screen_height - tooltip_height
+        
+        # Säkerställ att tooltip inte hamnar helt utanför skärmen
+        x = max(0, min(x, screen_width - tooltip_width))
+        y = max(0, min(y, usable_screen_height - tooltip_height))
+        
+        tw.wm_geometry(f"+{x}+{y}")
+        
+        # Lyft tooltip framför andra fönster
+        tw.lift()
     
     def hide_tooltip(self):
         """Döljer tooltip-rutan"""
@@ -113,6 +169,7 @@ HELP_TEXTS = {
     "enhetslös_k": "Enhetslös K - använd industristandard (%/%) istället för traditionell (°C/%) förstärkning.",
     "percent_mode": "Visa parametrar i procent av mätområdet istället för fysiska enheter.",
     "signalstörning": "Aktivera/inaktivera alla typer av signalstörningar på processen.",
+    "autopaus": "Autopaus - pausar automatiskt simuleringen när steady-state nås för att underlätta analys av resultat.",
     
     # Graf och export
     "graf_skala": "Min och max för värde-axeln.",
@@ -796,7 +853,8 @@ class PIDSimulatorApp:
         self.reset_btn = ttk.Button(sim_frame, text="Återställ", command=self.reset)
         self.reset_btn.pack(side=tk.LEFT, padx=2)
         
-        ttk.Checkbutton(sim_frame, text="Autopaus", variable=self.autopause_var).pack(side=tk.LEFT, padx=10)
+        self.autopause_checkbutton = ttk.Checkbutton(sim_frame, text="Autopaus", variable=self.autopause_var)
+        self.autopause_checkbutton.pack(side=tk.LEFT, padx=10)
         
         # Hastighetskontroller
         ttk.Label(sim_frame, text="Hastighet:").pack(side=tk.LEFT, padx=(20,2))
@@ -1108,6 +1166,9 @@ class PIDSimulatorApp:
         
         # Visa i procent checkbox
         ToolTip(self.percent_mode_check, HELP_TEXTS["percent_mode"])
+        
+        # Autopaus checkbox
+        ToolTip(self.autopause_checkbutton, HELP_TEXTS["autopaus"])
         
         # Checkboxes och viktiga val
         for widget in self.root.winfo_children():
