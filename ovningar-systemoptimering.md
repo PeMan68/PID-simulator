@@ -11,6 +11,35 @@ Denna övningssamling fokuserar på systematisk optimering av regulatorparametra
 
 **Mål:** Utveckla systematisk approach för regulatordesign och optimering.
 
+## Innehållsförteckning
+
+**Del 1: Parameterkänslighetsanalys**
+- 1.1 Kp-parameterns påverkan och statiskt reglerfel
+- 1.2 Ti-parameterns roll - Elimination av statiskt reglerfel  
+- 1.3 Td-parameterns optimering
+- 1.4 Integratoruppvridning (Windup) - Förståelse och hantering
+
+**Del 2: Praktisk regulatorinställning**
+- 2.1 Stegvis parameteroptimering
+- 2.2 Robusthetsanalys
+- 2.3 Alternativa inställningsstrategier
+
+**Del 3: Verkliga designstrategier**
+- 3.1 Ziegler-Nichols-metoden
+- 3.2 Lambda-inställning
+
+**Del 4: Specialfall och avancerade tekniker**
+- 4.1 Integrerande processer
+- 4.2 Multivariabel påverkan
+
+**Masterövning: Komplett regulatordesign**
+- 5 Systematisk PID-inställning från grunden
+
+**Avslutande reflektion**
+- Framtida tillämpning
+
+---
+
 **Viktigt om dokumentation och spårning:**
 
 **Historikfunktionen i programmet:**
@@ -51,8 +80,8 @@ Denna övningssamling fokuserar på systematisk optimering av regulatorparametra
 #### Steg 2: Skapa anteckningstabell (i separat dokument)
 
 **Anteckningsmall för Kp-variation och statiskt reglerfel:**
-```
-Process: K=1.3, T=15s, Dötid=0s, Börvärde=60, Endast P-reglering (Ti=OFF, Td=OFF)
+
+*Process: K=1.3, T=15s, Dötid=0s, Börvärde=60, Endast P-reglering (Ti=OFF, Td=OFF)*
 
 | Test | Kp  | Stab.tid(s) | Översläng(%) | Slutvärde PV | Statiskt fel | Fel i % | Oscillerar? | Anteckningar |
 |------|-----|-------------|--------------|--------------|--------------|---------|-------------|--------------|
@@ -61,7 +90,6 @@ Process: K=1.3, T=15s, Dötid=0s, Börvärde=60, Endast P-reglering (Ti=OFF, Td=
 | 3    |6.0  |             |              |              |              |         |             |              |
 | 4    |9.0  |             |              |              |              |         |             |              |
 | 5    |12.0 |             |              |              |              |         |             |              |
-```
 
 #### Steg 3: Kp-testsekvens (fyll i tabellen)
 > **⚠️ Viktigt**: Klicka **"Återställ"** före VARJE test för att nollställa processens tillstånd.
@@ -88,8 +116,8 @@ Använd din ifyllda tabell för att bestämma:
 Nu när du identifierat en optimal Kp från steg 4, testa olika börvärden:
 
 Skapa ny tabell:
-```
-Process: K=1.3, T=15s, Kp=X.X (din optimala från steg 4), Ti=OFF, Td=OFF
+
+*Process: K=1.3, T=15s, Kp=X.X (din optimala från steg 4), Ti=OFF, Td=OFF*
 
 | Test | Börvärde | Slutvärde PV | Statiskt fel | Fel i % | Anteckningar |
 |------|----------|--------------|--------------|---------|--------------|
@@ -97,7 +125,6 @@ Process: K=1.3, T=15s, Kp=X.X (din optimala från steg 4), Ti=OFF, Td=OFF
 | 2    | 50       |              |              |         |              |
 | 3    | 70       |              |              |         |              |
 | 4    | 90       |              |              |         |              |
-```
 
 **Testprocedur** (med din optimala Kp):
 1. För varje börvärde: **Återställ** → Ställ in börvärde → **Kör** → Mät slutvärde
@@ -135,9 +162,9 @@ Nu ska du demonstrera både Kp-effekter och börvärdes-påverkan:
 
 #### Steg 1: Anteckningsmall för Ti-variation
 Skapa ny tabell i ditt dokument:
-```
-Process: K=1.3, T=15s, Dötid=0s, Börvärde=60
-Regulator: Kp=x.x (från övning 1.1), Td=OFF
+
+*Process: K=1.3, T=15s, Dötid=0s, Börvärde=60*  
+*Regulator: Kp=x.x (från övning 1.1), Td=OFF*
 
 | Test | Ti(s) | Tid till fel=0 | Oscillationer | Stabilitet | Anteckningar |
 |------|-------|----------------|---------------|------------|--------------|
@@ -146,7 +173,6 @@ Regulator: Kp=x.x (från övning 1.1), Td=OFF
 | 3    | 20    |                |               |            |              |
 | 4    | 10    |                |               |            |              |
 | 5    | 5     |                |               |            |              |
-```
 
 #### Steg 2: Ti-testsekvens (PI-reglering)
 **Förberedelser**: Använd optimal Kp från övning 1.1, Td=OFF
@@ -191,9 +217,9 @@ Med dina 3 bästa kandidater från anteckningarna:
 
 #### Steg 1: Anteckningsmall för Td-variation
 Skapa ny tabell i ditt dokument:
-```
-Process: K=1.3, T=15s, Dötid=0s, Börvärde=60
-Regulator: Kp=x.x, Ti=xs (optimal från tidigare övningar)
+
+*Process: K=1.3, T=15s, Dötid=0s, Börvärde=60*  
+*Regulator: Kp=x.x, Ti=xs (optimal från tidigare övningar)*
 
 | Test | Td(s) | Översläng(%) | Stab.tid(s) | Oscillationer | Brus-känslig? | Anteckningar |
 |------|-------|--------------|-------------|---------------|---------------|--------------|
@@ -202,7 +228,6 @@ Regulator: Kp=x.x, Ti=xs (optimal från tidigare övningar)
 | 2    | 0.5   |              |             |               |               |              |
 | 3    | 1.0   |              |             |               |               |              |
 | 4    | 2.0   |              |             |               |               |              |
-```
 
 #### Steg 2: Td-testsekvens (PID-reglering)
 **Förberedelser**: Använd optimal Kp och Ti från tidigare övningar
@@ -252,21 +277,22 @@ Med dina 3 bästa kandidater från anteckningarna:
 5. **Rensa historik**
 
 #### Steg 2: Anteckningsmall för windup-studier
-```
-Process: K=1.5, T=20s, Börvärde=80, Utsignal: 0-50, Anti-windup=OFF
 
-Scenario 1: Börvärdessteg med windup
+*Process: K=1.5, T=20s, Börvärde=80, Utsignal: 0-50, Anti-windup=OFF*
+
+**Scenario 1: Börvärdessteg med windup**
+
 | Test | Kp | Ti(s) | Steg 1→2 | Stigtid(s) | Tid till mättnad | Recovery-tid(s) | Anteckningar |
 |------|-------|------|---------|-----------|-----------------|-----------------| -------------|
 | 1    | 3.0   | 8    | 80→90   |           |                 |                 |              |
 | 2    | 3.0   | 8    | 90→70   |           |                 |                 |              |
 
-Scenario 2: Anti-windup-effekt
+**Scenario 2: Anti-windup-effekt**
+
 | Test | Anti-windup | Börvärdessteg | Recovery-tid(s) | Förbättring | Anteckningar |
 |------|-------------|---------------|-----------------|-------------|--------------|
 | 3    | OFF         | 80→90→70      |                 | Baseline    |              |
 | 4    | ON          | 80→90→70      |                 |             |              |
-```
 
 #### Steg 3: Demonstration av windup-problemet
 **Test 1: Första börvärdessteget (80→90)**
@@ -334,10 +360,11 @@ För tydligare demonstration:
 #### Steg 1: P-optimering med systematisk anteckning
 
 **Skapa anteckningstabell:**
-```
-Process: K=1.0, T=30s, Dötid=2s, Börvärde=60
 
-P-OPTIMERING:
+*Process: K=1.0, T=30s, Dötid=2s, Börvärde=60*
+
+**P-OPTIMERING:**
+
 | Test | Kp  | Stab.tid(s) | Översläng(%) | Oscillation | Status | Anteckningar |
 |------|-----|-------------|--------------|-------------|--------|--------------|
 | 1    | 0.5 |             |              |             |        |              |
@@ -346,8 +373,7 @@ P-OPTIMERING:
 | 4    | 2.0 |             |              |             |        |              |
 | 5    | 2.5 |             |              |             |        |              |
 
-OPTIMAL P: Kp = _____ (säkerhetsmarginal: ____%)
-```
+**OPTIMAL P:** Kp = _____ (säkerhetsmarginal: _____%)
 
 **Metodisk P-testning:**
 1. **Återställ** (före varje test för konsistenta startförhållanden)
@@ -360,8 +386,9 @@ OPTIMAL P: Kp = _____ (säkerhetsmarginal: ____%)
 #### Steg 2: I-delen optimering med anteckning
 
 **Utöka din tabell:**
-```
-PI-OPTIMERING (med optimal Kp från ovan):
+
+**PI-OPTIMERING (med optimal Kp från ovan):**
+
 | Test | Ti(s) | Tid till fel=0 | Oscillation | Stabilitet | Anteckningar |
 |------|-------|----------------|-------------|------------|--------------|
 | 1    | 50    |                |             |            |              |
@@ -371,8 +398,7 @@ PI-OPTIMERING (med optimal Kp från ovan):
 | 5    | 12    |                |             |            |              |
 | 6    | 10    |                |             |            |              |
 
-OPTIMAL PI: Kp=_____, Ti=_____s
-```
+**OPTIMAL PI:** Kp=_____, Ti=_____s
 
 **Metodisk Ti-testning:**
 1. **Börja högt**: Ti=50s (låg I-effekt)
@@ -384,8 +410,9 @@ OPTIMAL PI: Kp=_____, Ti=_____s
 #### Steg 3: D-delen fintrimmning med anteckning
 
 **Komplettera tabellen:**
-```
-PID-OPTIMERING (med optimal Kp, Ti från ovan):
+
+**PID-OPTIMERING (med optimal Kp, Ti från ovan):**
+
 | Test | Td(s) | Översläng(%) | Stab.tid(s) | Brus-känslig | Anteckningar |
 |------|-------|--------------|-------------|--------------|--------------|
 | 0    | 0     |              |             | Nej          | PI-baslinje  |
@@ -394,8 +421,7 @@ PID-OPTIMERING (med optimal Kp, Ti från ovan):
 | 3    | 1.5   |              |             |              |              |
 | 4    | 2.0   |              |             |              |              |
 
-FINAL PID: Kp=_____, Ti=_____s, Td=_____s
-```
+**FINAL PID:** Kp=_____, Ti=_____s, Td=_____s
 
 **Metodisk Td-testning:**
 1. **Återställ** → **Baslinje**: Testa utan D-del först
@@ -461,15 +487,14 @@ Dokumentera för varje test:
 #### Steg 1: Utveckla tre strategier (anteckna först)
 
 **Anteckningsmall för strategijämförelse:**
-```
-Process: K=0.8, T=25s, Dötid=5s
+
+*Process: K=0.8, T=25s, Dötid=5s*
 
 | Strategi    | Kp  | Ti  | Td  | Filosofi  | Förväntad prestanda |
 |-------------|-----|-----|-----|-----------|---------------------|
 | Konservativ |     |     |     | Säkerhet  | Stabil, långsam     |
 | Balanserad  |     |     |     | Kompromiss| Rimlig balans       |
 | Aggressiv   |     |     |     | Snabbhet  | Snabb, riskabel     |
-```
 
 **Utveckla strategier:**
 - **Konservativ**: Kp=1.0, Ti=35s, Td=0.5s (stora marginaler)
@@ -511,8 +536,9 @@ Process: K=0.8, T=25s, Dötid=5s
 **Process**: K=1.0, T=25s, Dötid=2s
 
 **Kritisk punkt-anteckning:**
-```
-ZIEGLER-NICHOLS BESTÄMNING:
+
+**ZIEGLER-NICHOLS BESTÄMNING:**
+
 | Kp-test | Oscillation? | Amplitud | Period(s) | Anteckningar |
 |---------|--------------|----------|-----------|--------------|
 | 2.0     |              |          |           |              |
@@ -521,25 +547,30 @@ ZIEGLER-NICHOLS BESTÄMNING:
 | 5.0     |              |          |           |              |
 
 Kp_crit = _____ (där konstanta oscillationer börjar)
+
 T_crit = _____ s (oscillationsperiod)
-```
 
 **Kritisk punkt-testning:**
+
 1. **Återställ** → **Endast P-reglering**, börja Kp=2.0
-2. **Återställ** → **Öka gradvis** och anteckna oscillationsbeteende  
+2. **Återställ** → **Öka gradvis** och anteckna oscillationsbeteende
 3. **Identifiera Kp_crit**: Konstanta oscillationer utan dämpning
 4. **Mät T_crit**: Tid för en hel oscillation
 
 #### Steg 2: Beräkna och anteckna ZN-parametrar
+
 **Beräkning från dina mätvärden:**
+
 - **P-reglering**: Kp = 0.5 × _____ = _____
 - **PI-reglering**: Kp = 0.45 × _____ = _____, Ti = _____/1.2 = _____s
 - **PID-reglering**: Kp = 0.6 × _____ = _____, Ti = _____/2 = _____s, Td = _____/8 = _____s
 
 **Anteckna också din manuella optimering från övning 2.1:**
+
 - **Manuell PID**: Kp = _____, Ti = _____s, Td = _____s
 
 #### Steg 3: Metodjämförelse (visuell)
+
 1. **Rensa historik**
 2. **Återställ** → **ZN P**: Ställ in enligt beräkning → Kör → **Spara** (märk: "ZN P-metod")
 3. **Återställ** → **ZN PI**: Ställ in enligt beräkning → Kör → **Spara** (märk: "ZN PI-metod")
@@ -547,6 +578,7 @@ T_crit = _____ s (oscillationsperiod)
 5. **Återställ** → **Manuell**: Ställ in enligt övning 2.1 → Kör → **Spara** (märk: "Manuell metod")
 
 **Reflektion 3.1:**
+
 - Hur presterar Ziegler-Nichols jämfört med din manuella inställning?
 - Vilka fördelar och nackdelar har standardmetoder?
 - När skulle du använda ZN vs manuell optimering?
@@ -554,15 +586,17 @@ T_crit = _____ s (oscillationsperiod)
 ---
 
 ### Övning 3.2: Lambda-inställning
+
 **Syfte:** Utforska modern inställningsmetodik baserad på önskad sluten-slinga-tidskonstant.
 
 #### Steg 1: Lambda-beräkningar och anteckning
+
 **Process**: K=1.0, T=20s, Dötid=0s
 
-**Lambda-designtabell:**
-```
-LAMBDA-METOD BERÄKNINGAR:
+**LAMBDA-METOD BERÄKNINGAR:**
+
 Process: K=1.0, T=20s, Dötid=0s
+
 Formel: Kp = T/(K×(λ+dötid)), Ti = T, Td = 0
 
 | Design      | λ(s) | Kp-beräkning      | Kp   | Ti | Td | Filosofi   |
@@ -570,7 +604,6 @@ Formel: Kp = T/(K×(λ+dötid)), Ti = T, Td = 0
 | Konservativ | 40   | 20/(1×(40+0)) =   |      | 20 | 0  | Säkerhet   |
 | Balanserad  | 20   | 20/(1×(20+0)) =   |      | 20 | 0  | Kompromiss |
 | Aggressiv   | 10   | 20/(1×(10+0)) =   |      | 20 | 0  | Snabbhet   |
-```
 
 **Beräkna parametrar**: Fyll i Kp-kolumnen med dina beräkningar
 
@@ -581,14 +614,13 @@ För varje design:
 3. **Kör** simulering och mät prestanda
 4. **Anteckna** resultat:
 
-```
-LAMBDA-TESTRESULTAT:
+**LAMBDA-TESTRESULTAT:**
+
 | Design      | Stab.tid(s) | Översläng(%) | Stabilitet | Anteckningar |
 |-------------|-------------|--------------|------------|--------------|
 | Konservativ |             |              |            |              |
 | Balanserad  |             |              |            |              |
 | Aggressiv   |             |              |            |              |
-```
 
 #### Steg 3: Lambda-jämförelse (visuell)
 Med dina beräknade och testade parametrar:
@@ -621,8 +653,8 @@ Med dina beräknade och testade parametrar:
 #### Steg 1: Anteckningsmall för integrerande processer
 **Process**: Integrerande, K=0.8, T=15s, Utflöde=1.5
 
-```
-INTEGRERANDE PROCESS-TESTNING:
+**INTEGRERANDE PROCESS-TESTNING:**
+
 | Regulator  | Kp  | Ti  | Td  | Stabilitet | Hastighet | Anteckningar        |
 |------------|-----|-----|-----|------------|-----------|---------------------|
 | P          | 1.2 | OFF | OFF |            |           | Förväntat: instabil |
@@ -630,7 +662,6 @@ INTEGRERANDE PROCESS-TESTNING:
 | PI (säker) | 0.8 | 15  | OFF |            |           |                     |
 | PID        | 1.0 | 10  | 1.5 |            |           |                     |
 | PID (säker)| 0.8 | 15  | 1.0 |            |           |                     |
-```
 
 > **⚠️ Integrerande processer**: Känsligare för överinställning. Förvänta instabilitet med P-reglering.
 
@@ -664,14 +695,13 @@ Från din tabell, identifiera stabila kandidater och jämför visuellt:
 #### Steg 1: Anteckning för begränsningsanalys
 **Process**: Självreglerande, K=1.0, T=20s
 
-```
-BEGRÄNSNINGSANALYS:
+**BEGRÄNSNINGSANALYS:**
+
 | Test        | Utsignal-gräns | Kp  | Ti | Td | Max utsignal | Prestanda | Anteckningar |
 |-------------|----------------|-----|----|----|--------------|-----------|--------------|
 | Standard    | 0-100%         | 1.2 | 10 | 2  |              |           |              |
 | Begränsad   | 0-80%          | 1.2 | 10 | 2  |              |           |              |
 | Anpassad    | 0-80%          | 0.8 | 15 | 1  |              |           |              |
-```
 
 #### Steg 2: Systematisk testning av begränsningar
 För varje test i tabellen:
@@ -715,11 +745,13 @@ Du är processoperatör och ska ställa in en temperaturregulator för första g
 #### Fas 1: Processanalys och P-optimering
 
 **Skapa anteckningstabell först:**
-```
-HUVUDANTECKNINGAR - Masterövning
-Process: K=0.7, T=40s, Dötid=6s
 
-P-OPTIMERING:
+*HUVUDANTECKNINGAR - Masterövning*
+
+*Process: K=0.7, T=40s, Dötid=6s*
+
+**P-OPTIMERING:**
+
 | Kp | Stab.tid | Översläng | Oscillation | Status | Anteckningar |
 |----|----------|-----------|-------------|--------|--------------|
 |0.5 |          |           |             |        |              |
@@ -728,8 +760,7 @@ P-OPTIMERING:
 |2.0 |          |           |             |        |              |
 |2.5 |          |           |             |        |              |
 
-OPTIMAL P: Kp = _____ (säkerhetsmarginal: ____%)
-```
+**OPTIMAL P:** Kp = _____ (säkerhetsmarginal: ____%)
 
 **Metodisk P-optimering:**
 1. **Rensa historik**  
@@ -743,8 +774,9 @@ OPTIMAL P: Kp = _____ (säkerhetsmarginal: ____%)
 #### Fas 2: I-delen introduction och optimering
 
 **Utöka din anteckningstabell:**
-```
-PI-OPTIMERING (med optimal Kp från ovan):
+
+**PI-OPTIMERING (med optimal Kp från ovan):**
+
 | Ti  | Tid till fel=0 | Oscillation | Stabilitet | Status |
 |-----|----------------|-------------|------------|--------|
 | 60  |                |             |            |        |
@@ -754,8 +786,7 @@ PI-OPTIMERING (med optimal Kp från ovan):
 | 20  |                |             |            |        |
 | 15  |                |             |            |        |
 
-OPTIMAL PI: Kp=_____, Ti=_____ s
-```
+**OPTIMAL PI:** Kp=_____, Ti=_____ s
 
 **Metodisk Ti-optimering:**
 1. **Börja försiktigt**: Ti=60s (låg I-effekt)
@@ -767,8 +798,9 @@ OPTIMAL PI: Kp=_____, Ti=_____ s
 #### Fas 3: D-delen fintrimmning
 
 **Komplettera anteckningstabell:**
-```
-PID-FINTRIMMNING (med optimal Kp, Ti från ovan):
+
+**PID-FINTRIMMNING (med optimal Kp, Ti från ovan):**
+
 | Td  | Översläng | Stab.tid | Brus-sens | Utsig-var | Status |
 |-----|-----------|----------|-----------|-----------|--------|
 | 0.0 |           |          | Låg       |           | Bas    |
@@ -777,9 +809,9 @@ PID-FINTRIMMNING (med optimal Kp, Ti från ovan):
 | 1.5 |           |          |           |           |        |
 | 2.0 |           |          |           |           |        |
 
-FINAL PID: Kp=_____, Ti=_____s, Td=_____s
-Justerad Kp efter D: _____ (om tillämpligt)
-```
+**FINAL PID:** Kp=_____, Ti=_____s, Td=_____s
+
+**Justerad Kp efter D:** _____ (om tillämpligt)
 
 **Metodisk Td-optimering:**
 1. **Utgå från PI**: Testa utan D-del som baslinje
@@ -846,18 +878,4 @@ Från dina fas 1-4 anteckningar, välj dina **3 bästa designkandidater**:
 - **Kunskapsöverföring**: Kan kolleger följa din dokumentation för liknande system?
 
 ---
-
-**Tips för lärare:**
-- Använd olika processmodeller för olika studentgrupper
-- Låt studenter presentera sina optimeringsstrategier
-- Diskutera verkliga applikationer och industristandards
-- Använd som grund för avancerade reglerkurser
-
-**Version:** 2.0 för PID-simulator v1.7.0  
-**Tidsåtgång:** 5-7 timmar (inklusive nya övningar om statiskt fel och windup)  
 **Svårighetsgrad:** Medel-Avancerad
-
-**🆕 Förbättringar i v2.0:**
-- Övning 1.1: Konsoliderad Kp-övning med statiskt reglerfel-analys
-- Övning 1.4: Ny demonstration av integratoruppvridning (windup)
-- Utnyttjande av dynamiska inställningar för realtidsbörvärdesändringar
