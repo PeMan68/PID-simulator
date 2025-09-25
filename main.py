@@ -362,9 +362,9 @@ class PIDSimulatorApp:
         
         # Process och PID
         self.process = Process(K=2.0, T=15.0, dead_time=3.0, integrerande=False, Fout=0.0, 
-                              normalvarde=self.nv_var.get(),
-                              matområde_min=self.matområde_min_var.get(),
-                              matområde_max=self.matområde_max_var.get(),
+                              normalvarde=self.parse_float(self.nv_var),
+                              matområde_min=self.parse_float(self.matområde_min_var),
+                              matområde_max=self.parse_float(self.matområde_max_var),
                               enhetslös_K=self.enhetslös_K_var.get())
         self.pid = PID(Kp=2.0, Ti=10.0, Td=1.0, dt=self.dt)
         self.setpoint = 50.0
@@ -374,7 +374,7 @@ class PIDSimulatorApp:
         self.antiwindup_var = tk.BooleanVar(value=True)
         # Historik
         self.t = [0]
-        self.y = [self.nv_var.get()]  # Starta på normalvärdet
+        self.y = [self.parse_float(self.nv_var)]  # Starta på normalvärdet
         self.u = [0]
         self.e = [0]
         self.i = [0]
@@ -415,8 +415,8 @@ class PIDSimulatorApp:
         self.percent_mode_var = tk.BooleanVar(value=False)
         
         # Sätt skalning till samma som mätområdet som default
-        self.process_min = tk.DoubleVar(value=self.matområde_min_var.get())
-        self.process_max = tk.DoubleVar(value=self.matområde_max_var.get())
+        self.process_min = tk.DoubleVar(value=self.parse_float(self.matområde_min_var))
+        self.process_max = tk.DoubleVar(value=self.parse_float(self.matområde_max_var))
         
         # Processenhet för y-axeletiketter
         self.process_unit_var = tk.StringVar(value="°C")  # Default temperatur
@@ -436,25 +436,27 @@ class PIDSimulatorApp:
             'd_active': self.d_active_var.get(),
             'preset': self.preset_mode.get(),  # Spara initial preset-typ
             'setpoint': self.setpoint,
-            'nv': self.nv_var.get(),
-            'matområde_min': self.matområde_min_var.get(),
-            'matområde_max': self.matområde_max_var.get(),
+            'nv': self.parse_float(self.nv_var),
+            'matområde_min': self.parse_float(self.matområde_min_var),
+            'matområde_max': self.parse_float(self.matområde_max_var),
             'proc_k': self.process.K,
             'proc_t': self.process.T,
             'proc_dead_time': self.process.dead_time,
             'u_min': self.u_min,
             'u_max': self.u_max,
-            'onoff_hysteresis_high': self.onoff_hysteresis_high.get(),
-            'onoff_hysteresis_low': self.onoff_hysteresis_low.get(),
+            'onoff_hysteresis_high': self.parse_float(self.onoff_hysteresis_high),
+            'onoff_hysteresis_low': self.parse_float(self.onoff_hysteresis_low),
             'onoff_hysteresis_type': self.onoff_hysteresis_type.get(),
-            'graph_min': self.matområde_min_var.get(),  # Graf-skala min
-            'graph_max': self.matområde_max_var.get()   # Graf-skala max
+            'graph_min': self.parse_float(self.matområde_min_var),  # Graf-skala min
+            'graph_max': self.parse_float(self.matområde_max_var)   # Graf-skala max
         }
         
         # GUI
         self.create_widgets()
         # Lägg till change callbacks EFTER att widgets skapats
         self.setup_change_tracking()
+        # Sätt upp enhetlig hantering av numerisk input med decimal comma
+        self.setup_numeric_input_handling()
         # Tooltip och markör
         self.tooltip = None
         self.cursor_line = None  # For vertical marker
@@ -905,8 +907,8 @@ class PIDSimulatorApp:
             preset = self.preset_mode.get()
             if preset == 'OnOff':
                 hyst_type = self.onoff_hysteresis_type.get()
-                hyst_high = self.onoff_hysteresis_high.get()
-                hyst_low = self.onoff_hysteresis_low.get()
+                hyst_high = self.parse_float(self.onoff_hysteresis_high)
+                hyst_low = self.parse_float(self.onoff_hysteresis_low)
                 current_text = f"OnOff: {hyst_type}\nHyst: +{hyst_high:.1f}/-{hyst_low:.1f}"
             else:
                 kp = self.parse_float(self.kp_var)
@@ -921,8 +923,8 @@ class PIDSimulatorApp:
                     current_text = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
             
             # Lägg till utsignalgränser för alla typer
-            u_min = self.u_min_var.get()
-            u_max = self.u_max_var.get()
+            u_min = self.parse_float(self.u_min_var)
+            u_max = self.parse_float(self.u_max_var)
             current_text += f"\nUt: {u_min:.0f}-{u_max:.0f}%"
             
             ttk.Label(current_frame, text=current_text, font=('TkDefaultFont', 9, 'bold')).pack()
@@ -947,8 +949,8 @@ class PIDSimulatorApp:
         preset = self.preset_mode.get()
         if preset == 'OnOff':
             hyst_type = self.onoff_hysteresis_type.get()
-            hyst_high = self.onoff_hysteresis_high.get()
-            hyst_low = self.onoff_hysteresis_low.get()
+            hyst_high = self.parse_float(self.onoff_hysteresis_high)
+            hyst_low = self.parse_float(self.onoff_hysteresis_low)
             current_text = f"OnOff: {hyst_type}\nHyst: +{hyst_high:.1f}/-{hyst_low:.1f}"
         else:
             kp = self.parse_float(self.kp_var)
@@ -963,8 +965,8 @@ class PIDSimulatorApp:
                 current_text = f"PID: Kp={kp:.1f}, Ti={ti:.1f}, Td={td:.1f}"
         
         # Lägg till utsignalgränser för alla typer
-        u_min = self.u_min_var.get()
-        u_max = self.u_max_var.get()
+        u_min = self.parse_float(self.u_min_var)
+        u_max = self.parse_float(self.u_max_var)
         current_text += f"\nUt: {u_min:.0f}-{u_max:.0f}%"
         
         ttk.Label(current_frame, text=current_text, font=('TkDefaultFont', 9, 'bold')).pack()
@@ -1374,8 +1376,8 @@ class PIDSimulatorApp:
         # Uppdatera process-objektet med nya inställningar
         if not self.running:
             self.process.enhetslös_K = self.enhetslös_K_var.get()
-            self.process.matområde_min = self.matområde_min_var.get()
-            self.process.matområde_max = self.matområde_max_var.get()
+            self.process.matområde_min = self.parse_float(self.matområde_min_var)
+            self.process.matområde_max = self.parse_float(self.matområde_max_var)
             # Uppdatera K-label för att visa enhet
             self.update_k_label()
     
@@ -1468,6 +1470,63 @@ class PIDSimulatorApp:
         except Exception:
             return 0.0
 
+    def setup_numeric_input_handling(self):
+        """Sätter upp hantering av decimal comma för alla numeriska inmatningsfält"""
+        # Lista över alla numeriska Entry-widgets och deras motsvarande tkinter-variabler
+        self.numeric_fields = [
+            (self.sp_entry, self.sp_var),
+            (self.nv_entry, self.nv_var),
+            (self.kp_entry, self.kp_var),
+            (self.ti_entry, self.ti_var),
+            (self.td_entry, self.td_var),
+            (self.matområde_min_entry, self.matområde_min_var),
+            (self.matområde_max_entry, self.matområde_max_var),
+            (self.u_min_entry, self.u_min_var),
+            (self.u_max_entry, self.u_max_var),
+            (self.proc_k_entry, self.proc_k_var),
+            (self.proc_t_entry, self.proc_t_var),
+            (self.proc_dead_entry, self.proc_dead_var),
+            (self.utflode_entry, self.proc_fout_var),
+            (self.noise_entry, self.noise_std_var),
+            (self.pulse_entry, self.pulse_mag_var),
+            (self.manual_entry, self.manual_output_var),
+            (self.min_entry, self.process_min),
+            (self.max_entry, self.process_max),
+        ]
+        
+        # Lägg till Entry-widgets för hysteresis och andra fält om de existerar
+        if hasattr(self, 'onoff_high_entry'):
+            self.numeric_fields.append((self.onoff_high_entry, self.onoff_hysteresis_high))
+        if hasattr(self, 'onoff_low_entry'):
+            self.numeric_fields.append((self.onoff_low_entry, self.onoff_hysteresis_low))
+        
+        # Bind events för alla numeriska fält
+        for entry_widget, var in self.numeric_fields:
+            if entry_widget and var:
+                # Bind händelser för komma-till-punkt-konvertering
+                entry_widget.bind('<FocusOut>', lambda event, w=entry_widget, v=var: self.handle_numeric_input(event, w, v))
+                entry_widget.bind('<Return>', lambda event, w=entry_widget, v=var: self.handle_numeric_input(event, w, v))
+                entry_widget.bind('<KP_Enter>', lambda event, w=entry_widget, v=var: self.handle_numeric_input(event, w, v))
+
+    def handle_numeric_input(self, event, entry_widget, tk_var):
+        """Hanterar numerisk input genom att konvertera decimal comma och sätta tkinter-variabeln"""
+        try:
+            # Hämta det råa värdet från Entry-widgeten
+            raw_value = entry_widget.get()
+            # Konvertera decimal comma till decimal punkt
+            normalized_value = raw_value.replace(",", ".")
+            # Försök konvertera till float för validering
+            float_value = float(normalized_value)
+            # Sätt det normaliserade värdet i tkinter-variabeln
+            # Detta fungerar även för DoubleVar eftersom vi ger den en giltig float
+            tk_var.set(float_value)
+            # Uppdatera Entry-widgeten för att visa det normaliserade värdet
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, f"{float_value:.6g}")
+        except (ValueError, AttributeError):
+            # Om konvertering misslyckas, behåll ursprungligt värde
+            pass
+
     def validate_T_value(self, show_warning=True):
         """Validerar T-värdet och visar varning om det är <= 0"""
         dt = 1.0  # Simuleringssteg, hårdkodat i denna version
@@ -1505,24 +1564,28 @@ class PIDSimulatorApp:
     def set_setpoint(self):
         # Hantera svenska decimalkomma
         try:
-            self.setpoint = float(str(self.sp_var.get()).replace(",", "."))
+            self.setpoint = self.parse_float(self.sp_var)
+            # Normalisera fältet till decimal punkt
+            self.sp_var.set(f"{self.setpoint:.6g}")
         except Exception:
             self.setpoint = 0.0
 
     def set_nv(self):
         # Hantera svenska decimalkomma för normalvärde
         try:
-            nv = float(str(self.nv_entry.get()).replace(",", "."))
-            self.nv_var.set(nv)
+            # Create a temporary StringVar to use with parse_float
+            temp_var = tk.StringVar(value=self.nv_entry.get())
+            nv = self.parse_float(temp_var)
+            self.nv_var.set(f"{nv:.6g}")  # Normalisera till decimal punkt
         except Exception:
             nv = 23.0
         # Uppdatera processens normalvärde direkt
-        self.process.normalvarde = self.nv_var.get()
+        self.process.normalvarde = self.parse_float(self.nv_var)
         # Uppdatera även startvärdet och historiken om vi inte är mitt i en simulering
         if not self.running:
-            self.process.y = self.nv_var.get()
+            self.process.y = self.parse_float(self.nv_var)
             # Uppdatera hela dötidshistoriken med nya normalvärdet
-            self.process.y_hist = [self.nv_var.get()] * len(self.process.y_hist)
+            self.process.y_hist = [self.parse_float(self.nv_var)] * len(self.process.y_hist)
             # Uppdatera den första punkten i plot-historiken
         self.update_plot()
 
@@ -1661,7 +1724,7 @@ class PIDSimulatorApp:
         
         # Konvertera börvärdet mellan procent och fysiska enheter
         try:
-            current_setpoint = float(str(self.sp_var.get()).replace(",", "."))
+            current_setpoint = self.parse_float(self.sp_var)
         except ValueError:
             current_setpoint = self.setpoint
         
@@ -1669,13 +1732,17 @@ class PIDSimulatorApp:
             if self.percent_mode_var.get():
                 # Växla till procentläge: konvertera från fysisk enhet till procent
                 # Använd mätområdet för korrekt procentberäkning
-                new_setpoint = (current_setpoint - self.matområde_min_var.get()) / (self.matområde_max_var.get() - self.matområde_min_var.get()) * 100
+                mat_min = self.parse_float(self.matområde_min_var)
+                mat_max = self.parse_float(self.matområde_max_var)
+                new_setpoint = (current_setpoint - mat_min) / (mat_max - mat_min) * 100
                 self.sp_var.set(f"{new_setpoint:.1f}")
                 self.sp_unit_label.config(text="%")
             else:
                 # Växla från procentläge: konvertera från procent till fysisk enhet
                 # Använd mätområdet för korrekt fysisk enhetsberäkning
-                new_setpoint = self.matområde_min_var.get() + (current_setpoint / 100) * (self.matområde_max_var.get() - self.matområde_min_var.get())
+                mat_min = self.parse_float(self.matområde_min_var)
+                mat_max = self.parse_float(self.matområde_max_var)
+                new_setpoint = mat_min + (current_setpoint / 100) * (mat_max - mat_min)
                 self.sp_var.set(f"{new_setpoint:.1f}")
                 self.sp_unit_label.config(text=self.process_unit_var.get())
         except ZeroDivisionError:
@@ -1687,27 +1754,27 @@ class PIDSimulatorApp:
         # Uppdatera saved_params för alla fält som påverkas av enhetskonvertering
         # så att de nya konverterade värdena betraktas som "sparade"
         try:
-            new_setpoint_value = float(str(self.sp_var.get()).replace(",", "."))
+            new_setpoint_value = self.parse_float(self.sp_var)
             self.saved_params['setpoint'] = new_setpoint_value
         except ValueError:
             pass
             
         try:
-            new_min_value = self.matområde_min_var.get()
+            new_min_value = self.parse_float(self.matområde_min_var)
             self.saved_params['matområde_min'] = new_min_value
         except ValueError:
             pass
             
         try:
-            new_max_value = self.matområde_max_var.get()
+            new_max_value = self.parse_float(self.matområde_max_var)
             self.saved_params['matområde_max'] = new_max_value
         except ValueError:
             pass
             
         # Uppdatera även hysteresis-parametrar så de inte blir röda efter enhetskonvertering
         try:
-            self.saved_params['onoff_hysteresis_high'] = self.onoff_hysteresis_high.get()
-            self.saved_params['onoff_hysteresis_low'] = self.onoff_hysteresis_low.get()
+            self.saved_params['onoff_hysteresis_high'] = self.parse_float(self.onoff_hysteresis_high)
+            self.saved_params['onoff_hysteresis_low'] = self.parse_float(self.onoff_hysteresis_low)
             self.saved_params['onoff_hysteresis_type'] = self.onoff_hysteresis_type.get()
         except ValueError:
             pass
@@ -1734,8 +1801,8 @@ class PIDSimulatorApp:
             
             try:
                 # Hämta aktuella mätområdesvärden
-                min_val = self.matområde_min_var.get()
-                max_val = self.matområde_max_var.get()
+                min_val = self.parse_float(self.matområde_min_var)
+                max_val = self.parse_float(self.matområde_max_var)
                 
                 # Konvertera nuvarande setpoint till procent med nya mätområdet
                 current_setpoint_physical = self.setpoint  # Detta är det fysiska värdet
@@ -1760,8 +1827,8 @@ class PIDSimulatorApp:
             
             try:
                 # Hämta aktuella mätområdesvärden
-                min_val = self.matområde_min_var.get()
-                max_val = self.matområde_max_var.get()
+                min_val = self.parse_float(self.matområde_min_var)
+                max_val = self.parse_float(self.matområde_max_var)
                 
                 # Konvertera nuvarande setpoint till procent med nya mätområdet
                 current_setpoint_physical = self.setpoint  # Detta är det fysiska värdet
@@ -1781,8 +1848,8 @@ class PIDSimulatorApp:
         """Hanterar ändringar av mätområdet - uppdaterar skalning till samma värden"""
         try:
             # Sätt skalning till samma som mätområdet
-            self.process_min.set(self.matområde_min_var.get())
-            self.process_max.set(self.matområde_max_var.get())
+            self.process_min.set(self.parse_float(self.matområde_min_var))
+            self.process_max.set(self.parse_float(self.matområde_max_var))
         except (ValueError, tk.TclError):
             pass  # Undvik fel vid ogiltiga värden
         
@@ -1867,7 +1934,9 @@ class PIDSimulatorApp:
                     if current_value == '':
                         current_float = 0.0
                     else:
-                        current_float = float(current_value.replace(',', '.'))
+                        # Skapa tillfällig StringVar för att använda parse_float
+                        temp_var = tk.StringVar(value=current_value)
+                        current_float = self.parse_float(temp_var)
                     saved_float = float(saved_value) if saved_value else 0.0
                     
                     # Jämför som float med en liten tolerans
@@ -1919,7 +1988,9 @@ class PIDSimulatorApp:
                     if current_value == '':
                         current_float = 0.0
                     else:
-                        current_float = float(current_value.replace(',', '.'))
+                        # Skapa tillfällig StringVar för att använda parse_float
+                        temp_var = tk.StringVar(value=current_value)
+                        current_float = self.parse_float(temp_var)
                     saved_float = float(saved_value) if saved_value else 0.0
                     
                     # Jämför som float med en liten tolerans
@@ -1976,8 +2047,8 @@ class PIDSimulatorApp:
     def has_unsaved_graph_changes(self):
         """Kontrollerar om graf-skala har osparade ändringar"""
         try:
-            current_min = self.process_min.get()
-            current_max = self.process_max.get()
+            current_min = self.parse_float(self.process_min)
+            current_max = self.parse_float(self.process_max)
             saved_min = self.saved_params.get('graph_min', current_min)
             saved_max = self.saved_params.get('graph_max', current_max)
             
@@ -1999,7 +2070,11 @@ class PIDSimulatorApp:
                 saved_value = str(self.saved_params.get(param_name, '')).strip()
                 
                 try:
-                    current_float = float(current_value) if current_value else 0.0
+                    if current_value:
+                        temp_var = tk.StringVar(value=current_value)
+                        current_float = self.parse_float(temp_var)
+                    else:
+                        current_float = 0.0
                     saved_float = float(saved_value) if saved_value else 0.0
                     values_equal = abs(current_float - saved_float) < 0.0001
                 except ValueError:
@@ -2026,8 +2101,12 @@ class PIDSimulatorApp:
                 
     def save_graph_changes(self):
         """Sparar ändringar i graf-skala"""
-        self.saved_params['graph_min'] = self.process_min.get()
-        self.saved_params['graph_max'] = self.process_max.get()
+        self.saved_params['graph_min'] = self.parse_float(self.process_min)
+        self.saved_params['graph_max'] = self.parse_float(self.process_max)
+        
+        # Normalisera fälten till decimal punkt efter sparning
+        self.process_min.set(f"{self.saved_params['graph_min']:.6g}")
+        self.process_max.set(f"{self.saved_params['graph_max']:.6g}")
         
         # Nu när alla saved_params är uppdaterade, kör highlight för att återställa färgerna korrekt
         self.highlight_unsaved_changes()
@@ -2051,17 +2130,17 @@ class PIDSimulatorApp:
         
         # Uppdatera börvärde
         try:
-            self.saved_params['setpoint'] = float(str(self.sp_var.get()).replace(",", "."))
+            self.saved_params['setpoint'] = self.parse_float(self.sp_var)
             self.setpoint = self.saved_params['setpoint']
         except ValueError:
             self.saved_params['setpoint'] = 0.0
             self.setpoint = 0.0
         
         # Uppdatera mätområde
-        old_matområde_min = self.saved_params.get('matområde_min', self.matområde_min_var.get())
-        old_matområde_max = self.saved_params.get('matområde_max', self.matområde_max_var.get())
-        self.saved_params['matområde_min'] = self.matområde_min_var.get()
-        self.saved_params['matområde_max'] = self.matområde_max_var.get()
+        old_matområde_min = self.saved_params.get('matområde_min', self.parse_float(self.matområde_min_var))
+        old_matområde_max = self.saved_params.get('matområde_max', self.parse_float(self.matområde_max_var))
+        self.saved_params['matområde_min'] = self.parse_float(self.matområde_min_var)
+        self.saved_params['matområde_max'] = self.parse_float(self.matområde_max_var)
         
         # Kontrollera om mätområdet har ändrats och uppdatera graf-skalan automatiskt
         if (old_matområde_min != self.saved_params['matområde_min'] or 
@@ -2074,14 +2153,14 @@ class PIDSimulatorApp:
             self.process.matområde_max = self.saved_params['matområde_max']
         
         # Uppdatera utsignal gränser
-        self.saved_params['u_min'] = self.u_min_var.get()
-        self.saved_params['u_max'] = self.u_max_var.get()
+        self.saved_params['u_min'] = self.parse_float(self.u_min_var)
+        self.saved_params['u_max'] = self.parse_float(self.u_max_var)
         self.u_min = self.saved_params['u_min'] 
         self.u_max = self.saved_params['u_max']
         
         # Uppdatera OnOff hysteresis-parametrar
-        self.saved_params['onoff_hysteresis_high'] = self.onoff_hysteresis_high.get()
-        self.saved_params['onoff_hysteresis_low'] = self.onoff_hysteresis_low.get()
+        self.saved_params['onoff_hysteresis_high'] = self.parse_float(self.onoff_hysteresis_high)
+        self.saved_params['onoff_hysteresis_low'] = self.parse_float(self.onoff_hysteresis_low)
         self.saved_params['onoff_hysteresis_type'] = self.onoff_hysteresis_type.get()
         
         # Applicera sparade parametrar till PID-regulatorn
@@ -2098,6 +2177,18 @@ class PIDSimulatorApp:
         if self.manual_mode_var.get():
             self.manual_output = self.parse_float(self.manual_output_var)
         
+        # Normalisera fälten till decimal punkt efter sparning
+        self.kp_var.set(f"{self.saved_params['kp']:.6g}")
+        self.ti_var.set(f"{self.saved_params['ti']:.6g}")
+        self.td_var.set(f"{self.saved_params['td']:.6g}")
+        self.sp_var.set(f"{self.saved_params['setpoint']:.6g}")
+        self.matområde_min_var.set(f"{self.saved_params['matområde_min']:.6g}")
+        self.matområde_max_var.set(f"{self.saved_params['matområde_max']:.6g}")
+        self.u_min_var.set(f"{self.saved_params['u_min']:.6g}")
+        self.u_max_var.set(f"{self.saved_params['u_max']:.6g}")
+        self.onoff_hysteresis_high.set(f"{self.saved_params['onoff_hysteresis_high']:.6g}")
+        self.onoff_hysteresis_low.set(f"{self.saved_params['onoff_hysteresis_low']:.6g}")
+        
         # Nu när alla saved_params är uppdaterade, kör highlight för att återställa färgerna korrekt
         self.highlight_unsaved_changes()
         
@@ -2110,7 +2201,7 @@ class PIDSimulatorApp:
     def save_system_changes(self):
         """Sparar ändringar i Systemparametrar (normalvärde, processparametrar)"""
         # Uppdatera normalvärde
-        self.saved_params['nv'] = self.nv_var.get()
+        self.saved_params['nv'] = self.parse_float(self.nv_var)
         
         # Uppdatera processparametrar
         self.saved_params['proc_k'] = self.parse_float(self.proc_k_var)
@@ -2122,6 +2213,12 @@ class PIDSimulatorApp:
         self.process.T = self.saved_params['proc_t'] 
         self.process.dead_time = self.saved_params['proc_dead_time']
         self.process.normalvarde = self.saved_params['nv']
+        
+        # Normalisera fälten till decimal punkt efter sparning
+        self.nv_var.set(f"{self.saved_params['nv']:.6g}")
+        self.proc_k_var.set(f"{self.saved_params['proc_k']:.6g}")
+        self.proc_t_var.set(f"{self.saved_params['proc_t']:.6g}")
+        self.proc_dead_var.set(f"{self.saved_params['proc_dead_time']:.6g}")
         
         # Nu när alla saved_params är uppdaterade, kör highlight för att återställa färgerna korrekt
         self.highlight_unsaved_changes()
@@ -2135,12 +2232,12 @@ class PIDSimulatorApp:
     def reset_scale(self):
         """Återställer skalning till mätområdet"""
         # Sätt skalning till samma som mätområdet
-        self.process_min.set(self.matområde_min_var.get())
-        self.process_max.set(self.matområde_max_var.get())
+        self.process_min.set(self.parse_float(self.matområde_min_var))
+        self.process_max.set(self.parse_float(self.matområde_max_var))
         
         # Uppdatera även saved_params så att graf-skala blir "sparad"
-        self.saved_params['graph_min'] = self.matområde_min_var.get()
-        self.saved_params['graph_max'] = self.matområde_max_var.get()
+        self.saved_params['graph_min'] = self.parse_float(self.matområde_min_var)
+        self.saved_params['graph_max'] = self.parse_float(self.matområde_max_var)
         
         # Återställ highlights eftersom värdena nu är "sparade"
         self.clear_unsaved_graph_highlights()
@@ -2153,7 +2250,7 @@ class PIDSimulatorApp:
         if self.percent_mode_var.get() and len(self.y) > 0:
             current_y = self.y[-1]
             current_sp = self.sp[-1] if len(self.sp) > 0 else self.setpoint
-            nv = self.nv_var.get()
+            nv = self.parse_float(self.nv_var)
             
             y_pct = self.to_percent(current_y)
             sp_pct = self.to_percent(current_sp)
@@ -2269,16 +2366,16 @@ class PIDSimulatorApp:
                 
     def to_percent(self, value):
         """Konvertera värde till procent baserat på mätområdet"""
-        min_val = self.matområde_min_var.get()
-        max_val = self.matområde_max_var.get()
+        min_val = self.parse_float(self.matområde_min_var)
+        max_val = self.parse_float(self.matområde_max_var)
         if max_val == min_val:
             return 0.0
         return 100.0 * (value - min_val) / (max_val - min_val)
         
     def from_percent(self, percent):
         """Konvertera från procent till verkligt värde baserat på mätområdet"""
-        min_val = self.matområde_min_var.get()
-        max_val = self.matområde_max_var.get()
+        min_val = self.parse_float(self.matområde_min_var)
+        max_val = self.parse_float(self.matområde_max_var)
         return min_val + (max_val - min_val) * percent / 100.0
 
     def start(self):
@@ -2333,18 +2430,18 @@ class PIDSimulatorApp:
             dead_time=self.parse_float(self.proc_dead_var),
             integrerande=self.integrerande_var.get(),
             Fout=self.parse_float(self.proc_fout_var),
-            normalvarde=self.nv_var.get(),
-            matområde_min=self.matområde_min_var.get(),
-            matområde_max=self.matområde_max_var.get(),
+            normalvarde=self.parse_float(self.nv_var),
+            matområde_min=self.parse_float(self.matområde_min_var),
+            matområde_max=self.parse_float(self.matområde_max_var),
             enhetslös_K=self.enhetslös_K_var.get()
         )
         self.pid = PID(Kp=self.parse_float(self.kp_var), Ti=self.parse_float(self.ti_var), Td=self.parse_float(self.td_var), dt=self.dt)
         try:
-            self.setpoint = float(str(self.sp_var.get()).replace(",", "."))
+            self.setpoint = self.parse_float(self.sp_var)
         except Exception:
             self.setpoint = 0.0
         self.t = [0]
-        self.y = [self.nv_var.get()]  # Starta på normalvärdet
+        self.y = [self.parse_float(self.nv_var)]  # Starta på normalvärdet
         self.u = [0]
         self.e = [0]
         self.i = [0]
@@ -2453,9 +2550,9 @@ class PIDSimulatorApp:
             dead_time=self.parse_float(self.proc_dead_var),
             integrerande=self.integrerande_var.get(),
             Fout=self.parse_float(self.proc_fout_var),
-            normalvarde=self.nv_var.get(),
-            matområde_min=self.matområde_min_var.get(),
-            matområde_max=self.matområde_max_var.get(),
+            normalvarde=self.parse_float(self.nv_var),
+            matområde_min=self.parse_float(self.matområde_min_var),
+            matområde_max=self.parse_float(self.matområde_max_var),
             enhetslös_K=self.enhetslös_K_var.get()
         )
         
@@ -2741,7 +2838,7 @@ class PIDSimulatorApp:
         self.process.matområde_max = self.saved_params['matområde_max']
         self.process.enhetslös_K = self.enhetslös_K_var.get()
         # --- Störningar ---
-        noise_std = self.noise_std_var.get()
+        noise_std = self.parse_float(self.noise_std_var)
         noise = np.random.normal(0, noise_std) if noise_std > 0 else 0.0
         pulse = 0.0
         if getattr(self, 'pulse_active', False) and getattr(self, 'pulse_steps_left', 0) > 0:
@@ -2880,7 +2977,7 @@ class PIDSimulatorApp:
             y_plot = y
             sp_plot = sp
             # För fysiska enheter, använd sparade graf-skala värden
-            ymin, ymax = self.saved_params.get('graph_min', self.process_min.get()), self.saved_params.get('graph_max', self.process_max.get())
+            ymin, ymax = self.saved_params.get('graph_min', self.parse_float(self.process_min)), self.saved_params.get('graph_max', self.parse_float(self.process_max))
             ylabel = f'Processvärde ({self.process_unit_var.get()})'
             
         # Plotta
@@ -2902,15 +2999,16 @@ class PIDSimulatorApp:
         if self.preset_mode.get() == "OnOff" and len(t) > 0:
             hyst_type = self.onoff_hysteresis_type.get()
             # Använd sparade hysteresis-värden för plottet
-            hyst_high = self.saved_params.get('onoff_hysteresis_high', self.onoff_hysteresis_high.get())
-            hyst_low = self.saved_params.get('onoff_hysteresis_low', self.onoff_hysteresis_low.get())
+            hyst_high = self.saved_params.get('onoff_hysteresis_high', self.parse_float(self.onoff_hysteresis_high))
+            hyst_low = self.saved_params.get('onoff_hysteresis_low', self.parse_float(self.onoff_hysteresis_low))
             
             # Konvertera hysteresis-gränser till samma enhet som plottet
             if self.percent_mode_var.get():
                 # I procentläge: konvertera börvärde och hysteresis
                 setpoint_plot = self.to_percent(self.setpoint)
-                hyst_high_plot = hyst_high * (self.process_max.get() - self.process_min.get()) / 100.0
-                hyst_low_plot = hyst_low * (self.process_max.get() - self.process_min.get()) / 100.0
+                process_range = self.parse_float(self.process_max) - self.parse_float(self.process_min)
+                hyst_high_plot = hyst_high * process_range / 100.0
+                hyst_low_plot = hyst_low * process_range / 100.0
             else:
                 # I vanligt läge: använd direkt värden
                 setpoint_plot = self.setpoint
@@ -3137,14 +3235,14 @@ class PIDSimulatorApp:
         self._just_reset = True
         self.running = False
         self.current_step = 0
-        self.process = Process(K=self.parse_float(self.proc_k_var), T=self.validate_T_value(show_warning=True), dead_time=self.parse_float(self.proc_dead_var), integrerande=self.integrerande_var.get(), normalvarde=self.nv_var.get())
+        self.process = Process(K=self.parse_float(self.proc_k_var), T=self.validate_T_value(show_warning=True), dead_time=self.parse_float(self.proc_dead_var), integrerande=self.integrerande_var.get(), normalvarde=self.parse_float(self.nv_var))
         self.pid = PID(Kp=self.parse_float(self.kp_var), Ti=self.parse_float(self.ti_var), Td=self.parse_float(self.td_var), dt=self.dt)
         try:
-            self.setpoint = float(str(self.sp_var.get()).replace(",", "."))
+            self.setpoint = self.parse_float(self.sp_var)
         except Exception:
             self.setpoint = 0.0
         self.t = [0]
-        self.y = [self.nv_var.get()]  # Starta på normalvärdet
+        self.y = [self.parse_float(self.nv_var)]  # Starta på normalvärdet
         self.u = [0]
         self.e = [0]
         self.i = [0]

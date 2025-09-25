@@ -178,7 +178,7 @@ För varje test:
 2. **Ställ in** Td-värde (börja med Td=0 som baslinje)
 3. **Kör** simulering 80s utan brus
 4. **Anteckna** översläng, stabiliseringstid, oscillationsbeteende
-5. **Aktivera brus** (amplitud 1.5), observera utsignal-variation
+5. **Aktivera brus** (amplitud 1.0), observera utsignal-variation
 6. **Anteckna** bruskänslighet (Ja/Nej/Måttlig)
 
 #### Steg 3: Analys och kandidatval
@@ -193,7 +193,7 @@ Med dina 3 bästa kandidater från anteckningarna:
 1. **Rensa historik**
 2. **Återställ** → **Utan D-del**: Ställ in Td=0 → Kör → **Spara** (märk: "Utan D-del")
 3. **Återställ** → **Optimal Td**: Ställ in enligt anteckningar → Kör → **Spara** (märk: "Optimal D-del")
-4. **Med brus**: Aktivera brus (amplitud 1.5) → Upprepa båda testerna med **Återställ** före varje
+4. **Med brus**: Aktivera brus (amplitud 1.0) → Upprepa båda testerna med **Återställ** före varje
 5. **Jämför** effekten av D-delen med och utan brus
 
 **Reflektion 1.3:**
@@ -316,7 +316,7 @@ Med dina dokumenterade resultat från steg 1-3:
 
 #### Steg 2: Störningshantering
 1. **Återställ** → **Pulsstörning**: Aktivera pulse (amplitud=15, vid t=30s) → **Spara**
-2. **Återställ** → **Kontinuerligt brus**: Aktivera noise (amplitud=2.0) → **Spara**
+2. **Återställ** → **Kontinuerligt brus**: Aktivera noise (amplitud=1.0) → **Spara**
 3. **Återställ** → **Kombination**: Pulse + Noise samtidigt → **Spara**
 
 #### Steg 3: Prestanda-utvärdering
