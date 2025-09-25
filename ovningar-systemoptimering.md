@@ -57,9 +57,9 @@ Process: K=1.3, T=15s, Dötid=0s, Börvärde=60, Endast P-reglering (Ti=OFF, Td=
 | Test | Kp  | Stab.tid(s) | Översläng(%) | Slutvärde PV | Statiskt fel | Fel i % | Oscillerar? | Anteckningar |
 |------|-----|-------------|--------------|--------------|--------------|---------|-------------|--------------|
 | 1    |1.0  |             |              |              |              |         |             |              |
-| 2    |2.0  |             |              |              |              |         |             |              |
-| 3    |4.0  |             |              |              |              |         |             |              |
-| 4    |8.0  |             |              |              |              |         |             |              |
+| 2    |3.0  |             |              |              |              |         |             |              |
+| 3    |6.0  |             |              |              |              |         |             |              |
+| 4    |9.0  |             |              |              |              |         |             |              |
 | 5    |12.0 |             |              |              |              |         |             |              |
 ```
 
@@ -177,11 +177,6 @@ Med dina 3 bästa kandidater från anteckningarna:
 3. **Återställ** → **Säkraste**: Ställ in enligt resultat → Kör → **Spara** (märk: "Säker Ti")
 4. **Återställ** → **Balanserad**: Ställ in enligt resultat → Kör → **Spara** (märk: "Balanserad Ti")
 5. **Jämför** visuellt hur snabbt steady-state fel elimineras
-
-**Reflektion 1.2:**
-- Bekräftar den visuella jämförelsen dina antecknade mätningar?
-- Vilken Ti-kandidat ger bästa balansen för detta system?
-- Hur skulle processbrus påverka ditt val av Ti?
 
 **Reflektion 1.2:**
 - Kunde PI-regulatorn eliminera det statiska felet helt (jämfört med P-regulatorn)?
