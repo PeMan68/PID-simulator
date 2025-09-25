@@ -5,25 +5,7 @@
 
 ## Inledning
 
-Denna övningssamling fokuserar på systematisk optimering av regulatorparametrar och fördjupad förståelse för hur olika systemegenskap**Methodisk P-optimering:**
-1. ***Methodisk Ti-optimering:****Methodisk Td-optimering:**
-1. **Återställ** → **Utgå från PI**: Testa utan D-del som baslinje
-2. **Återställ** → **Försiktigt introduktion**: Börja Td=0.5s
-3. **Mät översläng**: Setpoint-steg, registrera förbättring
-4. **Brustest**: **Återställ** → Aktivera noise, observera utsignal-variation
-5. **Balans**: Bästa snabbhet utan överdriven brusamplifiering  
-6. **Ev. Kp-ökning**: D-del kan tillåta högre Kp
-7. **Anteckna** slutresultat, **spara** för jämförelserja försiktigt**: Ti=60s (låg I-effekt)
-2. **För varje Ti**: **Återställ** → Testa setpoint-ändring, mät tid till noll fel
-3. **Gradvis minskning**: Tills oscillationer eller instabilitet
-4. **Balansera**: Snabb fel-eliminering utan försämrad stabilitet
-5. **Anteckna** alla resultat, **spara** endast slutresultat historik**  
-2. **Återställ** → **Börja konservativt**: Kp=0.5, Ti=OFF, Td=OFF
-3. **För varje Kp-värde**: **Återställ** → Testa, mät, anteckna i tabell
-4. **Öka gradvis**: 0.5→1.0→1.5→2.0→2.5 (eller tills oscillation)
-5. **Identifiera gräns**: Anteckna när oscillationer börjar
-6. **Välj säkert värde**: 25-30% under oscillationsgräns
-7. **Spara** endast slutresultatet för jämförelsekar regulatorprestanda. De nya historikfunktionerna gör det möjligt att spara och namnge simuleringar för detaljerad jämförelse.
+Denna övningssamling fokuserar på systematisk optimering av regulatorparametrar och fördjupad förståelse för hur olika systemegenskaper påverkar regulatorprestanda. Historikfunktionerna gör det möjligt att spara och namnge simuleringar för detaljerad jämförelse.
 
 **Förkunskaper:** Genomförda övningar i signalstörningar, grundläggande PID-förståelse.
 
@@ -253,7 +235,7 @@ P-OPTIMERING:
 OPTIMAL P: Kp = _____ (säkerhetsmarginal: ____%)
 ```
 
-**Methodisk P-testning:**
+**Metodisk P-testning:**
 1. **Återställ** (före varje test för konsistenta startförhållanden)
 2. **För varje Kp**: Ställ in värde (Ti=OFF, Td=OFF)
 3. **Kör test**: Börvärde-steg, observera respons
@@ -278,7 +260,7 @@ PI-OPTIMERING (med optimal Kp från ovan):
 OPTIMAL PI: Kp=_____, Ti=_____s
 ```
 
-**Methodisk Ti-testning:**
+**Metodisk Ti-testning:**
 1. **Börja högt**: Ti=50s (låg I-effekt)
 2. **Återställ** (före varje Ti-test för nollställd integrator)
 3. **För varje Ti**: Testa setpoint-ändring
@@ -301,7 +283,7 @@ PID-OPTIMERING (med optimal Kp, Ti från ovan):
 FINAL PID: Kp=_____, Ti=_____s, Td=_____s
 ```
 
-**Methodisk Td-testning:**
+**Metodisk Td-testning:**
 1. **Återställ** → **Baslinje**: Testa utan D-del först
 2. **Återställ** → **För varje Td**: Mät förbättring i snabbhet
 3. **Brustest**: Kontrollera bruskänslighet (med **Återställ** före varje test)
