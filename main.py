@@ -170,6 +170,7 @@ HELP_TEXTS = {
     "percent_mode": "Visa parametrar i procent av mätområdet istället för fysiska enheter.",
     "signalstörning": "Aktivera/inaktivera alla typer av signalstörningar på processen.",
     "autopaus": "Autopaus - pausar automatiskt simuleringen när steady-state nås för att underlätta analys av resultat.",
+    "stop_at_time": "Stoppa automatiskt simuleringen vid specificerad tid för kontrollerad analys av specifika tidsperioder.",
     
     # Graf och export
     "graf_skala": "Min och max för värde-axeln.",
@@ -442,15 +443,15 @@ class PIDSimulatorApp:
         self.simulation_history = []
         self.max_history_size = 5
         self.next_color_id = 0  # Räknare för permanenta färg-ID
-        # Tidsfönster
-        self.window_mode = tk.StringVar(value="all")  # "all" eller "window"
-        self.window_size = tk.IntVar(value=30)
-        self.window_start = 0
+
         # PID-komponent aktivering
         self.i_active_var = tk.BooleanVar(value=True)
         self.d_active_var = tk.BooleanVar(value=True)
         # Autopaus-blockering
         self.autopause_var = tk.BooleanVar(value=True)
+        # Stoppa vid tidpunkt
+        self.stop_at_time_var = tk.BooleanVar(value=False)
+        self.stop_time_var = tk.DoubleVar(value=60.0)  # Standard 60 sekunder
         # Simuleringshastighet (delay i ms mellan steg)
         self.speed_var = tk.IntVar(value=300)  # 300ms standard
         
@@ -856,6 +857,13 @@ class PIDSimulatorApp:
         self.autopause_checkbutton = ttk.Checkbutton(sim_frame, text="Autopaus", variable=self.autopause_var)
         self.autopause_checkbutton.pack(side=tk.LEFT, padx=10)
         
+        # Stoppa vid tidpunkt
+        self.stop_at_time_checkbutton = ttk.Checkbutton(sim_frame, text="Stoppa vid:", variable=self.stop_at_time_var)
+        self.stop_at_time_checkbutton.pack(side=tk.LEFT, padx=(20,2))
+        self.stop_time_entry = ttk.Entry(sim_frame, textvariable=self.stop_time_var, width=5)
+        self.stop_time_entry.pack(side=tk.LEFT, padx=2)
+        ttk.Label(sim_frame, text="sek").pack(side=tk.LEFT)
+        
         # Hastighetskontroller
         ttk.Label(sim_frame, text="Hastighet:").pack(side=tk.LEFT, padx=(20,2))
         speed_frame = ttk.Frame(sim_frame)
@@ -865,16 +873,6 @@ class PIDSimulatorApp:
         self.speed_label = ttk.Label(speed_frame, text="1x", width=4)
         self.speed_label.pack(side=tk.LEFT, padx=2)
 
-        # Tidsfönster (flyttad längst ner)
-        window_frame = ttk.LabelFrame(frame, text="Tidsfönster")
-        window_frame.pack(fill=tk.X, padx=5, pady=5, side=tk.BOTTOM)
-        ttk.Radiobutton(window_frame, text="Visa allt", variable=self.window_mode, value="all", command=self.update_plot).pack(side=tk.LEFT)
-        ttk.Radiobutton(window_frame, text="Visa fönster", variable=self.window_mode, value="window", command=self.update_plot).pack(side=tk.LEFT)
-        ttk.Label(window_frame, text="Fönsterstorlek:").pack(side=tk.LEFT)
-        ttk.Entry(window_frame, textvariable=self.window_size, width=4).pack(side=tk.LEFT)
-        ttk.Button(window_frame, text="<", command=self.window_back).pack(side=tk.LEFT, padx=2)
-        ttk.Button(window_frame, text=">", command=self.window_forward).pack(side=tk.LEFT, padx=2)
-        
         # Skapa en container för grafer och export-knappar (i simulator-fliken)
         graph_container = ttk.Frame(self.simulator_frame)
         graph_container.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
@@ -1169,6 +1167,10 @@ class PIDSimulatorApp:
         
         # Autopaus checkbox
         ToolTip(self.autopause_checkbutton, HELP_TEXTS["autopaus"])
+        
+        # Stoppa vid tidpunkt
+        ToolTip(self.stop_at_time_checkbutton, HELP_TEXTS["stop_at_time"])
+        ToolTip(self.stop_time_entry, HELP_TEXTS["stop_at_time"])
         
         # Checkboxes och viktiga val
         for widget in self.root.winfo_children():
@@ -1555,6 +1557,7 @@ class PIDSimulatorApp:
             (self.manual_entry, self.manual_output_var),
             (self.min_entry, self.process_min),
             (self.max_entry, self.process_max),
+            (self.stop_time_entry, self.stop_time_var),
         ]
         
         # Lägg till Entry-widgets för hysteresis och andra fält om de existerar
@@ -1608,21 +1611,6 @@ class PIDSimulatorApp:
                 )
             return T_min
         return T_value
-
-    def window_back(self):
-        if self.window_mode.get() == "window":
-            size = self.parse_float(self.window_size)
-            step = max(1, int(size * 0.2))
-            self.window_start = max(0, self.window_start - step)
-            self.update_plot()
-
-    def window_forward(self):
-        if self.window_mode.get() == "window":
-            size = self.parse_float(self.window_size)
-            step = max(1, int(size * 0.2))
-            max_start = max(0, len(self.t) - int(size))
-            self.window_start = min(max_start, self.window_start + step)
-            self.update_plot()
 
     def set_setpoint(self):
         # Hantera svenska decimalkomma
@@ -2826,6 +2814,16 @@ class PIDSimulatorApp:
             self._auto_paused = False
             self.update_buttons()
             return
+        # Kontrollera "Stoppa vid tidpunkt"
+        if self.stop_at_time_var.get():
+            current_time = self.t[-1] if self.t else 0
+            stop_time = self.parse_float(self.stop_time_var)
+            if current_time >= stop_time:
+                self.running = False
+                self._auto_paused = False
+                self.update_buttons()
+                return
+        
         # Automatisk paus om ärvärdet varit inom ±5% av börvärdet under 20 steg
         window = 20
         # Blockera autopaus om användaren valt det
@@ -2982,26 +2980,14 @@ class PIDSimulatorApp:
         # Rita historik först (med progressiv transparens)
         self._plot_simulation_history()
         
-        # Välj datafönster för nuvarande simulering
-        if self.window_mode.get() == "window":
-            size = self.window_size.get()
-            start = self.window_start
-            end = min(len(self.t), start + size)
-            t = self.t[start:end]
-            y = self.y[start:end]
-            sp = self.sp[start:end]
-            u = self.u[start:end]
-            e = self.e[start:end]
-            i = [v for v in self.i[start:end]]
-            d = [v for v in self.d[start:end]]
-        else:
-            t = self.t
-            y = self.y
-            sp = self.sp
-            u = self.u
-            e = self.e
-            i = self.i
-            d = self.d
+        # Använd hela datamängden
+        t = self.t
+        y = self.y
+        sp = self.sp
+        u = self.u
+        e = self.e
+        i = self.i
+        d = self.d
         # Konvertera till procent om valt
         if self.percent_mode_var.get():
             y_plot = [self.to_percent(val) for val in y]

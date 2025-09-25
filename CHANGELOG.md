@@ -12,6 +12,7 @@
 
 ### Nya funktioner (Under utveckling)
 - **Stoppa vid tidpunkt**: Komplettera Simuleringskontroller med "Stoppa simulering vid: [X] sekunder" för automatisk stopp vid specificerad tid
+- **Ta bort Tidsfönster-kontroller**: Ta bort hela ramen med kontroller för att visa tidsaxel (hela/delar av) för att ge mer plats i GUI:t
 - **Dynamiska inställningar**: Ny ram för börvärde och signalstörningar med egen "Utför/Aktivera"-knapp
   - Flytta börvärde till separat ram med egen aktiveringsknapp
   - Flytta signalstörningar till samma ram
