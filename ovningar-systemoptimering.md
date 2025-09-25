@@ -5,7 +5,25 @@
 
 ## Inledning
 
-Denna övningssamling fokuserar på systematisk optimering av regulatorparametrar och fördjupad förståelse för hur olika systemegenskaper påverkar regulatorprestanda. De nya historikfunktionerna gör det möjligt att spara och namnge simuleringar för detaljerad jämförelse.
+Denna övningssamling fokuserar på systematisk optimering av regulatorparametrar och fördjupad förståelse för hur olika systemegenskap**Methodisk P-optimering:**
+1. ***Methodisk Ti-optimering:****Methodisk Td-optimering:**
+1. **Återställ** → **Utgå från PI**: Testa utan D-del som baslinje
+2. **Återställ** → **Försiktigt introduktion**: Börja Td=0.5s
+3. **Mät översläng**: Setpoint-steg, registrera förbättring
+4. **Brustest**: **Återställ** → Aktivera noise, observera utsignal-variation
+5. **Balans**: Bästa snabbhet utan överdriven brusamplifiering  
+6. **Ev. Kp-ökning**: D-del kan tillåta högre Kp
+7. **Anteckna** slutresultat, **spara** för jämförelserja försiktigt**: Ti=60s (låg I-effekt)
+2. **För varje Ti**: **Återställ** → Testa setpoint-ändring, mät tid till noll fel
+3. **Gradvis minskning**: Tills oscillationer eller instabilitet
+4. **Balansera**: Snabb fel-eliminering utan försämrad stabilitet
+5. **Anteckna** alla resultat, **spara** endast slutresultat historik**  
+2. **Återställ** → **Börja konservativt**: Kp=0.5, Ti=OFF, Td=OFF
+3. **För varje Kp-värde**: **Återställ** → Testa, mät, anteckna i tabell
+4. **Öka gradvis**: 0.5→1.0→1.5→2.0→2.5 (eller tills oscillation)
+5. **Identifiera gräns**: Anteckna när oscillationer börjar
+6. **Välj säkert värde**: 25-30% under oscillationsgräns
+7. **Spara** endast slutresultatet för jämförelsekar regulatorprestanda. De nya historikfunktionerna gör det möjligt att spara och namnge simuleringar för detaljerad jämförelse.
 
 **Förkunskaper:** Genomförda övningar i signalstörningar, grundläggande PID-förståelse.
 
@@ -25,12 +43,13 @@ Denna övningssamling fokuserar på systematisk optimering av regulatorparametra
 - **Endast så** kan du återvända till framgångsrika inställningar
 
 **Rekommenderat arbetsflöde:**
-1. Ställ in parametrar (ex: Kp=1.5, Ti=OFF, Td=OFF)
-2. **Anteckna inställningar** i din tabell INNAN test
-3. Kör simulering och observera beteende
-4. **Anteckna resultat** (stabiliseringstid, översläng, etc.)
-5. Vid intressanta resultat: "Spara" för kortvarig jämförelse
-6. **Behåll alltid** dina handskrivna anteckningar som huvuddokumentation
+1. **Återställ** (nollställer processen till normalvärde för konsistenta resultat)
+2. Ställ in parametrar (ex: Kp=1.5, Ti=OFF, Td=OFF)
+3. **Anteckna inställningar** i din tabell INNAN test
+4. Kör simulering och observera beteende
+5. **Anteckna resultat** (stabiliseringstid, översläng, etc.)
+6. Vid intressanta resultat: "Spara" för kortvarig jämförelse
+7. **Behåll alltid** dina handskrivna anteckningar som huvuddokumentation
 
 ---
 
@@ -48,7 +67,7 @@ Denna övningssamling fokuserar på systematisk optimering av regulatorparametra
 
 **Anteckningsmall för Kp-variation:**
 ```
-Process: K=1.0, T=25s, Dötid=0s, Börvärde=60
+Process: K=1.3, T=15s, Dötid=0s, Börvärde=60
 
 | Test | Kp  | Ti | Td | Stab.tid(s) | Översläng(%) | Stationärt fel | Oscillerar? | Anteckningar |
 |------|-----|----|----|-------------|--------------|----------------|-------------| -------------|
@@ -60,17 +79,18 @@ Process: K=1.0, T=25s, Dötid=0s, Börvärde=60
 ```
 
 #### Steg 3: Kp-testsekvens (fyll i tabellen)
+> **⚠️ KRITISKT för konsistenta resultat**: Klicka **"Återställ"** före VARJE test i denna övning för att nollställa processens tillstånd till normalvärdet.
+
 För **varje** test:
-1. **Ställ in** Kp-värde (Ti=OFF, Td=OFF)
-2. **Kör** simulering ~100s
-3. **Mät och anteckna** i din tabell:
+1. **Återställ** (nollställer processen)
+2. **Ställ in** Kp-värde (Ti=OFF, Td=OFF)
+3. **Kör** simulering ~100s
+4. **Mät och anteckna** i din tabell:
    - Stabiliseringstid till ±5% av börvärde
    - Översläng i % över börvärde  
    - Kvarvarande stationärt fel
    - Ja/Nej för oscillationer
-4. **Spara kurva** endast om du vill jämföra med nästa test
-
-**Testsekvens:** Kp = 1.0 → 2.0 → 4.0 → 5.0 → 8.0
+5. **Spara kurva** endast om du vill jämföra med nästa test
 
 #### Steg 4: Analys från dina anteckningar
 Använd din ifyllda tabell för att bestämma:
@@ -81,9 +101,9 @@ Använd din ifyllda tabell för att bestämma:
 Nu när du har identifierat 2-3 intressanta kandidater från din tabell:
 
 1. **Rensa historik**
-2. **Kandidat 1**: Ställ in enligt ditt "optimala" resultat → Kör → **Spara** (märk: "Optimal Kp")
-3. **Kandidat 2**: Ställ in enligt ditt "säkra" resultat → Kör → **Spara** (märk: "Säker Kp")  
-4. **Kandidat 3**: Ställ in enligt "gränsvärde" → Kör → **Spara** (märk: "Gräns Kp")
+2. **Återställ** → **Kandidat 1**: Ställ in enligt ditt "optimala" resultat → Kör → **Spara** (märk: "Optimal Kp")
+3. **Återställ** → **Kandidat 2**: Ställ in enligt ditt "säkra" resultat → Kör → **Spara** (märk: "Säker Kp")  
+4. **Återställ** → **Kandidat 3**: Ställ in enligt "gränsvärde" → Kör → **Spara** (märk: "Gräns Kp")
 5. **Jämför** alla tre kurvor samtidigt i historikpanelen
 
 **Reflektion 1.1:**
@@ -114,14 +134,17 @@ Regulator: Kp=2.0 (från övning 1.1), Td=OFF
 #### Steg 2: Ti-testsekvens (PI-reglering)
 **Förberedelser**: Använd optimal Kp från övning 1.1, Td=OFF
 
+> **⚠️ Viktigt**: Klicka **"Återställ"** före varje Ti-test för att säkerställa att integratorn startar från nolltillstånd.
+
 För varje test:
-1. **Ställ in** Ti-värde
-2. **Kör** simulering 150s (längre tid för I-effekt)
-3. **Mät och anteckna**:
+1. **Återställ** (nollställer integratorn)
+2. **Ställ in** Ti-värde
+3. **Kör** simulering 150s (längre tid för I-effekt)
+4. **Mät och anteckna**:
    - Tid tills stationärt fel = 0
    - Oscillationsbeteende (ingen/mild/stark)
    - Övergripande stabilitet (1-5 skala)
-4. **Spara** endast intressanta kurvor för jämförelse
+5. **Spara** endast intressanta kurvor för jämförelse
 
 **Testsekvens:** Ti = 5s → 10s → 20s → 40s → 100s
 
@@ -135,9 +158,9 @@ Från din anteckningstabell, identifiera:
 Med dina 3 bästa kandidater från anteckningarna:
 
 1. **Rensa historik**
-2. **Snabbaste**: Ställ in enligt resultat → Kör → **Spara** (märk: "Snabb Ti")
-3. **Säkraste**: Ställ in enligt resultat → Kör → **Spara** (märk: "Säker Ti")
-4. **Balanserad**: Ställ in enligt resultat → Kör → **Spara** (märk: "Balanserad Ti")
+2. **Återställ** → **Snabbaste**: Ställ in enligt resultat → Kör → **Spara** (märk: "Snabb Ti")
+3. **Återställ** → **Säkraste**: Ställ in enligt resultat → Kör → **Spara** (märk: "Säker Ti")
+4. **Återställ** → **Balanserad**: Ställ in enligt resultat → Kör → **Spara** (märk: "Balanserad Ti")
 5. **Jämför** visuellt hur snabbt steady-state fel elimineras
 
 **Reflektion 1.2:**
@@ -168,12 +191,15 @@ Regulator: Kp=2.8, Ti=15s (från tidigare övningar)
 #### Steg 2: Td-testsekvens (PID-reglering)
 **Förberedelser**: Använd optimal Kp och Ti från tidigare övningar
 
+> **⚠️ Viktigt**: Klicka **"Återställ"** före varje Td-test för konsistenta startförhållanden.
+
 För varje test:
-1. **Ställ in** Td-värde (börja med Td=0 som baslinje)
-2. **Kör** simulering 80s utan brus
-3. **Anteckna** översläng, stabiliseringstid, oscillationsbeteende
-4. **Aktivera brus** (amplitud 1.5), observera utsignal-variation
-5. **Anteckna** bruskänslighet (Ja/Nej/Måttlig)
+1. **Återställ** (nollställer systemet)
+2. **Ställ in** Td-värde (börja med Td=0 som baslinje)
+3. **Kör** simulering 80s utan brus
+4. **Anteckna** översläng, stabiliseringstid, oscillationsbeteende
+5. **Aktivera brus** (amplitud 1.5), observera utsignal-variation
+6. **Anteckna** bruskänslighet (Ja/Nej/Måttlig)
 
 **Testsekvens:** Td = 0s → 1s → 3s → 5s → 8s
 
@@ -187,9 +213,9 @@ Från din anteckningstabell, identifiera:
 Med dina 3 bästa kandidater från anteckningarna:
 
 1. **Rensa historik**
-2. **Utan D-del**: Ställ in Td=0 → Kör → **Spara** (märk: "Utan D-del")
-3. **Optimal Td**: Ställ in enligt anteckningar → Kör → **Spara** (märk: "Optimal D-del")
-4. **Med brus**: Aktivera brus (amplitud 1.5) → Upprepa båda testerna
+2. **Återställ** → **Utan D-del**: Ställ in Td=0 → Kör → **Spara** (märk: "Utan D-del")
+3. **Återställ** → **Optimal Td**: Ställ in enligt anteckningar → Kör → **Spara** (märk: "Optimal D-del")
+4. **Med brus**: Aktivera brus (amplitud 1.5) → Upprepa båda testerna med **Återställ** före varje
 5. **Jämför** effekten av D-delen med och utan brus
 
 **Reflektion 1.3:**
@@ -228,11 +254,12 @@ OPTIMAL P: Kp = _____ (säkerhetsmarginal: ____%)
 ```
 
 **Methodisk P-testning:**
-1. **För varje Kp**: Ställ in värde (Ti=OFF, Td=OFF)
-2. **Kör test**: Börvärde-steg, observera respons
-3. **Anteckna**: Alla mätningar i tabellen
-4. **Hitta gräns**: När oscillationer börjar
-5. **Välj säkert**: 20-30% under oscillationsgräns
+1. **Återställ** (före varje test för konsistenta startförhållanden)
+2. **För varje Kp**: Ställ in värde (Ti=OFF, Td=OFF)
+3. **Kör test**: Börvärde-steg, observera respons
+4. **Anteckna**: Alla mätningar i tabellen
+5. **Hitta gräns**: När oscillationer börjar
+6. **Välj säkert**: 20-30% under oscillationsgräns
 
 #### Steg 2: I-delen optimering med anteckning
 
@@ -253,9 +280,10 @@ OPTIMAL PI: Kp=_____, Ti=_____s
 
 **Methodisk Ti-testning:**
 1. **Börja högt**: Ti=50s (låg I-effekt)
-2. **För varje Ti**: Testa setpoint-ändring
-3. **Anteckna**: Tid till noll fel, oscillationsbeteende
-4. **Hitta balans**: Snabb fel-eliminering utan instabilitet
+2. **Återställ** (före varje Ti-test för nollställd integrator)
+3. **För varje Ti**: Testa setpoint-ändring
+4. **Anteckna**: Tid till noll fel, oscillationsbeteende
+5. **Hitta balans**: Snabb fel-eliminering utan instabilitet
 
 #### Steg 3: D-delen fintrimmning med anteckning
 
@@ -274,18 +302,18 @@ FINAL PID: Kp=_____, Ti=_____s, Td=_____s
 ```
 
 **Methodisk Td-testning:**
-1. **Baslinje**: Testa utan D-del först
-2. **För varje Td**: Mät förbättring i snabbhet
-3. **Brustest**: Kontrollera bruskänslighet
+1. **Återställ** → **Baslinje**: Testa utan D-del först
+2. **Återställ** → **För varje Td**: Mät förbättring i snabbhet
+3. **Brustest**: Kontrollera bruskänslighet (med **Återställ** före varje test)
 4. **Anteckna**: Balansen snabbhet vs bruskänslighet
 
 #### Steg 4: Slutlig metodjämförelse (visuell)
 Med dina dokumenterade resultat från steg 1-3:
 
 1. **Rensa historik**
-2. **Endast P**: Ställ in optimal P från anteckningar → Kör → **Spara** (märk: "Optimal P")
-3. **PI-design**: Ställ in optimal PI från anteckningar → Kör → **Spara** (märk: "Optimal PI")
-4. **PID-design**: Ställ in final PID från anteckningar → Kör → **Spara** (märk: "Final PID")
+2. **Återställ** → **Endast P**: Ställ in optimal P från anteckningar → Kör → **Spara** (märk: "Optimal P")
+3. **Återställ** → **PI-design**: Ställ in optimal PI från anteckningar → Kör → **Spara** (märk: "Optimal PI")
+4. **Återställ** → **PID-design**: Ställ in final PID från anteckningar → Kör → **Spara** (märk: "Final PID")
 5. **Jämför** progressionen P → PI → PID visuellt
 
 **Reflektion 2.1:**
@@ -304,14 +332,14 @@ Med dina dokumenterade resultat från steg 1-3:
 3. **Rensa historik**
 
 #### Steg 1: Setpoint-responstest
-1. **Stor ändring**: Börvärde 30→80 → **Spara** (märk: "Stor SP-ändring")
-2. **Liten ändring**: Börvärde 60→65 → **Spara** (märk: "Liten SP-ändring")
-3. **Negativ ändring**: Börvärde 70→40 → **Spara** (märk: "Negativ SP-ändring")
+1. **Återställ** → **Stor ändring**: Börvärde 30→80 → **Spara** (märk: "Stor SP-ändring")
+2. **Återställ** → **Liten ändring**: Börvärde 60→65 → **Spara** (märk: "Liten SP-ändring")
+3. **Återställ** → **Negativ ändring**: Börvärde 70→40 → **Spara** (märk: "Negativ SP-ändring")
 
 #### Steg 2: Störningshantering
-1. **Pulsstörning**: Aktivera pulse (amplitud=15, vid t=30s) → **Spara**
-2. **Kontinuerligt brus**: Aktivera noise (amplitud=2.0) → **Spara**
-3. **Kombination**: Pulse + Noise samtidigt → **Spara**
+1. **Återställ** → **Pulsstörning**: Aktivera pulse (amplitud=15, vid t=30s) → **Spara**
+2. **Återställ** → **Kontinuerligt brus**: Aktivera noise (amplitud=2.0) → **Spara**
+3. **Återställ** → **Kombination**: Pulse + Noise samtidigt → **Spara**
 
 #### Steg 3: Prestanda-utvärdering
 Dokumentera för varje test:
@@ -356,13 +384,13 @@ Process: K=0.8, T=25s, Dötid=5s
 
 **Direktjämförelse i samma diagram:**
 1. **Rensa historik**
-2. **Konservativ**: Ställ in enligt tabell → Börvärde 40→70 → **Spara** (märk: "Konservativ")
-3. **Balanserad**: Ställ in enligt tabell → Samma test → **Spara** (märk: "Balanserad")  
-4. **Aggressiv**: Ställ in enligt tabell → Samma test → **Spara** (märk: "Aggressiv")
+2. **Återställ** → **Konservativ**: Ställ in enligt tabell → Börvärde 40→70 → **Spara** (märk: "Konservativ")
+3. **Återställ** → **Balanserad**: Ställ in enligt tabell → Samma test → **Spara** (märk: "Balanserad")  
+4. **Återställ** → **Aggressiv**: Ställ in enligt tabell → Samma test → **Spara** (märk: "Aggressiv")
 
 **Robusthetstest:**
 5. **Rensa historik** 
-6. Upprepa alla tre med **störningspuls** (amplitud=10, t=50s)
+6. **Återställ** → Upprepa alla tre med **störningspuls** (amplitud=10, t=50s)
 7. **Spara** med namn: "Kons+störning", "Bal+störning", "Aggr+störning"
 
 #### Steg 3: Strategianalys från visuell jämförelse
@@ -401,8 +429,8 @@ T_crit = _____ s (oscillationsperiod)
 ```
 
 **Kritisk punkt-testning:**
-1. **Endast P-reglering**, börja Kp=2.0
-2. **Öka gradvis** och anteckna oscillationsbeteende  
+1. **Återställ** → **Endast P-reglering**, börja Kp=2.0
+2. **Återställ** → **Öka gradvis** och anteckna oscillationsbeteende  
 3. **Identifiera Kp_crit**: Konstanta oscillationer utan dämpning
 4. **Mät T_crit**: Tid för en hel oscillation
 
@@ -417,10 +445,10 @@ T_crit = _____ s (oscillationsperiod)
 
 #### Steg 3: Metodjämförelse (visuell)
 1. **Rensa historik**
-2. **ZN P**: Ställ in enligt beräkning → Kör → **Spara** (märk: "ZN P-metod")
-3. **ZN PI**: Ställ in enligt beräkning → Kör → **Spara** (märk: "ZN PI-metod")
-4. **ZN PID**: Ställ in enligt beräkning → Kör → **Spara** (märk: "ZN PID-metod")
-5. **Manuell**: Ställ in enligt övning 2.1 → Kör → **Spara** (märk: "Manuell metod")
+2. **Återställ** → **ZN P**: Ställ in enligt beräkning → Kör → **Spara** (märk: "ZN P-metod")
+3. **Återställ** → **ZN PI**: Ställ in enligt beräkning → Kör → **Spara** (märk: "ZN PI-metod")
+4. **Återställ** → **ZN PID**: Ställ in enligt beräkning → Kör → **Spara** (märk: "ZN PID-metod")
+5. **Återställ** → **Manuell**: Ställ in enligt övning 2.1 → Kör → **Spara** (märk: "Manuell metod")
 
 **Reflektion 3.1:**
 - Hur presterar Ziegler-Nichols jämfört med din manuella inställning?
@@ -452,9 +480,10 @@ Formel: Kp = T/(K×(λ+dötid)), Ti = T, Td = 0
 
 #### Steg 2: Lambda-testning med anteckning
 För varje design:
-1. **Ställ in** enligt beräknad tabell
-2. **Kör** simulering och mät prestanda
-3. **Anteckna** resultat:
+1. **Återställ** (nollställer processen)
+2. **Ställ in** enligt beräknad tabell
+3. **Kör** simulering och mät prestanda
+4. **Anteckna** resultat:
 
 ```
 LAMBDA-TESTRESULTAT:
@@ -469,9 +498,9 @@ LAMBDA-TESTRESULTAT:
 Med dina beräknade och testade parametrar:
 
 1. **Rensa historik**
-2. **Konservativ**: Ställ in λ=40s resultat → Kör → **Spara** (märk: "Lambda konservativ")
-3. **Balanserad**: Ställ in λ=20s resultat → Kör → **Spara** (märk: "Lambda balanserad")  
-4. **Aggressiv**: Ställ in λ=10s resultat → Kör → **Spara** (märk: "Lambda aggressiv")
+2. **Återställ** → **Konservativ**: Ställ in λ=40s resultat → Kör → **Spara** (märk: "Lambda konservativ")
+3. **Återställ** → **Balanserad**: Ställ in λ=20s resultat → Kör → **Spara** (märk: "Lambda balanserad")  
+4. **Återställ** → **Aggressiv**: Ställ in λ=10s resultat → Kör → **Spara** (märk: "Lambda aggressiv")
 
 #### Steg 4: Lambda med dötid (utökad analys)
 **Uppdatera beräkningar** med dötid=5s:
@@ -511,18 +540,19 @@ INTEGRERANDE PROCESS-TESTNING:
 
 #### Steg 2: Systematisk testning av regulatorstrategier
 För varje regulator i tabellen:
-1. **Ställ in** parametrar enligt tabell
-2. **Kör** simulering och observera stabilitet
-3. **Anteckna** i tabellen: Stabil/Instabil/Marginell
-4. **Mät hastighet** för stabila alternativ
-5. **Obs**: Vid instabilitet, stoppa test för säkerhet
+1. **Återställ** (viktigt för integrerande processer)
+2. **Ställ in** parametrar enligt tabell
+3. **Kör** simulering och observera stabilitet
+4. **Anteckna** i tabellen: Stabil/Instabil/Marginell
+5. **Mät hastighet** för stabila alternativ
+6. **Obs**: Vid instabilitet, stoppa test för säkerhet
 
 #### Steg 3: Slutlig jämförelse stabila alternativ
 Från din tabell, identifiera stabila kandidater och jämför visuellt:
 
 1. **Rensa historik**
-2. **PI-säker**: Ställ in stabil PI från tabell → Kör → **Spara** (märk: "PI säker")
-3. **PID-optimal**: Ställ in bästa PID från tabell → Kör → **Spara** (märk: "PID optimal")
+2. **Återställ** → **PI-säker**: Ställ in stabil PI från tabell → Kör → **Spara** (märk: "PI säker")
+3. **Återställ** → **PID-optimal**: Ställ in bästa PID från tabell → Kör → **Spara** (märk: "PID optimal")
 4. **Jämför** prestanda mellan stabila alternativen
 
 **Reflektion 4.1:**
@@ -549,19 +579,20 @@ BEGRÄNSNINGSANALYS:
 
 #### Steg 2: Systematisk testning av begränsningar
 För varje test i tabellen:
-1. **Konfigurera** systemet enligt tabell
-2. **Stor setpoint-ändring**: 30 → 70
-3. **Anteckna** maximal utsignal som uppnås
-4. **Bedöm** prestanda (stabiliseringstid, översläng)
-5. **Obs**: Anti-windup aktiverad för begränsade tester
+1. **Återställ** (nollställer integratorn för konsistent start)
+2. **Konfigurera** systemet enligt tabell
+3. **Stor setpoint-ändring**: 30 → 70
+4. **Anteckna** maximal utsignal som uppnås
+5. **Bedöm** prestanda (stabiliseringstid, översläng)
+6. **Obs**: Anti-windup aktiverad för begränsade tester
 
 #### Steg 3: Begränsningsjämförelse (visuell)
 Med dina testade inställningar:
 
 1. **Rensa historik**
-2. **Standard**: 0-100% gräns → Börvärde 30→70 → **Spara** (märk: "Obegränsad")
-3. **Begränsad**: 0-80% gräns, samma regulator → Samma test → **Spara** (märk: "Begränsad, samma PID")
-4. **Anpassad**: 0-80% gräns, mjukare regulator → Samma test → **Spara** (märk: "Begränsad, anpassad PID")
+2. **Återställ** → **Standard**: 0-100% gräns → Börvärde 30→70 → **Spara** (märk: "Obegränsad")
+3. **Återställ** → **Begränsad**: 0-80% gräns, samma regulator → Samma test → **Spara** (märk: "Begränsad, samma PID")
+4. **Återställ** → **Anpassad**: 0-80% gräns, mjukare regulator → Samma test → **Spara** (märk: "Begränsad, anpassad PID")
 5. **Analysera** hur begränsningar påverkar systemrespons
 
 **Reflektion 4.2:**
@@ -666,10 +697,10 @@ Justerad Kp efter D: _____ (om tillämpligt)
 #### Fas 4: Validering och robusthetstest
 
 **Slutgiltig verifiering** (anteckna ALLA resultat):
-1. **Stresstest**: Börvärde 60→80, dokumentera prestanda
-2. **Störningspuls**: Amplitud 12 vid t=40s, mät återhämtningstid  
-3. **Säkerhetsgränser**: Kontrollera max utsignal < 85%
-4. **Brusstabilitet**: Kontinuerligt brus, mät utsignal-variation
+1. **Återställ** → **Stresstest**: Börvärde 60→80, dokumentera prestanda
+2. **Återställ** → **Störningspuls**: Amplitud 12 vid t=40s, mät återhämtningstid  
+3. **Återställ** → **Säkerhetsgränser**: Kontrollera max utsignal < 85%
+4. **Återställ** → **Brusstabilitet**: Kontinuerligt brus, mät utsignal-variation
 5. **Dokumentera** alla mätningar, **spara** endast kritiska resultat
 
 #### Fas 5: Slutlig designjämförelse
@@ -683,10 +714,10 @@ Från dina fas 1-4 anteckningar, välj dina **3 bästa designkandidater**:
 
 **Slutlig visuell jämförelse:**
 1. **Rensa historik**
-2. **Konservativ**: Ställ in enligt anteckningar → Börvärde 60→80 → **Spara** (märk: "Konservativ design")
-3. **Balanserad**: Ställ in enligt anteckningar → Samma test → **Spara** (märk: "Balanserad design")  
-4. **Aggressiv**: Ställ in enligt anteckningar → Samma test → **Spara** (märk: "Aggressiv design")
-5. **Störningstest**: Upprepa med pulsstörning för alla tre
+2. **Återställ** → **Konservativ**: Ställ in enligt anteckningar → Börvärde 60→80 → **Spara** (märk: "Konservativ design")
+3. **Återställ** → **Balanserad**: Ställ in enligt anteckningar → Samma test → **Spara** (märk: "Balanserad design")  
+4. **Återställ** → **Aggressiv**: Ställ in enligt anteckningar → Samma test → **Spara** (märk: "Aggressiv design")
+5. **Störningstest**: **Återställ** → Upprepa med pulsstörning för alla tre
 6. **Dokumentera** skillnaderna mellan kurvorna
 
 #### Fas 6: Prestandaanalys och slutdokumentation
