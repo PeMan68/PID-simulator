@@ -24,6 +24,7 @@
 - **Ta bort Tidsfönster-kontroller**: Hela ramen med kontroller för tidsaxelvisning (hela/delar av) borttagen för att ge mer plats i GUI:t
 - **Optimerad kontrollplacering**: "Stoppa vid"-kontroller placerade logiskt mellan Autopaus och Hastighet
 - **Förbättrad GUI-struktur**: Tydligare gruppering av funktioner med dynamiska inställningar separat från fasta parametrar
+- **Logisk panelplacering**: Dynamiska inställningar flyttade direkt efter regulatorparametrar för intuitivt arbetsflöde
 
 ### Tekniska förbättringar
 - **Unified numeric input handling**: Enhetligt system för hantering av numeriska inmatningar med decimal-komma-stöd
