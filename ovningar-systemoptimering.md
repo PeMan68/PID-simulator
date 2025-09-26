@@ -99,17 +99,17 @@ För **varje** test:
 2. **Ställ in** Kp-värde (Ti=OFF, Td=OFF)
 3. **Kör** simulering ~150s (längre för att se statiskt fel)
 4. **Mät och anteckna** i din tabell:
-   - Stabiliseringstid till ±5% av börvärde
-   - Översläng i % över börvärde  
+   - **Stabiliseringstid** till ±5% av börvärde *(tid tills processvärdet stannar inom ±5% av slutvärdet)*
+   - **Översläng** i % över börvärde *(maximal överskjutning över slutvärdet, uttryckt som procent)*
    - Slutligt processvärde (när kurvan blivit horisontell)
-   - Statiskt fel = Börvärde - Slutligt processvärde
+   - **Statiskt fel** = Börvärde - Slutligt processvärde *(kvarstående skillnad mellan önskat och uppnått värde)*
    - Fel i % = (Statiskt fel / Börvärde) × 100%
-   - Ja/Nej för oscillationer
+   - Ja/Nej för **oscillationer** *(upprepade svängningar kring börvärdet - tecken på instabilitet)*
 
 #### Steg 4: Analys från dina anteckningar
 Använd din ifyllda tabell för att bestämma:
 - **Optimal Kp**: Snabbast utan oscillation
-- **Säkerhetsmarginaler**: Avstånd till instabilitetsgräns
+- **Säkerhetsmarginaler** *(hur mycket "marginal" till instabilitetsgräns - viktigt för robust drift i verkliga system)*: Avstånd till instabilitetsgräns
 - **Statiskt fel-trend**: Hur påverkar Kp det kvarvarande felet?
 
 #### Steg 5: Börvärdestest med optimal Kp-kandidat
@@ -159,6 +159,8 @@ Nu ska du demonstrera både Kp-effekter och börvärdes-påverkan:
 
 ### Övning 1.2: Ti-parameterns roll - Elimination av statiskt reglerfel
 **Syfte:** Förstå integreringstidens påverkan på systemdynamik.
+
+> **💡 Ti-parametern**: Integreringstiden Ti styr hur snabbt I-delen reagerar på kvarstående fel. Låg Ti = snabb integration = snabbt borttagande av statiskt fel, men risk för instabilitet. Hög Ti = långsam integration = säker men långsam elimination av fel.
 
 #### Steg 1: Anteckningsmall för Ti-variation
 Skapa ny tabell i ditt dokument:
@@ -215,13 +217,15 @@ Med dina 3 bästa kandidater från anteckningarna:
 ### Övning 1.3: Td-parameterns optimering
 **Syfte:** Förstå derivatadelens bidrag och begränsningar.
 
+> **💡 Td-parametern**: Deriveringstiden Td gör att regulatorn "förutser" förändring genom att reagera på hur snabbt felet ändras. Fördelar: snabbare respons, mindre översläng. Nackdelar: amplifierar brus kraftigt. Kompromiss mellan prestanda och robusthet.
+
 #### Steg 1: Anteckningsmall för Td-variation
 Skapa ny tabell i ditt dokument:
 
 *Process: K=1.3, T=15s, Dötid=0s, Börvärde=60*  
 *Regulator: Kp=x.x, Ti=xs (optimal från tidigare övningar)*
 
-| Test | Td(s) | Översläng(%) | Stab.tid(s) | Oscillationer | Brus-känslig? | Anteckningar |
+| Test | Td(s) | Översläng(%) | Stab.tid(s) | Oscillationer | **Brus-känslig?** | Anteckningar |
 |------|-------|--------------|-------------|---------------|---------------|--------------|
 | 0    | 0     |              |             |               | Nej (baslinje)|              |
 | 1    | 0.2   |              |             |               |               |              |
@@ -240,7 +244,7 @@ För varje test:
 3. **Kör** simulering 80s utan brus
 4. **Anteckna** översläng, stabiliseringstid, oscillationsbeteende
 5. **Aktivera brus** (amplitud 1.0), observera utsignal-variation
-6. **Anteckna** bruskänslighet (Ja/Nej/Måttlig)
+6. **Anteckna bruskänslighet** *(hur mycket utsignalen varierar när processvärdet innehåller brus - D-delen amplifierar brus)*: (Ja/Nej/Måttlig)
 
 #### Steg 3: Analys och kandidatval
 Från din anteckningstabell, identifiera:
@@ -266,6 +270,8 @@ Med dina 3 bästa kandidater från anteckningarna:
 
 ### Övning 1.4: Integratoruppvridning (Windup) - Förståelse och hantering
 **Syfte:** Demonstrera integratoruppvridning vid begränsade styrsignaler och förstå anti-windup-funktionen.
+
+> **💡 Windup-problematik**: När styrsignalen når max/min-gränser (t.ex. ventil helt öppen/stängd) fortsätter integratorn att "bygga upp" sitt bidrag eftersom felet kvarstår. Detta kallas "windup" och leder till långsam återhämtning när börvärdet ändras - systemet blir "trögt" efter mättnad.
 
 > **💡 Teori**: När styrsignalen når max/min-gränser fortsätter integratorn att "bygga upp" sitt bidrag eftersom felet kvarstår. Detta kallas "windup" och leder till långsam återhämtning när börvärdet ändras.
 
@@ -312,9 +318,12 @@ Med dina 3 bästa kandidater från anteckningarna:
 3. **Aktivera ändringar**
 4. **Observera**: Långsam initial respons trots stort fel
 5. **Mät**: Tid från börvärdesbyte tills PV börjar sjunka märkbart
-6. **Anteckna**: "Recovery-tid" (visar windup-effekten)
+6. **Anteckna**: "**Recovery-tid**" *(återhämtningstid - hur lång tid det tar för systemet att börja reagera efter windup, visar windup-effektens styrka)*
 
 #### Steg 4: Anti-windup-demonstrationen
+
+> **💡 Anti-windup**: Funktion som stoppar integratorn från att "bygga upp" när styrsignalen är mättad. Förhindrar långsam återhämtning och gör systemet mer responsivt efter perioder med begränsad styrsignal.
+
 **Test 3: Referenstest utan anti-windup**
 1. **Återställ** och starta om hela sekvensen (80→90→70)
 2. **Anti-windup**: OFF
@@ -448,6 +457,8 @@ Med dina dokumenterade resultat från steg 1-3:
 ### Övning 2.2: Robusthetsanalys
 **Syfte:** Testa regulatorns prestanda under olika driftförhållanden.
 
+> **💡 Robusthet**: En robust regulator presterar väl även under varierade förhållanden - olika börvärden, störningar, och driftförändringar. Viktigt för verkliga system som aldrig har perfekta förhållanden.
+
 #### Grundinställning
 1. **Samma process**: K=1.3, T=15s, Dötid=0s
 2. **Din optimala PID** från övning 2.1
@@ -535,6 +546,8 @@ Dokumentera för varje test:
 #### Steg 1: Hitta kritisk förstärkning med anteckning
 **Process**: K=1.0, T=25s, Dötid=2s
 
+> **💡 Kritisk förstärkning**: Det Kp-värde där systemet just börjar oscillera med konstant amplitud (varken dämpas eller växer). Detta är gränsen för stabilitet - utgångspunkt för Ziegler-Nichols-metoden.
+
 **Kritisk punkt-anteckning:**
 
 **ZIEGLER-NICHOLS BESTÄMNING:**
@@ -588,6 +601,8 @@ T_crit = _____ s (oscillationsperiod)
 ### Övning 3.2: Lambda-inställning
 
 **Syfte:** Utforska modern inställningsmetodik baserad på önskad sluten-slinga-tidskonstant.
+
+> **💡 Lambda-metoden**: Istället för att hitta kritisk punkt, väljer du direkt hur snabbt det slutna systemet ska vara (lambda λ = önskad tidskonstant). Mindre λ = snabbare system. Metoden beräknar sedan PID-parametrar automatiskt baserat på processens egenskaper.
 
 #### Steg 1: Lambda-beräkningar och anteckning
 
@@ -649,6 +664,8 @@ Med dina beräknade och testade parametrar:
 
 ### Övning 4.1: Integrerande processer
 **Syfte:** Hantera processer utan naturlig stabilitet.
+
+> **💡 Integrerande processer**: Processer som saknar naturlig jämviktspunkt - som nivåreglering i en tank. Utan regulator kommer nivån att ändras kontinuerligt (upp eller ner) även med konstant påverkan. Kräver försiktigare regulatorinställning än självreglerande processer.
 
 #### Steg 1: Anteckningsmall för integrerande processer
 **Process**: Integrerande, K=0.8, T=15s, Utflöde=1.5
