@@ -335,9 +335,6 @@ Där:
 - **Diskret reglering**: Z-transform och samplingseffekter
 - **Robust reglering**: Osäkerhetshantering och H∞-design
 
-### Kända begränsningar som ska åtgärdas:
-- **Integrerande processer**: Simuleringen av integrerande processer är inte helt korrekt implementerad i nuvarande version. Detta kommer att förbättras i kommande releaser för att bättre återspegla verklig nivåreglering och andra integrerande processer.
-
 ## Vidare läsning
 
 För mer fördjupning inom reglerteknik, se:

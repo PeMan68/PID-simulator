@@ -32,12 +32,6 @@
 - **Kompatibilitetsstruktur**: Bevarade kompatibilitet med äldre funktioner genom dummy-variabler och kompatibilitetslagrering
 - **Säkrare ändringshantering**: Dynamiska inställningar kan förhandsgranskas innan aktivering
 
-## [Kommande] - Planerade förbättringar
-
-### Möjliga framtida förbättringar
-- **Förbättrad integrerande processimulering**: Lösa kända problem med integrerande processer
-- **Utökad historik-funktionalitet**: Fler jämförelsemöjligheter och exportalternativ
-- **Avancerade störningsmodeller**: Fler typer av realistiska processförändringar
 
 ## [1.6.1] - 2025-09-23
 
@@ -154,7 +148,7 @@ Nya logaritmiska hastighetssteg: **0.17x → 0.25x → 0.4x → 0.7x → 1x → 
 - Ny `ToolTip`-klass för hover-hjälp med konfigurerbar fördröjning
 
 ### Kända begränsningar
-- **Integrerande processer**: Simulering av integrerande processer fungerar inte korrekt och ska åtgärdas i kommande versioner
+*Se BACKLOG.md för kända problem och framtida utveckling*
 
 ## [1.4.2] - 2025-08-25
 
