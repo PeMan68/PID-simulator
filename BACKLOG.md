@@ -7,8 +7,14 @@ Denna fil samlar kända buggar, feature requests och förbättringsförslag för
 ### Kärnfunktionalitet
 - **🔥 Integrerande processer**: Simulering av integrerande processer fungerar inte korrekt *(från CHANGELOG.md och teori-och-bakgrund.md)*
 
+### Build/Deployment
+- **🔥 Hjälp- och teori-flikar i exe**: Flikarnas Hjälp och teori innehåll skapas inte korrekt i exe-filen (PyInstaller packaging-problem)
+
 ### UI/UX-förbättringar
 - **⚡ Dynamiska inställningar feedback**: Ändringar i dynamiska inställningar ska också vara röda till de är aktiverade (för bättre visuell feedback)
+
+### Graf/Visualisering
+- **⚡ PID-bidrag y-axel enhet**: Y-axeln för PID-bidrag (graf 3) visar celsius men ska visa procent (%)
 
 ## 💡 Feature requests
 
