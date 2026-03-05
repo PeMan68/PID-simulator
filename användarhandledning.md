@@ -29,8 +29,6 @@
 - Vänster: Inställningspaneler
 - Höger: Grafer och historik
 
-> **[SKÄRMKLIPP: Helskärm]**
-
 ---
 
 ## Regulator-presets
@@ -44,7 +42,7 @@ Fyra knappar för snabb växling mellan regulatortyper:
 
 Aktiva parametrar ändras automatiskt beroende på vald preset.
 
-> **[SKÄRMKLIPP: Regulator-presets panel]**
+![Regulator-presets](media/användarhandledning/Pasted%20image%2020260305125311.png)
 
 ---
 
@@ -90,7 +88,7 @@ Beskriver processen som ska regleras.
 - Aktiverar ändringar
 - Återställer simulering
 
-> **[SKÄRMKLIPP: Systemparametrar panel]**
+![Systemparametrar](media/användarhandledning/Pasted%20image%2020260305125443.png)
 
 ---
 
@@ -98,19 +96,14 @@ Beskriver processen som ska regleras.
 
 Bestämmer regulatorns beteende.
 
-### Börvärde och mätområde
-
-**Börvärde (SP):**
-- Önskat värde som regulatorn ska upprätthålla
-- Måste ligga inom mätområdet
-
-**Mätområde Min/Max:**
+### Mätområde
 - Sensorns mätområde
 - Används för enhetslös K och procent-visning
+### Utsignalsbegränsningar
+- Begränsar regulatorns utsignal
+- Standard: 0-100%
 
-### PID-parametrar
-
-Vilka fält som är aktiva beror på vald preset (OnOff, P, PI, PID).
+Vilka fält som är aktiva nedan beror på vald preset (OnOff, P, PI, PID).
 
 **Kp (Proportionalförstärkning):**
 - Regulatorns grundförstärkning
@@ -128,11 +121,6 @@ Vilka fält som är aktiva beror på vald preset (OnOff, P, PI, PID).
 - Endast aktiv i PID
 - Enhet: sekunder
 
-### Utsignalsbegränsningar
-
-**Utsignal min/max (%):**
-- Begränsar regulatorns utsignal
-- Standard: 0-100%
 
 ### OnOff-parametrar
 
@@ -168,7 +156,7 @@ Visas endast när OnOff-preset är vald.
 - Sparar nuvarande simulering till historik
 - Återställer simulering
 
-> **[SKÄRMKLIPP: Regulatorparametrar panel, både PID och OnOff-läge]**
+![Regulatorparametrar](media/användarhandledning/Pasted%20image%2020260305125951.png)
 
 ---
 
@@ -205,7 +193,7 @@ Kan ändras under körning utan att återställa simuleringen.
 - Applicerar dynamiska ändringar direkt
 - Kräver ej återställning
 
-> **[SKÄRMKLIPP: Dynamiska inställningar panel]**
+![Dynamiska inställningar](media/användarhandledning/Pasted%20image%2020260305130041.png)
 
 ---
 
@@ -236,7 +224,7 @@ Styr hur data visas i graferna.
 **Spara:**
 - Applicerar graf-skalinställningar
 
-> **[SKÄRMKLIPP: Stegsvarsanalys och visning panel]**
+![Stegsvarsanalys och visning](media/användarhandledning/Pasted%20image%2020260305130222.png)
 
 ---
 
@@ -252,7 +240,7 @@ Visar realtidsberäkningar av regulatorns komponenter.
 
 Uppdateras varje simulationssteg.
 
-> **[SKÄRMKLIPP: Formler och mellanresultat panel]**
+![Formler och mellanresultat](media/användarhandledning/Pasted%20image%2020260305130309.png)
 
 ---
 
@@ -269,7 +257,7 @@ Kvantitativ utvärdering av regulatorprestanda.
 
 Uppdateras kontinuerligt under simulering.
 
-> **[SKÄRMKLIPP: Prestandamått panel]**
+![Prestandamått](media/användarhandledning/Pasted%20image%2020260305130324.png)
 
 ---
 
@@ -296,7 +284,7 @@ Knappar och inställningar för simuleringskörning.
 
 **Autopaus:**
 - Checkbox
-- Pausar automatiskt när graf-fönstret är fullt
+- Pausar automatiskt när *ärvärdet* är stabilt nära *börvärdet*
 
 **Stoppa vid:**
 - Checkbox + textfält
@@ -307,7 +295,7 @@ Knappar och inställningar för simuleringskörning.
 - Etikett visar hastighet (t.ex. "1x", "5x")
 - Styr simuleringstempo, inte simulerad tid
 
-> **[SKÄRMKLIPP: Simuleringskontroller panel]**
+![Simuleringskontroller](media/användarhandledning/Pasted%20image%2020260305130608.png)
 
 ---
 
@@ -316,24 +304,22 @@ Knappar och inställningar för simuleringskörning.
 Tre delgrafer visar simuleringsresultat.
 
 ### Graf 1: PV och SP
-- Blå linje: Processvärde (PV)
-- Röd linje: Börvärde (SP)
+- Graferna visar ärvärde och börvärde
+- X-axel: Tid i sekunder
 - Y-axel: Processenhet eller procent
 
 ### Graf 2: Utsignal (MO)
-- Grön linje: Utsignal
+- Graf: Beräknad och faktiskt utsignal
 - Y-axel: Procent (0-100%)
 
 ### Graf 3: PID-komponenter
-- Röd linje: Fel (e)
-- Orange linje: Integraldel (I)
-- Lila linje: Derivatadel (D)
+- Varje delkomponents bidrag till utsignalen
 
 **Interaktion:**
 - Crosshair visas vid musöverflygning
 - Visar koordinater vid muspositionen
 
-> **[SKÄRMKLIPP: Grafområde med kurvor]**
+![Grafområde](media/användarhandledning/Pasted%20image%2020260305131115.png)
 
 ---
 
@@ -361,13 +347,13 @@ För varje sparad simulering:
 **Max 5 simuleringar:**
 - Vid fler: Äldsta raderas automatiskt (FIFO)
 
-> **[SKÄRMKLIPP: Jämförelse-historik panel]**
+![Jämförelse-historik](media/användarhandledning/Pasted%20image%2020260305131135.png)
 
 ---
 
 ## Export
 
-Knappar under grafområdet.
+Knappar längst ned till höger.
 
 **Exportera grafer:**
 - Sparar grafer som PNG-bild
@@ -377,7 +363,7 @@ Knappar under grafområdet.
 - Exporterar simuleringsdata som CSV-fil
 - Kolumner: Tid, PV, SP, MO, Fel, I_värde, D_värde
 
-> **[SKÄRMKLIPP: Export-knappar]**
+![Export](media/användarhandledning/Pasted%20image%2020260305131200.png)
 
 ---
 
