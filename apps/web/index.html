@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PID Web Next - Shell</title>
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: Segoe UI, Arial, sans-serif; margin: 20px; }
+    h1 { margin-top: 0; }
+    .row { margin: 8px 0; }
+    button, select { padding: 6px 10px; }
+    #log { white-space: pre; background: #f4f4f4; padding: 12px; border-radius: 8px; height: 260px; overflow: auto; }
+    #status { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>PID Web Next - Simulator Shell</h1>
+  <div class="row">
+    <label for="scenario">Scenario:</label>
+    <select id="scenario"></select>
+    <button id="load">Ladda</button>
+  </div>
+  <div class="row">
+    <button id="step">Stega 1</button>
+    <button id="run10">Kör 10 steg</button>
+    <button id="pulse">Trigga puls</button>
+    <button id="reset">Återställ</button>
+  </div>
+  <div class="row" id="status">Status: ej laddad</div>
+  <div id="log"></div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
