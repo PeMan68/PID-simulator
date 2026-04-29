@@ -1,0 +1,26 @@
+{
+  "id": "manual-open-loop",
+  "version": "v1.0.0",
+  "title": "Manuellt oppen slinga",
+  "description": "Fast utsignal for pedagogisk oppen slinga.",
+  "tags": ["manual", "open-loop"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.0,
+    "T": 20.0,
+    "L": 0.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "manual",
+    "manualOutput": 50.0,
+    "kp": 0.0,
+    "ti": 0.0,
+    "td": 0.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 600, "setpoint": 50.0, "autopause": false }
+}

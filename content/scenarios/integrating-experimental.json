@@ -1,0 +1,26 @@
+{
+  "id": "integrating-experimental",
+  "version": "v1.0.0",
+  "title": "Integrerande process experimentell",
+  "description": "Markerad som experimentell tills parity verifierats.",
+  "tags": ["integrating", "experimental"],
+  "process": {
+    "type": "integrating",
+    "K": 0.5,
+    "T": 15.0,
+    "L": 0.0,
+    "normalValue": 0.0,
+    "outflow": 2.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "pi",
+    "kp": 2.0,
+    "ti": 8.0,
+    "td": 0.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 1.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 900, "setpoint": 50.0, "autopause": false }
+}

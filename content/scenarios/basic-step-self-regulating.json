@@ -1,0 +1,49 @@
+{
+  "id": "basic-step-self-regulating",
+  "version": "v1.0.0",
+  "title": "Grundlaggande stegsvar sjalvreglerande",
+  "description": "Basfall for fri simulator och grundovning.",
+  "tags": ["bas", "step", "self"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.5,
+    "T": 5.0,
+    "L": 1.0,
+    "normalValue": 0.0,
+    "outflow": 0.0,
+    "dimensionlessK": false,
+    "measurementRange": {
+      "min": 0.0,
+      "max": 100.0
+    }
+  },
+  "controller": {
+    "mode": "pid",
+    "kp": 2.0,
+    "ti": 10.0,
+    "td": 1.0,
+    "antiWindup": true,
+    "outputLimits": {
+      "min": 0.0,
+      "max": 100.0
+    },
+    "onoff": {
+      "hysteresisType": "both",
+      "high": 2.0,
+      "low": 2.0
+    }
+  },
+  "disturbance": {
+    "noiseStd": 0.0,
+    "pulse": {
+      "magnitude": 0.0,
+      "durationSteps": 0
+    }
+  },
+  "runtime": {
+    "dt": 1.0,
+    "maxSteps": 2000,
+    "setpoint": 50.0,
+    "autopause": true
+  }
+}
