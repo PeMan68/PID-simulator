@@ -10,11 +10,17 @@
     h1 { margin-top: 0; }
     .row { margin: 8px 0; }
     button, select { padding: 6px 10px; }
+    .grid { display: grid; grid-template-columns: repeat(6, minmax(90px, 1fr)); gap: 8px; margin: 10px 0; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 12px; color: #444; }
+    .field input { padding: 6px; }
     #chartWrap { margin-top: 12px; border: 1px solid #d0d0d0; border-radius: 8px; padding: 8px; background: #fff; }
     #chart { display: block; width: 100%; height: 280px; }
     #log { white-space: pre; background: #f4f4f4; padding: 12px; border-radius: 8px; height: 260px; overflow: auto; }
     #status { font-weight: 600; }
     .legend { font-size: 13px; margin-top: 6px; color: #333; }
+    #learnWrap { margin-top: 12px; border: 1px solid #d0d0d0; border-radius: 8px; padding: 10px; background: #fafafa; }
+    #learnBody { white-space: pre-wrap; background: #fff; border-radius: 6px; padding: 8px; min-height: 72px; }
   </style>
 </head>
 <body>
@@ -30,10 +36,36 @@
     <button id="pulse">Trigga puls</button>
     <button id="reset">Återställ</button>
   </div>
+  <div class="grid">
+    <div class="field"><label for="k">K</label><input id="k" type="number" step="0.1"></div>
+    <div class="field"><label for="t">T</label><input id="t" type="number" step="0.1"></div>
+    <div class="field"><label for="l">L</label><input id="l" type="number" step="0.1"></div>
+    <div class="field"><label for="kp">Kp</label><input id="kp" type="number" step="0.1"></div>
+    <div class="field"><label for="ti">Ti</label><input id="ti" type="number" step="0.1"></div>
+    <div class="field"><label for="td">Td</label><input id="td" type="number" step="0.1"></div>
+    <div class="field"><label for="sp">SP</label><input id="sp" type="number" step="0.1"></div>
+    <div class="field"><label for="umin">U min</label><input id="umin" type="number" step="0.1"></div>
+    <div class="field"><label for="umax">U max</label><input id="umax" type="number" step="0.1"></div>
+    <div class="field"><label for="mode">Läge</label><select id="mode"><option value="onoff">OnOff</option><option value="p">P</option><option value="pi">PI</option><option value="pid">PID</option><option value="manual">Manuell</option></select></div>
+    <div class="field"><label for="noise">Brus std</label><input id="noise" type="number" step="0.1"></div>
+    <div class="field"><label for="pulseMag">Puls mag</label><input id="pulseMag" type="number" step="0.1"></div>
+  </div>
+  <div class="row">
+    <button id="applyParams">Applicera parametrar</button>
+  </div>
   <div class="row" id="status">Status: ej laddad</div>
   <div id="chartWrap">
     <canvas id="chart" width="980" height="280"></canvas>
     <div class="legend">Bla: PV, Rod streckad: SP, Gron: MO</div>
+  </div>
+  <div id="learnWrap">
+    <div class="row">
+      <label for="learningPath">Lärstig:</label>
+      <select id="learningPath"></select>
+      <button id="loadPath">Ladda lärstig</button>
+      <button id="nextStep">Nästa steg</button>
+    </div>
+    <div id="learnBody">Ingen lärstig laddad.</div>
   </div>
   <div id="log"></div>
 

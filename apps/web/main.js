@@ -9,8 +9,29 @@ const resetBtn = document.getElementById("reset");
 const statusEl = document.getElementById("status");
 const logEl = document.getElementById("log");
 const chartCanvas = document.getElementById("chart");
+const applyParamsBtn = document.getElementById("applyParams");
+const learningPathSelect = document.getElementById("learningPath");
+const loadPathBtn = document.getElementById("loadPath");
+const nextStepBtn = document.getElementById("nextStep");
+const learnBody = document.getElementById("learnBody");
+
+const fieldK = document.getElementById("k");
+const fieldT = document.getElementById("t");
+const fieldL = document.getElementById("l");
+const fieldKp = document.getElementById("kp");
+const fieldTi = document.getElementById("ti");
+const fieldTd = document.getElementById("td");
+const fieldSp = document.getElementById("sp");
+const fieldUmin = document.getElementById("umin");
+const fieldUmax = document.getElementById("umax");
+const fieldMode = document.getElementById("mode");
+const fieldNoise = document.getElementById("noise");
+const fieldPulseMag = document.getElementById("pulseMag");
 
 let sim = null;
+let currentScenario = null;
+let currentLearningPath = null;
+let currentLearningStep = -1;
 
 const scenarioFiles = [
   "basic-step-self-regulating.json",
@@ -23,6 +44,8 @@ const scenarioFiles = [
   "integrating-experimental.json",
   "unstable-experimental.json"
 ];
+
+const learningPathFiles = ["basic-learning-path.v1.json"];
 
 function appendLog(line) {
   logEl.textContent += `${line}\n`;
@@ -111,17 +134,103 @@ function updateStatus() {
   statusEl.textContent = `Status: steg=${s.step}, t=${s.t.toFixed(2)}, y=${s.y.toFixed(3)}, u=${s.u.toFixed(3)}, e=${s.e.toFixed(3)}`;
 }
 
+function hydrateFieldsFromScenario(scenario) {
+  fieldK.value = scenario.process.K;
+  fieldT.value = scenario.process.T;
+  fieldL.value = scenario.process.L;
+  fieldKp.value = scenario.controller.kp ?? 0;
+  fieldTi.value = scenario.controller.ti ?? 0;
+  fieldTd.value = scenario.controller.td ?? 0;
+  fieldSp.value = scenario.runtime.setpoint;
+  fieldUmin.value = scenario.controller.outputLimits.min;
+  fieldUmax.value = scenario.controller.outputLimits.max;
+  fieldMode.value = scenario.controller.mode;
+  fieldNoise.value = scenario.disturbance?.noiseStd ?? 0;
+  fieldPulseMag.value = scenario.disturbance?.pulse?.magnitude ?? 0;
+}
+
 async function loadScenario(fileName) {
   const res = await fetch(`../../content/scenarios/${fileName}`);
   if (!res.ok) {
     throw new Error(`Kunde inte ladda scenario: ${fileName}`);
   }
   const scenario = await res.json();
+  currentScenario = scenario;
   sim = createSimulation(scenario, { seed: 42 });
   logEl.textContent = "";
   appendLog(`Laddat scenario: ${scenario.id}`);
+  hydrateFieldsFromScenario(scenario);
   updateStatus();
   drawChart();
+}
+
+function applyParameterChanges() {
+  if (!currentScenario) return;
+
+  currentScenario.process.K = Number(fieldK.value);
+  currentScenario.process.T = Number(fieldT.value);
+  currentScenario.process.L = Number(fieldL.value);
+  currentScenario.controller.kp = Number(fieldKp.value);
+  currentScenario.controller.ti = Number(fieldTi.value);
+  currentScenario.controller.td = Number(fieldTd.value);
+  currentScenario.runtime.setpoint = Number(fieldSp.value);
+  currentScenario.controller.outputLimits.min = Number(fieldUmin.value);
+  currentScenario.controller.outputLimits.max = Number(fieldUmax.value);
+  currentScenario.controller.mode = fieldMode.value;
+
+  if (!currentScenario.disturbance) currentScenario.disturbance = {};
+  currentScenario.disturbance.noiseStd = Number(fieldNoise.value);
+  if (!currentScenario.disturbance.pulse) {
+    currentScenario.disturbance.pulse = { magnitude: 0, durationSteps: 0 };
+  }
+  currentScenario.disturbance.pulse.magnitude = Number(fieldPulseMag.value);
+
+  sim = createSimulation(currentScenario, { seed: 42 });
+  appendLog("Parametrar applicerade och simulering omstartad.");
+  updateStatus();
+  drawChart();
+}
+
+async function loadLearningPath(fileName) {
+  const res = await fetch(`../../content/exercises/${fileName}`);
+  if (!res.ok) {
+    throw new Error(`Kunde inte ladda lärstig: ${fileName}`);
+  }
+  currentLearningPath = await res.json();
+  currentLearningStep = -1;
+  learnBody.textContent = `Laddad lärstig: ${currentLearningPath.title}\nKlicka Nästa steg för att börja.`;
+}
+
+async function showNextLearningStep() {
+  if (!currentLearningPath) {
+    learnBody.textContent = "Ingen lärstig laddad.";
+    return;
+  }
+
+  currentLearningStep += 1;
+  if (currentLearningStep >= currentLearningPath.steps.length) {
+    currentLearningStep = currentLearningPath.steps.length - 1;
+    learnBody.textContent = "Lärstigen är klar. Välj scenario och fortsätt experimentera.";
+    return;
+  }
+
+  const step = currentLearningPath.steps[currentLearningStep];
+
+  if (step.type === "theory") {
+    const res = await fetch(`../../content/theory/${step.ref}`);
+    if (!res.ok) {
+      throw new Error(`Kunde inte ladda teoristeg: ${step.ref}`);
+    }
+    const theory = await res.json();
+    learnBody.textContent = `${step.title}\nMål: ${step.objective}\n\n${theory.summary}\n\n- ${theory.bullets.join("\n- ")}`;
+    return;
+  }
+
+  if (step.type === "scenario") {
+    scenarioSelect.value = step.ref;
+    await loadScenario(step.ref);
+    learnBody.textContent = `${step.title}\nMål: ${step.objective}\n\nScenario ${step.ref} laddades automatiskt.`;
+  }
 }
 
 function ensureSim() {
@@ -137,6 +246,13 @@ for (const name of scenarioFiles) {
   opt.value = name;
   opt.textContent = name;
   scenarioSelect.appendChild(opt);
+}
+
+for (const fileName of learningPathFiles) {
+  const opt = document.createElement("option");
+  opt.value = fileName;
+  opt.textContent = fileName;
+  learningPathSelect.appendChild(opt);
 }
 
 loadBtn.addEventListener("click", async () => {
@@ -181,6 +297,26 @@ resetBtn.addEventListener("click", () => {
   appendLog("Simulering aterstalld.");
   updateStatus();
   drawChart();
+});
+
+applyParamsBtn.addEventListener("click", () => {
+  applyParameterChanges();
+});
+
+loadPathBtn.addEventListener("click", async () => {
+  try {
+    await loadLearningPath(learningPathSelect.value);
+  } catch (err) {
+    appendLog(`Fel: ${err.message}`);
+  }
+});
+
+nextStepBtn.addEventListener("click", async () => {
+  try {
+    await showNextLearningStep();
+  } catch (err) {
+    appendLog(`Fel: ${err.message}`);
+  }
 });
 
 loadScenario(scenarioFiles[0]).catch(err => appendLog(`Fel vid autoload: ${err.message}`));
