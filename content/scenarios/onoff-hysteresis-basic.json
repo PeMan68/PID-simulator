@@ -2,7 +2,7 @@
   "id": "onoff-hysteresis-basic",
   "version": "v1.0.0",
   "title": "OnOff med hysteresis",
-  "description": "Basfall for tvanivareglering med hysteresis.",
+  "description": "Basfall för tvånivåreglering med hysteresis.",
   "tags": ["onoff", "hysteresis", "basic"],
   "process": {
     "type": "self_regulating",

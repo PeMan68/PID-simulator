@@ -294,7 +294,7 @@ pulseBtn.addEventListener("click", () => {
 resetBtn.addEventListener("click", () => {
   if (!ensureSim()) return;
   sim.reset();
-  appendLog("Simulering aterstalld.");
+  appendLog("Simulering återställd.");
   updateStatus();
   drawChart();
 });

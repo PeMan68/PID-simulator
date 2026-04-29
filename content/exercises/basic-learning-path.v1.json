@@ -6,26 +6,26 @@
     {
       "type": "theory",
       "ref": "pid-intro.v1.json",
-      "title": "Teori: Vad gor en regulator?",
-      "objective": "Forsta relationen mellan PV, SP och MO."
+      "title": "Teori: Vad gör en regulator?",
+      "objective": "Förstå relationen mellan PV, SP och MO."
     },
     {
       "type": "scenario",
       "ref": "manual-open-loop.json",
-      "title": "Oppen slinga (manuell)",
+      "title": "Öppen slinga (manuell)",
       "objective": "Se hur processen beter sig utan automatisk reglering."
     },
     {
       "type": "scenario",
       "ref": "p-step-self-regulating.json",
       "title": "P-reglering",
-      "objective": "Identifiera stationart fel med enbart P-del."
+      "objective": "Identifiera stationärt fel med enbart P-del."
     },
     {
       "type": "scenario",
       "ref": "pi-step-self-regulating.json",
       "title": "PI-reglering",
-      "objective": "Jämför hur I-delen reducerar stationart fel."
+      "objective": "Jämför hur I-delen reducerar stationärt fel."
     }
   ]
 }

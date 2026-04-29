@@ -1,8 +1,8 @@
 {
   "id": "basic-step-self-regulating",
   "version": "v1.0.0",
-  "title": "Grundlaggande stegsvar sjalvreglerande",
-  "description": "Basfall for fri simulator och grundovning.",
+  "title": "Grundläggande stegsvar självreglerande",
+  "description": "Basfall för fri simulator och grundövning.",
   "tags": ["bas", "step", "self"],
   "process": {
     "type": "self_regulating",

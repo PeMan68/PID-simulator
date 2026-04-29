@@ -1,8 +1,8 @@
 {
   "id": "pid-pulse-rejection",
   "version": "v1.0.0",
-  "title": "PID pulsstorningsavstotning",
-  "description": "Testfall for transient avstotning med puls.",
+  "title": "PID pulsstörningsavstötning",
+  "description": "Testfall för transient avstötning med puls.",
   "tags": ["pid", "pulse", "disturbance"],
   "process": {
     "type": "self_regulating",

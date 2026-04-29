@@ -2,7 +2,7 @@
   "id": "unstable-experimental",
   "version": "v1.0.0",
   "title": "Instabil process experimentell",
-  "description": "Instabil process for kontroll av modellbeteende.",
+  "description": "Instabil process för kontroll av modellbeteende.",
   "tags": ["unstable", "experimental"],
   "process": {
     "type": "unstable",

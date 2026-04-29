@@ -1,8 +1,8 @@
 {
   "id": "manual-open-loop",
   "version": "v1.0.0",
-  "title": "Manuellt oppen slinga",
-  "description": "Fast utsignal for pedagogisk oppen slinga.",
+  "title": "Manuellt öppen slinga",
+  "description": "Fast utsignal för pedagogisk öppen slinga.",
   "tags": ["manual", "open-loop"],
   "process": {
     "type": "self_regulating",

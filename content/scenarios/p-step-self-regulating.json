@@ -2,7 +2,7 @@
   "id": "p-step-self-regulating",
   "version": "v1.0.0",
   "title": "P-reglering stegsvar",
-  "description": "Basfall for P-reglering och statiskt fel.",
+  "description": "Basfall för P-reglering och statiskt fel.",
   "tags": ["p", "step", "self"],
   "process": {
     "type": "self_regulating",

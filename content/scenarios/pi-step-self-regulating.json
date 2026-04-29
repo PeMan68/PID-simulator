@@ -2,7 +2,7 @@
   "id": "pi-step-self-regulating",
   "version": "v1.0.0",
   "title": "PI-reglering stegsvar",
-  "description": "Basfall for elimination av statiskt fel.",
+  "description": "Basfall för eliminering av statiskt fel.",
   "tags": ["pi", "step", "self"],
   "process": {
     "type": "self_regulating",
