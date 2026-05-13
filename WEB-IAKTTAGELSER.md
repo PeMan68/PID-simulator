@@ -69,8 +69,22 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Status: Noterad
 
 ### Datum: 2026-05-13
+### Del av webbappen: Arkitektur / web vs standalone
+### Iakttagelse: Två versioner av webbappen (web-server och standalone) - vilken är den primära? Web kräver serveradministration och är komplex, standalone är enkel och offline. För pedagogisk miljö utan skolintegrering är standalone enklare.
+### Konsekvens: Potentiell kodduplicering mellan web och standalone versioner.
+### Förslag / nästa tanke: Fokusera på standalone som primär för nu. Web-versionen kan bli "premium-version" för framtida skolintegrering (LMS, dataspårning, samarbete). Håll simulerings-logiken (sim-core) gemensam.
+### Status: Noterad - arkitektonisk beslutspunkt
+
+### Datum: 2026-05-13
 ### Del av webbappen: Paramterar
-### Iakttagelse: Parmaterar som visas och är skrivbara bör styras av 
+### Iakttagelse: Parmaterar som visas och är skrivbara bör styras av vilket läge som är valt. Fråga om du är osäker på vad som avses.
+### Konsekvens:
+### Förslag / nästa tanke:
+### Status: Noterad
+
+### Datum: 2026-05-13
+### Del av webbappen: PID-beräkning
+### Iakttagelse: Vid val a P-reglering beräknas output fel. Endast P-delen ska beräkna output. Det är förmodligen full PID som körs i både P och PI 
 ### Konsekvens:
 ### Förslag / nästa tanke:
 ### Status: Noterad
