@@ -193,10 +193,17 @@ function drawChart() {
   ctx.clearRect(0, 0, w, h); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = "#d8d8d8"; ctx.strokeRect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top); ctx.strokeRect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
   
-  // Y-axel etiketter
+  // Y-axel etiketter för PV/SP
   ctx.fillStyle = "#666"; ctx.font = "11px Segoe UI"; ctx.textAlign = "right";
   ctx.fillText("100", pad.left - 8, yScaleTop(100) + 4);
   ctx.fillText("0", pad.left - 8, yScaleTop(0) + 4);
+  
+  // Y-axel etiketter för u (nedre grafen)
+  const uScaleTop = h * 0.68;
+  const uScaleBot = h - pad.bottom;
+  const uRangeHeight = uScaleBot - uScaleTop;
+  ctx.fillText("100", pad.left - 8, uScaleTop + (1 - 100 / (uMax - uMin || 1)) * uRangeHeight + 4);
+  ctx.fillText("0", pad.left - 8, uScaleTop + (1 - 0 / (uMax - uMin || 1)) * uRangeHeight + 4);
   
   // Hystersgränser för on/off
   if (sim.scenario.controller.mode === "onoff") {
@@ -211,7 +218,7 @@ function drawChart() {
   }
   
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
-  ctx.fillText("PV/SP", 12, 24); ctx.fillText("MO", 20, h * 0.68 + 16);
+  ctx.fillText("PV/SP", 12, 24); ctx.fillText("u", 20, h * 0.68 + 28);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(u[i]) })), "#2f9e44", false);
