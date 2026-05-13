@@ -5,13 +5,13 @@ const root = path.resolve(".");
 
 const htmlFiles = [
   "apps/web/index.html",
-  "apps/web-standalone/index.html"
+  "apps/app/index.html"
 ];
 
 const uiTextFiles = [
   ...htmlFiles,
   "apps/web/main.js",
-  "apps/web-standalone/app.js",
+  "apps/app/app.js",
   "content/exercises/basic-learning-path.v1.json",
   "content/theory/pid-intro.v1.json",
   "content/scenarios/manual-open-loop.json",

@@ -5,7 +5,7 @@ Denna fil samlar kända buggar, feature requests och förbättringsförslag för
 ## 🏗️ Arkitektoniska beslut
 
 ### Web-versioner (prioritering)
-- **Primary (2026+)**: Fokus på `apps/web-standalone/` för offline-miljöer och enkelt pilotprojekt
+- **Primary (2026+)**: Fokus på `apps/app/` för offline-miljöer och enkelt pilotprojekt
 - **Secondary (framtida)**: `apps/web/` (server-baserad) för skolintegrering (LMS, dataspårning, samarbete)
 - **Gemensamt**: `packages/sim-core/` - alla förbättringar sprids till båda versioner
 

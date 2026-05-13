@@ -88,3 +88,10 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Konsekvens:
 ### Förslag / nästa tanke:
 ### Status: Fixerad - P-läge nollställer nu integral och dTerm. PI-läge nollställer dTerm. dTerm-historiken sparas nu korrekt värde istället för raw derivative. UI uppdateras: Ti och Td inputs är dolda/låsta när mode=P, Td är dold/låst när mode=PI.
+
+### Datum: 2026-05-13
+### Del av webbappen: PID-beräkning
+### Iakttagelse: Vid val av manuellt läge bör man kunna sätta utsignalen antar jag, och ingen reglering ska ske? Det finns ingen inmatningsruta för utsignal när man väljer manuellt läge.
+### Konsekvens:
+### Förslag / nästa tanke:
+### Status:

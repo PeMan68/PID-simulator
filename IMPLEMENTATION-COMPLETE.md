@@ -9,9 +9,9 @@ Denna fil bekräftar att alla användarförfrågningar från sessionen 2026-05-1
 ### 1. Grafetikett-förbättringar ✅
 - **MO → u**: Bytt från "MO" (process output) till "u" (utsignal) för bättre pedagogisk notation
   - Uppdaterad i `apps/web/index.html` legend
-  - Uppdaterad i `apps/web-standalone/index.html` legend
+  - Uppdaterad i `apps/app/index.html` legend
   - Uppdaterad i `apps/web/main.js` drawChart()
-  - Uppdaterad i `apps/web-standalone/app.js` drawChart()
+  - Uppdaterad i `apps/app/app.js` drawChart()
 
 ### 2. Y-axel skalering ✅
 - **0-100 skalering för u-axeln (nedre grafen)**:
@@ -28,7 +28,7 @@ Denna fil bekräftar att alla användarförfrågningar från sessionen 2026-05-1
 
 ### 4. Arkitektur-dokumentation ✅
 - **Web vs Standalone strategi**:
-  - `apps/web-standalone/`: Primär version för offline-miljöer
+  - `apps/app/`: Primär version för offline-miljöer
   - `apps/web/`: Sekundär version för framtida skolintegrering (LMS, dataspårning, samarbete)
   - `packages/sim-core/`: Gemensam simulerings-logik för båda
   - Dokumenterat i BACKLOG.md under "🏗️ Arkitektoniska beslut"

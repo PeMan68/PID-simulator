@@ -8,13 +8,13 @@ Användaren rapporterade att P-reglering visade I och D-termer trots att de bord
 ### Implementerade Lösningar
 
 #### 1. Bugfix: PIDController I och D-termer ✅
-**Standalone Version** (`apps/web-standalone/app.js`):
+**App Version** (`apps/app/app.js`):
 - Lagt till `mode` property i PIDController
 - I P-läge: integral uppdateras aldrig
 - I PI-läge: dTerm är alltid 0
 - Returnerar iTerm=0 och dTerm=0 för icke-tillämpliga lägen
 
-**Simulation Logic Update** (`apps/web-standalone/app.js`):
+**Simulation Logic Update** (`apps/app/app.js`):
 - Set `this.pid.mode = mode` för varje steg
 - I P-läge: nollställ integral och prevPv
 - I PI-läge: nollställ prevPv
@@ -24,7 +24,7 @@ Användaren rapporterade att P-reglering visade I och D-termer trots att de bord
 - Lade endast till UI-kontroller
 
 #### 2. UI-förbättringar: Parameter-styrning ✅
-**Standalone Version** (`apps/web-standalone/app.js`):
+**App Version** (`apps/app/app.js`):
 ```javascript
 function updateControllerUIState() {
   // Disable fields based on mode
