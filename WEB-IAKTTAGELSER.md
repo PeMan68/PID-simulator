@@ -36,8 +36,8 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 - Visa även de enskilda bidragen från P-, I- och D-delarna som bildar u. Formlerna behöver inte redovisas explicit.
 - Kunna stega både framåt och bakåt för att granska värden i statusraden. När kurvan är plottad ska en markör visa vilket steg som presenteras, inklusive tidpunkt.
 ### Konsekvens:
-### Förslag / nästa tanke:
-### Status: Delvis implementerad - P/I/D-bidrag visas nu i statusraden. Stegning framåt/tillbaka återstår.
+### Förslag / nästa tanke: Stegning framåt/tillbaka kräver sparande av alla simulator-stater - kan implementeras senare med state snapshots eller replay-logik.
+### Status: Delvis implementerad - P/I/D-bidrag visas nu i statusraden. Stegning framåt/tillbaka planerat för senare.
 
 ### Datum: 2026-05-13
 ### Del av webbappen: PID parametrar/graf
@@ -62,8 +62,15 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Status: Noterad
 
 ### Datum: 2026-05-13
-### Del av webbappen: graf
-### Iakttagelse: GRaferna bör ha en enkel skalering 0-100 på Y-axlarna.
+### Del av webbappen: utseende
+### Iakttagelse: lägg på ett tema på appen, lite industriellt stuk
+### Konsekvens:
+### Förslag / nästa tanke:
+### Status: Noterad
+
+### Datum: 2026-05-13
+### Del av webbappen: Paramterar
+### Iakttagelse: Parmaterar som visas och är skrivbara bör styras av 
 ### Konsekvens:
 ### Förslag / nästa tanke:
 ### Status: Noterad
