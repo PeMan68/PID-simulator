@@ -222,7 +222,8 @@ function drawChart() {
   }
   
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
-  ctx.fillText("PV/SP", 12, 24); ctx.fillText("u", 20, h * 0.68 + 28);
+  ctx.fillText("PV/SP", pad.left + 6, pad.top + 14);
+  ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(u[i]) })), "#2f9e44", false);
@@ -289,11 +290,13 @@ function updateControllerUIState() {
   tdField.style.pointerEvents = (isP || isPI || isManual || isOnOff) ? "none" : "auto";
   
   // Update controller parameters based on mode
-  if (isP || isManual || isOnOff) {
-    scenario.controller.ti = 0;
-  }
-  if (isP || isPI || isManual || isOnOff) {
-    scenario.controller.td = 0;
+  if (currentScenario && currentScenario.controller) {
+    if (isP || isManual || isOnOff) {
+      currentScenario.controller.ti = 0;
+    }
+    if (isP || isPI || isManual || isOnOff) {
+      currentScenario.controller.td = 0;
+    }
   }
 }
 function loadPath(name) { currentPath = LEARNING_PATHS[name]; currentPathStep = -1; learnBody.textContent = "Laddad lärstig: " + currentPath.title + "\nKlicka Nästa steg."; }
