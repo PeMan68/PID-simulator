@@ -100,12 +100,12 @@ function drawChart() {
   const processRange = sim.scenario.process.measurementRange;
   const yMin = Math.min(processRange.min, 0);
   const yMax = Math.max(processRange.max, 100);
-  const uMin = sim.scenario.controller.outputLimits.min;
-  const uMax = sim.scenario.controller.outputLimits.max;
+  const uViewMin = 0;
+  const uViewMax = 100;
 
   const xScale = val => pad.left + ((val - tMin) / (tMax - tMin)) * (w - pad.left - pad.right);
   const yScaleTop = val => pad.top + (1 - (val - yMin) / (yMax - yMin || 1)) * (h * 0.62 - pad.top);
-  const yScaleBottom = val => h * 0.68 + (1 - (val - uMin) / (uMax - uMin || 1)) * (h - pad.bottom - h * 0.68);
+  const yScaleBottom = val => h * 0.68 + (1 - (val - uViewMin) / (uViewMax - uViewMin || 1)) * (h - pad.bottom - h * 0.68);
 
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = "#ffffff";
@@ -125,11 +125,8 @@ function drawChart() {
   ctx.fillText("0", pad.left - 8, yScaleTop(0) + 4);
 
   // Y-axel etiketter för u (nedre grafen)
-  const uScaleTop = h * 0.68;
-  const uScaleBottom = h - pad.bottom;
-  const uRangeHeight = uScaleBottom - uScaleTop;
-  ctx.fillText("100", pad.left - 8, uScaleTop + (1 - 100 / (uMax - uMin || 1)) * uRangeHeight + 4);
-  ctx.fillText("0", pad.left - 8, uScaleTop + (1 - 0 / (uMax - uMin || 1)) * uRangeHeight + 4);
+  ctx.fillText("100", pad.left - 8, h * 0.68 + 4);
+  ctx.fillText("0", pad.left - 8, h - pad.bottom + 4);
 
   // Visar hystersgränser om on/off reglering
   if (sim.scenario.controller.mode === "onoff") {
@@ -165,7 +162,7 @@ function drawChart() {
 
   const pvPoints = t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) }));
   const spPoints = t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) }));
-  const uPoints = t.map((tv, i) => ({ x: xScale(tv), y: yScaleBottom(u[i]) }));
+  const uPoints = t.map((tv, i) => ({ x: xScale(tv), y: yScaleBottom(Math.max(0, Math.min(100, u[i]))) }));
 
   drawSeries(ctx, pvPoints, "#1266f1");
   drawSeries(ctx, spPoints, "#d64545", true);
@@ -232,8 +229,14 @@ function applyParameterChanges() {
   currentScenario.controller.td = Number(fieldTd.value);
   currentScenario.controller.manualOutput = Number(fieldManualOutput.value);
   currentScenario.runtime.setpoint = Number(fieldSp.value);
-  currentScenario.controller.outputLimits.min = Number(fieldUmin.value);
-  currentScenario.controller.outputLimits.max = Number(fieldUmax.value);
+  const rawUmin = Number(fieldUmin.value);
+  const rawUmax = Number(fieldUmax.value);
+  const safeUmin = Math.max(0, Math.min(100, Number.isFinite(rawUmin) ? rawUmin : 0));
+  const safeUmax = Math.max(0, Math.min(100, Number.isFinite(rawUmax) ? rawUmax : 100));
+  currentScenario.controller.outputLimits.min = Math.min(safeUmin, safeUmax);
+  currentScenario.controller.outputLimits.max = Math.max(safeUmin, safeUmax);
+  fieldUmin.value = currentScenario.controller.outputLimits.min;
+  fieldUmax.value = currentScenario.controller.outputLimits.max;
   currentScenario.controller.mode = fieldMode.value;
   
   if (!currentScenario.controller.hysteresis) {

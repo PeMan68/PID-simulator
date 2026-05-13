@@ -192,10 +192,10 @@ function drawChart() {
   const tMax = Math.max(1, t[t.length - 1] || 1);
   const yMin = Math.min(sim.scenario.process.measurementRange.min, 0);
   const yMax = Math.max(sim.scenario.process.measurementRange.max, 100);
-  const uMin = sim.scenario.controller.outputLimits.min, uMax = sim.scenario.controller.outputLimits.max;
+  const uViewMin = 0, uViewMax = 100;
   const xScale = v => pad.left + (v / tMax) * (w - pad.left - pad.right);
   const yScaleTop = v => pad.top + (1 - (v - yMin) / (yMax - yMin || 1)) * (h * 0.62 - pad.top);
-  const yScaleBot = v => h * 0.68 + (1 - (v - uMin) / (uMax - uMin || 1)) * (h - pad.bottom - h * 0.68);
+  const yScaleBot = v => h * 0.68 + (1 - (v - uViewMin) / (uViewMax - uViewMin || 1)) * (h - pad.bottom - h * 0.68);
   ctx.clearRect(0, 0, w, h); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = "#d8d8d8"; ctx.strokeRect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top); ctx.strokeRect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
   
@@ -205,11 +205,8 @@ function drawChart() {
   ctx.fillText("0", pad.left - 8, yScaleTop(0) + 4);
   
   // Y-axel etiketter för u (nedre grafen)
-  const uScaleTop = h * 0.68;
-  const uScaleBot = h - pad.bottom;
-  const uRangeHeight = uScaleBot - uScaleTop;
-  ctx.fillText("100", pad.left - 8, uScaleTop + (1 - 100 / (uMax - uMin || 1)) * uRangeHeight + 4);
-  ctx.fillText("0", pad.left - 8, uScaleTop + (1 - 0 / (uMax - uMin || 1)) * uRangeHeight + 4);
+  ctx.fillText("100", pad.left - 8, h * 0.68 + 4);
+  ctx.fillText("0", pad.left - 8, h - pad.bottom + 4);
   
   // Hystersgränser för on/off
   if (sim.scenario.controller.mode === "onoff") {
@@ -228,7 +225,7 @@ function drawChart() {
   ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
-  drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(u[i]) })), "#2f9e44", false);
+  drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(Math.max(0, Math.min(100, u[i]))) })), "#2f9e44", false);
 }
 function updateStatus() {
   if (!sim) { statusEl.textContent = "Status: ej laddad"; return; }
@@ -263,7 +260,15 @@ function applyParams() {
   currentScenario.process.K = Number(fields.k.value); currentScenario.process.T = Number(fields.t.value); currentScenario.process.L = Number(fields.l.value);
   currentScenario.controller.kp = Number(fields.kp.value); currentScenario.controller.ti = Number(fields.ti.value); currentScenario.controller.td = Number(fields.td.value);
   currentScenario.controller.manualOutput = Number(fields.manualOutput.value);
-  currentScenario.runtime.setpoint = Number(fields.sp.value); currentScenario.controller.outputLimits.min = Number(fields.umin.value); currentScenario.controller.outputLimits.max = Number(fields.umax.value);
+  currentScenario.runtime.setpoint = Number(fields.sp.value);
+  const rawUmin = Number(fields.umin.value);
+  const rawUmax = Number(fields.umax.value);
+  const safeUmin = Math.max(0, Math.min(100, Number.isFinite(rawUmin) ? rawUmin : 0));
+  const safeUmax = Math.max(0, Math.min(100, Number.isFinite(rawUmax) ? rawUmax : 100));
+  currentScenario.controller.outputLimits.min = Math.min(safeUmin, safeUmax);
+  currentScenario.controller.outputLimits.max = Math.max(safeUmin, safeUmax);
+  fields.umin.value = currentScenario.controller.outputLimits.min;
+  fields.umax.value = currentScenario.controller.outputLimits.max;
   currentScenario.controller.mode = nextMode; currentScenario.disturbance.noiseStd = Number(fields.noise.value); currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
   if (!currentScenario.controller.hysteresis) currentScenario.controller.hysteresis = {};
   currentScenario.controller.hysteresis.lower = Number(fields.hysteresLower.value);
