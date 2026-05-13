@@ -162,6 +162,7 @@ const fields = {
   k: document.getElementById("k"), t: document.getElementById("t"), l: document.getElementById("l"),
   kp: document.getElementById("kp"), ti: document.getElementById("ti"), td: document.getElementById("td"),
   sp: document.getElementById("sp"), umin: document.getElementById("umin"), umax: document.getElementById("umax"),
+  manualOutput: document.getElementById("manualOutput"),
   mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"),
   hysteresLower: document.getElementById("hysteresLower"), hysteresUpper: document.getElementById("hysteresUpper")
 };
@@ -239,6 +240,7 @@ function updateStatus() {
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;
   fields.kp.value = s.controller.kp || 0; fields.ti.value = s.controller.ti || 0; fields.td.value = s.controller.td || 0;
+  fields.manualOutput.value = s.controller.manualOutput ?? 0;
   fields.sp.value = s.runtime.setpoint; fields.umin.value = s.controller.outputLimits.min; fields.umax.value = s.controller.outputLimits.max;
   fields.mode.value = s.controller.mode; fields.noise.value = s.disturbance.noiseStd || 0; fields.pulseMag.value = s.disturbance.pulse.magnitude || 0;
   fields.hysteresLower.value = s.controller.hysteresis?.lower ?? 2;
@@ -257,6 +259,7 @@ function applyParams() {
   const oldHistory = sim ? sim.history : null;
   currentScenario.process.K = Number(fields.k.value); currentScenario.process.T = Number(fields.t.value); currentScenario.process.L = Number(fields.l.value);
   currentScenario.controller.kp = Number(fields.kp.value); currentScenario.controller.ti = Number(fields.ti.value); currentScenario.controller.td = Number(fields.td.value);
+  currentScenario.controller.manualOutput = Number(fields.manualOutput.value);
   currentScenario.runtime.setpoint = Number(fields.sp.value); currentScenario.controller.outputLimits.min = Number(fields.umin.value); currentScenario.controller.outputLimits.max = Number(fields.umax.value);
   currentScenario.controller.mode = fields.mode.value; currentScenario.disturbance.noiseStd = Number(fields.noise.value); currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
   if (!currentScenario.controller.hysteresis) currentScenario.controller.hysteresis = {};
@@ -280,17 +283,24 @@ function updateControllerUIState() {
   fields.kp.disabled = isManual || isOnOff;
   fields.ti.disabled = isP || isManual || isOnOff;
   fields.td.disabled = isP || isPI || isManual || isOnOff;
+  fields.manualOutput.disabled = !isManual;
   
   // Hide/show field groups
   const tiField = fields.ti.parentElement;
   const tdField = fields.td.parentElement;
+  const manualField = fields.manualOutput.parentElement;
   tiField.style.opacity = (isP || isManual || isOnOff) ? "0.5" : "1";
   tiField.style.pointerEvents = (isP || isManual || isOnOff) ? "none" : "auto";
   tdField.style.opacity = (isP || isPI || isManual || isOnOff) ? "0.5" : "1";
   tdField.style.pointerEvents = (isP || isPI || isManual || isOnOff) ? "none" : "auto";
+  manualField.style.opacity = isManual ? "1" : "0.5";
+  manualField.style.pointerEvents = isManual ? "auto" : "none";
   
   // Update controller parameters based on mode
   if (currentScenario && currentScenario.controller) {
+    if (isManual) {
+      currentScenario.controller.manualOutput = Number(fields.manualOutput.value);
+    }
     if (isP || isManual || isOnOff) {
       currentScenario.controller.ti = 0;
     }

@@ -24,6 +24,7 @@ const fieldTd = document.getElementById("td");
 const fieldSp = document.getElementById("sp");
 const fieldUmin = document.getElementById("umin");
 const fieldUmax = document.getElementById("umax");
+const fieldManualOutput = document.getElementById("manualOutput");
 const fieldMode = document.getElementById("mode");
 const fieldNoise = document.getElementById("noise");
 const fieldPulseMag = document.getElementById("pulseMag");
@@ -190,6 +191,7 @@ function hydrateFieldsFromScenario(scenario) {
   fieldKp.value = scenario.controller.kp ?? 0;
   fieldTi.value = scenario.controller.ti ?? 0;
   fieldTd.value = scenario.controller.td ?? 0;
+  fieldManualOutput.value = scenario.controller.manualOutput ?? 0;
   fieldSp.value = scenario.runtime.setpoint;
   fieldUmin.value = scenario.controller.outputLimits.min;
   fieldUmax.value = scenario.controller.outputLimits.max;
@@ -228,6 +230,7 @@ function applyParameterChanges() {
   currentScenario.controller.kp = Number(fieldKp.value);
   currentScenario.controller.ti = Number(fieldTi.value);
   currentScenario.controller.td = Number(fieldTd.value);
+  currentScenario.controller.manualOutput = Number(fieldManualOutput.value);
   currentScenario.runtime.setpoint = Number(fieldSp.value);
   currentScenario.controller.outputLimits.min = Number(fieldUmin.value);
   currentScenario.controller.outputLimits.max = Number(fieldUmax.value);
@@ -273,17 +276,24 @@ function updateControllerUIState() {
   fieldKp.disabled = isManual || isOnOff;
   fieldTi.disabled = isP || isManual || isOnOff;
   fieldTd.disabled = isP || isPI || isManual || isOnOff;
+  fieldManualOutput.disabled = !isManual;
   
   // Hide/show field groups
   const tiField = fieldTi.parentElement;
   const tdField = fieldTd.parentElement;
+  const manualField = fieldManualOutput.parentElement;
   tiField.style.opacity = (isP || isManual || isOnOff) ? "0.5" : "1";
   tiField.style.pointerEvents = (isP || isManual || isOnOff) ? "none" : "auto";
   tdField.style.opacity = (isP || isPI || isManual || isOnOff) ? "0.5" : "1";
   tdField.style.pointerEvents = (isP || isPI || isManual || isOnOff) ? "none" : "auto";
+  manualField.style.opacity = isManual ? "1" : "0.5";
+  manualField.style.pointerEvents = isManual ? "auto" : "none";
   
   // Update controller parameters based on mode
   if (currentScenario && currentScenario.controller) {
+    if (isManual) {
+      currentScenario.controller.manualOutput = Number(fieldManualOutput.value);
+    }
     if (isP || isManual || isOnOff) {
       currentScenario.controller.ti = 0;
     }

@@ -66,7 +66,7 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Iakttagelse: lägg på ett tema på appen, lite industriellt stuk
 ### Konsekvens:
 ### Förslag / nästa tanke:
-### Status: Noterad
+### Status: Implementerad - Appen har nu ett industriellt tema med metallisk färgpalett, panelkänsla och responsiv layout för desktop/mobil.
 
 ### Datum: 2026-05-13
 ### Del av webbappen: Arkitektur / web vs standalone
@@ -94,4 +94,4 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Iakttagelse: Vid val av manuellt läge bör man kunna sätta utsignalen antar jag, och ingen reglering ska ske? Det finns ingen inmatningsruta för utsignal när man väljer manuellt läge.
 ### Konsekvens:
 ### Förslag / nästa tanke:
-### Status:
+### Status: Implementerad - Nytt fält "Manuell u" finns och aktiveras endast i Manuell-läge. Värdet används direkt som utsignal utan PID-beräkning.

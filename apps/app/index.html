@@ -3,26 +3,149 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PID Web Standalone</title>
+  <title>PID Simulator App</title>
   <style>
-    body { font-family: Segoe UI, Arial, sans-serif; margin: 20px; }
-    h1 { margin: 0 0 10px; }
-    .row { margin: 8px 0; }
-    button, select, input { padding: 6px 10px; }
-    .grid { display: grid; grid-template-columns: repeat(6, minmax(90px, 1fr)); gap: 8px; margin: 10px 0; }
-    .field { display: flex; flex-direction: column; gap: 4px; }
-    .field label { font-size: 12px; color: #444; }
-    #chartWrap { margin-top: 12px; border: 1px solid #d0d0d0; border-radius: 8px; padding: 8px; background: #fff; }
+    :root {
+      --bg: #d9dde2;
+      --panel: #f4f6f8;
+      --panel-strong: #e7ebef;
+      --ink: #1b242c;
+      --muted: #5b6875;
+      --line: #a5b1bd;
+      --accent: #e07a2f;
+      --accent-2: #2f7a8f;
+      --shadow: rgba(35, 47, 58, 0.2);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(130deg, #f1f3f6 0%, #d1d7de 40%, #eef1f4 100%);
+    }
+    .app-shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 1.35rem;
+      color: #24313b;
+    }
+    .row {
+      margin: 10px 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    button, select, input {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: linear-gradient(180deg, #ffffff 0%, #eef2f6 100%);
+      color: var(--ink);
+    }
+    button {
+      cursor: pointer;
+      border-color: #919eac;
+      box-shadow: 0 2px 5px var(--shadow);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px var(--shadow);
+    }
+    #load, #applyParams, #step {
+      background: linear-gradient(180deg, #f9bb87 0%, var(--accent) 100%);
+      border-color: #bc6320;
+      color: #1d1308;
+      font-weight: 700;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: linear-gradient(180deg, var(--panel) 0%, var(--panel-strong) 100%);
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: opacity 120ms ease;
+    }
+    .field label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    #chartWrap {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+      box-shadow: 0 4px 10px var(--shadow);
+    }
     #chart { display: block; width: 100%; height: 280px; }
-    #log { white-space: pre; background: #f4f4f4; padding: 12px; border-radius: 8px; height: 200px; overflow: auto; margin-top: 12px; }
-    #learnWrap { margin-top: 12px; border: 1px solid #d0d0d0; border-radius: 8px; padding: 10px; background: #fafafa; }
-    #learnBody { white-space: pre-wrap; background: #fff; border-radius: 6px; padding: 8px; min-height: 72px; }
-    .legend { font-size: 13px; margin-top: 6px; color: #333; }
-    #status { font-weight: 600; }
+    #log {
+      white-space: pre;
+      background: #eef2f5;
+      border: 1px solid var(--line);
+      padding: 12px;
+      border-radius: 8px;
+      height: 200px;
+      overflow: auto;
+      margin-top: 12px;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 12px;
+    }
+    #learnWrap {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #f1f4f7;
+    }
+    #learnBody {
+      white-space: pre-wrap;
+      background: #fff;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      padding: 8px;
+      min-height: 72px;
+    }
+    .legend { font-size: 13px; margin-top: 6px; color: #2c3a44; }
+    #status {
+      font-weight: 700;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border-left: 4px solid var(--accent-2);
+      background: #edf3f5;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(3, minmax(120px, 1fr)); }
+    }
+    @media (max-width: 560px) {
+      .app-shell { padding: 12px; }
+      .grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      button, select, input { width: 100%; }
+      .row > label { width: 100%; }
+    }
   </style>
 </head>
 <body>
-  <h1>PID Web Standalone</h1>
+  <div class="app-shell">
+  <h1>PID Simulator App</h1>
   <div class="row">
     <label for="scenario">Scenario:</label>
     <select id="scenario"></select>
@@ -45,6 +168,7 @@
     <div class="field"><label for="umin">U min</label><input id="umin" type="number" step="0.1"></div>
     <div class="field"><label for="umax">U max</label><input id="umax" type="number" step="0.1"></div>
     <div class="field"><label for="mode">Läge</label><select id="mode"><option value="onoff">OnOff</option><option value="p">P</option><option value="pi">PI</option><option value="pid">PID</option><option value="manual">Manuell</option></select></div>
+    <div class="field"><label for="manualOutput">Manuell u</label><input id="manualOutput" type="number" step="0.1"></div>
     <div class="field"><label for="noise">Brus std</label><input id="noise" type="number" step="0.1"></div>
     <div class="field"><label for="pulseMag">Puls mag</label><input id="pulseMag" type="number" step="0.1"></div>
     <div class="field"><label for="hysteresLower">Hysterese låg</label><input id="hysteresLower" type="number" step="0.1"></div>
@@ -69,6 +193,7 @@
   </div>
 
   <div id="log"></div>
+  </div>
 
   <script src="./app.js"></script>
 </body>
