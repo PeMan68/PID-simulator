@@ -85,8 +85,8 @@ export class PIDController {
       integral: this.integral,
       derivative,
       pTerm: this.kp * error,
-      iTerm: this.mode === "p" ? 0 : (this.ti > 1e-9 ? (this.kp / this.ti) * this.integral : 0),
-      dTerm: this.mode === "p" ? 0 : (-this.kp * this.td * derivative)
+      iTerm: (this.mode === "p" || this.mode === "onoff" || this.mode === "manual") ? 0 : (this.ti > 1e-9 ? (this.kp / this.ti) * this.integral : 0),
+      dTerm: (this.mode === "p" || this.mode === "pi" || this.mode === "onoff" || this.mode === "manual") ? 0 : (-this.kp * this.td * derivative)
     };
   }
 }

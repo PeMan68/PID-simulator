@@ -77,7 +77,7 @@ class PIDController {
     this.prevPv = pv;
     const pTerm = this.kp * error;
     const dTerm = -this.kp * this.td * derivative;
-    return { u: u, error: error, integral: this.integral, derivative: derivative, pTerm: pTerm, iTerm: this.mode === "p" ? 0 : this.kp * iTerm, dTerm: this.mode === "p" ? 0 : dTerm };
+    return { u: u, error: error, integral: this.integral, derivative: derivative, pTerm: pTerm, iTerm: (this.mode === "p" || this.mode === "onoff" || this.mode === "manual") ? 0 : this.kp * iTerm, dTerm: (this.mode === "p" || this.mode === "pi" || this.mode === "onoff" || this.mode === "manual") ? 0 : dTerm };
   }
 }
 
