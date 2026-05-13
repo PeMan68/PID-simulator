@@ -87,4 +87,4 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Iakttagelse: Vid val a P-reglering beräknas output fel. Endast P-delen ska beräkna output. Det är förmodligen full PID som körs i både P och PI 
 ### Konsekvens:
 ### Förslag / nästa tanke:
-### Status: Noterad
+### Status: Fixerad - P-läge nollställer nu integral och dTerm. PI-läge nollställer dTerm. dTerm-historiken sparar nu korrekt värde istället för raw derivative.

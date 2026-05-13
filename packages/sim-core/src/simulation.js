@@ -93,10 +93,17 @@ export class Simulation {
       return { u, error: setpoint - pv, integral: 0, derivative: 0, pTerm: 0 };
     }
 
+    // Set controller mode for proper I and D term calculations
+    this.pid.mode = mode;
+
+    // For P-only mode: disable I and D terms completely
     if (mode === "p") {
       this.pid.ti = 0;
       this.pid.td = 0;
+      this.pid.integral = 0;
+      this.pid.prevPv = pv;
     } else if (mode === "pi") {
+      // For PI mode: disable D term
       this.pid.td = 0;
     }
 
@@ -152,7 +159,7 @@ export class Simulation {
     this.history.e.push(ctrl.error);
     this.history.sp.push(setpoint);
     this.history.i.push(ctrl.integral);
-    this.history.d.push(ctrl.derivative);
+    this.history.d.push(ctrl.dTerm);
     this.history.p.push(ctrl.pTerm);
 
     return {
