@@ -57,7 +57,7 @@ class OnOffController {
 }
 
 class PIDController {
-  constructor(cfg = {}, dt = 1) { this.kp = cfg.kp || 0; this.ti = cfg.ti || 0; this.td = cfg.td || 0; this.dt = dt; this.integral = 0; this.prevPv = 0; }
+  constructor(cfg = {}, dt = 1) { this.kp = cfg.kp || 0; this.ti = cfg.ti || 0; this.td = cfg.td || 0; this.dt = dt; this.integral = 0; this.prevPv = 0; this.mode = "pid"; }
   reset() { this.integral = 0; this.prevPv = 0; }
   step(sp, pv, limits, antiWindup) {
     const error = sp - pv;
@@ -66,15 +66,18 @@ class PIDController {
     const iTerm = this.ti > 1e-9 ? integralCandidate / this.ti : 0;
     const raw = this.kp * (error + iTerm - this.td * derivative);
     const u = Math.max(limits.min, Math.min(limits.max, raw));
-    if (!antiWindup) this.integral = integralCandidate;
-    else {
-      const ok = (u === limits.min && error > 0) || (u === limits.max && error < 0) || (u > limits.min && u < limits.max);
-      if (ok) this.integral = integralCandidate;
+    // Only update integral if not in P-only mode
+    if (this.mode !== "p") {
+      if (!antiWindup) this.integral = integralCandidate;
+      else {
+        const ok = (u === limits.min && error > 0) || (u === limits.max && error < 0) || (u > limits.min && u < limits.max);
+        if (ok) this.integral = integralCandidate;
+      }
     }
     this.prevPv = pv;
     const pTerm = this.kp * error;
     const dTerm = -this.kp * this.td * derivative;
-    return { u: u, error: error, integral: this.integral, derivative: derivative, pTerm: pTerm, iTerm: this.kp * iTerm, dTerm: dTerm };
+    return { u: u, error: error, integral: this.integral, derivative: derivative, pTerm: pTerm, iTerm: this.mode === "p" ? 0 : this.kp * iTerm, dTerm: this.mode === "p" ? 0 : dTerm };
   }
 }
 
@@ -127,8 +130,9 @@ class Simulation {
     if (mode === "manual") ctrl = { u: this.scenario.controller.manualOutput || 0, error: sp - pv, pTerm: 0, iTerm: 0, dTerm: 0 };
     else if (mode === "onoff") ctrl = { u: this.onoff.step(sp, pv, limits), error: sp - pv, pTerm: 0, iTerm: 0, dTerm: 0 };
     else {
-      if (mode === "p") { this.pid.ti = 0; this.pid.td = 0; }
-      if (mode === "pi") this.pid.td = 0;
+      this.pid.mode = mode;
+      if (mode === "p") { this.pid.ti = 0; this.pid.td = 0; this.pid.integral = 0; this.pid.prevPv = pv; }
+      if (mode === "pi") { this.pid.td = 0; this.pid.prevPv = pv; }
       this.pid.kp = this.scenario.controller.kp || 0;
       this.pid.ti = this.scenario.controller.ti || 0;
       this.pid.td = this.scenario.controller.td || 0;
@@ -244,6 +248,7 @@ function loadScenarioByName(name) {
   sim = new Simulation(currentScenario, 42);
   hydrateFields(currentScenario);
   appendLog("Laddat scenario: " + currentScenario.id);
+  updateControllerUIState();
   updateStatus(); drawChart();
 }
 function applyParams() {
@@ -259,7 +264,29 @@ function applyParams() {
   sim = new Simulation(currentScenario, 42);
   if (oldHistory && oldHistory.t.length > 0) { sim.history = oldHistory; sim.stepNo = oldHistory.t.length / sim.dt; appendLog("Parametrar applicerade. Grafen behålls."); } 
   else { appendLog("Parametrar applicerade."); }
+  updateControllerUIState();
   updateStatus(); drawChart();
+}
+
+function updateControllerUIState() {
+  const mode = fields.mode.value;
+  const isP = mode === "p";
+  const isPI = mode === "pi";
+  const isManual = mode === "manual";
+  const isOnOff = mode === "onoff";
+  
+  // Enable/disable fields based on mode
+  fields.kp.disabled = isManual || isOnOff;
+  fields.ti.disabled = isP || isManual || isOnOff;
+  fields.td.disabled = isP || isPI || isManual || isOnOff;
+  
+  // Hide/show field groups
+  const tiField = fields.ti.parentElement;
+  const tdField = fields.td.parentElement;
+  tiField.style.opacity = (isP || isManual || isOnOff) ? "0.5" : "1";
+  tiField.style.pointerEvents = (isP || isManual || isOnOff) ? "none" : "auto";
+  tdField.style.opacity = (isP || isPI || isManual || isOnOff) ? "0.5" : "1";
+  tdField.style.pointerEvents = (isP || isPI || isManual || isOnOff) ? "none" : "auto";
 }
 function loadPath(name) { currentPath = LEARNING_PATHS[name]; currentPathStep = -1; learnBody.textContent = "Laddad lärstig: " + currentPath.title + "\nKlicka Nästa steg."; }
 function nextPathStep() {
@@ -281,6 +308,7 @@ Object.keys(SCENARIOS).forEach(name => { const o = document.createElement("optio
 Object.keys(LEARNING_PATHS).forEach(name => { const o = document.createElement("option"); o.value = name; o.textContent = name; learningPathSelect.appendChild(o); });
 
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
+document.getElementById("mode").addEventListener("change", updateControllerUIState);
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });
 document.getElementById("run10").addEventListener("click", () => { if (!sim) return; const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); });
 document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; sim.triggerPulse(); appendLog("Puls triggad."); });

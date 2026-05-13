@@ -211,6 +211,7 @@ async function loadScenario(fileName) {
   logEl.textContent = "";
   appendLog(`Laddat scenario: ${scenario.id}`);
   hydrateFieldsFromScenario(scenario);
+  updateControllerUIState();
   updateStatus();
   drawChart();
 }
@@ -256,8 +257,31 @@ function applyParameterChanges() {
     appendLog("Parametrar applicerade och simulering omstartad.");
   }
   
+  updateControllerUIState();
   updateStatus();
   drawChart();
+}
+
+function updateControllerUIState() {
+  const mode = fieldMode.value;
+  const isP = mode === "p";
+  const isPI = mode === "pi";
+  const isManual = mode === "manual";
+  const isOnOff = mode === "onoff";
+  
+  // Enable/disable fields based on mode
+  fieldKp.disabled = isManual || isOnOff;
+  fieldTi.disabled = isP || isManual || isOnOff;
+  fieldTd.disabled = isP || isPI || isManual || isOnOff;
+  
+  // Hide/show field groups
+  const tiField = fieldTi.parentElement;
+  const tdField = fieldTd.parentElement;
+  tiField.style.opacity = (isP || isManual || isOnOff) ? "0.5" : "1";
+  tiField.style.pointerEvents = (isP || isManual || isOnOff) ? "none" : "auto";
+  tdField.style.opacity = (isP || isPI || isManual || isOnOff) ? "0.5" : "1";
+  tdField.style.pointerEvents = (isP || isPI || isManual || isOnOff) ? "none" : "auto";
+}
 }
 
 async function loadLearningPath(fileName) {
@@ -331,6 +355,8 @@ loadBtn.addEventListener("click", async () => {
     appendLog(`Fel: ${err.message}`);
   }
 });
+
+fieldMode.addEventListener("change", updateControllerUIState);
 
 stepBtn.addEventListener("click", () => {
   if (!ensureSim()) return;

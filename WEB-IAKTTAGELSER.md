@@ -76,15 +76,15 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Status: Noterad - arkitektonisk beslutspunkt
 
 ### Datum: 2026-05-13
-### Del av webbappen: Paramterar
-### Iakttagelse: Parmaterar som visas och är skrivbara bör styras av vilket läge som är valt. Fråga om du är osäker på vad som avses.
-### Konsekvens:
-### Förslag / nästa tanke:
-### Status: Noterad
+### Del av webbappen: Parameterstyrning
+### Iakttagelse: Parametrar som visas och är skrivbara bör styras av vilket läge som är valt. 
+### Konsekvens: Användare kan sätta värden på Ti och Td i P-läge, vilket är förvirrande.
+### Förslag / nästa tanke: Dölja/låsa parametrar baserat på läge.
+### Status: Implementerad - Ti och Td inputs är nu dolda/låsta när de inte är tillämpliga för det valda läget.
 
 ### Datum: 2026-05-13
 ### Del av webbappen: PID-beräkning
 ### Iakttagelse: Vid val a P-reglering beräknas output fel. Endast P-delen ska beräkna output. Det är förmodligen full PID som körs i både P och PI 
 ### Konsekvens:
 ### Förslag / nästa tanke:
-### Status: Fixerad - P-läge nollställer nu integral och dTerm. PI-läge nollställer dTerm. dTerm-historiken sparar nu korrekt värde istället för raw derivative.
+### Status: Fixerad - P-läge nollställer nu integral och dTerm. PI-läge nollställer dTerm. dTerm-historiken sparas nu korrekt värde istället för raw derivative. UI uppdateras: Ti och Td inputs är dolda/låsta när mode=P, Td är dold/låst när mode=PI.
