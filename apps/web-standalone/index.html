@@ -47,8 +47,10 @@
     <div class="field"><label for="mode">Läge</label><select id="mode"><option value="onoff">OnOff</option><option value="p">P</option><option value="pi">PI</option><option value="pid">PID</option><option value="manual">Manuell</option></select></div>
     <div class="field"><label for="noise">Brus std</label><input id="noise" type="number" step="0.1"></div>
     <div class="field"><label for="pulseMag">Puls mag</label><input id="pulseMag" type="number" step="0.1"></div>
+    <div class="field"><label for="hysteresLower">Hysterese låg</label><input id="hysteresLower" type="number" step="0.1"></div>
+    <div class="field"><label for="hysteresUpper">Hysterese hög</label><input id="hysteresUpper" type="number" step="0.1"></div>
   </div>
-  <div class="row"><button id="applyParams">Applicera parametrar</button></div>
+  <div class="row"><button id="applyParams">Applicera parametrar</button><button id="clearChart">Rensa graf</button><button id="systemReset">Återställ system</button></div>
   <div class="row" id="status">Status: ej laddad</div>
 
   <div id="chartWrap">

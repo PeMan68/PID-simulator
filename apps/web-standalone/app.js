@@ -72,7 +72,9 @@ class PIDController {
       if (ok) this.integral = integralCandidate;
     }
     this.prevPv = pv;
-    return { u: u, error: error, integral: this.integral, derivative: derivative, pTerm: this.kp * error };
+    const pTerm = this.kp * error;
+    const dTerm = -this.kp * this.td * derivative;
+    return { u: u, error: error, integral: this.integral, derivative: derivative, pTerm: pTerm, iTerm: this.kp * iTerm, dTerm: dTerm };
   }
 }
 
@@ -107,11 +109,13 @@ class Simulation {
     this.rng = seededRandom(seed || 42);
     this.process = new ProcessModel(scenario.process, this.dt);
     this.pid = new PIDController(scenario.controller, this.dt);
-    this.onoff = new OnOffController(scenario.controller.onoff || {});
+    const onoffCfg = scenario.controller.onoff || {};
+    const hysteresisCfg = scenario.controller.hysteresis || {};
+    this.onoff = new OnOffController({ ...onoffCfg, low: hysteresisCfg.lower ?? onoffCfg.low ?? 2, high: hysteresisCfg.upper ?? onoffCfg.high ?? 2 });
     this.pulseStepsLeft = 0;
-    this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y] };
+    this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0] };
   }
-  reset() { this.stepNo = 0; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y] }; }
+  reset() { this.stepNo = 0; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0] }; }
   triggerPulse() { const p = this.scenario.disturbance.pulse; if (p && p.durationSteps > 0) this.pulseStepsLeft = p.durationSteps; }
   step() {
     if (this.stepNo >= this.maxSteps) return null;
@@ -120,8 +124,8 @@ class Simulation {
     const mode = this.scenario.controller.mode;
     const limits = this.scenario.controller.outputLimits;
     let ctrl;
-    if (mode === "manual") ctrl = { u: this.scenario.controller.manualOutput || 0, error: sp - pv };
-    else if (mode === "onoff") ctrl = { u: this.onoff.step(sp, pv, limits), error: sp - pv };
+    if (mode === "manual") ctrl = { u: this.scenario.controller.manualOutput || 0, error: sp - pv, pTerm: 0, iTerm: 0, dTerm: 0 };
+    else if (mode === "onoff") ctrl = { u: this.onoff.step(sp, pv, limits), error: sp - pv, pTerm: 0, iTerm: 0, dTerm: 0 };
     else {
       if (mode === "p") { this.pid.ti = 0; this.pid.td = 0; }
       if (mode === "pi") this.pid.td = 0;
@@ -136,11 +140,11 @@ class Simulation {
     const y = this.process.step(ctrl.u, this.dt, disturbance);
     this.stepNo += 1;
     const t = this.stepNo * this.dt;
-    this.history.t.push(t); this.history.y.push(y); this.history.sp.push(sp); this.history.u.push(ctrl.u); this.history.e.push(ctrl.error);
+    this.history.t.push(t); this.history.y.push(y); this.history.sp.push(sp); this.history.u.push(ctrl.u); this.history.e.push(ctrl.error); this.history.p.push(ctrl.pTerm || 0); this.history.i.push(ctrl.iTerm || 0); this.history.d.push(ctrl.dTerm || 0);
     return { t: t, y: y, u: ctrl.u, e: ctrl.error };
   }
   run(n) { const frames = []; for (let i = 0; i < n; i += 1) { const f = this.step(); if (!f) break; frames.push(f); } return frames; }
-  getState() { const i = this.history.t.length - 1; return { step: this.stepNo, t: this.history.t[i], y: this.history.y[i], u: this.history.u[i], e: this.history.e[i] }; }
+  getState() { const i = this.history.t.length - 1; return { step: this.stepNo, t: this.history.t[i], y: this.history.y[i], u: this.history.u[i], e: this.history.e[i], pTerm: this.history.p[i] || 0, iTerm: this.history.i[i] || 0, dTerm: this.history.d[i] || 0 }; }
 }
 
 const scenarioSelect = document.getElementById("scenario");
@@ -154,7 +158,8 @@ const fields = {
   k: document.getElementById("k"), t: document.getElementById("t"), l: document.getElementById("l"),
   kp: document.getElementById("kp"), ti: document.getElementById("ti"), td: document.getElementById("td"),
   sp: document.getElementById("sp"), umin: document.getElementById("umin"), umax: document.getElementById("umax"),
-  mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag")
+  mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"),
+  hysteresLower: document.getElementById("hysteresLower"), hysteresUpper: document.getElementById("hysteresUpper")
 };
 
 let currentScenario = null;
@@ -179,14 +184,34 @@ function drawChart() {
   const pad = { left: 52, right: 16, top: 14, bottom: 28 };
   const t = sim.history.t, y = sim.history.y, sp = sim.history.sp, u = sim.history.u;
   const tMax = Math.max(1, t[t.length - 1] || 1);
-  const yMin = sim.scenario.process.measurementRange.min, yMax = sim.scenario.process.measurementRange.max;
+  const yMin = Math.min(sim.scenario.process.measurementRange.min, 0);
+  const yMax = Math.max(sim.scenario.process.measurementRange.max, 100);
   const uMin = sim.scenario.controller.outputLimits.min, uMax = sim.scenario.controller.outputLimits.max;
   const xScale = v => pad.left + (v / tMax) * (w - pad.left - pad.right);
   const yScaleTop = v => pad.top + (1 - (v - yMin) / (yMax - yMin || 1)) * (h * 0.62 - pad.top);
   const yScaleBot = v => h * 0.68 + (1 - (v - uMin) / (uMax - uMin || 1)) * (h - pad.bottom - h * 0.68);
   ctx.clearRect(0, 0, w, h); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = "#d8d8d8"; ctx.strokeRect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top); ctx.strokeRect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
-  ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.fillText("PV/SP", 12, 24); ctx.fillText("MO", 20, h * 0.68 + 16);
+  
+  // Y-axel etiketter
+  ctx.fillStyle = "#666"; ctx.font = "11px Segoe UI"; ctx.textAlign = "right";
+  ctx.fillText("100", pad.left - 8, yScaleTop(100) + 4);
+  ctx.fillText("0", pad.left - 8, yScaleTop(0) + 4);
+  
+  // Hystersgränser för on/off
+  if (sim.scenario.controller.mode === "onoff") {
+    const sp_current = sp[sp.length - 1] ?? sim.scenario.runtime.setpoint;
+    const hysteresis = sim.scenario.controller.hysteresis || { lower: 2, upper: 2 };
+    const lowerBound = yScaleTop(sp_current - hysteresis.lower);
+    const upperBound = yScaleTop(sp_current + hysteresis.upper);
+    ctx.strokeStyle = "#ff9900"; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(pad.left, lowerBound); ctx.lineTo(w - pad.right, lowerBound); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.left, upperBound); ctx.lineTo(w - pad.right, upperBound); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  
+  ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
+  ctx.fillText("PV/SP", 12, 24); ctx.fillText("MO", 20, h * 0.68 + 16);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(u[i]) })), "#2f9e44", false);
@@ -194,13 +219,18 @@ function drawChart() {
 function updateStatus() {
   if (!sim) { statusEl.textContent = "Status: ej laddad"; return; }
   const s = sim.getState();
-  statusEl.textContent = "Status: steg=" + s.step + ", t=" + s.t.toFixed(2) + ", y=" + s.y.toFixed(3) + ", u=" + s.u.toFixed(3) + ", e=" + s.e.toFixed(3);
+  const pidInfo = (s.pTerm !== 0 || s.iTerm !== 0 || s.dTerm !== 0) 
+    ? " | P=" + s.pTerm.toFixed(2) + ", I=" + s.iTerm.toFixed(2) + ", D=" + s.dTerm.toFixed(2)
+    : "";
+  statusEl.textContent = "Status: steg=" + s.step + ", t=" + s.t.toFixed(2) + ", y=" + s.y.toFixed(3) + ", u=" + s.u.toFixed(3) + ", e=" + s.e.toFixed(3) + pidInfo;
 }
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;
   fields.kp.value = s.controller.kp || 0; fields.ti.value = s.controller.ti || 0; fields.td.value = s.controller.td || 0;
   fields.sp.value = s.runtime.setpoint; fields.umin.value = s.controller.outputLimits.min; fields.umax.value = s.controller.outputLimits.max;
   fields.mode.value = s.controller.mode; fields.noise.value = s.disturbance.noiseStd || 0; fields.pulseMag.value = s.disturbance.pulse.magnitude || 0;
+  fields.hysteresLower.value = s.controller.hysteresis?.lower ?? 2;
+  fields.hysteresUpper.value = s.controller.hysteresis?.upper ?? 2;
 }
 function loadScenarioByName(name) {
   currentScenario = deepClone(SCENARIOS[name]);
@@ -211,12 +241,18 @@ function loadScenarioByName(name) {
 }
 function applyParams() {
   if (!currentScenario) return;
+  const oldHistory = sim ? sim.history : null;
   currentScenario.process.K = Number(fields.k.value); currentScenario.process.T = Number(fields.t.value); currentScenario.process.L = Number(fields.l.value);
   currentScenario.controller.kp = Number(fields.kp.value); currentScenario.controller.ti = Number(fields.ti.value); currentScenario.controller.td = Number(fields.td.value);
   currentScenario.runtime.setpoint = Number(fields.sp.value); currentScenario.controller.outputLimits.min = Number(fields.umin.value); currentScenario.controller.outputLimits.max = Number(fields.umax.value);
   currentScenario.controller.mode = fields.mode.value; currentScenario.disturbance.noiseStd = Number(fields.noise.value); currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
+  if (!currentScenario.controller.hysteresis) currentScenario.controller.hysteresis = {};
+  currentScenario.controller.hysteresis.lower = Number(fields.hysteresLower.value);
+  currentScenario.controller.hysteresis.upper = Number(fields.hysteresUpper.value);
   sim = new Simulation(currentScenario, 42);
-  appendLog("Parametrar applicerade."); updateStatus(); drawChart();
+  if (oldHistory && oldHistory.t.length > 0) { sim.history = oldHistory; sim.stepNo = oldHistory.t.length / sim.dt; appendLog("Parametrar applicerade. Grafen behålls."); } 
+  else { appendLog("Parametrar applicerade."); }
+  updateStatus(); drawChart();
 }
 function loadPath(name) { currentPath = LEARNING_PATHS[name]; currentPathStep = -1; learnBody.textContent = "Laddad lärstig: " + currentPath.title + "\nKlicka Nästa steg."; }
 function nextPathStep() {
@@ -243,6 +279,8 @@ document.getElementById("run10").addEventListener("click", () => { if (!sim) ret
 document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; sim.triggerPulse(); appendLog("Puls triggad."); });
 document.getElementById("reset").addEventListener("click", () => { if (!sim) return; sim.reset(); appendLog("Återställd."); updateStatus(); drawChart(); });
 document.getElementById("applyParams").addEventListener("click", applyParams);
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("Graf nollställd."); updateStatus(); drawChart(); });
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("System återställt."); updateStatus(); drawChart(); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
 window.addEventListener("resize", drawChart);
