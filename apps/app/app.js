@@ -57,14 +57,14 @@ class OnOffController {
 }
 
 class PIDController {
-  constructor(cfg = {}, dt = 1) { this.kp = cfg.kp || 0; this.ti = cfg.ti || 0; this.td = cfg.td || 0; this.dt = dt; this.integral = 0; this.prevPv = 0; this.mode = "pid"; }
+  constructor(cfg = {}, dt = 1) { this.kp = cfg.kp || 0; this.ti = cfg.ti || 0; this.td = cfg.td || 0; this.dt = dt; this.integral = 0; this.prevPv = 0; this.mode = "pid"; this.bias = cfg.bias || 0; }
   reset() { this.integral = 0; this.prevPv = 0; }
   step(sp, pv, limits, antiWindup) {
     const error = sp - pv;
     const integralCandidate = this.integral + error * this.dt;
     const derivative = (pv - this.prevPv) / this.dt;
     const iTerm = this.ti > 1e-9 ? integralCandidate / this.ti : 0;
-    const raw = this.kp * (error + iTerm - this.td * derivative);
+    const raw = this.bias + this.kp * (error + iTerm - this.td * derivative);
     const u = Math.max(limits.min, Math.min(limits.max, raw));
     // Only update integral if not in P-only mode
     if (this.mode !== "p") {
@@ -136,6 +136,7 @@ class Simulation {
       this.pid.kp = this.scenario.controller.kp || 0;
       this.pid.ti = this.scenario.controller.ti || 0;
       this.pid.td = this.scenario.controller.td || 0;
+      this.pid.bias = this.scenario.controller.bias || 0;
       ctrl = this.pid.step(sp, pv, limits, this.scenario.controller.antiWindup !== false);
     }
     let disturbance = 0;
@@ -255,19 +256,49 @@ function loadScenarioByName(name) {
   updateStatus(); drawChart();
 }
 function applyParams() {
-  if (!currentScenario) return;
-  const oldHistory = sim ? sim.history : null;
+  if (!currentScenario || !sim) return;
+  const prevMode = currentScenario.controller.mode;
+  const prevState = sim.getState();
+  const nextMode = fields.mode.value;
   currentScenario.process.K = Number(fields.k.value); currentScenario.process.T = Number(fields.t.value); currentScenario.process.L = Number(fields.l.value);
   currentScenario.controller.kp = Number(fields.kp.value); currentScenario.controller.ti = Number(fields.ti.value); currentScenario.controller.td = Number(fields.td.value);
   currentScenario.controller.manualOutput = Number(fields.manualOutput.value);
   currentScenario.runtime.setpoint = Number(fields.sp.value); currentScenario.controller.outputLimits.min = Number(fields.umin.value); currentScenario.controller.outputLimits.max = Number(fields.umax.value);
-  currentScenario.controller.mode = fields.mode.value; currentScenario.disturbance.noiseStd = Number(fields.noise.value); currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
+  currentScenario.controller.mode = nextMode; currentScenario.disturbance.noiseStd = Number(fields.noise.value); currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
   if (!currentScenario.controller.hysteresis) currentScenario.controller.hysteresis = {};
   currentScenario.controller.hysteresis.lower = Number(fields.hysteresLower.value);
   currentScenario.controller.hysteresis.upper = Number(fields.hysteresUpper.value);
-  sim = new Simulation(currentScenario, 42);
-  if (oldHistory && oldHistory.t.length > 0) { sim.history = oldHistory; sim.stepNo = oldHistory.t.length / sim.dt; appendLog("Parametrar applicerade. Grafen behålls."); } 
-  else { appendLog("Parametrar applicerade."); }
+
+  // Bumpless transfer: behåll aktuell utsignal vid lägesbyte till P.
+  if (nextMode === "p") {
+    const kp = currentScenario.controller.kp || 0;
+    const e = prevState ? prevState.e : 0;
+    const u = prevState ? prevState.u : 0;
+    const bias = u - kp * e;
+    currentScenario.controller.bias = Number.isFinite(bias) ? bias : 0;
+  }
+
+  if (prevMode !== "manual" && nextMode === "manual" && prevState) {
+    currentScenario.controller.manualOutput = prevState.u;
+    fields.manualOutput.value = prevState.u.toFixed(2);
+  }
+
+  // Uppdatera aktiv simulering utan att nollställa interna tillstånd.
+  sim.scenario = currentScenario;
+  sim.process.cfg = currentScenario.process;
+  const delayLen = Math.max(1, Math.ceil(currentScenario.process.L / sim.dt));
+  if (sim.process.delay.length !== delayLen) {
+    const fillValue = sim.process.delay.length ? sim.process.delay[sim.process.delay.length - 1] : (prevState ? prevState.u : 0);
+    sim.process.delay = new Array(delayLen).fill(fillValue);
+  }
+  sim.pid.kp = currentScenario.controller.kp || 0;
+  sim.pid.ti = currentScenario.controller.ti || 0;
+  sim.pid.td = currentScenario.controller.td || 0;
+  sim.pid.bias = currentScenario.controller.bias || 0;
+  sim.pid.mode = nextMode;
+  sim.onoff.low = currentScenario.controller.hysteresis?.lower ?? sim.onoff.low;
+  sim.onoff.high = currentScenario.controller.hysteresis?.upper ?? sim.onoff.high;
+  appendLog("Parametrar applicerade utan omstart (bumpless övergång aktiv).");
   updateControllerUIState();
   updateStatus(); drawChart();
 }

@@ -94,4 +94,4 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Iakttagelse: Vid val av manuellt läge bör man kunna sätta utsignalen antar jag, och ingen reglering ska ske? Det finns ingen inmatningsruta för utsignal när man väljer manuellt läge.
 ### Konsekvens:
 ### Förslag / nästa tanke:
-### Status: Implementerad - Nytt fält "Manuell u" finns och aktiveras endast i Manuell-läge. Värdet används direkt som utsignal utan PID-beräkning.
+### Status: Implementerad - Nytt fält "Manuell u" finns och aktiveras endast i Manuell-läge. Värdet används direkt som utsignal utan PID-beräkning. Lägesbyte PID->P använder nu bumpless övergång så u inte hoppar till 0 vid nästa steg.
