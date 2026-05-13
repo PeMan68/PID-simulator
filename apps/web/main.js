@@ -123,6 +123,13 @@ function drawChart() {
   ctx.fillText("100", pad.left - 8, yScaleTop(100) + 4);
   ctx.fillText("0", pad.left - 8, yScaleTop(0) + 4);
 
+  // Y-axel etiketter för u (nedre grafen)
+  const uScaleTop = h * 0.68;
+  const uScaleBottom = h - pad.bottom;
+  const uRangeHeight = uScaleBottom - uScaleTop;
+  ctx.fillText("100", pad.left - 8, uScaleTop + (1 - 100 / (uMax - uMin || 1)) * uRangeHeight + 4);
+  ctx.fillText("0", pad.left - 8, uScaleTop + (1 - 0 / (uMax - uMin || 1)) * uRangeHeight + 4);
+
   // Visar hystersgränser om on/off reglering
   if (sim.scenario.controller.mode === "onoff") {
     const sp_current = sp[sp.length - 1] ?? sim.scenario.runtime.setpoint;
@@ -151,7 +158,7 @@ function drawChart() {
   ctx.font = "12px Segoe UI";
   ctx.textAlign = "left";
   ctx.fillText("PV/SP", 12, 24);
-  ctx.fillText("MO", 20, h * 0.68 + 16);
+  ctx.fillText("u", 20, h * 0.68 + 28);
   ctx.textAlign = "right";
   ctx.fillText("Tid", w - 34, h - 8);
 
