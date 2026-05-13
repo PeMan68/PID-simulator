@@ -45,6 +45,7 @@ export class PIDController {
     this.dt = dt;
     this.integral = 0;
     this.prevPv = 0;
+    this.mode = "pid"; // Track current control mode
   }
 
   reset() {
@@ -61,15 +62,18 @@ export class PIDController {
     const raw = this.kp * (error + iTerm - this.td * derivative);
     const u = Math.max(umin, Math.min(umax, raw));
 
-    if (!antiWindup) {
-      this.integral = integralCandidate;
-    } else {
-      const canIntegrate =
-        (u === umin && error > 0) ||
-        (u === umax && error < 0) ||
-        (u > umin && u < umax);
-      if (canIntegrate) {
+    // Only update integral if not in P-only mode
+    if (this.mode !== "p") {
+      if (!antiWindup) {
         this.integral = integralCandidate;
+      } else {
+        const canIntegrate =
+          (u === umin && error > 0) ||
+          (u === umax && error < 0) ||
+          (u > umin && u < umax);
+        if (canIntegrate) {
+          this.integral = integralCandidate;
+        }
       }
     }
 
@@ -81,8 +85,8 @@ export class PIDController {
       integral: this.integral,
       derivative,
       pTerm: this.kp * error,
-      iTerm: this.ti > 1e-9 ? (this.kp / this.ti) * this.integral : 0,
-      dTerm: -this.kp * this.td * derivative
+      iTerm: (this.mode === "p" || this.mode === "onoff" || this.mode === "manual") ? 0 : (this.ti > 1e-9 ? (this.kp / this.ti) * this.integral : 0),
+      dTerm: (this.mode === "p" || this.mode === "pi" || this.mode === "onoff" || this.mode === "manual") ? 0 : (-this.kp * this.td * derivative)
     };
   }
 }

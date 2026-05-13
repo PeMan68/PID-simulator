@@ -24,9 +24,15 @@ const fieldTd = document.getElementById("td");
 const fieldSp = document.getElementById("sp");
 const fieldUmin = document.getElementById("umin");
 const fieldUmax = document.getElementById("umax");
+const fieldManualOutput = document.getElementById("manualOutput");
 const fieldMode = document.getElementById("mode");
 const fieldNoise = document.getElementById("noise");
 const fieldPulseMag = document.getElementById("pulseMag");
+const fieldHysteresLower = document.getElementById("hysteresLower");
+const fieldHysteresUpper = document.getElementById("hysteresUpper");
+const clearChartBtn = document.getElementById("clearChart");
+const systemResetBtn = document.getElementById("systemReset");
+const stepBackBtn = document.getElementById("stepBack");
 
 let sim = null;
 let currentScenario = null;
@@ -92,33 +98,71 @@ function drawChart() {
   const tMax = Math.max(1, t[t.length - 1] || 1);
 
   const processRange = sim.scenario.process.measurementRange;
-  const yMin = processRange.min;
-  const yMax = processRange.max;
-  const uMin = sim.scenario.controller.outputLimits.min;
-  const uMax = sim.scenario.controller.outputLimits.max;
+  const yMin = Math.min(processRange.min, 0);
+  const yMax = Math.max(processRange.max, 100);
+  const uViewMin = 0;
+  const uViewMax = 100;
 
   const xScale = val => pad.left + ((val - tMin) / (tMax - tMin)) * (w - pad.left - pad.right);
   const yScaleTop = val => pad.top + (1 - (val - yMin) / (yMax - yMin || 1)) * (h * 0.62 - pad.top);
-  const yScaleBottom = val => h * 0.68 + (1 - (val - uMin) / (uMax - uMin || 1)) * (h - pad.bottom - h * 0.68);
+  const yScaleBottom = val => h * 0.68 + (1 - (val - uViewMin) / (uViewMax - uViewMin || 1)) * (h - pad.bottom - h * 0.68);
 
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, w, h);
 
+  // Rektanglar för grafer
   ctx.strokeStyle = "#d8d8d8";
   ctx.lineWidth = 1;
   ctx.strokeRect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top);
   ctx.strokeRect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
 
+  // Y-axel etiketter för PV/SP
+  ctx.fillStyle = "#666";
+  ctx.font = "11px Segoe UI";
+  ctx.textAlign = "right";
+  ctx.fillText("100", pad.left - 8, yScaleTop(100) + 4);
+  ctx.fillText("0", pad.left - 8, yScaleTop(0) + 4);
+
+  // Y-axel etiketter för u (nedre grafen)
+  ctx.fillText("100", pad.left - 8, h * 0.68 + 4);
+  ctx.fillText("0", pad.left - 8, h - pad.bottom + 4);
+
+  // Visar hystersgränser om on/off reglering
+  if (sim.scenario.controller.mode === "onoff") {
+    const sp_current = sp[sp.length - 1] ?? sim.scenario.runtime.setpoint;
+    const hysteresis = sim.scenario.controller.hysteresis || { lower: 2, upper: 2 };
+    const lowerBound = yScaleTop(sp_current - hysteresis.lower);
+    const upperBound = yScaleTop(sp_current + hysteresis.upper);
+
+    ctx.strokeStyle = "#ff9900";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    
+    ctx.beginPath();
+    ctx.moveTo(pad.left, lowerBound);
+    ctx.lineTo(w - pad.right, lowerBound);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(pad.left, upperBound);
+    ctx.lineTo(w - pad.right, upperBound);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+  }
+
   ctx.fillStyle = "#444";
   ctx.font = "12px Segoe UI";
-  ctx.fillText("PV/SP", 12, 24);
-  ctx.fillText("MO", 20, h * 0.68 + 16);
+  ctx.textAlign = "left";
+  ctx.fillText("PV/SP", pad.left + 6, pad.top + 14);
+  ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
+  ctx.textAlign = "right";
   ctx.fillText("Tid", w - 34, h - 8);
 
   const pvPoints = t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) }));
   const spPoints = t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) }));
-  const uPoints = t.map((tv, i) => ({ x: xScale(tv), y: yScaleBottom(u[i]) }));
+  const uPoints = t.map((tv, i) => ({ x: xScale(tv), y: yScaleBottom(Math.max(0, Math.min(100, u[i]))) }));
 
   drawSeries(ctx, pvPoints, "#1266f1");
   drawSeries(ctx, spPoints, "#d64545", true);
@@ -131,7 +175,10 @@ function updateStatus() {
     return;
   }
   const s = sim.getState();
-  statusEl.textContent = `Status: steg=${s.step}, t=${s.t.toFixed(2)}, y=${s.y.toFixed(3)}, u=${s.u.toFixed(3)}, e=${s.e.toFixed(3)}`;
+  const pidInfo = (s.pTerm !== 0 || s.iTerm !== 0 || s.dTerm !== 0) 
+    ? ` | P=${s.pTerm.toFixed(2)}, I=${s.iTerm.toFixed(2)}, D=${s.dTerm.toFixed(2)}`
+    : "";
+  statusEl.textContent = `Status: steg=${s.step}, t=${s.t.toFixed(2)}, y=${s.y.toFixed(3)}, u=${s.u.toFixed(3)}, e=${s.e.toFixed(3)}${pidInfo}`;
 }
 
 function hydrateFieldsFromScenario(scenario) {
@@ -141,12 +188,15 @@ function hydrateFieldsFromScenario(scenario) {
   fieldKp.value = scenario.controller.kp ?? 0;
   fieldTi.value = scenario.controller.ti ?? 0;
   fieldTd.value = scenario.controller.td ?? 0;
+  fieldManualOutput.value = scenario.controller.manualOutput ?? 0;
   fieldSp.value = scenario.runtime.setpoint;
   fieldUmin.value = scenario.controller.outputLimits.min;
   fieldUmax.value = scenario.controller.outputLimits.max;
   fieldMode.value = scenario.controller.mode;
   fieldNoise.value = scenario.disturbance?.noiseStd ?? 0;
   fieldPulseMag.value = scenario.disturbance?.pulse?.magnitude ?? 0;
+  fieldHysteresLower.value = scenario.controller.hysteresis?.lower ?? 2;
+  fieldHysteresUpper.value = scenario.controller.hysteresis?.upper ?? 2;
 }
 
 async function loadScenario(fileName) {
@@ -160,6 +210,7 @@ async function loadScenario(fileName) {
   logEl.textContent = "";
   appendLog(`Laddat scenario: ${scenario.id}`);
   hydrateFieldsFromScenario(scenario);
+  updateControllerUIState();
   updateStatus();
   drawChart();
 }
@@ -167,16 +218,32 @@ async function loadScenario(fileName) {
 function applyParameterChanges() {
   if (!currentScenario) return;
 
+  // Spara historiken före
+  const oldHistory = sim ? sim.getHistory() : null;
+
   currentScenario.process.K = Number(fieldK.value);
   currentScenario.process.T = Number(fieldT.value);
   currentScenario.process.L = Number(fieldL.value);
   currentScenario.controller.kp = Number(fieldKp.value);
   currentScenario.controller.ti = Number(fieldTi.value);
   currentScenario.controller.td = Number(fieldTd.value);
+  currentScenario.controller.manualOutput = Number(fieldManualOutput.value);
   currentScenario.runtime.setpoint = Number(fieldSp.value);
-  currentScenario.controller.outputLimits.min = Number(fieldUmin.value);
-  currentScenario.controller.outputLimits.max = Number(fieldUmax.value);
+  const rawUmin = Number(fieldUmin.value);
+  const rawUmax = Number(fieldUmax.value);
+  const safeUmin = Math.max(0, Math.min(100, Number.isFinite(rawUmin) ? rawUmin : 0));
+  const safeUmax = Math.max(0, Math.min(100, Number.isFinite(rawUmax) ? rawUmax : 100));
+  currentScenario.controller.outputLimits.min = Math.min(safeUmin, safeUmax);
+  currentScenario.controller.outputLimits.max = Math.max(safeUmin, safeUmax);
+  fieldUmin.value = currentScenario.controller.outputLimits.min;
+  fieldUmax.value = currentScenario.controller.outputLimits.max;
   currentScenario.controller.mode = fieldMode.value;
+  
+  if (!currentScenario.controller.hysteresis) {
+    currentScenario.controller.hysteresis = {};
+  }
+  currentScenario.controller.hysteresis.lower = Number(fieldHysteresLower.value);
+  currentScenario.controller.hysteresis.upper = Number(fieldHysteresUpper.value);
 
   if (!currentScenario.disturbance) currentScenario.disturbance = {};
   currentScenario.disturbance.noiseStd = Number(fieldNoise.value);
@@ -186,9 +253,57 @@ function applyParameterChanges() {
   currentScenario.disturbance.pulse.magnitude = Number(fieldPulseMag.value);
 
   sim = createSimulation(currentScenario, { seed: 42 });
-  appendLog("Parametrar applicerade och simulering omstartad.");
+  
+  // Återställ historiken
+  if (oldHistory && oldHistory.t.length > 0) {
+    sim.history = oldHistory;
+    sim.currentStep = oldHistory.t.length / sim.dt;
+    appendLog("Parametrar applicerade. Grafen behålls.");
+  } else {
+    appendLog("Parametrar applicerade och simulering omstartad.");
+  }
+  
+  updateControllerUIState();
   updateStatus();
   drawChart();
+}
+
+function updateControllerUIState() {
+  const mode = fieldMode.value;
+  const isP = mode === "p";
+  const isPI = mode === "pi";
+  const isManual = mode === "manual";
+  const isOnOff = mode === "onoff";
+  
+  // Enable/disable fields based on mode
+  fieldKp.disabled = isManual || isOnOff;
+  fieldTi.disabled = isP || isManual || isOnOff;
+  fieldTd.disabled = isP || isPI || isManual || isOnOff;
+  fieldManualOutput.disabled = !isManual;
+  
+  // Hide/show field groups
+  const tiField = fieldTi.parentElement;
+  const tdField = fieldTd.parentElement;
+  const manualField = fieldManualOutput.parentElement;
+  tiField.style.opacity = (isP || isManual || isOnOff) ? "0.5" : "1";
+  tiField.style.pointerEvents = (isP || isManual || isOnOff) ? "none" : "auto";
+  tdField.style.opacity = (isP || isPI || isManual || isOnOff) ? "0.5" : "1";
+  tdField.style.pointerEvents = (isP || isPI || isManual || isOnOff) ? "none" : "auto";
+  manualField.style.opacity = isManual ? "1" : "0.5";
+  manualField.style.pointerEvents = isManual ? "auto" : "none";
+  
+  // Update controller parameters based on mode
+  if (currentScenario && currentScenario.controller) {
+    if (isManual) {
+      currentScenario.controller.manualOutput = Number(fieldManualOutput.value);
+    }
+    if (isP || isManual || isOnOff) {
+      currentScenario.controller.ti = 0;
+    }
+    if (isP || isPI || isManual || isOnOff) {
+      currentScenario.controller.td = 0;
+    }
+  }
 }
 
 async function loadLearningPath(fileName) {
@@ -263,6 +378,8 @@ loadBtn.addEventListener("click", async () => {
   }
 });
 
+fieldMode.addEventListener("change", updateControllerUIState);
+
 stepBtn.addEventListener("click", () => {
   if (!ensureSim()) return;
   const frame = sim.step();
@@ -317,6 +434,47 @@ nextStepBtn.addEventListener("click", async () => {
   } catch (err) {
     appendLog(`Fel: ${err.message}`);
   }
+});
+
+clearChartBtn.addEventListener("click", () => {
+  if (!sim) return;
+  sim.history = {
+    t: [],
+    y: [],
+    u: [],
+    e: [],
+    sp: [],
+    i: [],
+    d: [],
+    p: []
+  };
+  sim.currentStep = 0;
+  appendLog("Graf nollställd. Simulering fortsätter från aktuell punkt.");
+  updateStatus();
+  drawChart();
+});
+
+systemResetBtn.addEventListener("click", () => {
+  if (!ensureSim()) return;
+  sim.reset();
+  sim.history = {
+    t: [],
+    y: [],
+    u: [],
+    e: [],
+    sp: [],
+    i: [],
+    d: [],
+    p: []
+  };
+  sim.currentStep = 0;
+  appendLog("System återställt till utgångspunkt.");
+  updateStatus();
+  drawChart();
+});
+
+stepBackBtn.addEventListener("click", () => {
+  appendLog("Stega tillbaka är inte ännu implementerat. Ladda scenario på nytt för att börja om.");
 });
 
 loadScenario(scenarioFiles[0]).catch(err => appendLog(`Fel vid autoload: ${err.message}`));

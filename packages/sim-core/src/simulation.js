@@ -28,7 +28,13 @@ export class Simulation {
     this.rng = seededRandom(seed);
 
     this.process = new ProcessModel({ ...scenario.process, dt: this.dt });
-    this.onoff = new OnOffController(scenario.controller.onoff || {});
+    const onoffConfig = scenario.controller.onoff || {};
+    const hysteresisConfig = scenario.controller.hysteresis || {};
+    this.onoff = new OnOffController({
+      hysteresisType: onoffConfig.hysteresisType,
+      low: hysteresisConfig.lower ?? onoffConfig.low ?? 2,
+      high: hysteresisConfig.upper ?? onoffConfig.high ?? 2
+    });
     this.pid = new PIDController({
       kp: scenario.controller.kp || 0,
       ti: scenario.controller.ti || 0,
@@ -87,10 +93,17 @@ export class Simulation {
       return { u, error: setpoint - pv, integral: 0, derivative: 0, pTerm: 0 };
     }
 
+    // Set controller mode for proper I and D term calculations
+    this.pid.mode = mode;
+
+    // For P-only mode: disable I and D terms completely
     if (mode === "p") {
       this.pid.ti = 0;
       this.pid.td = 0;
+      this.pid.integral = 0;
+      this.pid.prevPv = pv;
     } else if (mode === "pi") {
+      // For PI mode: disable D term
       this.pid.td = 0;
     }
 
@@ -146,7 +159,7 @@ export class Simulation {
     this.history.e.push(ctrl.error);
     this.history.sp.push(setpoint);
     this.history.i.push(ctrl.integral);
-    this.history.d.push(ctrl.derivative);
+    this.history.d.push(ctrl.dTerm);
     this.history.p.push(ctrl.pTerm);
 
     return {
@@ -177,7 +190,10 @@ export class Simulation {
       y: this.history.y[idx],
       u: this.history.u[idx],
       sp: this.history.sp[idx],
-      e: this.history.e[idx]
+      e: this.history.e[idx],
+      pTerm: this.history.p[idx] ?? 0,
+      iTerm: this.history.i[idx] ?? 0,
+      dTerm: this.history.d[idx] ?? 0
     };
   }
 

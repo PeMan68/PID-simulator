@@ -1,13 +1,15 @@
-# web app (next)
+# Web App (PAUSAD - Framtida utveckling)
 
-Detta ar den nya webappen som byggs fran grunden.
+⚠️ **Status**: Denna appversion är pausad. Fokus ligger på huvudversionen i `apps/app/` för överskådlig framtid.
 
-## Prioriteringsordning
+Den nya webappen byggdes från grunden och planerades att bli en utökad version med innehållsdrivna övningar och progressionsmoduler. Koden bevaras för framtida återupptagande.
+
+## Planerad arkitektur (ej aktiv)
 1. Fri simulator
-2. Innehallsdrivna ovningar
+2. Innehållsdrivna övningar
 3. Progression/spelmoduler
 
-## Integration
-- Lastar scenarios fran content/scenarios
-- Anvander sim-core som enda simuleringsmotor
-- Renderar teori och ovningar fran content/
+## Integrationsplan (ej aktiv)
+- Lastar scenarios från content/scenarios
+- Använder sim-core som enda simuleringsmotor
+- Renderar teori och övningar från content/

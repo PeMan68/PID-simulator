@@ -57,14 +57,14 @@ class OnOffController {
 }
 
 class PIDController {
-  constructor(cfg = {}, dt = 1) { this.kp = cfg.kp || 0; this.ti = cfg.ti || 0; this.td = cfg.td || 0; this.dt = dt; this.integral = 0; this.prevPv = 0; this.mode = "pid"; }
+  constructor(cfg = {}, dt = 1) { this.kp = cfg.kp || 0; this.ti = cfg.ti || 0; this.td = cfg.td || 0; this.dt = dt; this.integral = 0; this.prevPv = 0; this.mode = "pid"; this.bias = cfg.bias || 0; }
   reset() { this.integral = 0; this.prevPv = 0; }
   step(sp, pv, limits, antiWindup) {
     const error = sp - pv;
     const integralCandidate = this.integral + error * this.dt;
     const derivative = (pv - this.prevPv) / this.dt;
     const iTerm = this.ti > 1e-9 ? integralCandidate / this.ti : 0;
-    const raw = this.kp * (error + iTerm - this.td * derivative);
+    const raw = this.bias + this.kp * (error + iTerm - this.td * derivative);
     const u = Math.max(limits.min, Math.min(limits.max, raw));
     // Only update integral if not in P-only mode
     if (this.mode !== "p") {
@@ -136,6 +136,7 @@ class Simulation {
       this.pid.kp = this.scenario.controller.kp || 0;
       this.pid.ti = this.scenario.controller.ti || 0;
       this.pid.td = this.scenario.controller.td || 0;
+      this.pid.bias = this.scenario.controller.bias || 0;
       ctrl = this.pid.step(sp, pv, limits, this.scenario.controller.antiWindup !== false);
     }
     let disturbance = 0;
@@ -162,6 +163,7 @@ const fields = {
   k: document.getElementById("k"), t: document.getElementById("t"), l: document.getElementById("l"),
   kp: document.getElementById("kp"), ti: document.getElementById("ti"), td: document.getElementById("td"),
   sp: document.getElementById("sp"), umin: document.getElementById("umin"), umax: document.getElementById("umax"),
+  manualOutput: document.getElementById("manualOutput"),
   mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"),
   hysteresLower: document.getElementById("hysteresLower"), hysteresUpper: document.getElementById("hysteresUpper")
 };
@@ -190,10 +192,10 @@ function drawChart() {
   const tMax = Math.max(1, t[t.length - 1] || 1);
   const yMin = Math.min(sim.scenario.process.measurementRange.min, 0);
   const yMax = Math.max(sim.scenario.process.measurementRange.max, 100);
-  const uMin = sim.scenario.controller.outputLimits.min, uMax = sim.scenario.controller.outputLimits.max;
+  const uViewMin = 0, uViewMax = 100;
   const xScale = v => pad.left + (v / tMax) * (w - pad.left - pad.right);
   const yScaleTop = v => pad.top + (1 - (v - yMin) / (yMax - yMin || 1)) * (h * 0.62 - pad.top);
-  const yScaleBot = v => h * 0.68 + (1 - (v - uMin) / (uMax - uMin || 1)) * (h - pad.bottom - h * 0.68);
+  const yScaleBot = v => h * 0.68 + (1 - (v - uViewMin) / (uViewMax - uViewMin || 1)) * (h - pad.bottom - h * 0.68);
   ctx.clearRect(0, 0, w, h); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = "#d8d8d8"; ctx.strokeRect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top); ctx.strokeRect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
   
@@ -203,11 +205,8 @@ function drawChart() {
   ctx.fillText("0", pad.left - 8, yScaleTop(0) + 4);
   
   // Y-axel etiketter för u (nedre grafen)
-  const uScaleTop = h * 0.68;
-  const uScaleBot = h - pad.bottom;
-  const uRangeHeight = uScaleBot - uScaleTop;
-  ctx.fillText("100", pad.left - 8, uScaleTop + (1 - 100 / (uMax - uMin || 1)) * uRangeHeight + 4);
-  ctx.fillText("0", pad.left - 8, uScaleTop + (1 - 0 / (uMax - uMin || 1)) * uRangeHeight + 4);
+  ctx.fillText("100", pad.left - 8, h * 0.68 + 4);
+  ctx.fillText("0", pad.left - 8, h - pad.bottom + 4);
   
   // Hystersgränser för on/off
   if (sim.scenario.controller.mode === "onoff") {
@@ -222,10 +221,11 @@ function drawChart() {
   }
   
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
-  ctx.fillText("PV/SP", 12, 24); ctx.fillText("u", 20, h * 0.68 + 28);
+  ctx.fillText("PV/SP", pad.left + 6, pad.top + 14);
+  ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
-  drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(u[i]) })), "#2f9e44", false);
+  drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(Math.max(0, Math.min(100, u[i]))) })), "#2f9e44", false);
 }
 function updateStatus() {
   if (!sim) { statusEl.textContent = "Status: ej laddad"; return; }
@@ -238,6 +238,7 @@ function updateStatus() {
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;
   fields.kp.value = s.controller.kp || 0; fields.ti.value = s.controller.ti || 0; fields.td.value = s.controller.td || 0;
+  fields.manualOutput.value = s.controller.manualOutput ?? 0;
   fields.sp.value = s.runtime.setpoint; fields.umin.value = s.controller.outputLimits.min; fields.umax.value = s.controller.outputLimits.max;
   fields.mode.value = s.controller.mode; fields.noise.value = s.disturbance.noiseStd || 0; fields.pulseMag.value = s.disturbance.pulse.magnitude || 0;
   fields.hysteresLower.value = s.controller.hysteresis?.lower ?? 2;
@@ -252,18 +253,57 @@ function loadScenarioByName(name) {
   updateStatus(); drawChart();
 }
 function applyParams() {
-  if (!currentScenario) return;
-  const oldHistory = sim ? sim.history : null;
+  if (!currentScenario || !sim) return;
+  const prevMode = currentScenario.controller.mode;
+  const prevState = sim.getState();
+  const nextMode = fields.mode.value;
   currentScenario.process.K = Number(fields.k.value); currentScenario.process.T = Number(fields.t.value); currentScenario.process.L = Number(fields.l.value);
   currentScenario.controller.kp = Number(fields.kp.value); currentScenario.controller.ti = Number(fields.ti.value); currentScenario.controller.td = Number(fields.td.value);
-  currentScenario.runtime.setpoint = Number(fields.sp.value); currentScenario.controller.outputLimits.min = Number(fields.umin.value); currentScenario.controller.outputLimits.max = Number(fields.umax.value);
-  currentScenario.controller.mode = fields.mode.value; currentScenario.disturbance.noiseStd = Number(fields.noise.value); currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
+  currentScenario.controller.manualOutput = Number(fields.manualOutput.value);
+  currentScenario.runtime.setpoint = Number(fields.sp.value);
+  const rawUmin = Number(fields.umin.value);
+  const rawUmax = Number(fields.umax.value);
+  const safeUmin = Math.max(0, Math.min(100, Number.isFinite(rawUmin) ? rawUmin : 0));
+  const safeUmax = Math.max(0, Math.min(100, Number.isFinite(rawUmax) ? rawUmax : 100));
+  currentScenario.controller.outputLimits.min = Math.min(safeUmin, safeUmax);
+  currentScenario.controller.outputLimits.max = Math.max(safeUmin, safeUmax);
+  fields.umin.value = currentScenario.controller.outputLimits.min;
+  fields.umax.value = currentScenario.controller.outputLimits.max;
+  currentScenario.controller.mode = nextMode; currentScenario.disturbance.noiseStd = Number(fields.noise.value); currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
   if (!currentScenario.controller.hysteresis) currentScenario.controller.hysteresis = {};
   currentScenario.controller.hysteresis.lower = Number(fields.hysteresLower.value);
   currentScenario.controller.hysteresis.upper = Number(fields.hysteresUpper.value);
-  sim = new Simulation(currentScenario, 42);
-  if (oldHistory && oldHistory.t.length > 0) { sim.history = oldHistory; sim.stepNo = oldHistory.t.length / sim.dt; appendLog("Parametrar applicerade. Grafen behålls."); } 
-  else { appendLog("Parametrar applicerade."); }
+
+  // Bumpless transfer: behåll aktuell utsignal vid lägesbyte till P.
+  if (nextMode === "p") {
+    const kp = currentScenario.controller.kp || 0;
+    const e = prevState ? prevState.e : 0;
+    const u = prevState ? prevState.u : 0;
+    const bias = u - kp * e;
+    currentScenario.controller.bias = Number.isFinite(bias) ? bias : 0;
+  }
+
+  if (prevMode !== "manual" && nextMode === "manual" && prevState) {
+    currentScenario.controller.manualOutput = prevState.u;
+    fields.manualOutput.value = prevState.u.toFixed(2);
+  }
+
+  // Uppdatera aktiv simulering utan att nollställa interna tillstånd.
+  sim.scenario = currentScenario;
+  sim.process.cfg = currentScenario.process;
+  const delayLen = Math.max(1, Math.ceil(currentScenario.process.L / sim.dt));
+  if (sim.process.delay.length !== delayLen) {
+    const fillValue = sim.process.delay.length ? sim.process.delay[sim.process.delay.length - 1] : (prevState ? prevState.u : 0);
+    sim.process.delay = new Array(delayLen).fill(fillValue);
+  }
+  sim.pid.kp = currentScenario.controller.kp || 0;
+  sim.pid.ti = currentScenario.controller.ti || 0;
+  sim.pid.td = currentScenario.controller.td || 0;
+  sim.pid.bias = currentScenario.controller.bias || 0;
+  sim.pid.mode = nextMode;
+  sim.onoff.low = currentScenario.controller.hysteresis?.lower ?? sim.onoff.low;
+  sim.onoff.high = currentScenario.controller.hysteresis?.upper ?? sim.onoff.high;
+  appendLog("Parametrar applicerade utan omstart (bumpless övergång aktiv).");
   updateControllerUIState();
   updateStatus(); drawChart();
 }
@@ -279,21 +319,30 @@ function updateControllerUIState() {
   fields.kp.disabled = isManual || isOnOff;
   fields.ti.disabled = isP || isManual || isOnOff;
   fields.td.disabled = isP || isPI || isManual || isOnOff;
+  fields.manualOutput.disabled = !isManual;
   
   // Hide/show field groups
   const tiField = fields.ti.parentElement;
   const tdField = fields.td.parentElement;
+  const manualField = fields.manualOutput.parentElement;
   tiField.style.opacity = (isP || isManual || isOnOff) ? "0.5" : "1";
   tiField.style.pointerEvents = (isP || isManual || isOnOff) ? "none" : "auto";
   tdField.style.opacity = (isP || isPI || isManual || isOnOff) ? "0.5" : "1";
   tdField.style.pointerEvents = (isP || isPI || isManual || isOnOff) ? "none" : "auto";
+  manualField.style.opacity = isManual ? "1" : "0.5";
+  manualField.style.pointerEvents = isManual ? "auto" : "none";
   
   // Update controller parameters based on mode
-  if (isP || isManual || isOnOff) {
-    scenario.controller.ti = 0;
-  }
-  if (isP || isPI || isManual || isOnOff) {
-    scenario.controller.td = 0;
+  if (currentScenario && currentScenario.controller) {
+    if (isManual) {
+      currentScenario.controller.manualOutput = Number(fields.manualOutput.value);
+    }
+    if (isP || isManual || isOnOff) {
+      currentScenario.controller.ti = 0;
+    }
+    if (isP || isPI || isManual || isOnOff) {
+      currentScenario.controller.td = 0;
+    }
   }
 }
 function loadPath(name) { currentPath = LEARNING_PATHS[name]; currentPathStep = -1; learnBody.textContent = "Laddad lärstig: " + currentPath.title + "\nKlicka Nästa steg."; }
