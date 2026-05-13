@@ -28,7 +28,13 @@ export class Simulation {
     this.rng = seededRandom(seed);
 
     this.process = new ProcessModel({ ...scenario.process, dt: this.dt });
-    this.onoff = new OnOffController(scenario.controller.onoff || {});
+    const onoffConfig = scenario.controller.onoff || {};
+    const hysteresisConfig = scenario.controller.hysteresis || {};
+    this.onoff = new OnOffController({
+      hysteresisType: onoffConfig.hysteresisType,
+      low: hysteresisConfig.lower ?? onoffConfig.low ?? 2,
+      high: hysteresisConfig.upper ?? onoffConfig.high ?? 2
+    });
     this.pid = new PIDController({
       kp: scenario.controller.kp || 0,
       ti: scenario.controller.ti || 0,
@@ -177,7 +183,10 @@ export class Simulation {
       y: this.history.y[idx],
       u: this.history.u[idx],
       sp: this.history.sp[idx],
-      e: this.history.e[idx]
+      e: this.history.e[idx],
+      pTerm: this.history.p[idx] ?? 0,
+      iTerm: this.history.i[idx] ?? 0,
+      dTerm: this.history.d[idx] ?? 0
     };
   }
 
