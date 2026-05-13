@@ -38,3 +38,24 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Konsekvens:
 ### Förslag / nästa tanke:
 ### Status: Noterad
+
+### Datum: 2026-05-13
+### Del av webbappen: PID parametrar/graf
+### Iakttagelse: Vid ändring av parmetrar och "Applicera" nollställs graf. Det skainte vara så, grafen ska fortsätta plotta. En knapp "Rensa graf" bör istället läggas till. En annan knapp kan vara "Återställ system" så allt börjar om från utgångsläget.
+### Konsekvens:
+### Förslag / nästa tanke:
+### Status: Noterad
+
+### Datum: 2026-05-13
+### Del av webbappen: graf
+### Iakttagelse: GRaferna bör ha en enkel skalering 0-100 på Y-axlarna.
+### Konsekvens:
+### Förslag / nästa tanke:
+### Status: Noterad
+
+### Datum: 2026-05-13
+### Del av webbappen: on/off reglering
+### Iakttagelse: Inställning av hysteres saknas och applicering av dem. hysteres ska vara 2 separata inställningar övre och undre och ska beräknas korrekt i regleringen. grafen ska visa hystersgränserna med streckade linjer i annan färg
+### Konsekvens:
+### Förslag / nästa tanke:
+### Status: Noterad
