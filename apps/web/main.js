@@ -281,6 +281,14 @@ function updateControllerUIState() {
   tiField.style.pointerEvents = (isP || isManual || isOnOff) ? "none" : "auto";
   tdField.style.opacity = (isP || isPI || isManual || isOnOff) ? "0.5" : "1";
   tdField.style.pointerEvents = (isP || isPI || isManual || isOnOff) ? "none" : "auto";
+  
+  // Update controller parameters based on mode
+  if (isP || isManual || isOnOff) {
+    scenario.controller.ti = 0;
+  }
+  if (isP || isPI || isManual || isOnOff) {
+    scenario.controller.td = 0;
+  }
 }
 }
 
