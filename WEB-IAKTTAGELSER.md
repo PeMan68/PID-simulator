@@ -100,5 +100,5 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Del av webbappen: PID-beräkning (P-läge / Kp-uppdatering)
 ### Iakttagelse: Vid ändring av Kp i P-läge och klick på "Applicera parametrar" blir u inte proportionell mot aktuellt fel (u != e*Kp). Efter "Återställ system" kvarstår samma effekt i nästa steg. Exempel: Kp=1, e ca 14, men u ca 24.
 ### Konsekvens: Användaren får intrycket att Kp inte uppdateras korrekt, och P-regleringens pedagogiska tydlighet försämras eftersom u inte följer enkel P-logik.
-### Förslag / nästa tanke: Separera "bumpless transfer" från ren P-beräkning. I P-läge bör bias nollställas vid reset och vid explicit parameterapplicering i samma läge, alternativt göras valbar via en tydlig toggle ("Bumpless aktiv").
-### Status: Analyserad - Trolig rotorsak är att bias-termen ligger kvar i P-läge (u = bias + Kp*e) och återanvänds efter Kp-ändring/reset, vilket gör att u inte blir ren e*Kp.
+### Förslag / nästa tanke: Separera "bumpless transfer" från ren P-beräkning. Lösning: låt bias fasas ut linjärt över 5 steg så att övergången blir mjuk men går tillbaka till ren reglering. Lägg dessutom till val av bumpless transfer (På/Av) så man pedagogiskt kan se skillnaden mellan mjuk övergång och ren P-logik.
+### Status: Analyserad - Trolig rotorsak är att bias-termen ligger kvar i P-läge (u = bias + Kp*e) och återanvänds efter Kp-ändring/reset, vilket gör att u inte blir ren e*Kp. Rekommenderad åtgärd är linjär utfasning av bias över 5 steg när bumpless är aktiv.
