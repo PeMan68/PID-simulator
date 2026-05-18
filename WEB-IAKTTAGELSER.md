@@ -95,3 +95,10 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Konsekvens:
 ### Förslag / nästa tanke:
 ### Status: Implementerad - Nytt fält "Manuell u" finns och aktiveras endast i Manuell-läge. Värdet används direkt som utsignal utan PID-beräkning. Lägesbyte PID->P använder nu bumpless övergång så u inte hoppar till 0 vid nästa steg.
+
+### Datum: 2026-05-18
+### Del av webbappen: PID-beräkning (P-läge / Kp-uppdatering)
+### Iakttagelse: Vid ändring av Kp i P-läge och klick på "Applicera parametrar" blir u inte proportionell mot aktuellt fel (u != e*Kp). Efter "Återställ system" kvarstår samma effekt i nästa steg. Exempel: Kp=1, e ca 14, men u ca 24.
+### Konsekvens: Användaren får intrycket att Kp inte uppdateras korrekt, och P-regleringens pedagogiska tydlighet försämras eftersom u inte följer enkel P-logik.
+### Förslag / nästa tanke: Separera "bumpless transfer" från ren P-beräkning. I P-läge bör bias nollställas vid reset och vid explicit parameterapplicering i samma läge, alternativt göras valbar via en tydlig toggle ("Bumpless aktiv").
+### Status: Analyserad - Trolig rotorsak är att bias-termen ligger kvar i P-läge (u = bias + Kp*e) och återanvänds efter Kp-ändring/reset, vilket gör att u inte blir ren e*Kp.
