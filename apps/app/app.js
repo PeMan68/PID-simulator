@@ -265,7 +265,10 @@ function syncParamsFromUI() {
   const prevMode = currentScenario.controller.mode;
   const prevState = sim.getState();
   const nextMode = fields.mode.value;
-  currentScenario.process.K = Number(fields.k.value); currentScenario.process.T = Number(fields.t.value); currentScenario.process.L = Number(fields.l.value);
+  currentScenario.process.K = Number(fields.k.value);
+  currentScenario.process.T = Math.max(1, Number(fields.t.value));
+  if (Number(fields.t.value) < 1) fields.t.value = currentScenario.process.T;
+  currentScenario.process.L = Number(fields.l.value);
   const noTi = nextMode === "p" || nextMode === "manual" || nextMode === "onoff";
   const noTd = nextMode === "p" || nextMode === "pi" || nextMode === "manual" || nextMode === "onoff";
   currentScenario.controller.kp = Number(fields.kp.value);
