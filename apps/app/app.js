@@ -84,17 +84,25 @@ class PIDController {
 class ProcessModel {
   constructor(cfg, dt) {
     this.cfg = cfg;
+    this.dt = dt;
     this.y = cfg.normalValue;
-    this.delay = new Array(Math.max(1, Math.ceil(cfg.L / dt))).fill(0);
+    this.delay = cfg.L > 0 ? new Array(Math.max(1, Math.ceil(cfg.L / dt))).fill(0) : [];
   }
-  reset() { this.y = this.cfg.normalValue; this.delay.fill(0); }
+  reset() { this.y = this.cfg.normalValue; if (this.delay.length > 0) this.delay.fill(0); }
   step(u, dt, disturbance) {
-    this.delay.push(u);
-    const ud = this.delay.shift();
-    const T = this.cfg.T > 1e-9 ? this.cfg.T : 1e-9;
-    if (this.cfg.type === "integrating") this.y += ((this.cfg.K * ud) * dt) / T;
-    else if (this.cfg.type === "unstable") this.y += ((this.y - this.cfg.normalValue + this.cfg.K * ud) * dt) / T;
-    else this.y += ((-(this.y - this.cfg.normalValue) + this.cfg.K * ud) * dt) / T;
+    let ud;
+    if (this.delay.length > 0) { this.delay.push(u); ud = this.delay.shift(); }
+    else { ud = u; }
+    const T = this.cfg.T;
+    if (T <= 1e-9) {
+      // T=0: statisk förstärkning, ingen dynamik — output följer input direkt
+      if (this.cfg.type === "integrating") this.y += this.cfg.K * ud * dt;
+      else this.y = this.cfg.normalValue + this.cfg.K * ud;
+    } else {
+      if (this.cfg.type === "integrating") this.y += ((this.cfg.K * ud) * dt) / T;
+      else if (this.cfg.type === "unstable") this.y += ((this.y - this.cfg.normalValue + this.cfg.K * ud) * dt) / T;
+      else this.y += ((-(this.y - this.cfg.normalValue) + this.cfg.K * ud) * dt) / T;
+    }
     this.y += disturbance;
     return this.y;
   }
@@ -307,10 +315,10 @@ function syncParamsFromUI() {
 
   sim.scenario = currentScenario;
   sim.process.cfg = currentScenario.process;
-  const delayLen = Math.max(1, Math.ceil(currentScenario.process.L / sim.dt));
+  const delayLen = currentScenario.process.L > 0 ? Math.max(1, Math.ceil(currentScenario.process.L / sim.dt)) : 0;
   if (sim.process.delay.length !== delayLen) {
     const fillValue = sim.process.delay.length ? sim.process.delay[sim.process.delay.length - 1] : (prevState ? prevState.u : 0);
-    sim.process.delay = new Array(delayLen).fill(fillValue);
+    sim.process.delay = delayLen > 0 ? new Array(delayLen).fill(fillValue) : [];
   }
   sim.pid.kp = currentScenario.controller.kp || 0;
   sim.pid.ti = currentScenario.controller.ti || 0;
