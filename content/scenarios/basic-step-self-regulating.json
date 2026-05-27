@@ -19,7 +19,7 @@
   },
   "controller": {
     "mode": "pid",
-    "kp": 2.0,
+    "kp": 1.2,
     "ti": 10.0,
     "td": 1.0,
     "antiWindup": true,

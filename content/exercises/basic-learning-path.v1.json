@@ -7,7 +7,7 @@
       "type": "theory",
       "ref": "pid-intro.v1.json",
       "title": "Teori: Vad gör en regulator?",
-      "objective": "Förstå relationen mellan PV, SP och MO."
+      "objective": "Förstå relationen mellan PV, SP och u."
     },
     {
       "type": "scenario",

@@ -121,7 +121,7 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Förslag / nästa tanke:
   1. **Ny lärstig: "Processens begränsningar"** — Steg 1: visa vad K, T, L betyder fysikaliskt. Steg 2: experimentera med K för att se hur y_max förändras. Steg 3: sätt SP > y_max och observera att u fastnar vid 100 %. Steg 4: öka K tills SP är nåbar. Steg 5: diskutera vad som händer i en riktig anläggning (ventil för stor/liten, pump för svag).
   2. **Varning i statusraden** när SP > y_max, t.ex. "⚠ SP ouppnåeligt (y_max=50.0)". Beräknas som normalValue + K × outputLimits.max.
-### Status: Noterad — två konkreta åtgärder föreslagna (ny lärstig + statusvarning)
+### Status: Noterad — två konkreta åtgärder föreslagna (ny lärstig + statusvarning) 
 
 ---
 

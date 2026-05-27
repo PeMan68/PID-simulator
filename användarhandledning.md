@@ -233,7 +233,7 @@ Styr hur data visas i graferna.
 Visar realtidsberäkningar av regulatorns komponenter.
 
 **Innehåll:**
-- Aktuella värden: PV, SP, MO
+- Aktuella värden: PV, SP, u
 - Reglerfel (e)
 - P-del, I-del, D-del (när tillämpligt)
 - OnOff-status (när OnOff aktiv)
@@ -308,7 +308,7 @@ Tre delgrafer visar simuleringsresultat.
 - X-axel: Tid i sekunder
 - Y-axel: Processenhet eller procent
 
-### Graf 2: Utsignal (MO)
+### Graf 2: Utsignal (u)
 - Graf: Beräknad och faktiskt utsignal
 - Y-axel: Procent (0-100%)
 
@@ -361,7 +361,7 @@ Knappar längst ned till höger.
 
 **Spara data:**
 - Exporterar simuleringsdata som CSV-fil
-- Kolumner: Tid, PV, SP, MO, Fel, I_värde, D_värde
+- Kolumner: Tid, PV, SP, u, Fel, I_värde, D_värde
 
 ![Export](media/användarhandledning/Pasted%20image%2020260305131200.png)
 
@@ -375,7 +375,7 @@ Knappar längst ned till höger.
 |--------|-----------|
 | PV | Processvärde |
 | SP | Börvärde |
-| MO | Utsignal |
+| u | Utsignal |
 | Kp | Proportionalförstärkning |
 | Ti | Integreringstid |
 | Td | Deriveringstid |

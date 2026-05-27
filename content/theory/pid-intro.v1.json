@@ -6,7 +6,7 @@
   "bullets": [
     "PV är processvärdet som mäts.",
     "SP är börvärdet som vi vill nå.",
-    "MO är regulatorns utsignal till processen.",
+    "u är regulatorns utsignal till processen.",
     "P-delen reagerar på aktuellt fel.",
     "I-delen tar bort stationärt fel över tid.",
     "D-delen dämpar snabba förändringar."
