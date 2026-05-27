@@ -621,12 +621,19 @@ function updateScoreDisplay() {
   if (testMode && currentPath) { el.style.display = ""; txt.textContent = pathScore.correct + "/" + pathScore.total; }
   else { el.style.display = "none"; }
 }
+function updateNavButtons() {
+  const prev = document.getElementById("prevStep");
+  const next = document.getElementById("nextStep");
+  prev.style.display = testMode ? "none" : "";
+  prev.disabled = !currentPath || currentPathStep <= 0;
+  if (!testMode) next.disabled = false;
+}
 function loadPath(name) {
   currentPath = LEARNING_PATHS[name];
   currentPathStep = -1;
   pathScore = { correct: 0, total: 0 };
   checkpointAnswered = false;
-  document.getElementById("nextStep").disabled = false;
+  updateNavButtons();
   updateScoreDisplay();
   learnBody.innerHTML = "<em>" + currentPath.title + "</em><br><small>" + (currentPath.description || "") + "</small><br><br>Klicka <strong>Nästa »</strong> för att börja.";
 }
@@ -662,6 +669,7 @@ function renderStep(step) {
   } else {
     document.getElementById("nextStep").disabled = false;
   }
+  updateNavButtons();
 }
 function handleQuizAnswer(btn, checkpoint) {
   if (checkpointAnswered) return;
@@ -685,6 +693,15 @@ function handleQuizAnswer(btn, checkpoint) {
     fb.className = "quiz-feedback wrong";
     updateScoreDisplay();
   }
+}
+function prevPathStep() {
+  if (!currentPath || currentPathStep <= 0) return;
+  currentPathStep -= 1;
+  const step = currentPath.steps[currentPathStep];
+  if (step.type === "scenario" || step.type === "observe") {
+    if (SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
+  }
+  renderStep(step);
 }
 function nextPathStep() {
   if (!currentPath) { learnBody.innerHTML = "Ingen lärstig laddad."; return; }
@@ -777,6 +794,7 @@ function setTestMode(on) {
   document.getElementById("modeGuided").classList.toggle("active", !on);
   document.getElementById("modeTest").classList.toggle("active", on);
   updateScoreDisplay();
+  updateNavButtons();
   if (currentPath && currentPathStep >= 0) renderStep(currentPath.steps[currentPathStep]);
 }
 document.getElementById("modeGuided").addEventListener("click", () => setTestMode(false));
@@ -791,6 +809,7 @@ document.getElementById("reset").addEventListener("click", () => { if (!sim) ret
 document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("Graf nollställd."); updateStatus(); drawChart(); });
 document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("System återställt."); updateStatus(); drawChart(); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
+document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
 window.addEventListener("resize", drawChart);
 

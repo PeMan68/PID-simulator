@@ -288,7 +288,7 @@
     }
 
     /* ── Disabled next button ── */
-    #nextStep:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+    #nextStep:disabled, #prevStep:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
     /* ── Step rendering ── */
     .step-header { font-weight: 700; font-size: 13px; color: var(--ink); margin-bottom: 4px; }
@@ -375,7 +375,10 @@
           <button id="modeTest" class="mode-btn">Test</button>
         </div>
         <div id="scoreDisplay" style="display:none" class="score-display">Poäng: <strong id="scoreText">0/0</strong></div>
-        <button id="nextStep">Nästa »</button>
+        <div class="row">
+          <button id="prevStep">« Föreg.</button>
+          <button id="nextStep">Nästa »</button>
+        </div>
         <div id="learnBody">Ingen lärstig laddad.</div>
       </div>
     </div>
