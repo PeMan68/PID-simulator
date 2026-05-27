@@ -57,8 +57,8 @@ class OnOffController {
 }
 
 class PIDController {
-  constructor(cfg = {}, dt = 1) { this.kp = cfg.kp || 0; this.ti = cfg.ti || 0; this.td = cfg.td || 0; this.dt = dt; this.integral = 0; this.prevPv = 0; this.mode = "pid"; this.bias = cfg.bias || 0; }
-  reset() { this.integral = 0; this.prevPv = 0; }
+  constructor(cfg = {}, dt = 1) { this.kp = cfg.kp || 0; this.ti = cfg.ti || 0; this.td = cfg.td || 0; this.dt = dt; this.integral = 0; this.prevPv = 0; this.mode = "pid"; this.bias = cfg.bias || 0; this.biasFadeSteps = 0; this.biasFadePerStep = 0; }
+  reset() { this.integral = 0; this.prevPv = 0; this.bias = 0; this.biasFadeSteps = 0; this.biasFadePerStep = 0; }
   step(sp, pv, limits, antiWindup) {
     const error = sp - pv;
     const integralCandidate = this.integral + error * this.dt;
@@ -136,7 +136,13 @@ class Simulation {
       this.pid.kp = this.scenario.controller.kp || 0;
       this.pid.ti = this.scenario.controller.ti || 0;
       this.pid.td = this.scenario.controller.td || 0;
-      this.pid.bias = this.scenario.controller.bias || 0;
+      if (this.pid.biasFadeSteps > 0) {
+        this.pid.bias -= this.pid.biasFadePerStep;
+        this.pid.biasFadeSteps--;
+        if (this.pid.biasFadeSteps === 0) { this.pid.bias = 0; this.scenario.controller.bias = 0; }
+      } else {
+        this.pid.bias = this.scenario.controller.bias || 0;
+      }
       ctrl = this.pid.step(sp, pv, limits, this.scenario.controller.antiWindup !== false);
     }
     let disturbance = 0;
@@ -149,7 +155,7 @@ class Simulation {
     return { t: t, y: y, u: ctrl.u, e: ctrl.error };
   }
   run(n) { const frames = []; for (let i = 0; i < n; i += 1) { const f = this.step(); if (!f) break; frames.push(f); } return frames; }
-  getState() { const i = this.history.t.length - 1; return { step: this.stepNo, t: this.history.t[i], y: this.history.y[i], u: this.history.u[i], e: this.history.e[i], pTerm: this.history.p[i] || 0, iTerm: this.history.i[i] || 0, dTerm: this.history.d[i] || 0 }; }
+  getState() { const i = this.history.t.length - 1; if (i < 0) return { step: 0, t: 0, y: 0, u: 0, e: 0, pTerm: 0, iTerm: 0, dTerm: 0 }; return { step: this.stepNo, t: this.history.t[i], y: this.history.y[i], u: this.history.u[i], e: this.history.e[i], pTerm: this.history.p[i] || 0, iTerm: this.history.i[i] || 0, dTerm: this.history.d[i] || 0 }; }
 }
 
 const scenarioSelect = document.getElementById("scenario");
@@ -274,13 +280,19 @@ function applyParams() {
   currentScenario.controller.hysteresis.lower = Number(fields.hysteresLower.value);
   currentScenario.controller.hysteresis.upper = Number(fields.hysteresUpper.value);
 
-  // Bumpless transfer: behåll aktuell utsignal vid lägesbyte till P.
-  if (nextMode === "p") {
+  // Bumpless transfer: beräkna bias bara vid faktiskt lägesbyte till P.
+  const bumplessOn = document.getElementById("bumpless").checked;
+  if (prevMode !== "p" && nextMode === "p" && bumplessOn && prevState) {
     const kp = currentScenario.controller.kp || 0;
-    const e = prevState ? prevState.e : 0;
-    const u = prevState ? prevState.u : 0;
-    const bias = u - kp * e;
+    const bias = prevState.u - kp * prevState.e;
     currentScenario.controller.bias = Number.isFinite(bias) ? bias : 0;
+    const fadeSteps = 5;
+    sim.pid.biasFadeSteps = fadeSteps;
+    sim.pid.biasFadePerStep = currentScenario.controller.bias / fadeSteps;
+  } else if (nextMode === "p") {
+    currentScenario.controller.bias = 0;
+    sim.pid.biasFadeSteps = 0;
+    sim.pid.biasFadePerStep = 0;
   }
 
   if (prevMode !== "manual" && nextMode === "manual" && prevState) {
