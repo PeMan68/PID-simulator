@@ -265,27 +265,34 @@ function syncParamsFromUI() {
   const prevMode = currentScenario.controller.mode;
   const prevState = sim.getState();
   const nextMode = fields.mode.value;
-  currentScenario.process.K = Number(fields.k.value);
-  currentScenario.process.T = Math.max(1, Number(fields.t.value));
-  if (Number(fields.t.value) < 1) fields.t.value = currentScenario.process.T;
-  currentScenario.process.L = Number(fields.l.value);
+  function clamp(val, min, max) { return Math.max(min, max !== undefined ? Math.min(max, val) : val); }
+  function readClamped(field, min, max) {
+    const v = clamp(Number(field.value), min, max);
+    if (Number(field.value) !== v) field.value = v;
+    return v;
+  }
+  currentScenario.process.K = readClamped(fields.k, 0.1);
+  currentScenario.process.T = readClamped(fields.t, 1);
+  currentScenario.process.L = readClamped(fields.l, 0);
   const noTi = nextMode === "p" || nextMode === "manual" || nextMode === "onoff";
   const noTd = nextMode === "p" || nextMode === "pi" || nextMode === "manual" || nextMode === "onoff";
-  currentScenario.controller.kp = Number(fields.kp.value);
-  currentScenario.controller.ti = noTi ? 0 : Number(fields.ti.value);
-  currentScenario.controller.td = noTd ? 0 : Number(fields.td.value);
-  currentScenario.controller.manualOutput = Number(fields.manualOutput.value);
-  currentScenario.runtime.setpoint = Number(fields.sp.value);
-  const rawUmin = Number(fields.umin.value);
-  const rawUmax = Number(fields.umax.value);
-  const safeUmin = Math.max(0, Math.min(100, Number.isFinite(rawUmin) ? rawUmin : 0));
-  const safeUmax = Math.max(0, Math.min(100, Number.isFinite(rawUmax) ? rawUmax : 100));
+  currentScenario.controller.kp = readClamped(fields.kp, 0.1);
+  currentScenario.controller.ti = noTi ? 0 : readClamped(fields.ti, 0);
+  currentScenario.controller.td = noTd ? 0 : readClamped(fields.td, 0);
+  currentScenario.controller.manualOutput = readClamped(fields.manualOutput, 0, 100);
+  currentScenario.runtime.setpoint = readClamped(fields.sp, 0, 100);
+  const safeUmin = clamp(Number(fields.umin.value), 0, 100);
+  const safeUmax = clamp(Number(fields.umax.value), 0, 100);
   currentScenario.controller.outputLimits.min = Math.min(safeUmin, safeUmax);
   currentScenario.controller.outputLimits.max = Math.max(safeUmin, safeUmax);
-  currentScenario.controller.mode = nextMode; currentScenario.disturbance.noiseStd = Number(fields.noise.value); currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
+  fields.umin.value = currentScenario.controller.outputLimits.min;
+  fields.umax.value = currentScenario.controller.outputLimits.max;
+  currentScenario.controller.mode = nextMode;
+  currentScenario.disturbance.noiseStd = readClamped(fields.noise, 0);
+  currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
   if (!currentScenario.controller.hysteresis) currentScenario.controller.hysteresis = {};
-  currentScenario.controller.hysteresis.lower = Number(fields.hysteresLower.value);
-  currentScenario.controller.hysteresis.upper = Number(fields.hysteresUpper.value);
+  currentScenario.controller.hysteresis.lower = readClamped(fields.hysteresLower, 0);
+  currentScenario.controller.hysteresis.upper = readClamped(fields.hysteresUpper, 0);
 
   if (prevMode !== nextMode) {
     const bumplessOn = document.getElementById("bumpless").checked;
