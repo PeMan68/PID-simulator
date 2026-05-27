@@ -456,18 +456,55 @@ function nextPathStep() {
 Object.keys(SCENARIOS).forEach(name => { const o = document.createElement("option"); o.value = name; o.textContent = name; scenarioSelect.appendChild(o); });
 Object.keys(LEARNING_PATHS).forEach(name => { const o = document.createElement("option"); o.value = name; o.textContent = name; learningPathSelect.appendChild(o); });
 
+// ── Sidebar resize ──
+function makeResizable(handleId, sidebarId, side, storageKey) {
+  const handle = document.getElementById(handleId);
+  const sidebar = document.getElementById(sidebarId);
+  const saved = localStorage.getItem(storageKey);
+  if (saved && !sidebar.classList.contains("collapsed")) sidebar.style.width = saved + "px";
+  handle.addEventListener("mousedown", e => {
+    if (sidebar.classList.contains("collapsed")) return;
+    const startX = e.clientX;
+    const startW = sidebar.getBoundingClientRect().width;
+    handle.classList.add("dragging");
+    document.body.style.userSelect = "none";
+    const onMove = e => {
+      const dx = side === "left" ? e.clientX - startX : startX - e.clientX;
+      const w = Math.max(180, Math.min(520, startW + dx));
+      sidebar.style.width = w + "px";
+    };
+    const onUp = () => {
+      handle.classList.remove("dragging");
+      document.body.style.userSelect = "";
+      localStorage.setItem(storageKey, parseInt(sidebar.style.width, 10));
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  });
+}
+makeResizable("resizeLeft", "sidebarLeft", "left", "pid-sb-left-w");
+makeResizable("resizeRight", "sidebarRight", "right", "pid-sb-right-w");
+
 // ── Sidebar toggles ──
 document.getElementById("toggleLeft").addEventListener("click", () => {
   const sb = document.getElementById("sidebarLeft");
   const btn = document.getElementById("toggleLeft");
+  const handle = document.getElementById("resizeLeft");
   sb.classList.toggle("collapsed");
-  btn.textContent = sb.classList.contains("collapsed") ? "»" : "«";
+  const collapsed = sb.classList.contains("collapsed");
+  btn.textContent = collapsed ? "»" : "«";
+  handle.style.display = collapsed ? "none" : "";
 });
 document.getElementById("toggleRight").addEventListener("click", () => {
   const sb = document.getElementById("sidebarRight");
   const btn = document.getElementById("toggleRight");
+  const handle = document.getElementById("resizeRight");
   sb.classList.toggle("collapsed");
-  btn.textContent = sb.classList.contains("collapsed") ? "«" : "»";
+  const collapsed = sb.classList.contains("collapsed");
+  btn.textContent = collapsed ? "«" : "»";
+  handle.style.display = collapsed ? "none" : "";
 });
 
 // ── Help buttons ──

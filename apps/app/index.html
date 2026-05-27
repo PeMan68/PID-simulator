@@ -15,8 +15,8 @@
       --accent: #e07a2f;
       --accent-2: #2f7a8f;
       --shadow: rgba(35, 47, 58, 0.2);
-      --sb-left-w: 240px;
-      --sb-right-w: 270px;
+      --sb-left-w: 280px;
+      --sb-right-w: 290px;
       --sb-toggle-w: 28px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -77,14 +77,32 @@
     .sidebar-toggle:hover { background: var(--accent); color: #fff; }
 
     /* ── Left sidebar ── */
-    .sidebar-left { width: var(--sb-left-w); border-right: 2px solid var(--line); }
+    .sidebar-left { width: var(--sb-left-w); }
     .sidebar-left.collapsed { width: var(--sb-toggle-w); }
     .sidebar-left .sidebar-toggle { order: 2; border-left: 1px solid var(--line); }
 
     /* ── Right sidebar ── */
-    .sidebar-right { width: var(--sb-right-w); border-left: 2px solid var(--line); box-shadow: -2px 0 8px var(--shadow); }
+    .sidebar-right { width: var(--sb-right-w); box-shadow: -2px 0 8px var(--shadow); }
     .sidebar-right.collapsed { width: var(--sb-toggle-w); }
     .sidebar-right .sidebar-toggle { order: -1; border-right: 1px solid var(--line); }
+
+    /* ── Resize handles ── */
+    .resize-handle {
+      flex-shrink: 0;
+      width: 5px;
+      cursor: col-resize;
+      background: var(--line);
+      transition: background 150ms;
+      position: relative;
+      z-index: 5;
+    }
+    .resize-handle::after {
+      content: "";
+      position: absolute;
+      top: 0; bottom: 0;
+      left: -4px; right: -4px;
+    }
+    .resize-handle:hover, .resize-handle.dragging { background: var(--accent); }
 
     /* ── Sidebar content ── */
     .sidebar-title {
@@ -181,23 +199,25 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 15px;
-      height: 15px;
+      width: 13px;
+      height: 13px;
       padding: 0;
-      font-size: 9px;
+      font-size: 8px;
       font-weight: 700;
       border-radius: 50%;
-      background: var(--accent-2);
-      color: #fff;
-      border: none;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--muted);
       box-shadow: none;
       cursor: pointer;
       vertical-align: middle;
-      margin-left: 2px;
-      transition: background 120ms;
+      margin-left: 3px;
+      opacity: 0;
+      transition: opacity 150ms, background 120ms, color 120ms, border-color 120ms;
       flex-shrink: 0;
     }
-    .help-btn:hover { background: var(--accent); transform: none; box-shadow: none; }
+    .field:hover .help-btn { opacity: 0.6; }
+    .help-btn:hover { opacity: 1 !important; background: var(--accent-2); color: #fff; border-color: var(--accent-2); transform: none; box-shadow: none; }
 
     /* ── Parameter grid ── */
     .grid {
@@ -299,6 +319,8 @@
     <button class="sidebar-toggle" id="toggleLeft" title="Dölj/visa sidebar">«</button>
   </aside>
 
+  <div class="resize-handle" id="resizeLeft"></div>
+
   <!-- ══ MAIN CONTENT ══ -->
   <main class="main-content">
     <div class="row">
@@ -395,6 +417,8 @@
 
     <div id="log"></div>
   </main>
+
+  <div class="resize-handle" id="resizeRight"></div>
 
   <!-- ══ RIGHT SIDEBAR ══ -->
   <aside class="sidebar sidebar-right" id="sidebarRight">
