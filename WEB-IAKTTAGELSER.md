@@ -101,4 +101,13 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Iakttagelse: Vid ändring av Kp i P-läge och klick på "Applicera parametrar" blir u inte proportionell mot aktuellt fel (u != e*Kp). Efter "Återställ system" kvarstår samma effekt i nästa steg. Exempel: Kp=1, e ca 14, men u ca 24.
 ### Konsekvens: Användaren får intrycket att Kp inte uppdateras korrekt, och P-regleringens pedagogiska tydlighet försämras eftersom u inte följer enkel P-logik.
 ### Förslag / nästa tanke: Separera "bumpless transfer" från ren P-beräkning. Lösning: låt bias fasas ut linjärt över 5 steg så att övergången blir mjuk men går tillbaka till ren reglering. Lägg dessutom till val av bumpless transfer (På/Av) så man pedagogiskt kan se skillnaden mellan mjuk övergång och ren P-logik.
-### Status: Analyserad - Trolig rotorsak är att bias-termen ligger kvar i P-läge (u = bias + Kp*e) och återanvänds efter Kp-ändring/reset, vilket gör att u inte blir ren e*Kp. Rekommenderad åtgärd är linjär utfasning av bias över 5 steg när bumpless är aktiv.
+### Status: Implementerad - bias fasas ut linjärt över 5 steg. Bumpless checkbox (på/av) tillagd.
+
+---
+
+### Datum: 2026-05-27
+### Del av webbappen: Layout / navigationsstruktur
+### Iakttagelse: Scenario-väljaren och Lärstig-väljaren ligger idag inline i huvudflödet. Det skulle vara tydligare om de flyttades till en vänsterpanel/sidebar, separerade från parameterkontrollen. Det skulle ge mer plats till grafen och göra det lättare att byta scenario/lärstig utan att blanda ihop med PID-parametrar.
+### Konsekvens: Nuvarande layout känns tätt packat när alla kontroller visas samtidigt. Scenario och lärstig har en annan karaktär (övergripande val) jämfört med parametrarna (detaljjustering).
+### Förslag / nästa tanke: Lägg till en vänstersidebar (kollapsbar) med Scenario-sektion och Lärstig-sektion. Parametrar och graf förblir i höger/mitten-sektionen. Responsiv design: sidebar kollapsas automatiskt på mobil.
+### Status: Noterad
