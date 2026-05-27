@@ -41,6 +41,73 @@ const LEARNING_PATHS = {
   }
 };
 
+const HELP_CONTENT = {
+  k: {
+    title: "K — Processförstärkning",
+    body: "Bestämmer hur mycket processen påverkas av utsignalen.\n\nK=0.5 och u=100 ger y_max = 50 (vid normalValue=0). Vill du nå SP=80 krävs K≥0.8.\n\nJämförelse: K är som motorns effekt — en svag motor (lågt K) når aldrig höga hastigheter oavsett hur mycket gas du ger."
+  },
+  t: {
+    title: "T — Tidskonstant",
+    body: "Hur snabbt processen svarar på förändringar. T=10 innebär att processen når ~63% av sitt slutvärde efter 10 tidssteg.\n\nLägre T → snabbare process.\nHögre T → trögare process.\n\nMinimum: T=1 (numerisk stabilitet)."
+  },
+  l: {
+    title: "L — Dötid (Dead time)",
+    body: "Fördröjning innan processens svar ens börjar. Under dötiden ser regulatorn ingen effekt alls av utsignalen.\n\nL=0 → omedelbar respons.\nL=5 → 5 steg passerar utan reaktion.\n\nDötid gör reglering svårare — Kp bör minskas vid stor L."
+  },
+  kp: {
+    title: "Kp — Proportionalförstärkning",
+    body: "Regulatorns direkta reaktion på felet (SP − PV).\n\nu_P = Kp × e\n\nHög Kp → snabb reaktion, risk för oscillation.\nLåg Kp → långsam men stabil respons.\n\nI P-läge (utan I-del) ger Kp alltid ett kvarstående fel om processen inte är perfekt matchad."
+  },
+  ti: {
+    title: "Ti — Integreringstid",
+    body: "Hur snabbt integratorn eliminerar kvarstående fel.\n\nu_I = (Kp / Ti) × ∫e dt\n\nLågt Ti → snabb integrering, risk för oscillation.\nHögt Ti → långsam, stabil eliminering.\nTi=0 → ingen I-verkan (P-läge).\n\nObs: Integratorn kan \"vinda upp\" (windup) om utsignalen är mättad länge."
+  },
+  td: {
+    title: "Td — Deriveringstid",
+    body: "Reglering baserad på hur snabbt PV förändras.\n\nu_D = −Kp × Td × (dPV/dt)\n\nFörutser framtida fel och motverkar svängningar.\n\nNackdel: Känslig för mätbrus — ett brusigt PV ger ryckig utsignal.\nTd=0 → ingen D-verkan (PI-läge)."
+  },
+  sp: {
+    title: "SP — Börvärde (Setpoint)",
+    body: "Det värde som processen ska regleras till.\n\nMåste vara inom mätområdet 0–100.\n\nObs: Om SP > normalValue + K × u_max kan processen aldrig nå börvärdet — regulatorn kör mot 100% men y fastnar under SP."
+  },
+  umin: {
+    title: "U min — Lägsta tillåtna utsignal",
+    body: "Begränsar regulatorns utsignal underifrån (0–100).\n\nAnvänds för säkerhet, t.ex.:\n• Pump ska aldrig vara helt stängd (U min=10)\n• Ventil ska alltid ha ett grundflöde\n\nDefault: 0"
+  },
+  umax: {
+    title: "U max — Högsta tillåtna utsignal",
+    body: "Begränsar regulatorns utsignal uppifrån (0–100).\n\nMaximalt uppnåeligt processvärde:\ny_max = normalValue + K × U max\n\nDefault: 100"
+  },
+  mode: {
+    title: "Regulatorläge",
+    body: "OnOff: Ut är antingen u_min eller u_max.\nIngen mellannivå. Svänger runt SP.\n\nP: u = Kp × e\nSnabbt men ger alltid kvarstående fel.\n\nPI: u = Kp(e + ∫e/Ti)\nEliminerar kvarstående fel.\n\nPID: Lägger till dämpning via D-del.\nBäst prestanda men känslig för brus.\n\nManuell: Du sätter u direkt.\nAnvändbart för testning och nödsituationer."
+  },
+  bumpless: {
+    title: "Bumpless övergång",
+    body: "Mjuk övergång vid lägesbyte.\n\nPÅ: Bias fasas ut linjärt över 5 steg — u hoppar inte bryskt.\n\nAV: Ren Kp×e direkt vid lägesbyte. Pedagogiskt för att se vad som händer utan utjämning.\n\nTips: Testa att byta PID→P med och utan för att se skillnaden."
+  },
+  manualOutput: {
+    title: "Manuell u",
+    body: "Utsignal i Manuellt läge (0–100%).\n\nRegulatorn är frånkopplad — du styr utsignalen direkt. PID-beräkning körs inte.\n\nAnvändbart för:\n• Testa processens svar direkt\n• Nödsituationer\n• Bumpless transfer: värdet sätts automatiskt till föregående u vid bytet till Manuell."
+  },
+  noise: {
+    title: "Brus std — Brusstörning",
+    body: "Standardavvikelse för normalfördelat mätbrus som läggs till PV varje steg.\n\nBrus=0 → perfekt mätning.\nBrus=2 → PV varierar ±2 runt sitt sanna värde.\n\nVisar tydligt D-delens brus-känslighet: hög Td + högt brus → ryckig utsignal."
+  },
+  pulseMag: {
+    title: "Puls mag — Pulsstörning",
+    body: "Storleken på störningen som triggas med knappen 'Trigga puls'.\n\nPositiv → kortvarig ökning av PV (t.ex. tillflöde öppnas).\nNegativ → kortvarig minskning.\n\nBra för att testa hur regulatorn reagerar på störningar."
+  },
+  hysteresLower: {
+    title: "Hysterese låg (OnOff)",
+    body: "Undre hysteresgräns för OnOff-regulatorn.\n\nRegulatorn slår PÅ (u_max) när:\nPV < SP − hysteres_låg\n\nBredare hysteres → färre switchningar men sämre precision.\nSmalare hysteres → fler switchningar, bättre precision."
+  },
+  hysteresUpper: {
+    title: "Hysterese hög (OnOff)",
+    body: "Övre hysteresgräns för OnOff-regulatorn.\n\nRegulatorn slår AV (u_min) när:\nPV > SP + hysteres_hög\n\nAsymmetrisk hysteres (låg ≠ hög) ger ett reglervärde som inte är exakt SP."
+  }
+};
+
 function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
 
 class OnOffController {
@@ -388,6 +455,34 @@ function nextPathStep() {
 
 Object.keys(SCENARIOS).forEach(name => { const o = document.createElement("option"); o.value = name; o.textContent = name; scenarioSelect.appendChild(o); });
 Object.keys(LEARNING_PATHS).forEach(name => { const o = document.createElement("option"); o.value = name; o.textContent = name; learningPathSelect.appendChild(o); });
+
+// ── Sidebar toggles ──
+document.getElementById("toggleLeft").addEventListener("click", () => {
+  const sb = document.getElementById("sidebarLeft");
+  const btn = document.getElementById("toggleLeft");
+  sb.classList.toggle("collapsed");
+  btn.textContent = sb.classList.contains("collapsed") ? "»" : "«";
+});
+document.getElementById("toggleRight").addEventListener("click", () => {
+  const sb = document.getElementById("sidebarRight");
+  const btn = document.getElementById("toggleRight");
+  sb.classList.toggle("collapsed");
+  btn.textContent = sb.classList.contains("collapsed") ? "«" : "»";
+});
+
+// ── Help buttons ──
+document.querySelectorAll(".help-btn").forEach(btn => {
+  btn.addEventListener("click", e => {
+    e.preventDefault();
+    const h = HELP_CONTENT[btn.dataset.help];
+    if (!h) return;
+    document.getElementById("infoTitle").textContent = h.title;
+    document.getElementById("infoBody").textContent = h.body;
+    const sb = document.getElementById("sidebarRight");
+    const toggle = document.getElementById("toggleRight");
+    if (sb.classList.contains("collapsed")) { sb.classList.remove("collapsed"); toggle.textContent = "»"; }
+  });
+});
 
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
 document.getElementById("mode").addEventListener("change", updateControllerUIState);
