@@ -258,13 +258,17 @@ function loadScenarioByName(name) {
   updateControllerUIState();
   updateStatus(); drawChart();
 }
-function applyParams() {
+function syncParamsFromUI() {
   if (!currentScenario || !sim) return;
   const prevMode = currentScenario.controller.mode;
   const prevState = sim.getState();
   const nextMode = fields.mode.value;
   currentScenario.process.K = Number(fields.k.value); currentScenario.process.T = Number(fields.t.value); currentScenario.process.L = Number(fields.l.value);
-  currentScenario.controller.kp = Number(fields.kp.value); currentScenario.controller.ti = Number(fields.ti.value); currentScenario.controller.td = Number(fields.td.value);
+  const noTi = nextMode === "p" || nextMode === "manual" || nextMode === "onoff";
+  const noTd = nextMode === "p" || nextMode === "pi" || nextMode === "manual" || nextMode === "onoff";
+  currentScenario.controller.kp = Number(fields.kp.value);
+  currentScenario.controller.ti = noTi ? 0 : Number(fields.ti.value);
+  currentScenario.controller.td = noTd ? 0 : Number(fields.td.value);
   currentScenario.controller.manualOutput = Number(fields.manualOutput.value);
   currentScenario.runtime.setpoint = Number(fields.sp.value);
   const rawUmin = Number(fields.umin.value);
@@ -273,34 +277,34 @@ function applyParams() {
   const safeUmax = Math.max(0, Math.min(100, Number.isFinite(rawUmax) ? rawUmax : 100));
   currentScenario.controller.outputLimits.min = Math.min(safeUmin, safeUmax);
   currentScenario.controller.outputLimits.max = Math.max(safeUmin, safeUmax);
-  fields.umin.value = currentScenario.controller.outputLimits.min;
-  fields.umax.value = currentScenario.controller.outputLimits.max;
   currentScenario.controller.mode = nextMode; currentScenario.disturbance.noiseStd = Number(fields.noise.value); currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
   if (!currentScenario.controller.hysteresis) currentScenario.controller.hysteresis = {};
   currentScenario.controller.hysteresis.lower = Number(fields.hysteresLower.value);
   currentScenario.controller.hysteresis.upper = Number(fields.hysteresUpper.value);
 
-  // Bumpless transfer: beräkna bias bara vid faktiskt lägesbyte till P.
-  const bumplessOn = document.getElementById("bumpless").checked;
-  if (prevMode !== "p" && nextMode === "p" && bumplessOn && prevState) {
-    const kp = currentScenario.controller.kp || 0;
-    const bias = prevState.u - kp * prevState.e;
-    currentScenario.controller.bias = Number.isFinite(bias) ? bias : 0;
-    const fadeSteps = 5;
-    sim.pid.biasFadeSteps = fadeSteps;
-    sim.pid.biasFadePerStep = currentScenario.controller.bias / fadeSteps;
-  } else if (nextMode === "p") {
-    currentScenario.controller.bias = 0;
-    sim.pid.biasFadeSteps = 0;
-    sim.pid.biasFadePerStep = 0;
+  if (prevMode !== nextMode) {
+    const bumplessOn = document.getElementById("bumpless").checked;
+    if (["p", "pi", "pid"].includes(nextMode)) {
+      if (bumplessOn && prevState) {
+        const kp = currentScenario.controller.kp || 0;
+        const bias = prevState.u - kp * prevState.e;
+        currentScenario.controller.bias = Number.isFinite(bias) ? bias : 0;
+        sim.pid.bias = currentScenario.controller.bias;
+        sim.pid.biasFadeSteps = 5;
+        sim.pid.biasFadePerStep = currentScenario.controller.bias / 5;
+      } else {
+        currentScenario.controller.bias = 0;
+        sim.pid.bias = 0;
+        sim.pid.biasFadeSteps = 0;
+        sim.pid.biasFadePerStep = 0;
+      }
+    }
+    if (nextMode === "manual" && prevState) {
+      currentScenario.controller.manualOutput = prevState.u;
+      fields.manualOutput.value = prevState.u.toFixed(2);
+    }
   }
 
-  if (prevMode !== "manual" && nextMode === "manual" && prevState) {
-    currentScenario.controller.manualOutput = prevState.u;
-    fields.manualOutput.value = prevState.u.toFixed(2);
-  }
-
-  // Uppdatera aktiv simulering utan att nollställa interna tillstånd.
   sim.scenario = currentScenario;
   sim.process.cfg = currentScenario.process;
   const delayLen = Math.max(1, Math.ceil(currentScenario.process.L / sim.dt));
@@ -311,13 +315,10 @@ function applyParams() {
   sim.pid.kp = currentScenario.controller.kp || 0;
   sim.pid.ti = currentScenario.controller.ti || 0;
   sim.pid.td = currentScenario.controller.td || 0;
-  sim.pid.bias = currentScenario.controller.bias || 0;
+  if (sim.pid.biasFadeSteps === 0) sim.pid.bias = currentScenario.controller.bias || 0;
   sim.pid.mode = nextMode;
   sim.onoff.low = currentScenario.controller.hysteresis?.lower ?? sim.onoff.low;
   sim.onoff.high = currentScenario.controller.hysteresis?.upper ?? sim.onoff.high;
-  appendLog("Parametrar applicerade utan omstart (bumpless övergång aktiv).");
-  updateControllerUIState();
-  updateStatus(); drawChart();
 }
 
 function updateControllerUIState() {
@@ -378,11 +379,10 @@ Object.keys(LEARNING_PATHS).forEach(name => { const o = document.createElement("
 
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
 document.getElementById("mode").addEventListener("change", updateControllerUIState);
-document.getElementById("step").addEventListener("click", () => { if (!sim) return; const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });
-document.getElementById("run10").addEventListener("click", () => { if (!sim) return; const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); });
-document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; sim.triggerPulse(); appendLog("Puls triggad."); });
+document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });
+document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); });
+document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); appendLog("Puls triggad."); });
 document.getElementById("reset").addEventListener("click", () => { if (!sim) return; sim.reset(); appendLog("Återställd."); updateStatus(); drawChart(); });
-document.getElementById("applyParams").addEventListener("click", applyParams);
 document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("Graf nollställd."); updateStatus(); drawChart(); });
 document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("System återställt."); updateStatus(); drawChart(); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
