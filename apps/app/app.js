@@ -84,14 +84,16 @@ class PIDController {
 class ProcessModel {
   constructor(cfg, dt) {
     this.cfg = cfg;
+    this.dt = dt;
     this.y = cfg.normalValue;
-    this.delay = new Array(Math.max(1, Math.ceil(cfg.L / dt))).fill(0);
+    this.delay = cfg.L > 0 ? new Array(Math.max(1, Math.ceil(cfg.L / dt))).fill(0) : [];
   }
-  reset() { this.y = this.cfg.normalValue; this.delay.fill(0); }
+  reset() { this.y = this.cfg.normalValue; if (this.delay.length > 0) this.delay.fill(0); }
   step(u, dt, disturbance) {
-    this.delay.push(u);
-    const ud = this.delay.shift();
-    const T = this.cfg.T > 1e-9 ? this.cfg.T : 1e-9;
+    let ud;
+    if (this.delay.length > 0) { this.delay.push(u); ud = this.delay.shift(); }
+    else { ud = u; }
+    const T = Math.max(1, this.cfg.T);
     if (this.cfg.type === "integrating") this.y += ((this.cfg.K * ud) * dt) / T;
     else if (this.cfg.type === "unstable") this.y += ((this.y - this.cfg.normalValue + this.cfg.K * ud) * dt) / T;
     else this.y += ((-(this.y - this.cfg.normalValue) + this.cfg.K * ud) * dt) / T;
@@ -263,7 +265,10 @@ function syncParamsFromUI() {
   const prevMode = currentScenario.controller.mode;
   const prevState = sim.getState();
   const nextMode = fields.mode.value;
-  currentScenario.process.K = Number(fields.k.value); currentScenario.process.T = Number(fields.t.value); currentScenario.process.L = Number(fields.l.value);
+  currentScenario.process.K = Number(fields.k.value);
+  currentScenario.process.T = Math.max(1, Number(fields.t.value));
+  if (Number(fields.t.value) < 1) fields.t.value = currentScenario.process.T;
+  currentScenario.process.L = Number(fields.l.value);
   const noTi = nextMode === "p" || nextMode === "manual" || nextMode === "onoff";
   const noTd = nextMode === "p" || nextMode === "pi" || nextMode === "manual" || nextMode === "onoff";
   currentScenario.controller.kp = Number(fields.kp.value);
@@ -307,10 +312,10 @@ function syncParamsFromUI() {
 
   sim.scenario = currentScenario;
   sim.process.cfg = currentScenario.process;
-  const delayLen = Math.max(1, Math.ceil(currentScenario.process.L / sim.dt));
+  const delayLen = currentScenario.process.L > 0 ? Math.max(1, Math.ceil(currentScenario.process.L / sim.dt)) : 0;
   if (sim.process.delay.length !== delayLen) {
     const fillValue = sim.process.delay.length ? sim.process.delay[sim.process.delay.length - 1] : (prevState ? prevState.u : 0);
-    sim.process.delay = new Array(delayLen).fill(fillValue);
+    sim.process.delay = delayLen > 0 ? new Array(delayLen).fill(fillValue) : [];
   }
   sim.pid.kp = currentScenario.controller.kp || 0;
   sim.pid.ti = currentScenario.controller.ti || 0;
