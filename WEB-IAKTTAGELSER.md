@@ -122,3 +122,33 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
   1. **Ny lärstig: "Processens begränsningar"** — Steg 1: visa vad K, T, L betyder fysikaliskt. Steg 2: experimentera med K för att se hur y_max förändras. Steg 3: sätt SP > y_max och observera att u fastnar vid 100 %. Steg 4: öka K tills SP är nåbar. Steg 5: diskutera vad som händer i en riktig anläggning (ventil för stor/liten, pump för svag).
   2. **Varning i statusraden** när SP > y_max, t.ex. "⚠ SP ouppnåeligt (y_max=50.0)". Beräknas som normalValue + K × outputLimits.max.
 ### Status: Noterad — två konkreta åtgärder föreslagna (ny lärstig + statusvarning)
+
+---
+
+### Datum: 2026-05-27
+### Del av webbappen: Lärstigar / gamifiering / test-lager
+### Iakttagelse: De befintliga övningsdokumenten (ovningar-grundlaggande.md, ovningar-signalstorningar.md, ovningar-systemoptimering.md) är designade för py-appen men innehåller precis det material som behövs för interaktiva lärstigar i webappen. Varje dokument har redan: steg-för-steg-instruktioner (→ scenario-steg), reflektionsfrågor (→ quiz-steg) och verklighetsexempel (→ teori-steg). Övningarna är naturligt indelade i tre progressionsnivåer som passar tre separata lärstigar.
+
+Idag är lärstigs-systemet passivt: användaren klickar "Nästa steg" utan att behöva visa att de förstått. För att få pedagogisk effekt och gamifiering behövs ett test-lager där svar krävs för att gå vidare.
+### Konsekvens: Utan testfrågor kan studenter klicka igenom hela lärstigen utan att lära sig något. Övningsdokumentens reflektionsfrågor är värdefulla men används inte alls i webappen.
+### Förslag / nästa tanke:
+
+**Arkitektur — tre steg-typer:**
+- `type: "theory"` — finns idag, visar text
+- `type: "scenario"` — finns idag, laddar scenario
+- `type: "quiz"` — NY: visar en flervalsfråga med 3-4 alternativ; "Nästa steg"-knappen är låst tills rätt svar klickas. Fel svar ger feedback ("Inte riktigt — tänk på att...") utan att blockera permanent.
+- `type: "task"` — NY: "Kör simuleringen tills y > 80 inom 30 steg". Appen kontrollerar automatiskt mot simulatorns state och låser upp när villkoret uppfylls.
+
+**Två separata lager:**
+1. **Lärstigar** (nuvarande) — guidad utforskning, öppen, ingen kontroll. Passar intro och demonstration.
+2. **Utmaningar/Test** (nytt lager) — samma progression men med quiz- och task-steg som blockerar. Passar examination och självtest. Kan ha stjärnbetyg (1-3 stjärnor beroende på antal försök).
+
+**Konvertering av övningsdokumenten:**
+- `ovningar-grundlaggande.md` → Lärstig "Grundläggande reglering" (3 delar, ~12 steg)
+- `ovningar-signalstorningar.md` → Lärstig "Störningar och robusthet" (mellannivå)
+- `ovningar-systemoptimering.md` → Lärstig "Optimering" (avancerad)
+
+Reflektionsfrågor i .md-filerna omvandlas till `quiz`-steg med MCQ. Simuleringsuppgifter ("kör tills systemet stabiliseras") omvandlas till `task`-steg med auto-kontroll.
+
+**Gamifieringselement att överväga:** låsta lärstigar (måste klara grundläggande för att låsa upp mellannivå), framstegsvisning (steg X av Y), stjärnbetyg, lokal sparning av framsteg (localStorage).
+### Status: Noterad — kräver arkitekturutvidgning av LEARNING_PATHS-strukturen och ny UI-komponent för quiz/task-steg
