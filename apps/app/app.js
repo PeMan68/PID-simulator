@@ -18,25 +18,199 @@ const SCENARIOS = {
     process: { type: "self_regulating", K: 1.3, T: 15, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
     controller: { mode: "pi", kp: 1.2, ti: 20, td: 0, antiWindup: true, outputLimits: { min: 0, max: 100 } },
     disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
+  },
+  "onoff-basic.json": {
+    id: "onoff-basic", runtime: { dt: 1, maxSteps: 300, setpoint: 50 },
+    process: { type: "self_regulating", K: 1.0, T: 10, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
+    controller: { mode: "onoff", kp: 0, ti: 0, td: 0, antiWindup: false, outputLimits: { min: 0, max: 100 }, hysteresis: { lower: 2, upper: 2 } },
+    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
   }
 };
 
 const THEORY = {
   "pid-intro.v1.json": {
     title: "Introduktion till reglering",
-    summary: "Grundidé: regulatorn justerar utsignalen så att processvärdet når börvärdet.",
-    bullets: ["PV är processvärdet som mäts.", "SP är börvärdet.", "MO är utsignalen.", "P reagerar på fel.", "I tar bort stationärt fel.", "D dämpar snabba förändringar."]
+    summary: "Grundidé: regulatorn justerar utsignalen (u) så att processvärdet (PV) når börvärdet (SP).",
+    bullets: [
+      "PV (Process Value) — det mätta processvärdet, t.ex. temperatur.",
+      "SP (Setpoint) — det önskade värdet som regulatorn strävar mot.",
+      "u (utsignal) — regulatorns kommando till processen, t.ex. ventilöppning 0–100%.",
+      "Felet e = SP − PV — regulatorn försöker alltid driva e mot noll.",
+      "P-delen reagerar omedelbart på aktuellt fel.",
+      "I-delen ackumulerar felet och eliminerar kvarstående avvikelse.",
+      "D-delen bromsar när PV förändras snabbt och minskar överskjutning."
+    ]
+  },
+  "process-basics.v1.json": {
+    title: "Processparametrar: K, T och L",
+    summary: "Tre parametrar bestämmer helt hur en process beter sig och vad regulatorn kan uppnå.",
+    bullets: [
+      "K (processförstärkning) — hur mycket y ändras per enhet u. Maximalt y = normalValue + K × u_max.",
+      "T (tidskonstant) — hur snabbt processen svarar. T=10 → 63 % av slutvärdet nås efter 10 steg.",
+      "L (dötid) — fördröjning innan processen reagerar alls på utsignalen.",
+      "Stor dötid (L/T > 0.3) gör reglering svårt — regulatorn agerar på gammal information.",
+      "Jämförelse: K är motoreffekten, T är hur trög bilen är, L är reaktionstiden."
+    ]
+  },
+  "onoff-theory.v1.json": {
+    title: "On/Off-reglering",
+    summary: "Den enklaste regulatorn: utsignalen är antingen på (u_max) eller av (u_min).",
+    bullets: [
+      "Termostat är ett klassiskt exempel — värmer på eller av beroende på temperatur.",
+      "Hysteres används för att undvika för täta switchningar nära SP.",
+      "Lägre hysteres → bättre precision men fler switchningar.",
+      "Höger hysteres → färre switchningar men mer svängning runt SP.",
+      "On/Off ger alltid oscillation — det finns ingen mellannivå."
+    ]
   }
 };
 
 const LEARNING_PATHS = {
-  "basic-learning-path.v1.json": {
-    title: "Grundstig: teori till simulering",
+  "grundlaggande.v1": {
+    title: "Grundläggande reglering",
+    description: "Från on/off till PID — förstå varje steg i regulatorutvecklingen.",
+    difficulty: "intro",
     steps: [
-      { type: "theory", ref: "pid-intro.v1.json", title: "Teori", objective: "Förstå PV, SP och MO." },
-      { type: "scenario", ref: "basic-step-self-regulating.json", title: "PID-bas", objective: "Se stegsvar i praktiken." },
-      { type: "scenario", ref: "p-step-self-regulating.json", title: "P-reglering", objective: "Observera stationärt fel." },
-      { type: "scenario", ref: "pi-step-self-regulating.json", title: "PI-reglering", objective: "Jämför mot P." }
+      {
+        type: "theory",
+        ref: "pid-intro.v1.json",
+        title: "Vad är reglering?",
+        objective: "Förstå begreppen PV, SP, u och felet e.",
+        checkpoint: {
+          question: "Vad kallas skillnaden mellan börvärde (SP) och processvärde (PV)?",
+          options: ["Utsignalen (u)", "Felet (e)", "Tidskonstanten (T)", "Dötiden (L)"],
+          correct: 1,
+          explanation: "Felet e = SP − PV är grunden i all reglering. Regulatorn försöker alltid driva e mot noll."
+        }
+      },
+      {
+        type: "scenario",
+        ref: "onoff-basic.json",
+        title: "On/Off-reglering",
+        objective: "Observera oscillationen kring SP — on/off kan inte stanna exakt.",
+        instruction: "Kör 40 steg. Notera att PV (blå) oscillerar runt SP (röd streckad). u (grön) växlar bara mellan 0 och 100.",
+        checkpoint: {
+          question: "Varför oscillerar PV ständigt runt SP med on/off-reglering?",
+          options: [
+            "Kp är felaktigt inställt",
+            "On/off har ingen mellannivå — den kan bara välja fullt på eller helt av",
+            "Processen är för snabb",
+            "SP är satt för högt"
+          ],
+          correct: 1,
+          explanation: "On/off kan bara ge u_max eller u_min, aldrig ett mellanvärde. Processen overshoots alltid och regulatorn slår om igen — resultatet är kontinuerlig oscillation."
+        }
+      },
+      {
+        type: "scenario",
+        ref: "p-step-self-regulating.json",
+        title: "P-reglering",
+        objective: "Se att P-reglering stabiliserar men lämnar ett kvarstående fel.",
+        instruction: "Kör 50 steg. PV stabiliserar sig — men når den SP? Notera skillnaden mot on/off.",
+        checkpoint: {
+          question: "Varför når PV inte exakt SP med bara P-reglering?",
+          options: [
+            "Kp är för litet — öka det",
+            "P-regulatorn behöver ett fel (e≠0) för att hålla utsignalen — vid e=0 faller u till noll",
+            "Processen är för trög",
+            "On/off hade fungerat bättre"
+          ],
+          correct: 1,
+          explanation: "u = Kp × e. Om e = 0 ger P-regulatorn u = 0, vilket inte räcker för att hålla processen på SP. Därför kvarstår alltid ett litet fel — det kallas stationärt fel."
+        }
+      },
+      {
+        type: "scenario",
+        ref: "pi-step-self-regulating.json",
+        title: "PI-reglering",
+        objective: "Integratorn eliminerar det stationära felet.",
+        instruction: "Kör 60 steg. Jämför med P-steget — når PV nu SP? Tar det längre tid?",
+        checkpoint: {
+          question: "Vad gör I-delen (integratorn) som P-delen inte klarar?",
+          options: [
+            "Reagerar snabbare på plötsliga störningar",
+            "Ackumulerar felet över tid och driver u tills e = 0",
+            "Minskar oscillationen",
+            "Begränsar utsignalens maximala värde"
+          ],
+          correct: 1,
+          explanation: "Integratorn summerar felet för varje steg. Även ett litet kvarstående fel byggs upp och driver till slut u tillräckligt högt för att hålla y = SP — stationärt fel = 0."
+        }
+      },
+      {
+        type: "scenario",
+        ref: "basic-step-self-regulating.json",
+        title: "PID-reglering",
+        objective: "D-delen dämpar svängningar och snabbar upp insvängningen.",
+        instruction: "Kör 40 steg. Jämför stegsvar med PI — är överskjutningen mindre? Är det snabbare?",
+        checkpoint: {
+          question: "Vad är D-delens huvudsakliga funktion i PID-regulatorn?",
+          options: [
+            "Eliminera stationärt fel",
+            "Reagera på felets förändringshastighet och bromsa svängningar",
+            "Öka regulatorförstärkningen automatiskt",
+            "Minska dötiden i processen"
+          ],
+          correct: 1,
+          explanation: "D-delen beräknar u_D = −Kp × Td × (dPV/dt). Den 'ser' att PV förändras snabbt och bromsar i förväg — som att lyfta foten från gasen innan en kurva."
+        }
+      }
+    ]
+  },
+
+  "processbegransningar.v1": {
+    title: "Processens begränsningar",
+    description: "Vad K, T och L egentligen betyder — och varför regulatorn inte alltid kan nå SP.",
+    difficulty: "intro",
+    steps: [
+      {
+        type: "theory",
+        ref: "process-basics.v1.json",
+        title: "K, T och L",
+        objective: "Förstå de tre processparametrarna fysikaliskt.",
+        checkpoint: {
+          question: "Vad är det maximalt uppnåeliga PV för en process med K=0.5, normalValue=0 och u_max=100?",
+          options: ["100", "50", "0.5", "Beror på regulatorns Kp"],
+          correct: 1,
+          explanation: "y_max = normalValue + K × u_max = 0 + 0.5 × 100 = 50. Ingen regulator kan ta PV förbi detta tak — det är en ren processbegränsning."
+        }
+      },
+      {
+        type: "scenario",
+        ref: "p-step-self-regulating.json",
+        title: "Svag process",
+        objective: "Ändra K till 0.5 och SP till 80 — se att y fastnar vid ~50.",
+        instruction: "1. Ändra K till 0.5 i fältet\n2. Ändra SP till 80\n3. Kör 40 steg\n\nVarifrån: y_max = K × u_max = 0.5 × 100 = 50",
+        checkpoint: {
+          question: "PV fastnar på ~50 trots att u = 100 %. Vad är förklaringen?",
+          options: [
+            "Ti behöver sänkas för att hjälpa integratorn",
+            "Processförstärkning K är för låg — processen är fysikaliskt för svag att nå SP",
+            "Kp behöver ökas kraftigt",
+            "Dötiden L blockerar processen"
+          ],
+          correct: 1,
+          explanation: "Med K=0.5 är y_max = 50. Det spelar ingen roll hur regulatorn är inställd — processen kan inte producera mer. Lösningen i verkligheten: större ventil, starkare pump, eller sänk SP."
+        }
+      },
+      {
+        type: "scenario",
+        ref: "p-step-self-regulating.json",
+        title: "Dötid och regulering",
+        objective: "Sätt L=5 och observera hur regleringen försvåras.",
+        instruction: "1. Återställ K till 1.3 och SP till 60\n2. Ändra L till 5\n3. Kör 60 steg\n\nVad händer med insvängningen?",
+        checkpoint: {
+          question: "Varför försämrar dötid (L) regleringen?",
+          options: [
+            "L minskar processförstärkningen K",
+            "Regulatorn agerar på gammal information — processen svarar L steg senare än väntat",
+            "L ökar tidskonstanten T",
+            "Dötid påverkar bara on/off-reglering"
+          ],
+          correct: 1,
+          explanation: "Under dötiden ser regulatorn ingen effekt av sin utsignal. Den tror att processen inte reagerar och ökar u ytterligare — när svarstiden väl kommer har regulatorn överstimulerat, vilket ger oscillation."
+        }
+      }
     ]
   }
 };
@@ -247,6 +421,9 @@ let currentScenario = null;
 let sim = null;
 let currentPath = null;
 let currentPathStep = -1;
+let testMode = false;
+let checkpointAnswered = false;
+let pathScore = { correct: 0, total: 0 };
 
 function appendLog(line) { logEl.textContent += line + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 function fitCanvas() { const w = Math.max(680, chartCanvas.clientWidth); if (chartCanvas.width !== w) chartCanvas.width = w; }
@@ -437,20 +614,93 @@ function updateControllerUIState() {
     }
   }
 }
-function loadPath(name) { currentPath = LEARNING_PATHS[name]; currentPathStep = -1; learnBody.textContent = "Laddad lärstig: " + currentPath.title + "\nKlicka Nästa steg."; }
-function nextPathStep() {
-  if (!currentPath) { learnBody.textContent = "Ingen lärstig laddad."; return; }
-  currentPathStep += 1;
-  if (currentPathStep >= currentPath.steps.length) { currentPathStep = currentPath.steps.length - 1; learnBody.textContent = "Lärstigen är klar."; return; }
-  const step = currentPath.steps[currentPathStep];
+function updateScoreDisplay() {
+  const el = document.getElementById("scoreDisplay");
+  const txt = document.getElementById("scoreText");
+  if (!el || !txt) return;
+  if (testMode && currentPath) { el.style.display = ""; txt.textContent = pathScore.correct + "/" + pathScore.total; }
+  else { el.style.display = "none"; }
+}
+function loadPath(name) {
+  currentPath = LEARNING_PATHS[name];
+  currentPathStep = -1;
+  pathScore = { correct: 0, total: 0 };
+  checkpointAnswered = false;
+  document.getElementById("nextStep").disabled = false;
+  updateScoreDisplay();
+  learnBody.innerHTML = "<em>" + currentPath.title + "</em><br><small>" + (currentPath.description || "") + "</small><br><br>Klicka <strong>Nästa »</strong> för att börja.";
+}
+function renderStep(step) {
+  let bodyText = "";
   if (step.type === "theory") {
     const th = THEORY[step.ref];
-    learnBody.textContent = step.title + "\nMål: " + step.objective + "\n\n" + th.summary + "\n\n- " + th.bullets.join("\n- ");
-  } else {
-    scenarioSelect.value = step.ref;
-    loadScenarioByName(step.ref);
-    learnBody.textContent = step.title + "\nMål: " + step.objective + "\n\nScenario laddades.";
+    if (th) bodyText = "<strong>" + th.summary + "</strong><br><br>" + th.bullets.map(b => "• " + b).join("<br>");
+  } else if (step.instruction) {
+    bodyText = step.instruction.replace(/\n/g, "<br>");
   }
+  const stepNum = (currentPathStep + 1) + "/" + currentPath.steps.length;
+  let html = '<div class="step-header"><span class="step-num">Steg ' + stepNum + '</span> ' + step.title + '</div>'
+    + '<div class="step-objective">Mål: ' + step.objective + '</div>';
+  if (bodyText) html += '<div class="step-body">' + bodyText + '</div>';
+  if (step.checkpoint) {
+    if (testMode) {
+      html += '<div class="quiz-block"><div class="quiz-question">❓ ' + step.checkpoint.question + '</div>'
+        + '<div class="quiz-options">'
+        + step.checkpoint.options.map((opt, i) => '<button class="quiz-opt" data-idx="' + i + '">' + opt + '</button>').join("")
+        + '</div><div class="quiz-feedback" id="quizFeedback"></div></div>';
+    } else {
+      html += '<div class="reflect-block">💭 <em>Fundera: ' + step.checkpoint.question + '</em></div>';
+    }
+  }
+  learnBody.innerHTML = html;
+  if (step.checkpoint && testMode) {
+    checkpointAnswered = false;
+    document.getElementById("nextStep").disabled = true;
+    learnBody.querySelectorAll(".quiz-opt").forEach(btn => {
+      btn.addEventListener("click", () => handleQuizAnswer(btn, step.checkpoint));
+    });
+  } else {
+    document.getElementById("nextStep").disabled = false;
+  }
+}
+function handleQuizAnswer(btn, checkpoint) {
+  if (checkpointAnswered) return;
+  const correct = parseInt(btn.dataset.idx, 10) === checkpoint.correct;
+  const fb = document.getElementById("quizFeedback");
+  if (correct) {
+    checkpointAnswered = true;
+    pathScore.correct++;
+    pathScore.total++;
+    btn.classList.add("quiz-correct");
+    learnBody.querySelectorAll(".quiz-opt").forEach(b => b.disabled = true);
+    fb.innerHTML = "✅ Rätt! " + checkpoint.explanation;
+    fb.className = "quiz-feedback correct";
+    document.getElementById("nextStep").disabled = false;
+    updateScoreDisplay();
+  } else {
+    pathScore.total++;
+    btn.classList.add("quiz-wrong");
+    btn.disabled = true;
+    fb.innerHTML = "❌ Inte rätt — försök igen.";
+    fb.className = "quiz-feedback wrong";
+    updateScoreDisplay();
+  }
+}
+function nextPathStep() {
+  if (!currentPath) { learnBody.innerHTML = "Ingen lärstig laddad."; return; }
+  currentPathStep += 1;
+  if (currentPathStep >= currentPath.steps.length) {
+    currentPathStep = currentPath.steps.length - 1;
+    const score = testMode ? " Poäng: " + pathScore.correct + "/" + pathScore.total + " rätt." : "";
+    learnBody.innerHTML = "<strong>✓ Lärstigen klar!</strong>" + score;
+    document.getElementById("nextStep").disabled = true;
+    return;
+  }
+  const step = currentPath.steps[currentPathStep];
+  if (step.type === "scenario" || step.type === "observe") {
+    if (SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
+  }
+  renderStep(step);
 }
 
 Object.keys(SCENARIOS).forEach(name => { const o = document.createElement("option"); o.value = name; o.textContent = name; scenarioSelect.appendChild(o); });
@@ -520,6 +770,17 @@ document.querySelectorAll(".help-btn").forEach(btn => {
     if (sb.classList.contains("collapsed")) { sb.classList.remove("collapsed"); toggle.textContent = "»"; }
   });
 });
+
+// ── Test/Guidat mode toggle ──
+function setTestMode(on) {
+  testMode = on;
+  document.getElementById("modeGuided").classList.toggle("active", !on);
+  document.getElementById("modeTest").classList.toggle("active", on);
+  updateScoreDisplay();
+  if (currentPath && currentPathStep >= 0) renderStep(currentPath.steps[currentPathStep]);
+}
+document.getElementById("modeGuided").addEventListener("click", () => setTestMode(false));
+document.getElementById("modeTest").addEventListener("click", () => setTestMode(true));
 
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
 document.getElementById("mode").addEventListener("change", updateControllerUIState);
