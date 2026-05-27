@@ -93,16 +93,10 @@ class ProcessModel {
     let ud;
     if (this.delay.length > 0) { this.delay.push(u); ud = this.delay.shift(); }
     else { ud = u; }
-    const T = this.cfg.T;
-    if (T <= 1e-9) {
-      // T=0: statisk förstärkning, ingen dynamik — output följer input direkt
-      if (this.cfg.type === "integrating") this.y += this.cfg.K * ud * dt;
-      else this.y = this.cfg.normalValue + this.cfg.K * ud;
-    } else {
-      if (this.cfg.type === "integrating") this.y += ((this.cfg.K * ud) * dt) / T;
-      else if (this.cfg.type === "unstable") this.y += ((this.y - this.cfg.normalValue + this.cfg.K * ud) * dt) / T;
-      else this.y += ((-(this.y - this.cfg.normalValue) + this.cfg.K * ud) * dt) / T;
-    }
+    const T = Math.max(1, this.cfg.T);
+    if (this.cfg.type === "integrating") this.y += ((this.cfg.K * ud) * dt) / T;
+    else if (this.cfg.type === "unstable") this.y += ((this.y - this.cfg.normalValue + this.cfg.K * ud) * dt) / T;
+    else this.y += ((-(this.y - this.cfg.normalValue) + this.cfg.K * ud) * dt) / T;
     this.y += disturbance;
     return this.y;
   }
