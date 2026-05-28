@@ -1,0 +1,93 @@
+{
+  "id": "grundlaggande-v1",
+  "version": "v1.0.0",
+  "title": "Grundläggande reglering",
+  "description": "Från on/off till PID — förstå varje steg i regulatorutvecklingen.",
+  "difficulty": "intro",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "pid-intro.v1.json",
+      "title": "Vad är reglering?",
+      "objective": "Förstå begreppen PV, SP, u och felet e.",
+      "checkpoint": {
+        "question": "Vad kallas skillnaden mellan börvärde (SP) och processvärde (PV)?",
+        "options": ["Utsignalen (u)", "Felet (e)", "Tidskonstanten (T)", "Dötiden (L)"],
+        "correct": 1,
+        "explanation": "Felet e = SP − PV är grunden i all reglering. Regulatorn försöker alltid driva e mot noll."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "onoff-basic.json",
+      "title": "On/Off-reglering",
+      "objective": "Observera oscillationen kring SP — on/off kan inte stanna exakt.",
+      "instruction": "Kör 40 steg. Notera att PV (blå) oscillerar runt SP (röd streckad). u (grön) växlar bara mellan 0 och 100.",
+      "checkpoint": {
+        "question": "Varför oscillerar PV ständigt runt SP med on/off-reglering?",
+        "options": [
+          "Kp är felaktigt inställt",
+          "On/off har ingen mellannivå — den kan bara välja fullt på eller helt av",
+          "Processen är för snabb",
+          "SP är satt för högt"
+        ],
+        "correct": 1,
+        "explanation": "On/off kan bara ge u_max eller u_min, aldrig ett mellanvärde. Processen overshoots alltid och regulatorn slår om igen — resultatet är kontinuerlig oscillation."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "p-step-self-regulating.json",
+      "title": "P-reglering",
+      "objective": "Se att P-reglering stabiliserar men lämnar ett kvarstående fel.",
+      "instruction": "Kör 50 steg. PV stabiliserar sig — men når den SP? Notera skillnaden mot on/off.",
+      "checkpoint": {
+        "question": "Varför når PV inte exakt SP med bara P-reglering?",
+        "options": [
+          "Kp är för litet — öka det",
+          "P-regulatorn behöver ett fel (e≠0) för att hålla utsignalen — vid e=0 faller u till noll",
+          "Processen är för trög",
+          "On/off hade fungerat bättre"
+        ],
+        "correct": 1,
+        "explanation": "u = Kp × e. Om e = 0 ger P-regulatorn u = 0, vilket inte räcker för att hålla processen på SP. Därför kvarstår alltid ett litet fel — det kallas stationärt fel."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pi-step-self-regulating.json",
+      "title": "PI-reglering",
+      "objective": "Integratorn eliminerar det stationära felet.",
+      "instruction": "Kör 60 steg. Jämför med P-steget — når PV nu SP? Tar det längre tid?",
+      "checkpoint": {
+        "question": "Vad gör I-delen (integratorn) som P-delen inte klarar?",
+        "options": [
+          "Reagerar snabbare på plötsliga störningar",
+          "Ackumulerar felet över tid och driver u tills e = 0",
+          "Minskar oscillationen",
+          "Begränsar utsignalens maximala värde"
+        ],
+        "correct": 1,
+        "explanation": "Integratorn summerar felet för varje steg. Även ett litet kvarstående fel byggs upp och driver till slut u tillräckligt högt för att hålla y = SP — stationärt fel = 0."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pid-step-self-regulating.json",
+      "title": "PID-reglering",
+      "objective": "D-delen dämpar svängningar — samma process som PI-steget för direkt jämförelse.",
+      "instruction": "Kör 40 steg. Samma process som PI (K=1.3, T=15) — jämför insvängningen. Är överskjutningen mindre med D-delen aktiv?",
+      "checkpoint": {
+        "question": "Vad är D-delens huvudsakliga funktion i PID-regulatorn?",
+        "options": [
+          "Eliminera stationärt fel",
+          "Reagera på felets förändringshastighet och bromsa svängningar",
+          "Öka regulatorförstärkningen automatiskt",
+          "Minska dötiden i processen"
+        ],
+        "correct": 1,
+        "explanation": "D-delen beräknar u_D = −Kp × Td × (dPV/dt). Den 'ser' att PV förändras snabbt och bromsar i förväg — som att lyfta foten från gasen innan en kurva."
+      }
+    }
+  ]
+}

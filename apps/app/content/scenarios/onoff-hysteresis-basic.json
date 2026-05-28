@@ -1,0 +1,26 @@
+{
+  "id": "onoff-hysteresis-basic",
+  "version": "v1.0.0",
+  "title": "OnOff med hysteresis",
+  "description": "Basfall för tvånivåreglering med hysteresis.",
+  "tags": ["onoff", "hysteresis", "basic"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.0,
+    "T": 20.0,
+    "L": 0.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "onoff",
+    "kp": 0.0,
+    "ti": 0.0,
+    "td": 0.0,
+    "antiWindup": true,
+    "hysteresis": { "lower": 10.0, "upper": 10.0 },
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 600, "setpoint": 50.0, "autopause": false }
+}

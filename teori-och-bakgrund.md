@@ -322,6 +322,204 @@ Där:
 
 ---
 
+## Prestandamått och definitioner
+
+När man utvärderar en regulators prestanda används standardiserade mått för att objektivt jämföra olika inställningar. Dessa definitioner är kritiska för systematisk regulatoroptimering.
+
+### Stabiliseringstid (Settling Time)
+
+**Definition**: Tiden det tar för processvärdet att nå och förbli inom ett specificerat toleransband kring slutvärdet.
+
+**Vanliga toleranser**:
+- **±5%**: Industristandard för de flesta tillämpningar
+- **±2%**: Högprecisionssystem  
+- **±1%**: Kritiska kvalitetsprocesser
+
+**Mätning**: 
+```
+Stabiliseringstid = tid då |PV(t) - PV_slutligt| ≤ tolerans permanent
+```
+
+**Exempel**: Om börvärdet är 60 och ±5% tolerans används, är systemet stabiliserat när processvärdet stannar mellan 57-63.
+
+### Översläng (Overshoot)
+
+**Definition**: Den maximala överskjutningen av processvärdet över sitt slutliga värde, uttryckt som procent av förändringen i börvärde.
+
+**Formel**:
+```
+Översläng (%) = ((PV_max - PV_slutligt) / (SP_ny - SP_gammal)) × 100
+```
+
+**Kategorisering**:
+- **0%**: Ingen översläng (aperiodisk respons)
+- **1-10%**: Låg översläng (vanligt önskvärt)
+- **10-25%**: Måttlig översläng (acceptabelt för många system)
+- **>25%**: Hög översläng (ofta oacceptabelt)
+
+**Exempel**: Vid börvärdessteg från 50 till 70, om PV når max 75 innan det stabiliseras på 68:
+```
+Översläng = ((75 - 68) / (70 - 50)) × 100 = (7 / 20) × 100 = 35%
+```
+
+### Statiskt fel (Steady-State Error)
+
+**Definition**: Skillnaden mellan börvärde och det slutliga processvärdet när systemet nått jämvikt.
+
+**Formel**:
+```
+Statiskt fel = Börvärde - Slutligt processvärde
+```
+
+**Relativ form**:
+```
+Statiskt fel (%) = (Statiskt fel / Börvärde) × 100
+```
+
+**Teoretiska egenskaper**:
+- **P-regulatorer**: Alltid kvarstående statiskt fel för stegförändring
+- **PI-regulatorer**: Teoretiskt noll statiskt fel för stegförändring  
+- **PID-regulatorer**: Noll statiskt fel för steg och ramp
+
+**Praktiska faktorer som påverkar**:
+- Processens linjäritet
+- Störningar och brus
+- Mätosäkerhet
+- Hysteresis i aktuatorer
+
+### Oscillationer och stabilitet
+
+**Oscillationstyper**:
+- **Dämpade oscillationer**: Amplituden minskar över tid → Stabilt system
+- **Konstanta oscillationer**: Konstant amplitud → Marginellt stabilt (kritisk gräns)
+- **Växande oscillationer**: Ökande amplitud → Instabilt system
+
+**Bedömningskriterier**:
+- **Inga oscillationer**: Aperiodisk eller kraftigt dämpat
+- **Lätta oscillationer**: 1-2 svängningar innan stabilisering
+- **Måttliga oscillationer**: 3-5 svängningar, dämpade
+- **Kraftiga oscillationer**: Många svängningar eller långsam dämpning
+- **Instabila oscillationer**: Växande amplitud över tid
+
+### Återhämtningstid (Recovery Time)
+
+**Definition**: Tiden det tar för systemet att återgå till börvärdet efter en störning.
+
+**Mätning**: 
+- Från störningens slut till processvärdet når ±5% av börvärdet
+- Viktig för robusthetsanalys
+- Påverkas starkt av I-delens inställning
+
+### Integratoruppvridning (Windup)
+
+**Definition**: Fenomenet där integratorn i en PI/PID-regulator fortsätter att ackumulera fel även när utsignalen är begränsad (mättad).
+
+**Symptom**:
+- Långsam återhämtning när börvärdet ändras efter mättnad
+- "Recovery time" blir onormalt lång
+- Systemet verkar "trögt" efter perioder med mättad utsignal
+
+**Orsaker**:
+- Utsignalens min/max-begränsningar
+- Stora börvärdesändringar
+- För aggressiva I-inställningar (låg Ti)
+
+**Åtgärder**:
+- **Anti-windup-algoritmer**: Stoppar integratorns ackumulering vid mättnad
+- **Konditionell integration**: Integrerar endast när utsignalen inte är mättad
+- **Mjukare I-inställningar**: Högre Ti-värden
+
+### Bruskänslighet
+
+**Definition**: Hur mycket högfrekvent brus i processvärdet påverkar regulatorns utsignal.
+
+**Påverkande faktorer**:
+- **D-delen**: Mest känslig för brus (deriverar bruset)
+- **P-delen**: Måttligt känslig (överför brus direkt)
+- **I-delen**: Minst känslig (integrerar/filtrerar brus)
+
+**Bedömning**:
+- **Låg**: Utsignalen är stabil trots brus i processvärdet
+- **Måttlig**: Lätt variation i utsignal, men acceptabel
+- **Hög**: Kraftig variation i utsignal, kan påverka aktuatorer negativt
+
+### Mätmetodik för övningar
+
+**Viktiga principer**:
+1. **Återställ före varje test**: Säkerställer konsistenta startförhållanden
+2. **Tillräcklig testtid**: Minst 3-5 tidskonstanter för stabila system
+3. **Dokumentera alla mätningar**: Systematisk anteckning för jämförelser
+4. **Upprepa kritiska mätningar**: Kontrollera reproducerbarhet
+5. **Visuell verifiering**: Använd historikfunktionen för jämförelser
+
+**Rekommenderade mätintervall**:
+- **Stabiliseringstid**: ±5% tolerans (industristandard)
+- **Översläng**: Inga decimaler om inte nödvändigt
+- **Statiskt fel**: Både absolut värde och procent
+- **Oscillationer**: Kvalitativ bedömning (ingen/lätt/måttlig/kraftig)
+
+### Kritisk punkt och oscillationsgräns
+
+**Kritisk förstärkning (Kp_crit)**: Det Kp-värde där systemet börjar oscillera med konstant amplitud (marginell stabilitet).
+
+**Kritisk period (T_crit)**: Oscillationsperioden vid kritisk förstärkning.
+
+**Säkerhetsmarginal**: Procentuell reduktion från kritisk punkt för robust drift:
+```
+Kp_säker = Kp_crit × (1 - säkerhetsmarginal)
+```
+
+Typiska säkerhetsmarginaler:
+- **20-30%**: Standardindustritillämpningar
+- **40-50%**: Kritiska processer eller oregelbundna driftförhållanden
+
+### Regulatortyper och karakteristik
+
+**P-regulator (Proportionell)**:
+- **Egenskaper**: Snabb respons, alltid statiskt fel för stegändring
+- **Användning**: Enkel reglering där visst statiskt fel accepteras
+- **Limitation**: Kan inte eliminera statiskt fel helt
+
+**PI-regulator (Proportionell + Integral)**:
+- **Egenskaper**: Eliminerar statiskt fel, risk för windup
+- **Användning**: De flesta industriella tillämpningar (90% av alla regulatorer)
+- **Fördel**: Balans mellan prestanda och enkelhet
+
+**PID-regulator (Proportionell + Integral + Derivata)**:
+- **Egenskaper**: Snabbast respons, känslig för brus
+- **Användning**: System med dötid eller där snabb respons krävs
+- **Utmaning**: Kräver noggrann avstämning av D-delen
+
+**OnOff-regulator**:
+- **Egenskaper**: Enklast möjliga, hysteresis för att undvika "flatter"
+- **Användning**: Termostat, enklare temperaturreglering
+- **Begränsning**: Konstant oscillation kring börvärde
+
+### Designfilosofier och strategier
+
+**Konservativ design**:
+- **Kp**: Lågt värde med stora säkerhetsmarginaler (30-50% under kritisk punkt)
+- **Ti**: Höga värden för långsam integration
+- **Td**: Låga värden eller helt undviket
+- **Förväntat resultat**: Stabil, långsam, säker drift
+- **Tillämpning**: Kritiska processer, oregelbundna störningar
+
+**Balanserad design**:
+- **Kp**: Måttligt värde med standardmarginaler (20-30% under kritisk punkt)
+- **Ti**: Balanserade värden för rimlig integrering
+- **Td**: Måttliga värden för förbättrad snabbhet
+- **Förväntat resultat**: Rimlig kompromiss mellan snabbhet och stabilitet
+- **Tillämpning**: Vanligaste industriella tillämpningar
+
+**Aggressiv design**:
+- **Kp**: Höga värden nära stabilitetsgräns (10-20% under kritisk punkt)
+- **Ti**: Låga värden för snabb integrering
+- **Td**: Höga värden för maximal snabbhet
+- **Förväntat resultat**: Snabb respons men risk för instabilitet
+- **Tillämpning**: System med höga prestationskrav och kontrollerade förhållanden
+
+---
+
 ## Framtida teorisektioner
 
 **Framtida utbyggnad**: Detta dokument kan utökas med fler teoretiska avsnitt när nya funktioner läggs till i simulatorn:
@@ -334,9 +532,6 @@ Där:
 - **Anti-windup strategier**: Detaljerad analys av olika metoder
 - **Diskret reglering**: Z-transform och samplingseffekter
 - **Robust reglering**: Osäkerhetshantering och H∞-design
-
-### Kända begränsningar som ska åtgärdas:
-- **Integrerande processer**: Simuleringen av integrerande processer är inte helt korrekt implementerad i nuvarande version. Detta kommer att förbättras i kommande releaser för att bättre återspegla verklig nivåreglering och andra integrerande processer.
 
 ## Vidare läsning
 

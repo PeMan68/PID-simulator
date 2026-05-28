@@ -1,0 +1,57 @@
+{
+  "id": "processbegransningar-v1",
+  "version": "v1.0.0",
+  "title": "Processens begränsningar",
+  "description": "Vad K, T och L egentligen betyder — och varför regulatorn inte alltid kan nå SP.",
+  "difficulty": "intro",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "process-basics.v1.json",
+      "title": "K, T och L",
+      "objective": "Förstå de tre processparametrarna fysikaliskt.",
+      "checkpoint": {
+        "question": "Vad är det maximalt uppnåeliga PV för en process med K=0.5, normalValue=0 och u_max=100?",
+        "options": ["100", "50", "0.5", "Beror på regulatorns Kp"],
+        "correct": 1,
+        "explanation": "y_max = normalValue + K × u_max = 0 + 0.5 × 100 = 50. Ingen regulator kan ta PV förbi detta tak — det är en ren processbegränsning."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pi-step-self-regulating.json",
+      "title": "Svag process",
+      "objective": "Ändra K till 0.5 och SP till 80 — se att y fastnar vid ~50 trots PI-reglering.",
+      "instruction": "PI-reglering laddad (eliminerar stationärt fel). Ändå fastnar y:\n1. Ändra K till 0.5\n2. Ändra SP till 80\n3. Kör 50 steg\n\ny_max = K × u_max = 0.5 × 100 = 50\nEftersom SP=80 > y_max=50 kan ingen regulator nå SP.",
+      "checkpoint": {
+        "question": "PV fastnar på ~50 trots att u = 100 %. Vad är förklaringen?",
+        "options": [
+          "Ti behöver sänkas för att hjälpa integratorn",
+          "Processförstärkning K är för låg — processen är fysikaliskt för svag att nå SP",
+          "Kp behöver ökas kraftigt",
+          "Dötiden L blockerar processen"
+        ],
+        "correct": 1,
+        "explanation": "Med K=0.5 är y_max = 50. Det spelar ingen roll hur regulatorn är inställd — processen kan inte producera mer. Lösningen i verkligheten: större ventil, starkare pump, eller sänk SP."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pi-step-self-regulating.json",
+      "title": "Dötid och reglering",
+      "objective": "Sätt L=5 och observera hur PI-regleringen destabiliseras av dötiden.",
+      "instruction": "PI-reglering laddad (K=1.3, L=0). Lägg till dötid:\n1. Ändra L till 5\n2. Kör 80 steg\n\nVad händer med insvängningen jämfört med L=0?",
+      "checkpoint": {
+        "question": "Varför försämrar dötid (L) regleringen?",
+        "options": [
+          "L minskar processförstärkningen K",
+          "Regulatorn agerar på gammal information — processen svarar L steg senare än väntat",
+          "L ökar tidskonstanten T",
+          "Dötid påverkar bara on/off-reglering"
+        ],
+        "correct": 1,
+        "explanation": "Under dötiden ser regulatorn ingen effekt av sin utsignal. Den tror att processen inte reagerar och ökar u ytterligare — när svarstiden väl kommer har regulatorn överstimulerat, vilket ger oscillation."
+      }
+    }
+  ]
+}

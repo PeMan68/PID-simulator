@@ -1,0 +1,25 @@
+{
+  "id": "pid-pulse-rejection",
+  "version": "v1.0.0",
+  "title": "PID pulsstörningsavstötning",
+  "description": "Testfall för transient avstötning med puls.",
+  "tags": ["pid", "pulse", "disturbance"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.0,
+    "T": 20.0,
+    "L": 0.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "pid",
+    "kp": 1.0,
+    "ti": 10.0,
+    "td": 2.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 10.0, "durationSteps": 5 } },
+  "runtime": { "dt": 1.0, "maxSteps": 600, "setpoint": 50.0, "autopause": false }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "basic-learning-path-v1",
+  "version": "v1.0.0",
+  "title": "Grundstig: teori till simulering",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "pid-intro.v1.json",
+      "title": "Teori: Vad gör en regulator?",
+      "objective": "Förstå relationen mellan PV, SP och u."
+    },
+    {
+      "type": "scenario",
+      "ref": "manual-open-loop.json",
+      "title": "Öppen slinga (manuell)",
+      "objective": "Se hur processen beter sig utan automatisk reglering."
+    },
+    {
+      "type": "scenario",
+      "ref": "p-step-self-regulating.json",
+      "title": "P-reglering",
+      "objective": "Identifiera stationärt fel med enbart P-del."
+    },
+    {
+      "type": "scenario",
+      "ref": "pi-step-self-regulating.json",
+      "title": "PI-reglering",
+      "objective": "Jämför hur I-delen reducerar stationärt fel."
+    }
+  ]
+}

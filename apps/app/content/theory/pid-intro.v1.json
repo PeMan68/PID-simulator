@@ -1,0 +1,14 @@
+{
+  "id": "pid-intro-v1",
+  "version": "v1.0.0",
+  "title": "Introduktion till reglering",
+  "summary": "Grundidé: regulatorn justerar utsignalen så att processvärdet når börvärdet.",
+  "bullets": [
+    "PV är processvärdet som mäts.",
+    "SP är börvärdet som vi vill nå.",
+    "u är regulatorns utsignal till processen.",
+    "P-delen reagerar på aktuellt fel.",
+    "I-delen tar bort stationärt fel över tid.",
+    "D-delen dämpar snabba förändringar."
+  ]
+}

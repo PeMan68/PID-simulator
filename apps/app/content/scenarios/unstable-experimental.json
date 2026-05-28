@@ -1,0 +1,25 @@
+{
+  "id": "unstable-experimental",
+  "version": "v1.0.0",
+  "title": "Instabil process experimentell",
+  "description": "Instabil process för kontroll av modellbeteende.",
+  "tags": ["unstable", "experimental"],
+  "process": {
+    "type": "unstable",
+    "K": 1.5,
+    "T": 5.0,
+    "L": 0.5,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "pid",
+    "kp": 1.0,
+    "ti": 10.0,
+    "td": 1.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 0.5, "maxSteps": 600, "setpoint": 50.0, "autopause": false }
+}

@@ -1,0 +1,25 @@
+{
+  "id": "pi-step-self-regulating",
+  "version": "v1.0.0",
+  "title": "PI-reglering stegsvar",
+  "description": "Basfall för eliminering av statiskt fel.",
+  "tags": ["pi", "step", "self"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.3,
+    "T": 15.0,
+    "L": 0.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "pi",
+    "kp": 1.2,
+    "ti": 20.0,
+    "td": 0.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 600, "setpoint": 60.0, "autopause": false }
+}

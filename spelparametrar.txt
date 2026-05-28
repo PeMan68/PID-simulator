@@ -1,0 +1,215 @@
+REGLERTEKNIK LARSPEL - PARAMETRAR OCH TRIMGUIDE
+
+Versiondatum: 2026-04-28
+Huvudfil: index.html
+
+SYFTE
+- Snabb oversikt av vad som finns i spelet och vilka parametrar som styr spelupplevelsen.
+- Underlag for feedback: vad ska bli snabbare, tydligare, svarare, mer pedagogiskt.
+
+================================================================================
+1) KONTROLLER
+================================================================================
+Grundkontroll (lage 1 och 2):
+- Musens Y-position styr insignal u(t).
+- Mus upp = hogre u(t), mus ned = lagre u(t).
+- u(t) klammas till intervallet 0 till 100.
+
+Knappar:
+- Start: startar valt lage.
+- Avbryt: stoppar pagande runda.
+- Nytt borvarde (lage 1): slumpas ny BV under spel.
+- Tillbaka till meny: avslutar current run och visar lagen.
+- Adminlage (topbar toggle): laser upp alla lagen tillfalligt utan krav pa stjarnor.
+
+Nedrakning vid start:
+- Lage 1, 2 och 5 startar med 3-2-1 innan simuleringen borjar.
+- Lage 3 och 4: "Applicera steg" kor ocksa 3-2-1 innan steget slapps pa.
+- Syfte: spelaren hinner stalla musen i onskad startposition.
+
+Tangentgenvagar:
+- Meny: 1-5 for att starta motsvarande lage (om upplast/adminlage).
+- I spel:
+  - Space: primar knapp (Start/Applicera steg), annars Avbryt.
+  - R: starta om aktuellt lage.
+  - N: nytt borvarde (lage 1, om tillgangligt).
+  - M eller Esc: tillbaka till meny.
+
+Adminlage detaljer:
+- Sparas lokalt i browsern (persistent mellan omladdningar).
+- Paverkar inte lagrade poang eller stjarnor.
+- Nar adminlage stangs av galler normal upplasning igen.
+
+Specialknappar per lage:
+- Lage 3: "Applicera steg (u=80)", "Lämna in svar".
+- Lage 4: "Applicera steg (u=40)", val av processtyp.
+- Lage 5: "Kör simulering" (PID regulator driver processen, ingen musstyrning).
+
+================================================================================
+2) SIMULERINGSMODELL
+================================================================================
+Diskret tid:
+- Fast tidssteg DT = 0.05 s (20 Hz).
+- requestAnimationFrame används for rendering, men simulering sker i fasta steg.
+
+Processmodell:
+- Självreglerande: FOPDT-liknande diskret modell.
+- Dodtid: cirkular buffer med storlek ceil(L/DT).
+- Visningsfönster: 30 sekunder.
+
+Signalnivaer:
+- u(t): 0 till 100.
+- y(t): visas i graf, klammas internt till ungefarligt -20 till 200 for stabilitet.
+
+================================================================================
+3) FORDEFINIERADE PROCESSPRESETS
+================================================================================
+Svag motor:
+- K = 0.5
+- tau = 10 s
+- L = 1.0 s
+- Kansla: trog, kraver stora musrorelser.
+
+Normal motor:
+- K = 1.5
+- tau = 5 s
+- L = 1.0 s
+- Kansla: balanserad.
+
+Stark motor:
+- K = 4.0
+- tau = 3 s
+- L = 0.5 s
+- Kansla: latt oversvanging vid for snabb input.
+
+Seg process:
+- K = 1.0
+- tau = 15 s
+- L = 3.0 s
+- Kansla: tydlig doddtid och langsam respons.
+
+Anpassad (lage 1):
+- K: 0.1 till 5.0 (steg 0.1)
+- tau: 1 till 20 s (steg 0.5)
+- L: 0 till 5 s (steg 0.1)
+
+================================================================================
+4) SPELLAGEN (PROGRESSION)
+================================================================================
+Lage 1 - Stegrespons (Nybörjare)
+- Mal: na och hall BV snabbt med lite oversvang.
+- Tid: 45 s.
+- Parametrar synliga.
+
+Lage 2 - Storningsavstotning (Medel)
+- Mal: halla y nara BV under slumpstoringar.
+- Tid: 60 s.
+- Parametrar synliga.
+
+Lage 3 - Identifiera processen (Medel-svar)
+- Mal: gissa K, tau, L efter stegrespons.
+- Tidsgrans: ingen hard timeout i nuvarande version.
+
+Lage 4 - Valj processtyp (Svar)
+- Mal: identifiera om responsen ar sjalvreglerande, integrerande eller instabil.
+- Tidsgrans: ingen hard timeout i nuvarande version.
+
+Lage 5 - PID-tuning (Expert)
+- Mal: valj Kp, Ki, Kd som ger bra respons.
+- Tid: 60 s.
+
+Upplasning:
+- Stjarnor samlas globalt.
+- Senare lagen kraver fler stjarnor totalt.
+
+================================================================================
+5) POANGMODELL (NUVARANDE)
+================================================================================
+Matriser/logik som anvands i olika lagen:
+- IAE (Integral Absolute Error): lagre ar battre.
+- Overskjutning (%): ger avdrag.
+- Insvangningstid: kan ge bonus.
+
+Stjarnor:
+- 80 till 100 poang: 3 stjarnor
+- 60 till 79 poang: 2 stjarnor
+- 40 till 59 poang: 1 stjarna
+- 0 till 39 poang: 0 stjarnor
+
+Rekord:
+- Sparas lokalt i browsern via localStorage.
+
+================================================================================
+6) PID-LAGE (LAGE 5)
+================================================================================
+Regulatorslider:
+- Kp: 0 till 10 (steg 0.05)
+- Ki: 0 till 2 (steg 0.005)
+- Kd: 0 till 5 (steg 0.05)
+
+Regulatorn beraknar u(t) och klammas till 0 till 100.
+
+================================================================================
+7) VISUELLA ELEMENT I GRAFEN
+================================================================================
+- Bla kurva: processvardet y(t).
+- Rod streckad linje: borvarde (BV).
+- Gron kurva i nedre strip: styrsignal u(t).
+- 5%-band kring BV visas som svag rod zon.
+- Tidsaxel scrollar over senaste 30 s.
+
+================================================================================
+8) TRIMLISTA - FORSLAG ATT JUSTERA FOR SPELUPPLEVELSE
+================================================================================
+A. KANSLA I KONTROLL
+- Musfiltrering (smoothing):
+  - Nuvarande: alpha ~ 0.15.
+  - Oka alpha -> mer direkt men ryckigare.
+  - Sanka alpha -> mjukare men segare styrkansla.
+- u-omfång:
+  - Nu: 0 till 100.
+  - Forslag: testa 0 till 70 i nyborjarlagen for mindre aggressivitet.
+
+B. SVARIGHET
+- Lage 1 tid (45 s): testa 30/60 s.
+- Lage 2 storningsniva:
+  - Nuvarande amplitud ar tydlig.
+  - Kan dämpas 20-30% for mjukare inlaraningskurva.
+- Upplasningskrav (stjarnor):
+  - Justera for snabbare/langsammare progression.
+
+C. PEDAGOGIK
+- Lage 3/4 saknar hard timeout:
+  - Kan laggas till for mer spelkansla.
+- Lage 3 analysstod:
+  - Kan visa hjalpmarkorer (t.ex. 63%-niva) i "hjalplage".
+
+D. SCORING
+- Overskjutningsstraff:
+  - Om spelare tycker den ar for hard, minska straffkoefficient.
+- Settling-bonus:
+  - Oka bonus om ni vill premiera stabilitet mer.
+
+E. UI/FEEDBACK
+- Lagg till kort "coachtext" live:
+  - "For aggressiv styrning", "Bra dämpning", "Lite for segt".
+- Lagg till trendindikator:
+  - Pil upp/ner for felutveckling.
+
+================================================================================
+9) FRAGOR ATT BESVARA VID NASTA TRIMRUNDA
+================================================================================
+1. Vilket lage upplevs mest respektive minst intuitivt?
+2. Kanns styrningen for kenslig eller for seg i lage 1?
+3. Ar poangberakningen rattvis mot hur bra man faktiskt styr?
+4. Ar progressionen (upplasning) lagom snabb for kursens tempo?
+5. Ska lage 3 och 4 ha tydlig tidspress?
+6. Vill ni ha ett tydligt "Lararlage" med exakta styrbara scenarier?
+
+================================================================================
+10) FORSLAG PA NASTA ITERATION
+================================================================================
+- Prioritet 1: Finjustera kontrollkansla (musfilter + u-range).
+- Prioritet 2: Kalibrera poangvikter sa att bra reglerbeteende belonas tydligare.
+- Prioritet 3: Lagg in hjalplage/coachning for de forsta veckorna i kursen.
+- Prioritet 4: Lararlage med fasta case (K,tau,L + facit).

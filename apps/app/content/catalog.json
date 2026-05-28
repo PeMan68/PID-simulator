@@ -1,0 +1,25 @@
+{
+  "version": "v1.0.0",
+  "scenarios": [
+    { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json" },
+    { "id": "p-step-self-regulating",     "file": "scenarios/p-step-self-regulating.json" },
+    { "id": "pi-step-self-regulating",    "file": "scenarios/pi-step-self-regulating.json" },
+    { "id": "pid-step-self-regulating",   "file": "scenarios/pid-step-self-regulating.json" },
+    { "id": "onoff-basic",                "file": "scenarios/onoff-basic.json" },
+    { "id": "onoff-hysteresis-basic",     "file": "scenarios/onoff-hysteresis-basic.json" },
+    { "id": "manual-open-loop",           "file": "scenarios/manual-open-loop.json" },
+    { "id": "pid-disturbance-noise",      "file": "scenarios/pid-disturbance-noise.json" },
+    { "id": "pid-pulse-rejection",        "file": "scenarios/pid-pulse-rejection.json" },
+    { "id": "integrating-experimental",   "file": "scenarios/integrating-experimental.json" },
+    { "id": "unstable-experimental",      "file": "scenarios/unstable-experimental.json" }
+  ],
+  "theory": [
+    { "id": "pid-intro",      "file": "theory/pid-intro.v1.json" },
+    { "id": "process-basics", "file": "theory/process-basics.v1.json" },
+    { "id": "onoff-theory",   "file": "theory/onoff-theory.v1.json" }
+  ],
+  "learning_paths": [
+    { "id": "grundlaggande.v1",        "file": "exercises/grundlaggande.v1.json" },
+    { "id": "processbegransningar.v1", "file": "exercises/processbegransningar.v1.json" }
+  ]
+}
