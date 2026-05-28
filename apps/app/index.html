@@ -398,8 +398,15 @@
 
     <div class="grid">
       <div class="field">
-        <label for="k">K <button class="help-btn" data-help="k">?</button></label>
-        <input id="k" type="number" step="0.1" min="0.1">
+        <label for="processType">Processtyp <button class="help-btn" data-help="processType">?</button></label>
+        <select id="processType">
+          <option value="self_regulating">Självreglerande</option>
+          <option value="integrating">Integrerande</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="k"><span id="kLabel">K</span> <button class="help-btn" id="kHelpBtn" data-help="k">?</button></label>
+        <input id="k" type="number" step="0.01" min="0.001">
       </div>
       <div class="field">
         <label for="t">T <button class="help-btn" data-help="t">?</button></label>
@@ -408,6 +415,10 @@
       <div class="field">
         <label for="l">L <button class="help-btn" data-help="l">?</button></label>
         <input id="l" type="number" step="0.1" min="0">
+      </div>
+      <div class="field">
+        <label for="outflow">Utflöde <button class="help-btn" data-help="outflow">?</button></label>
+        <input id="outflow" type="number" step="0.1" min="0">
       </div>
       <div class="field">
         <label for="kp">Kp <button class="help-btn" data-help="kp">?</button></label>

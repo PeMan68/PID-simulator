@@ -84,6 +84,18 @@ const HELP_CONTENT = {
     title: "Hysterese hög (OnOff)",
     body: "Övre hysteresgräns för OnOff-regulatorn.\n\nRegulatorn slår AV (u_min) när:\nPV > SP + hysteres_hög\n\nAsymmetrisk hysteres (låg ≠ hög) ger ett reglervärde som inte är exakt SP."
   },
+  processType: {
+    title: "Processtyp",
+    body: "Självreglerande: Processen har en naturlig vilopunkt — vid u=0 återgår y till normalValue. Exempel: rumstemperatur, flöde i ett rör.\n\nIntegrerande: Processen integrerar nettoflödet — ingen naturlig vilopunkt. Exempel: tanknivå, position.\n\nJämvikt kräver att inflöde = utflöde: u_jämvikt = utflöde / Kv\n\nTips: Byt typ och ladda om för att se skillnaden i beteende."
+  },
+  kv: {
+    title: "Kv — Hastighetsförstärkning (integrerande process)",
+    body: "Bestämmer hur snabbt processen integrerar utsignalen.\n\ndy/dt = Kv × u − utflöde\n\nJämviktspunkt: u_jämvikt = utflöde / Kv\n\nKv=0.01 och utflöde=0.5 → u_jämvikt = 50%\n\nTill skillnad från K (självreglerande) bestämmer Kv integrationshastigheten — högre Kv ger snabbare nivåändring per procent utsignal.\n\nPI-regulatorn hittar automatiskt u_jämvikt via sin integratordel."
+  },
+  outflow: {
+    title: "Utflöde (integrerande process)",
+    body: "Konstant avrinning eller förbrukning i den integrerande processen.\n\ndy/dt = Kv × u − utflöde\n\nUtflöde = 0: Ren integrator — nivån stiger alltid om u > 0.\nUtflöde > 0: Jämviktspunkt vid u = utflöde / Kv.\n\nExempel:\n• Naturlig dränering ur tank\n• Konstant förbrukning i ett system\n\nObs: Utflöde påverkar inte självreglerande processer."
+  },
   antiWindup: {
     title: "Anti-windup",
     body: "Förhindrar att integratorn 'vider upp' (windup) när utsignalen är mättad.\n\nNÄR WINDUP UPPSTÅR:\nOm u är vid max/min under lång tid men felet kvarstår fortsätter integralen att växa — även om mer integrering inte hjälper. När felet sedan minskar är integratorn uppladdad med ett stort värde → kraftig överskjutning.\n\nMED ANTI-WINDUP PÅ:\nIntegralen fryses när u = u_min eller u = u_max. Överskjutningen reduceras markant.\n\nAV (pedagogik): Stäng av för att tydligt se windup-effekten. Läs av I-bidraget i statusraden under mättning.\n\nTips: Ladda 'PI – integratoruppvridning' och jämför med/utan."
@@ -220,7 +232,9 @@ const chartCanvas = document.getElementById("chart");
 const learnBody = document.getElementById("learnBody");
 
 const fields = {
+  processType: document.getElementById("processType"),
   k: document.getElementById("k"), t: document.getElementById("t"), l: document.getElementById("l"),
+  outflow: document.getElementById("outflow"),
   kp: document.getElementById("kp"), ti: document.getElementById("ti"), td: document.getElementById("td"),
   sp: document.getElementById("sp"), umin: document.getElementById("umin"), umax: document.getElementById("umax"),
   manualOutput: document.getElementById("manualOutput"),
@@ -308,6 +322,8 @@ function hydrateFields(s) {
   fields.hysteresLower.value = s.controller.hysteresis?.lower ?? 2;
   fields.hysteresUpper.value = s.controller.hysteresis?.upper ?? 2;
   fields.antiWindup.checked = s.controller.antiWindup !== false;
+  fields.processType.value = s.process.type || "self_regulating";
+  fields.outflow.value = s.process.outflow ?? 0;
 }
 function loadScenarioByName(name) {
   currentScenario = deepClone(SCENARIOS[name]);
@@ -315,6 +331,7 @@ function loadScenarioByName(name) {
   hydrateFields(currentScenario);
   appendLog("Laddat scenario: " + currentScenario.id);
   updateControllerUIState();
+  updateProcessUIState();
   updateStatus(); drawChart();
 }
 function syncParamsFromUI() {
@@ -328,9 +345,12 @@ function syncParamsFromUI() {
     if (Number(field.value) !== v) field.value = v;
     return v;
   }
-  currentScenario.process.K = readClamped(fields.k, 0.1);
+  const isIntegrating = fields.processType.value === "integrating";
+  currentScenario.process.type = fields.processType.value;
+  currentScenario.process.K = readClamped(fields.k, isIntegrating ? 0.001 : 0.1);
   currentScenario.process.T = readClamped(fields.t, 1);
   currentScenario.process.L = readClamped(fields.l, 0);
+  currentScenario.process.outflow = readClamped(fields.outflow, 0);
   const noTi = nextMode === "p" || nextMode === "manual" || nextMode === "onoff";
   const noTd = nextMode === "p" || nextMode === "pi" || nextMode === "manual" || nextMode === "onoff";
   currentScenario.controller.kp = readClamped(fields.kp, 0.1);
@@ -433,6 +453,21 @@ function updateControllerUIState() {
     }
   }
 }
+function updateProcessUIState() {
+  const isIntegrating = fields.processType.value === "integrating";
+  document.getElementById("kLabel").textContent = isIntegrating ? "Kv" : "K";
+  document.getElementById("kHelpBtn").dataset.help = isIntegrating ? "kv" : "k";
+  fields.k.step = isIntegrating ? "0.001" : "0.1";
+  const tField = fields.t.parentElement;
+  fields.t.disabled = isIntegrating;
+  tField.style.opacity = isIntegrating ? "0.5" : "1";
+  tField.style.pointerEvents = isIntegrating ? "none" : "auto";
+  const outflowField = fields.outflow.parentElement;
+  fields.outflow.disabled = !isIntegrating;
+  outflowField.style.opacity = isIntegrating ? "1" : "0.5";
+  outflowField.style.pointerEvents = isIntegrating ? "auto" : "none";
+}
+
 function updateScoreDisplay() {
   const el = document.getElementById("scoreDisplay");
   const txt = document.getElementById("scoreText");
@@ -632,6 +667,7 @@ document.getElementById("modeTest").addEventListener("click", () => setTestMode(
 
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
 document.getElementById("mode").addEventListener("change", updateControllerUIState);
+document.getElementById("processType").addEventListener("change", updateProcessUIState);
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });
 document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); });
 document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); appendLog("Puls triggad."); });
