@@ -161,3 +161,12 @@ Reflektionsfrågor i .md-filerna omvandlas till `quiz`-steg med MCQ. Simulerings
 ### Konsekvens: Användaren kan inte "fuska" in i mitten av ett test.
 ### Förslag / nästa tanke: Implementerat. Klick på "Guidat" behöver inte nollställa — man kan fortsätta där man var.
 ### Status: Implementerad
+
+---
+
+### Datum: 2026-05-28
+### Del av webbappen: Lärstigar / processbegransningar.v1 / steg "Svag process"
+### Iakttagelse: Steget "Svag process" använder p-step-self-regulating.json (P-reglering). P-reglering ger alltid ett stationärt fel, vilket gör det svårt att avgöra om y fastnar för att processen är för svag (K-begränsning) eller för att regulatorn har inherent steady-state-fel. Studenter riskerar att dra fel slutsats.
+### Konsekvens: Pedagogisk otydlighet — det som ska demonstreras är en processbegränsning, inte ett regulatorfel.
+### Förslag / nästa tanke: Byt scenario till PI eller PID för detta steg. Då elimineras regulatorns stationära fel och om y ändå inte når SP är det glasklart att orsaken är K × u_max-begränsningen. Behöver ett nytt scenario: t.ex. "pi-svag-process.json" med K=0.5, PI-reglering, SP=80.
+### Status: Noterad
