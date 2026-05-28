@@ -10,16 +10,21 @@
     { "id": "manual-open-loop",           "file": "scenarios/manual-open-loop.json" },
     { "id": "pid-disturbance-noise",      "file": "scenarios/pid-disturbance-noise.json" },
     { "id": "pid-pulse-rejection",        "file": "scenarios/pid-pulse-rejection.json" },
+    { "id": "pi-windup-demo",              "file": "scenarios/pi-windup-demo.json" },
+    { "id": "integrating-pi",             "file": "scenarios/integrating-pi.json" },
     { "id": "integrating-experimental",   "file": "scenarios/integrating-experimental.json" },
     { "id": "unstable-experimental",      "file": "scenarios/unstable-experimental.json" }
   ],
   "theory": [
     { "id": "pid-intro",      "file": "theory/pid-intro.v1.json" },
     { "id": "process-basics", "file": "theory/process-basics.v1.json" },
-    { "id": "onoff-theory",   "file": "theory/onoff-theory.v1.json" }
+    { "id": "onoff-theory",          "file": "theory/onoff-theory.v1.json" },
+    { "id": "integrator-windup",     "file": "theory/integrator-windup.v1.json" },
+    { "id": "integrating-process",   "file": "theory/integrating-process.v1.json" }
   ],
   "learning_paths": [
     { "id": "grundlaggande.v1",        "file": "exercises/grundlaggande.v1.json" },
-    { "id": "processbegransningar.v1", "file": "exercises/processbegransningar.v1.json" }
+    { "id": "processbegransningar.v1", "file": "exercises/processbegransningar.v1.json" },
+    { "id": "windup.v1",              "file": "exercises/windup.v1.json" }
   ]
 }

@@ -1,0 +1,26 @@
+{
+  "id": "integrating-pi",
+  "version": "v1.0.0",
+  "title": "Integrerande process – PI-reglering",
+  "description": "Tanknivåsimulering. Processen integrerar nettoflödet (inflöde - utflöde) — ingen naturlig återgång till nollpunkt. PI-reglering krävs för nollsteadystate-fel. Trigga puls för att simulera störning i utflöde.",
+  "tags": ["integrating", "pi", "level", "tank"],
+  "process": {
+    "type": "integrating",
+    "K": 0.01,
+    "T": 1.0,
+    "L": 0.0,
+    "normalValue": 20.0,
+    "outflow": 0.5,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "pi",
+    "kp": 1.5,
+    "ti": 80.0,
+    "td": 0.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 5.0, "durationSteps": 20 } },
+  "runtime": { "dt": 1.0, "maxSteps": 600, "setpoint": 60.0, "autopause": false }
+}

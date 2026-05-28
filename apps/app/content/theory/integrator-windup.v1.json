@@ -1,0 +1,14 @@
+{
+  "id": "integrator-windup-v1",
+  "version": "v1.0.0",
+  "title": "Integratoruppvridning (Windup)",
+  "summary": "Vad händer när integratorn 'laddar upp' under lång mättning av utsignalen?",
+  "bullets": [
+    "Windup uppstår när I-delen fortsätter summera felet trots att utsignalen redan är vid max (100%) eller min (0%) — integratorn 'vider upp'",
+    "Typisk situation: stort börvärdessteg (SP-steg) → u mättas omedelbart vid 100% → processen stiger sakta mot SP under många steg",
+    "Under mättningstiden ackumuleras ett enormt integral-värde, även om mer integrering inte hjälper alls",
+    "När y till slut når SP är integratorn hårt uppladdad → u är fortfarande långt över vad som behövs → kraftig överskjutning",
+    "Anti-windup stoppar integral-ackumuleringen (fryser integralen) när u är mättad — responsen blir betydligt mjukare",
+    "Integrerande processer (tank-nivå, position) är extra känsliga: process + PI-regulatorns integrator = dubbel integration → oscillationsrisk"
+  ]
+}

@@ -83,6 +83,10 @@ const HELP_CONTENT = {
   hysteresUpper: {
     title: "Hysterese hög (OnOff)",
     body: "Övre hysteresgräns för OnOff-regulatorn.\n\nRegulatorn slår AV (u_min) när:\nPV > SP + hysteres_hög\n\nAsymmetrisk hysteres (låg ≠ hög) ger ett reglervärde som inte är exakt SP."
+  },
+  antiWindup: {
+    title: "Anti-windup",
+    body: "Förhindrar att integratorn 'vider upp' (windup) när utsignalen är mättad.\n\nNÄR WINDUP UPPSTÅR:\nOm u är vid max/min under lång tid men felet kvarstår fortsätter integralen att växa — även om mer integrering inte hjälper. När felet sedan minskar är integratorn uppladdad med ett stort värde → kraftig överskjutning.\n\nMED ANTI-WINDUP PÅ:\nIntegralen fryses när u = u_min eller u = u_max. Överskjutningen reduceras markant.\n\nAV (pedagogik): Stäng av för att tydligt se windup-effekten. Läs av I-bidraget i statusraden under mättning.\n\nTips: Ladda 'PI – integratoruppvridning' och jämför med/utan."
   }
 };
 
@@ -139,7 +143,10 @@ class ProcessModel {
     if (this.delay.length > 0) { this.delay.push(u); ud = this.delay.shift(); }
     else { ud = u; }
     const T = Math.max(1, this.cfg.T);
-    if (this.cfg.type === "integrating") this.y += ((this.cfg.K * ud) * dt) / T;
+    if (this.cfg.type === "integrating") {
+      const outflow = this.cfg.outflow ?? 0;
+      this.y += (this.cfg.K * ud - outflow) * dt;
+    }
     else if (this.cfg.type === "unstable") this.y += ((this.y - this.cfg.normalValue + this.cfg.K * ud) * dt) / T;
     else this.y += ((-(this.y - this.cfg.normalValue) + this.cfg.K * ud) * dt) / T;
     this.y += disturbance;
@@ -218,7 +225,8 @@ const fields = {
   sp: document.getElementById("sp"), umin: document.getElementById("umin"), umax: document.getElementById("umax"),
   manualOutput: document.getElementById("manualOutput"),
   mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"),
-  hysteresLower: document.getElementById("hysteresLower"), hysteresUpper: document.getElementById("hysteresUpper")
+  hysteresLower: document.getElementById("hysteresLower"), hysteresUpper: document.getElementById("hysteresUpper"),
+  antiWindup: document.getElementById("antiWindup")
 };
 
 let currentScenario = null;
@@ -299,6 +307,7 @@ function hydrateFields(s) {
   fields.mode.value = s.controller.mode; fields.noise.value = s.disturbance.noiseStd || 0; fields.pulseMag.value = s.disturbance.pulse.magnitude || 0;
   fields.hysteresLower.value = s.controller.hysteresis?.lower ?? 2;
   fields.hysteresUpper.value = s.controller.hysteresis?.upper ?? 2;
+  fields.antiWindup.checked = s.controller.antiWindup !== false;
 }
 function loadScenarioByName(name) {
   currentScenario = deepClone(SCENARIOS[name]);
@@ -341,6 +350,7 @@ function syncParamsFromUI() {
   if (!currentScenario.controller.hysteresis) currentScenario.controller.hysteresis = {};
   currentScenario.controller.hysteresis.lower = readClamped(fields.hysteresLower, 0);
   currentScenario.controller.hysteresis.upper = readClamped(fields.hysteresUpper, 0);
+  currentScenario.controller.antiWindup = fields.antiWindup.checked;
 
   if (prevMode !== nextMode) {
     const bumplessOn = document.getElementById("bumpless").checked;
@@ -404,6 +414,11 @@ function updateControllerUIState() {
   tdField.style.pointerEvents = (isP || isPI || isManual || isOnOff) ? "none" : "auto";
   manualField.style.opacity = isManual ? "1" : "0.5";
   manualField.style.pointerEvents = isManual ? "auto" : "none";
+  const noIntegral = isP || isManual || isOnOff;
+  fields.antiWindup.disabled = noIntegral;
+  const antiWindupField = fields.antiWindup.parentElement;
+  antiWindupField.style.opacity = noIntegral ? "0.5" : "1";
+  antiWindupField.style.pointerEvents = noIntegral ? "none" : "auto";
   
   // Update controller parameters based on mode
   if (currentScenario && currentScenario.controller) {

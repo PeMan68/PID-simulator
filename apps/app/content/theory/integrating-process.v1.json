@@ -1,0 +1,14 @@
+{
+  "id": "integrating-process-v1",
+  "version": "v1.0.0",
+  "title": "Integrerande process",
+  "summary": "En integrerande process (t.ex. tanknivå) har ingen naturlig vilopunkt — den integrerar nettoflödet.",
+  "bullets": [
+    "En självreglerande process återgår till ett vilovärde när u=0 — en integrerande process gör det inte",
+    "Exempel: tanknivå = integrerat nettoflöde (inflöde − utflöde). Stängs pumpen av sjunker nivån tills tanken är tom",
+    "Processmodell: dy/dt = K × u − utflöde. Jämviktspunkt: u_jämvikt = utflöde / K",
+    "P-reglering ger alltid stationärt fel för integrerande processer — integratorn i regulatorn (I-del) är nödvändig",
+    "PI-regulatorn hittar automatiskt rätt u_jämvikt så att dy/dt = 0 och y = SP",
+    "Dubbel integration (process + regulatorintegrator) kräver försiktig inställning av Kp och Ti — lätt att orsaka oscillation"
+  ]
+}
