@@ -30,6 +30,42 @@ const SCENARIOS = {
     process: { type: "self_regulating", K: 1.0, T: 10, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
     controller: { mode: "onoff", kp: 0, ti: 0, td: 0, antiWindup: false, outputLimits: { min: 0, max: 100 }, hysteresis: { lower: 2, upper: 2 } },
     disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
+  },
+  "onoff-hysteresis-basic.json": {
+    id: "onoff-hysteresis-basic", runtime: { dt: 1, maxSteps: 600, setpoint: 50 },
+    process: { type: "self_regulating", K: 1.0, T: 20, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
+    controller: { mode: "onoff", kp: 0, ti: 0, td: 0, antiWindup: true, outputLimits: { min: 0, max: 100 }, hysteresis: { lower: 10, upper: 10 } },
+    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
+  },
+  "manual-open-loop.json": {
+    id: "manual-open-loop", runtime: { dt: 1, maxSteps: 600, setpoint: 50 },
+    process: { type: "self_regulating", K: 1.0, T: 20, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
+    controller: { mode: "manual", manualOutput: 50, kp: 0, ti: 0, td: 0, antiWindup: true, outputLimits: { min: 0, max: 100 } },
+    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
+  },
+  "pid-disturbance-noise.json": {
+    id: "pid-disturbance-noise", runtime: { dt: 1, maxSteps: 900, setpoint: 50 },
+    process: { type: "self_regulating", K: 1.0, T: 20, L: 5, normalValue: 0, measurementRange: { min: 0, max: 100 } },
+    controller: { mode: "pid", kp: 1.2, ti: 12, td: 2, antiWindup: true, outputLimits: { min: 0, max: 100 } },
+    disturbance: { noiseStd: 3, pulse: { magnitude: 0, durationSteps: 0 } }
+  },
+  "pid-pulse-rejection.json": {
+    id: "pid-pulse-rejection", runtime: { dt: 1, maxSteps: 600, setpoint: 50 },
+    process: { type: "self_regulating", K: 1.0, T: 20, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
+    controller: { mode: "pid", kp: 1.0, ti: 10, td: 2, antiWindup: true, outputLimits: { min: 0, max: 100 } },
+    disturbance: { noiseStd: 0, pulse: { magnitude: 10, durationSteps: 0 } }
+  },
+  "integrating-experimental.json": {
+    id: "integrating-experimental", runtime: { dt: 1, maxSteps: 900, setpoint: 50 },
+    process: { type: "integrating", K: 0.5, T: 15, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
+    controller: { mode: "pi", kp: 2.0, ti: 8, td: 0, antiWindup: true, outputLimits: { min: 0, max: 100 } },
+    disturbance: { noiseStd: 1, pulse: { magnitude: 0, durationSteps: 0 } }
+  },
+  "unstable-experimental.json": {
+    id: "unstable-experimental", runtime: { dt: 0.5, maxSteps: 600, setpoint: 50 },
+    process: { type: "unstable", K: 1.5, T: 5, L: 0.5, normalValue: 0, measurementRange: { min: 0, max: 100 } },
+    controller: { mode: "pid", kp: 1.0, ti: 10, td: 1, antiWindup: true, outputLimits: { min: 0, max: 100 } },
+    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
   }
 };
 
