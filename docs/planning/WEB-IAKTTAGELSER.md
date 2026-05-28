@@ -170,3 +170,12 @@ Reflektionsfrågor i .md-filerna omvandlas till `quiz`-steg med MCQ. Simulerings
 ### Konsekvens: Pedagogisk otydlighet — det som ska demonstreras är en processbegränsning, inte ett regulatorfel.
 ### Förslag / nästa tanke: Byt scenario till PI eller PID för detta steg. Då elimineras regulatorns stationära fel och om y ändå inte når SP är det glasklart att orsaken är K × u_max-begränsningen. Behöver ett nytt scenario: t.ex. "pi-svag-process.json" med K=0.5, PI-reglering, SP=80.
 ### Status: Noterad
+
+---
+
+### Datum: 2026-05-28
+### Del av webbappen: Störningar / Trigga puls
+### Iakttagelse: Trigga puls påverkar inte PV. Pulsstörningen verkar inte nå processmodellen.
+### Konsekvens: Studenten kan inte testa hur regulatorn hanterar störningsimpulser, vilket är en central del av PID-pedagogiken.
+### Förslag / nästa tanke: Felsök hur `triggerPulse()` kopplar till `ProcessModel.step()` — troligen en synk-miss eller felaktig puls-magnitude i scenario-JSON (magnitude=0 i defaults).
+### Status: Noterad

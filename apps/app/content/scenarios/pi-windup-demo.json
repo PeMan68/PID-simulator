@@ -1,0 +1,25 @@
+{
+  "id": "pi-windup-demo",
+  "version": "v1.0.0",
+  "title": "PI – integratoruppvridning (windup)",
+  "description": "Demonstrerar integratoruppvridning (windup). Stort steg-SP gör att u mättas länge — integratorn laddar upp och ger kraftig överskjutning. Jämför med Anti-windup av/på.",
+  "tags": ["pi", "windup", "antiwindup"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.0,
+    "T": 20.0,
+    "L": 0.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "pi",
+    "kp": 3.0,
+    "ti": 20.0,
+    "td": 0.0,
+    "antiWindup": false,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 400, "setpoint": 80.0, "autopause": false }
+}
