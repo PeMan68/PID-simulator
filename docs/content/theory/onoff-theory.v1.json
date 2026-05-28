@@ -1,0 +1,13 @@
+{
+  "id": "onoff-theory-v1",
+  "version": "v1.0.0",
+  "title": "On/Off-reglering",
+  "summary": "Den enklaste regulatorn: utsignalen är antingen på (u_max) eller av (u_min).",
+  "bullets": [
+    "Termostat är ett klassiskt exempel — värmer på eller av beroende på temperatur.",
+    "Hysteres används för att undvika för täta switchningar nära SP.",
+    "Lägre hysteres → bättre precision men fler switchningar.",
+    "Höger hysteres → färre switchningar men mer svängning runt SP.",
+    "On/Off ger alltid oscillation — det finns ingen mellannivå."
+  ]
+}
