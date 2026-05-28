@@ -1,0 +1,35 @@
+name: Deploy PID-simulator till GitHub Pages
+
+on:
+  push:
+    branches: [main]          # Triggar bara vid push till main
+    paths:
+      - 'apps/app/**'         # Och bara om något i apps/app/ ändrades
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Hämta koden
+        uses: actions/checkout@v4
+
+      - name: Konfigurera Pages
+        uses: actions/configure-pages@v5
+
+      - name: Ladda upp apps/app/ som webbplats
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/app          # <-- Allt i apps/app/ blir webbplatsen
+
+      - name: Publicera till GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
