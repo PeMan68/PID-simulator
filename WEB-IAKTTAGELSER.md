@@ -157,7 +157,7 @@ Reflektionsfrågor i .md-filerna omvandlas till `quiz`-steg med MCQ. Simulerings
 
 ### Datum: 2026-05-28
 ### Del av webbappen: Lärstigar / test-läge / UX
-### Iakttagelse: Klick på "Test"-knappen nollställer poäng och startar lärstigen från steg 1. Det är inte alltid önskat beteende — om användaren råkar klicka Test mitt i en lärstig förlorar de sin progress och måste börja om. Samma gäller om man växlar Guidat→Test→Guidat under pågående genomgång.
-### Konsekvens: Oavsiktlig förlust av progress och poäng. Pedagogiskt störande om det händer i klassrum eller under examination.
-### Förslag / nästa tanke: Två alternativ — (A) Visa en bekräftelsedialog: "Byta till Test-läge nollställer poäng och startar om. Fortsätt?". (B) Låt lägesbytet bevara steget man är på och bara ändra hur checkpoints renderas; nollställ bara poäng explicit med en "Börja om"-knapp. Alternativ B är mjukare UX och troligen rätt för pedagogisk miljö.
-### Status: Noterad
+### Iakttagelse: Klick på "Test"-knappen ska nollställa poäng och starta lärstigen från steg 1. Det är avsett beteende — test är ett separat, kontrollerat genomlopp som alltid börjar från början.
+### Konsekvens: Användaren kan inte "fuska" in i mitten av ett test.
+### Förslag / nästa tanke: Implementerat. Klick på "Guidat" behöver inte nollställa — man kan fortsätta där man var.
+### Status: Implementerad

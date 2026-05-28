@@ -793,9 +793,17 @@ function setTestMode(on) {
   testMode = on;
   document.getElementById("modeGuided").classList.toggle("active", !on);
   document.getElementById("modeTest").classList.toggle("active", on);
+  if (on && currentPath) {
+    currentPathStep = -1;
+    pathScore = { correct: 0, total: 0 };
+    checkpointAnswered = false;
+    document.getElementById("nextStep").disabled = false;
+    learnBody.innerHTML = "<em>" + currentPath.title + "</em><br><small>" + (currentPath.description || "") + "</small><br><br>Klicka <strong>Nästa »</strong> för att börja testet.";
+  } else if (!on && currentPath && currentPathStep >= 0) {
+    renderStep(currentPath.steps[currentPathStep]);
+  }
   updateScoreDisplay();
   updateNavButtons();
-  if (currentPath && currentPathStep >= 0) renderStep(currentPath.steps[currentPathStep]);
 }
 document.getElementById("modeGuided").addEventListener("click", () => setTestMode(false));
 document.getElementById("modeTest").addEventListener("click", () => setTestMode(true));
