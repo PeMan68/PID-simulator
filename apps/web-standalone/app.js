@@ -25,7 +25,7 @@ const THEORY = {
   "pid-intro.v1.json": {
     title: "Introduktion till reglering",
     summary: "Grundidé: regulatorn justerar utsignalen så att processvärdet når börvärdet.",
-    bullets: ["PV är processvärdet som mäts.", "SP är börvärdet.", "MO är utsignalen.", "P reagerar på fel.", "I tar bort stationärt fel.", "D dämpar snabba förändringar."]
+    bullets: ["PV är processvärdet som mäts.", "SP är börvärdet.", "u är utsignalen.", "P reagerar på fel.", "I tar bort stationärt fel.", "D dämpar snabba förändringar."]
   }
 };
 
@@ -33,7 +33,7 @@ const LEARNING_PATHS = {
   "basic-learning-path.v1.json": {
     title: "Grundstig: teori till simulering",
     steps: [
-      { type: "theory", ref: "pid-intro.v1.json", title: "Teori", objective: "Förstå PV, SP och MO." },
+      { type: "theory", ref: "pid-intro.v1.json", title: "Teori", objective: "Förstå PV, SP och u." },
       { type: "scenario", ref: "basic-step-self-regulating.json", title: "PID-bas", objective: "Se stegsvar i praktiken." },
       { type: "scenario", ref: "p-step-self-regulating.json", title: "P-reglering", objective: "Observera stationärt fel." },
       { type: "scenario", ref: "pi-step-self-regulating.json", title: "PI-reglering", objective: "Jämför mot P." }

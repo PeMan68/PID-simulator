@@ -121,7 +121,7 @@ Flytta en punkt till BACKLOG.md när den är tillräckligt tydlig för att bli:
 ### Förslag / nästa tanke:
   1. **Ny lärstig: "Processens begränsningar"** — Steg 1: visa vad K, T, L betyder fysikaliskt. Steg 2: experimentera med K för att se hur y_max förändras. Steg 3: sätt SP > y_max och observera att u fastnar vid 100 %. Steg 4: öka K tills SP är nåbar. Steg 5: diskutera vad som händer i en riktig anläggning (ventil för stor/liten, pump för svag).
   2. **Varning i statusraden** när SP > y_max, t.ex. "⚠ SP ouppnåeligt (y_max=50.0)". Beräknas som normalValue + K × outputLimits.max.
-### Status: Noterad — två konkreta åtgärder föreslagna (ny lärstig + statusvarning)
+### Status: Noterad — två konkreta åtgärder föreslagna (ny lärstig + statusvarning) 
 
 ---
 
@@ -151,4 +151,22 @@ Idag är lärstigs-systemet passivt: användaren klickar "Nästa steg" utan att 
 Reflektionsfrågor i .md-filerna omvandlas till `quiz`-steg med MCQ. Simuleringsuppgifter ("kör tills systemet stabiliseras") omvandlas till `task`-steg med auto-kontroll.
 
 **Gamifieringselement att överväga:** låsta lärstigar (måste klara grundläggande för att låsa upp mellannivå), framstegsvisning (steg X av Y), stjärnbetyg, lokal sparning av framsteg (localStorage).
-### Status: Noterad — kräver arkitekturutvidgning av LEARNING_PATHS-strukturen och ny UI-komponent för quiz/task-steg
+### Status: Delvis implementerad — quiz-gates, guidat/test-läge och föregående-knapp klart (2026-05-28)
+
+---
+
+### Datum: 2026-05-28
+### Del av webbappen: Lärstigar / test-läge / UX
+### Iakttagelse: Klick på "Test"-knappen ska nollställa poäng och starta lärstigen från steg 1. Det är avsett beteende — test är ett separat, kontrollerat genomlopp som alltid börjar från början.
+### Konsekvens: Användaren kan inte "fuska" in i mitten av ett test.
+### Förslag / nästa tanke: Implementerat. Klick på "Guidat" behöver inte nollställa — man kan fortsätta där man var.
+### Status: Implementerad
+
+---
+
+### Datum: 2026-05-28
+### Del av webbappen: Lärstigar / processbegransningar.v1 / steg "Svag process"
+### Iakttagelse: Steget "Svag process" använder p-step-self-regulating.json (P-reglering). P-reglering ger alltid ett stationärt fel, vilket gör det svårt att avgöra om y fastnar för att processen är för svag (K-begränsning) eller för att regulatorn har inherent steady-state-fel. Studenter riskerar att dra fel slutsats.
+### Konsekvens: Pedagogisk otydlighet — det som ska demonstreras är en processbegränsning, inte ett regulatorfel.
+### Förslag / nästa tanke: Byt scenario till PI eller PID för detta steg. Då elimineras regulatorns stationära fel och om y ändå inte når SP är det glasklart att orsaken är K × u_max-begränsningen. Behöver ett nytt scenario: t.ex. "pi-svag-process.json" med K=0.5, PI-reglering, SP=80.
+### Status: Noterad

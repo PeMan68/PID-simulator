@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir apps/)",
+      "Bash(git checkout *)",
+      "Bash(git push *)",
+      "Bash(where python *)",
+      "Bash(python -m http.server 9173 --bind 127.0.0.1)",
+      "Bash(echo \"Server PID: $!\")",
+      "Bash(npx playwright *)",
+      "Bash(pip show *)",
+      "Read(//tmp/**)",
+      "Bash(node test.js)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git branch *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:9173/)",
+      "Bash(node verify3.js)",
+      "Bash(node verify_t0.js)",
+      "Bash(node -e ' *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(node --check \"c:/Users/prmm00/dev/PID-simulator/apps/app/app.js\")",
+      "Bash(python -c ' *)"
+    ]
+  }
+}

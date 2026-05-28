@@ -47,14 +47,14 @@ Välkommen till grundläggande reglerteknik! Dessa övningar är designade för 
 
 **Vad händer?**
 - Processvärdet (PV) förblir på 0
-- Utsignalen (MO) är också 0
+- Utsignalen (u) är också 0
 - Systemet gör ingenting!
 
 **Förklaring:**
 När vi inte har någon regulator så finns det ingenting som försöker styra processen mot önskat värde (börvärdet). Det är som att ha en värmare utan termostat - den kommer aldrig att veta när den ska värma!
 
 #### Steg 2: Fast utsignal
-1. Under "Simuleringsstart" hittar du **Initialt MO**
+1. Under "Simuleringsstart" hittar du **Initialt u**
 2. Ändra detta till 50%
 3. Starta om simuleringen
 
@@ -159,7 +159,7 @@ P-reglering (Proportionell reglering) är smartare än On/Off:
 
 **Formel:**
 ```
-MO = Kp × fel
+u = Kp × fel
 där fel = (börvärde - processvärde)
 ```
 
@@ -554,7 +554,7 @@ Du får tre okända processer (bygg dem själv!):
 3. K=1.0, T=5s, Dötid=5s
 
 För varje process:
-1. Starta med öppen styrning (MO=30%)
+1. Starta med öppen styrning (u=30%)
 2. Observera stegsvar
 3. Uppskatta systemets "svårighetsgrad"
 4. Välj lämpliga PID-parametrar
@@ -563,7 +563,7 @@ För varje process:
 **Viktiga observationer:**
 - Hur snabbt når systemet 63% av slutvärdet? (ger T)
 - Hur lång fördröjning innan något händer? (ger dötid)
-- Hur stort är slutvärdet vid MO=30%? (ger K)
+- Hur stort är slutvärdet vid u=30%? (ger K)
 
 ---
 
