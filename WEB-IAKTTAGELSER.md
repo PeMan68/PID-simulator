@@ -151,4 +151,13 @@ Idag är lärstigs-systemet passivt: användaren klickar "Nästa steg" utan att 
 Reflektionsfrågor i .md-filerna omvandlas till `quiz`-steg med MCQ. Simuleringsuppgifter ("kör tills systemet stabiliseras") omvandlas till `task`-steg med auto-kontroll.
 
 **Gamifieringselement att överväga:** låsta lärstigar (måste klara grundläggande för att låsa upp mellannivå), framstegsvisning (steg X av Y), stjärnbetyg, lokal sparning av framsteg (localStorage).
-### Status: Noterad — kräver arkitekturutvidgning av LEARNING_PATHS-strukturen och ny UI-komponent för quiz/task-steg
+### Status: Delvis implementerad — quiz-gates, guidat/test-läge och föregående-knapp klart (2026-05-28)
+
+---
+
+### Datum: 2026-05-28
+### Del av webbappen: Lärstigar / test-läge / UX
+### Iakttagelse: Klick på "Test"-knappen nollställer poäng och startar lärstigen från steg 1. Det är inte alltid önskat beteende — om användaren råkar klicka Test mitt i en lärstig förlorar de sin progress och måste börja om. Samma gäller om man växlar Guidat→Test→Guidat under pågående genomgång.
+### Konsekvens: Oavsiktlig förlust av progress och poäng. Pedagogiskt störande om det händer i klassrum eller under examination.
+### Förslag / nästa tanke: Två alternativ — (A) Visa en bekräftelsedialog: "Byta till Test-läge nollställer poäng och startar om. Fortsätt?". (B) Låt lägesbytet bevara steget man är på och bara ändra hur checkpoints renderas; nollställ bara poäng explicit med en "Börja om"-knapp. Alternativ B är mjukare UX och troligen rätt för pedagogisk miljö.
+### Status: Noterad
