@@ -54,6 +54,10 @@ packages/
 docs/
   architecture/     ← Teknisk dokumentation
   agents/           ← AI-assistenternas planeringsunderlag
+  planning/         ← Backlog och iakttagelser (webbapp)
+  releases/         ← CHANGELOG och release notes
+  exercises/        ← Övningsmaterial och pedagogiska PDF:er
+  python-app/       ← Legacy Python/tkinter-app dokumentation
 main.py             ← Original Python/tkinter-app (referens)
 ```
 
