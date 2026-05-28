@@ -18,7 +18,7 @@
     "ti": 0.0,
     "td": 0.0,
     "antiWindup": true,
-    "onoff": { "hysteresisType": "both", "high": 10.0, "low": 10.0 },
+    "hysteresis": { "lower": 10.0, "upper": 10.0 },
     "outputLimits": { "min": 0.0, "max": 100.0 }
   },
   "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },

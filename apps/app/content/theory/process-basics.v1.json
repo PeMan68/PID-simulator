@@ -1,0 +1,13 @@
+{
+  "id": "process-basics-v1",
+  "version": "v1.0.0",
+  "title": "Processparametrar: K, T och L",
+  "summary": "Tre parametrar bestämmer helt hur en process beter sig och vad regulatorn kan uppnå.",
+  "bullets": [
+    "K (processförstärkning) — hur mycket y ändras per enhet u. Maximalt y = normalValue + K × u_max.",
+    "T (tidskonstant) — hur snabbt processen svarar. T=10 → 63 % av slutvärdet nås efter 10 steg.",
+    "L (dötid) — fördröjning innan processen reagerar alls på utsignalen.",
+    "Stor dötid (L/T > 0.3) gör reglering svårt — regulatorn agerar på gammal information.",
+    "Jämförelse: K är motoreffekten, T är hur trög bilen är, L är reaktionstiden."
+  ]
+}

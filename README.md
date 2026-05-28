@@ -1,61 +1,70 @@
 # PID-simulator
 
-Ett pedagogiskt verktyg för att demonstrera och simulera PID-reglering i processindustriella system.
+Pedagogiskt verktyg för simulering av PID-reglering. Primärt målgrupp: YH-studenter inom automation och reglerteknik.
 
-## Översikt
+## Huvudapplikation
 
-Denna simulator är utformad för utbildning i reglerteknik och visar hur olika regulatortyper fungerar med realistiska processmodeller.
+**`apps/app/`** — Webbsimulator som hostas på GitHub Pages.
 
-### Huvudfunktioner
-- **Flera regulatortyper**: On/Off, P, PI och PID
-- **Realistiska processmodeller**: Självreglerande och integrerande processer  
-- **Simuleringshistorik**: Jämför olika regulatorinställningar
-- **Pedagogisk design**: Interaktiv visualisering med hjälpsystem
-- **Störningstester**: Brus och pulsstörningar
+Live-URL: `https://peman68.github.io/PID-simulator/`
 
-## Snabbstart
+Funktioner: On/Off-, P-, PI- och PID-reglering, interaktiva lärstigar med quiz, scenariobibliotek, hjälpsystem.
 
-### Krav
-- Python 3.8+
-- tkinter (ingår normalt i Python-standardinstallationen)
+## Lokal utveckling
 
-### Installation
+```bash
+cd apps/app
+python -m http.server 8080
+# Öppna http://localhost:8080
+```
 
-1. **Klona eller ladda ner projektet**
-2. **Skapa virtuell miljö**:
-   ```powershell
-   python -m venv venv
-   .\venv\Scripts\Activate.ps1
-   ```
-3. **Installera beroenden**:
-   ```powershell
-   pip install -r requirements.txt
-   ```
-4. **Starta programmet**:
-   ```powershell
-   python main.py
-   ```
+Appen kräver HTTP-server (fetch() används för att ladda data). Dubbel-klick på index.html fungerar inte.
 
-### Första användning
-1. Välj **OnOff-preset** för enklaste introduktion
-2. Experimentera med **P-reglering** 
-3. Utforska **PI** och **PID** för avancerade tillämpningar
-4. Använd **Hjälp-fliken** för detaljerade förklaringar
+## Lägg till ett scenario
 
-## Pedagogisk användning
+1. Skapa `apps/app/content/scenarios/mitt-scenario.json`
+2. Lägg till en rad i `apps/app/content/catalog.json` under `"scenarios"`
+3. Testa lokalt, merga till main → deployas automatiskt
 
-### Målgrupp
-- Studenter inom automation och reglerteknik
-- Yrkesverksamma som vill förstå PID-reglering bättre  
-- Lärare som behöver demonstrationsverktyg
+Se `docs/architecture/current-state.md` för fullständigt format.
 
-### Support och utveckling
-För detaljerad hjälp och teknisk information, se:
-- **Hjälp-fliken** i programmet för praktisk användning
-- **teori-och-bakgrund.md** för matematisk fördjupning
-- **CHANGELOG.md** för versionshistorik
+## Deployment
 
----
+GitHub Actions deployas automatiskt vid push till `main` om filer under `apps/app/` ändrades.
+Workflow: `.github/workflows/deploy-pid-simulator.yml`
 
-**Version**: 1.7.0  
-**Utvecklat för**: Pedagogisk användning inom reglerteknik
+Branches som **inte** triggar deployment: `develop`, feature-branches.
+
+## Projektstruktur
+
+```
+apps/
+  app/              ← Huvudapplikation (GitHub Pages)
+    index.html
+    app.js
+    content/
+      catalog.json  ← Manifest för alla datafiler
+      scenarios/    ← En JSON-fil per scenario
+      exercises/    ← Lärstigar med quiz-checkpoints
+      theory/       ← Teoritexter
+  web/              ← Experimentell serverapp (ES-moduler, kräver server)
+  web-standalone/   ← Äldre standalone-prototyp (referens)
+packages/
+  sim-core/         ← Delad simuleringslogik (används av apps/web/)
+docs/
+  architecture/     ← Teknisk dokumentation
+  agents/           ← AI-assistenternas planeringsunderlag
+main.py             ← Original Python/tkinter-app (referens)
+```
+
+## Gitflow
+
+```
+main        ← Stabil, deployas till GitHub Pages
+develop     ← Integrationsgren
+feature/*   ← Ny funktionalitet
+fix/*       ← Buggfixar
+refactor/*  ← Omstrukturering
+```
+
+Merga alltid feature → develop → main. Aldrig direkt till main.

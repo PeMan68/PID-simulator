@@ -1,261 +1,23 @@
-/* Standalone version: no imports, no fetch, no server dependency */
+/* Data laddas via fetch() från content/catalog.json vid uppstart */
 
-const SCENARIOS = {
-  "basic-step-self-regulating.json": {
-    id: "basic-step-self-regulating", runtime: { dt: 1, maxSteps: 2000, setpoint: 50 },
-    process: { type: "self_regulating", K: 1.5, T: 5, L: 1, normalValue: 0, measurementRange: { min: 0, max: 100 } },
-    controller: { mode: "pid", kp: 2, ti: 10, td: 1, antiWindup: true, outputLimits: { min: 0, max: 100 }, onoff: { hysteresisType: "both", high: 2, low: 2 } },
-    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
-  },
-  "p-step-self-regulating.json": {
-    id: "p-step-self-regulating", runtime: { dt: 1, maxSteps: 600, setpoint: 60 },
-    process: { type: "self_regulating", K: 1.3, T: 15, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
-    controller: { mode: "p", kp: 1, ti: 0, td: 0, antiWindup: true, outputLimits: { min: 0, max: 100 } },
-    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
-  },
-  "pi-step-self-regulating.json": {
-    id: "pi-step-self-regulating", runtime: { dt: 1, maxSteps: 600, setpoint: 60 },
-    process: { type: "self_regulating", K: 1.3, T: 15, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
-    controller: { mode: "pi", kp: 1.2, ti: 20, td: 0, antiWindup: true, outputLimits: { min: 0, max: 100 } },
-    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
-  },
-  "pid-step-self-regulating.json": {
-    id: "pid-step-self-regulating", runtime: { dt: 1, maxSteps: 600, setpoint: 60 },
-    process: { type: "self_regulating", K: 1.3, T: 15, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
-    controller: { mode: "pid", kp: 1.2, ti: 20, td: 3, antiWindup: true, outputLimits: { min: 0, max: 100 } },
-    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
-  },
-  "onoff-basic.json": {
-    id: "onoff-basic", runtime: { dt: 1, maxSteps: 300, setpoint: 50 },
-    process: { type: "self_regulating", K: 1.0, T: 10, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
-    controller: { mode: "onoff", kp: 0, ti: 0, td: 0, antiWindup: false, outputLimits: { min: 0, max: 100 }, hysteresis: { lower: 2, upper: 2 } },
-    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
-  },
-  "onoff-hysteresis-basic.json": {
-    id: "onoff-hysteresis-basic", runtime: { dt: 1, maxSteps: 600, setpoint: 50 },
-    process: { type: "self_regulating", K: 1.0, T: 20, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
-    controller: { mode: "onoff", kp: 0, ti: 0, td: 0, antiWindup: true, outputLimits: { min: 0, max: 100 }, hysteresis: { lower: 10, upper: 10 } },
-    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
-  },
-  "manual-open-loop.json": {
-    id: "manual-open-loop", runtime: { dt: 1, maxSteps: 600, setpoint: 50 },
-    process: { type: "self_regulating", K: 1.0, T: 20, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
-    controller: { mode: "manual", manualOutput: 50, kp: 0, ti: 0, td: 0, antiWindup: true, outputLimits: { min: 0, max: 100 } },
-    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
-  },
-  "pid-disturbance-noise.json": {
-    id: "pid-disturbance-noise", runtime: { dt: 1, maxSteps: 900, setpoint: 50 },
-    process: { type: "self_regulating", K: 1.0, T: 20, L: 5, normalValue: 0, measurementRange: { min: 0, max: 100 } },
-    controller: { mode: "pid", kp: 1.2, ti: 12, td: 2, antiWindup: true, outputLimits: { min: 0, max: 100 } },
-    disturbance: { noiseStd: 3, pulse: { magnitude: 0, durationSteps: 0 } }
-  },
-  "pid-pulse-rejection.json": {
-    id: "pid-pulse-rejection", runtime: { dt: 1, maxSteps: 600, setpoint: 50 },
-    process: { type: "self_regulating", K: 1.0, T: 20, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
-    controller: { mode: "pid", kp: 1.0, ti: 10, td: 2, antiWindup: true, outputLimits: { min: 0, max: 100 } },
-    disturbance: { noiseStd: 0, pulse: { magnitude: 10, durationSteps: 0 } }
-  },
-  "integrating-experimental.json": {
-    id: "integrating-experimental", runtime: { dt: 1, maxSteps: 900, setpoint: 50 },
-    process: { type: "integrating", K: 0.5, T: 15, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
-    controller: { mode: "pi", kp: 2.0, ti: 8, td: 0, antiWindup: true, outputLimits: { min: 0, max: 100 } },
-    disturbance: { noiseStd: 1, pulse: { magnitude: 0, durationSteps: 0 } }
-  },
-  "unstable-experimental.json": {
-    id: "unstable-experimental", runtime: { dt: 0.5, maxSteps: 600, setpoint: 50 },
-    process: { type: "unstable", K: 1.5, T: 5, L: 0.5, normalValue: 0, measurementRange: { min: 0, max: 100 } },
-    controller: { mode: "pid", kp: 1.0, ti: 10, td: 1, antiWindup: true, outputLimits: { min: 0, max: 100 } },
-    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
-  }
-};
+let SCENARIOS = {}, THEORY = {}, LEARNING_PATHS = {};
 
-const THEORY = {
-  "pid-intro.v1.json": {
-    title: "Introduktion till reglering",
-    summary: "Grundidé: regulatorn justerar utsignalen (u) så att processvärdet (PV) når börvärdet (SP).",
-    bullets: [
-      "PV (Process Value) — det mätta processvärdet, t.ex. temperatur.",
-      "SP (Setpoint) — det önskade värdet som regulatorn strävar mot.",
-      "u (utsignal) — regulatorns kommando till processen, t.ex. ventilöppning 0–100%.",
-      "Felet e = SP − PV — regulatorn försöker alltid driva e mot noll.",
-      "P-delen reagerar omedelbart på aktuellt fel.",
-      "I-delen ackumulerar felet och eliminerar kvarstående avvikelse.",
-      "D-delen bromsar när PV förändras snabbt och minskar överskjutning."
-    ]
-  },
-  "process-basics.v1.json": {
-    title: "Processparametrar: K, T och L",
-    summary: "Tre parametrar bestämmer helt hur en process beter sig och vad regulatorn kan uppnå.",
-    bullets: [
-      "K (processförstärkning) — hur mycket y ändras per enhet u. Maximalt y = normalValue + K × u_max.",
-      "T (tidskonstant) — hur snabbt processen svarar. T=10 → 63 % av slutvärdet nås efter 10 steg.",
-      "L (dötid) — fördröjning innan processen reagerar alls på utsignalen.",
-      "Stor dötid (L/T > 0.3) gör reglering svårt — regulatorn agerar på gammal information.",
-      "Jämförelse: K är motoreffekten, T är hur trög bilen är, L är reaktionstiden."
-    ]
-  },
-  "onoff-theory.v1.json": {
-    title: "On/Off-reglering",
-    summary: "Den enklaste regulatorn: utsignalen är antingen på (u_max) eller av (u_min).",
-    bullets: [
-      "Termostat är ett klassiskt exempel — värmer på eller av beroende på temperatur.",
-      "Hysteres används för att undvika för täta switchningar nära SP.",
-      "Lägre hysteres → bättre precision men fler switchningar.",
-      "Höger hysteres → färre switchningar men mer svängning runt SP.",
-      "On/Off ger alltid oscillation — det finns ingen mellannivå."
-    ]
-  }
-};
+function getBasePath() {
+  return window.location.href.replace(/\/[^/]*$/, '');
+}
 
-const LEARNING_PATHS = {
-  "grundlaggande.v1": {
-    title: "Grundläggande reglering",
-    description: "Från on/off till PID — förstå varje steg i regulatorutvecklingen.",
-    difficulty: "intro",
-    steps: [
-      {
-        type: "theory",
-        ref: "pid-intro.v1.json",
-        title: "Vad är reglering?",
-        objective: "Förstå begreppen PV, SP, u och felet e.",
-        checkpoint: {
-          question: "Vad kallas skillnaden mellan börvärde (SP) och processvärde (PV)?",
-          options: ["Utsignalen (u)", "Felet (e)", "Tidskonstanten (T)", "Dötiden (L)"],
-          correct: 1,
-          explanation: "Felet e = SP − PV är grunden i all reglering. Regulatorn försöker alltid driva e mot noll."
-        }
-      },
-      {
-        type: "scenario",
-        ref: "onoff-basic.json",
-        title: "On/Off-reglering",
-        objective: "Observera oscillationen kring SP — on/off kan inte stanna exakt.",
-        instruction: "Kör 40 steg. Notera att PV (blå) oscillerar runt SP (röd streckad). u (grön) växlar bara mellan 0 och 100.",
-        checkpoint: {
-          question: "Varför oscillerar PV ständigt runt SP med on/off-reglering?",
-          options: [
-            "Kp är felaktigt inställt",
-            "On/off har ingen mellannivå — den kan bara välja fullt på eller helt av",
-            "Processen är för snabb",
-            "SP är satt för högt"
-          ],
-          correct: 1,
-          explanation: "On/off kan bara ge u_max eller u_min, aldrig ett mellanvärde. Processen overshoots alltid och regulatorn slår om igen — resultatet är kontinuerlig oscillation."
-        }
-      },
-      {
-        type: "scenario",
-        ref: "p-step-self-regulating.json",
-        title: "P-reglering",
-        objective: "Se att P-reglering stabiliserar men lämnar ett kvarstående fel.",
-        instruction: "Kör 50 steg. PV stabiliserar sig — men når den SP? Notera skillnaden mot on/off.",
-        checkpoint: {
-          question: "Varför når PV inte exakt SP med bara P-reglering?",
-          options: [
-            "Kp är för litet — öka det",
-            "P-regulatorn behöver ett fel (e≠0) för att hålla utsignalen — vid e=0 faller u till noll",
-            "Processen är för trög",
-            "On/off hade fungerat bättre"
-          ],
-          correct: 1,
-          explanation: "u = Kp × e. Om e = 0 ger P-regulatorn u = 0, vilket inte räcker för att hålla processen på SP. Därför kvarstår alltid ett litet fel — det kallas stationärt fel."
-        }
-      },
-      {
-        type: "scenario",
-        ref: "pi-step-self-regulating.json",
-        title: "PI-reglering",
-        objective: "Integratorn eliminerar det stationära felet.",
-        instruction: "Kör 60 steg. Jämför med P-steget — når PV nu SP? Tar det längre tid?",
-        checkpoint: {
-          question: "Vad gör I-delen (integratorn) som P-delen inte klarar?",
-          options: [
-            "Reagerar snabbare på plötsliga störningar",
-            "Ackumulerar felet över tid och driver u tills e = 0",
-            "Minskar oscillationen",
-            "Begränsar utsignalens maximala värde"
-          ],
-          correct: 1,
-          explanation: "Integratorn summerar felet för varje steg. Även ett litet kvarstående fel byggs upp och driver till slut u tillräckligt högt för att hålla y = SP — stationärt fel = 0."
-        }
-      },
-      {
-        type: "scenario",
-        ref: "pid-step-self-regulating.json",
-        title: "PID-reglering",
-        objective: "D-delen dämpar svängningar — samma process som PI-steget för direkt jämförelse.",
-        instruction: "Kör 40 steg. Samma process som PI (K=1.3, T=15) — jämför insvängningen. Är överskjutningen mindre med D-delen aktiv?",
-        checkpoint: {
-          question: "Vad är D-delens huvudsakliga funktion i PID-regulatorn?",
-          options: [
-            "Eliminera stationärt fel",
-            "Reagera på felets förändringshastighet och bromsa svängningar",
-            "Öka regulatorförstärkningen automatiskt",
-            "Minska dötiden i processen"
-          ],
-          correct: 1,
-          explanation: "D-delen beräknar u_D = −Kp × Td × (dPV/dt). Den 'ser' att PV förändras snabbt och bromsar i förväg — som att lyfta foten från gasen innan en kurva."
-        }
-      }
-    ]
-  },
-
-  "processbegransningar.v1": {
-    title: "Processens begränsningar",
-    description: "Vad K, T och L egentligen betyder — och varför regulatorn inte alltid kan nå SP.",
-    difficulty: "intro",
-    steps: [
-      {
-        type: "theory",
-        ref: "process-basics.v1.json",
-        title: "K, T och L",
-        objective: "Förstå de tre processparametrarna fysikaliskt.",
-        checkpoint: {
-          question: "Vad är det maximalt uppnåeliga PV för en process med K=0.5, normalValue=0 och u_max=100?",
-          options: ["100", "50", "0.5", "Beror på regulatorns Kp"],
-          correct: 1,
-          explanation: "y_max = normalValue + K × u_max = 0 + 0.5 × 100 = 50. Ingen regulator kan ta PV förbi detta tak — det är en ren processbegränsning."
-        }
-      },
-      {
-        type: "scenario",
-        ref: "pi-step-self-regulating.json",
-        title: "Svag process",
-        objective: "Ändra K till 0.5 och SP till 80 — se att y fastnar vid ~50 trots PI-reglering.",
-        instruction: "PI-reglering laddad (eliminerar stationärt fel). Ändå fastnar y:\n1. Ändra K till 0.5\n2. Ändra SP till 80\n3. Kör 50 steg\n\ny_max = K × u_max = 0.5 × 100 = 50\nEftersom SP=80 > y_max=50 kan ingen regulator nå SP.",
-        checkpoint: {
-          question: "PV fastnar på ~50 trots att u = 100 %. Vad är förklaringen?",
-          options: [
-            "Ti behöver sänkas för att hjälpa integratorn",
-            "Processförstärkning K är för låg — processen är fysikaliskt för svag att nå SP",
-            "Kp behöver ökas kraftigt",
-            "Dötiden L blockerar processen"
-          ],
-          correct: 1,
-          explanation: "Med K=0.5 är y_max = 50. Det spelar ingen roll hur regulatorn är inställd — processen kan inte producera mer. Lösningen i verkligheten: större ventil, starkare pump, eller sänk SP."
-        }
-      },
-      {
-        type: "scenario",
-        ref: "pi-step-self-regulating.json",
-        title: "Dötid och regulering",
-        objective: "Sätt L=5 och observera hur PI-regleringen destabiliseras av dötiden.",
-        instruction: "PI-reglering laddad (K=1.3, L=0). Lägg till dötid:\n1. Ändra L till 5\n2. Kör 80 steg\n\nVad händer med insvängningen jämfört med L=0?",
-        checkpoint: {
-          question: "Varför försämrar dötid (L) regleringen?",
-          options: [
-            "L minskar processförstärkningen K",
-            "Regulatorn agerar på gammal information — processen svarar L steg senare än väntat",
-            "L ökar tidskonstanten T",
-            "Dötid påverkar bara on/off-reglering"
-          ],
-          correct: 1,
-          explanation: "Under dötiden ser regulatorn ingen effekt av sin utsignal. Den tror att processen inte reagerar och ökar u ytterligare — när svarstiden väl kommer har regulatorn överstimulerat, vilket ger oscillation."
-        }
-      }
-    ]
-  }
-};
+async function loadCatalog() {
+  const base = getBasePath();
+  const catalog = await fetch(base + '/content/catalog.json').then(r => { if (!r.ok) throw new Error('catalog.json: ' + r.status); return r.json(); });
+  const [scenarioDatas, theoryDatas, pathDatas] = await Promise.all([
+    Promise.all(catalog.scenarios.map(s => fetch(base + '/content/' + s.file).then(r => r.json()))),
+    Promise.all(catalog.theory.map(t => fetch(base + '/content/' + t.file).then(r => r.json()))),
+    Promise.all(catalog.learning_paths.map(p => fetch(base + '/content/' + p.file).then(r => r.json())))
+  ]);
+  catalog.scenarios.forEach((entry, i) => { SCENARIOS[entry.file.split('/').pop()] = scenarioDatas[i]; });
+  catalog.theory.forEach((entry, i) => { THEORY[entry.file.split('/').pop()] = theoryDatas[i]; });
+  catalog.learning_paths.forEach((entry, i) => { LEARNING_PATHS[entry.id] = pathDatas[i]; });
+}
 
 const HELP_CONTENT = {
   k: {
@@ -762,8 +524,11 @@ function nextPathStep() {
   renderStep(step);
 }
 
-Object.keys(SCENARIOS).forEach(name => { const o = document.createElement("option"); o.value = name; o.textContent = name; scenarioSelect.appendChild(o); });
-Object.keys(LEARNING_PATHS).forEach(name => { const o = document.createElement("option"); o.value = name; o.textContent = name; learningPathSelect.appendChild(o); });
+function initUI() {
+  Object.entries(SCENARIOS).forEach(([name, s]) => { const o = document.createElement("option"); o.value = name; o.textContent = s.title || name; scenarioSelect.appendChild(o); });
+  Object.entries(LEARNING_PATHS).forEach(([id, p]) => { const o = document.createElement("option"); o.value = id; o.textContent = p.title || id; learningPathSelect.appendChild(o); });
+  loadScenarioByName("basic-step-self-regulating.json");
+}
 
 // ── Sidebar resize ──
 function makeResizable(handleId, sidebarId, side, storageKey) {
@@ -863,4 +628,6 @@ document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
 window.addEventListener("resize", drawChart);
 
-loadScenarioByName("basic-step-self-regulating.json");
+loadCatalog().then(initUI).catch(err => {
+  document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;background:#1a1a2e;color:#e0e0e0;min-height:100vh"><h2 style="color:#f0a500">Kunde inte ladda data</h2><p>' + err.message + '</p><p>Appen kräver HTTP-server (GitHub Pages eller lokal server). Dubbel-klick på index.html stöds inte.</p></div>';
+});
