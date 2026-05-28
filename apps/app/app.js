@@ -19,6 +19,12 @@ const SCENARIOS = {
     controller: { mode: "pi", kp: 1.2, ti: 20, td: 0, antiWindup: true, outputLimits: { min: 0, max: 100 } },
     disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
   },
+  "pid-step-self-regulating.json": {
+    id: "pid-step-self-regulating", runtime: { dt: 1, maxSteps: 600, setpoint: 60 },
+    process: { type: "self_regulating", K: 1.3, T: 15, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
+    controller: { mode: "pid", kp: 1.2, ti: 20, td: 3, antiWindup: true, outputLimits: { min: 0, max: 100 } },
+    disturbance: { noiseStd: 0, pulse: { magnitude: 0, durationSteps: 0 } }
+  },
   "onoff-basic.json": {
     id: "onoff-basic", runtime: { dt: 1, maxSteps: 300, setpoint: 50 },
     process: { type: "self_regulating", K: 1.0, T: 10, L: 0, normalValue: 0, measurementRange: { min: 0, max: 100 } },
@@ -139,10 +145,10 @@ const LEARNING_PATHS = {
       },
       {
         type: "scenario",
-        ref: "basic-step-self-regulating.json",
+        ref: "pid-step-self-regulating.json",
         title: "PID-reglering",
-        objective: "D-delen dämpar svängningar och snabbar upp insvängningen.",
-        instruction: "Kör 40 steg. Jämför stegsvar med PI — är överskjutningen mindre? Är det snabbare?",
+        objective: "D-delen dämpar svängningar — samma process som PI-steget för direkt jämförelse.",
+        instruction: "Kör 40 steg. Samma process som PI (K=1.3, T=15) — jämför insvängningen. Är överskjutningen mindre med D-delen aktiv?",
         checkpoint: {
           question: "Vad är D-delens huvudsakliga funktion i PID-regulatorn?",
           options: [
@@ -177,10 +183,10 @@ const LEARNING_PATHS = {
       },
       {
         type: "scenario",
-        ref: "p-step-self-regulating.json",
+        ref: "pi-step-self-regulating.json",
         title: "Svag process",
-        objective: "Ändra K till 0.5 och SP till 80 — se att y fastnar vid ~50.",
-        instruction: "1. Ändra K till 0.5 i fältet\n2. Ändra SP till 80\n3. Kör 40 steg\n\nVarifrån: y_max = K × u_max = 0.5 × 100 = 50",
+        objective: "Ändra K till 0.5 och SP till 80 — se att y fastnar vid ~50 trots PI-reglering.",
+        instruction: "PI-reglering laddad (eliminerar stationärt fel). Ändå fastnar y:\n1. Ändra K till 0.5\n2. Ändra SP till 80\n3. Kör 50 steg\n\ny_max = K × u_max = 0.5 × 100 = 50\nEftersom SP=80 > y_max=50 kan ingen regulator nå SP.",
         checkpoint: {
           question: "PV fastnar på ~50 trots att u = 100 %. Vad är förklaringen?",
           options: [
@@ -195,10 +201,10 @@ const LEARNING_PATHS = {
       },
       {
         type: "scenario",
-        ref: "p-step-self-regulating.json",
+        ref: "pi-step-self-regulating.json",
         title: "Dötid och regulering",
-        objective: "Sätt L=5 och observera hur regleringen försvåras.",
-        instruction: "1. Återställ K till 1.3 och SP till 60\n2. Ändra L till 5\n3. Kör 60 steg\n\nVad händer med insvängningen?",
+        objective: "Sätt L=5 och observera hur PI-regleringen destabiliseras av dötiden.",
+        instruction: "PI-reglering laddad (K=1.3, L=0). Lägg till dötid:\n1. Ändra L till 5\n2. Kör 80 steg\n\nVad händer med insvängningen jämfört med L=0?",
         checkpoint: {
           question: "Varför försämrar dötid (L) regleringen?",
           options: [
