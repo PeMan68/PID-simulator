@@ -14,18 +14,17 @@ Varje feature-branch uppdaterar **endast sin egen post** (status, anteckningar).
 **Prioritet:** Hög
 **Beskrivning:**
 När fält döljs/visas dynamiskt (t.ex. hysteres vid On/Off, Ti/Td vid P-läge) hoppar layouten eftersom fälten flödar fritt i ett CSS-grid. Fälten ska grupperas logiskt och en grupp ska aldrig delas över två rader eller två kolumner — gruppen ska hålla ihop som en enhet. Responsiv design ska fortfarande respekteras (grupper kan staplas vertikalt vid smal skärm), men en grupp bryts aldrig internt.
-**Lösningsidé:**
-Gruppera relaterade fält i egna container-element (t.ex. `<div class="param-group">`). Varje grupp renderas som en enhet med `break-inside: avoid` eller liknande CSS-teknik. Grupper: (1) Process (K, T, L, Normalvärde, Processtyp, Utflöde), (2) Regulator (Kp, Ti, Td, läge, Bumpless, Anti-windup), (3) Utsignal (U min, U max, Manuell u), (4) Störningar (Brus, Puls mag, Puls steg), (5) On/Off (Hyst. låg, Hyst. hög).
-**Status:** Öppen
+**Grupper:** Process, Regulator, Styrning, Störningar, On/Off (döljs när ej OnOff-läge).
+**Status:** Fixad i branch — inväntar testning
 
 ---
 
 ### FEAT-017 — Versionsinformation i GUI
-**Branch:** `feature/version-info`
+**Branch:** `feature/parameter-grupper`
 **Prioritet:** Låg
 **Beskrivning:**
-Versionsinformation ska visas i gränssnittet så att användare och testare kan se vilken version av appen de kör. Exakt placering och format bestäms under implementation.
-**Status:** Öppen
+Versionsinformation visas i sidebar-titeln bredvid "PID Simulator". Konstanten `APP_VERSION` i app.js styr värdet.
+**Status:** Fixad i branch — inväntar testning
 
 ---
 

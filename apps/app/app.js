@@ -1,5 +1,7 @@
 /* Data laddas via fetch() från content/catalog.json vid uppstart */
 
+const APP_VERSION = "1.1";
+
 let SCENARIOS = {}, THEORY = {}, LEARNING_PATHS = {};
 
 function getBasePath() {
@@ -438,8 +440,7 @@ function updateControllerUIState() {
   fields.td.parentElement.style.display = (isP || isPI || isManual || isOnOff) ? "none" : "";
   fields.manualOutput.parentElement.style.display = isManual ? "" : "none";
   fields.antiWindup.parentElement.style.display = noIntegral ? "none" : "";
-  fields.hysteresLower.parentElement.style.display = isOnOff ? "" : "none";
-  fields.hysteresUpper.parentElement.style.display = isOnOff ? "" : "none";
+  document.getElementById("groupOnOff").style.display = isOnOff ? "" : "none";
   
   // Update controller parameters based on mode
   if (currentScenario && currentScenario.controller) {
@@ -661,6 +662,7 @@ function setTestMode(on) {
 document.getElementById("modeGuided").addEventListener("click", () => setTestMode(false));
 document.getElementById("modeTest").addEventListener("click", () => setTestMode(true));
 
+document.getElementById("appVersion").textContent = "v" + APP_VERSION;
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
 fields.pulseDuration.addEventListener("input", () => { if (Number(fields.pulseDuration.value) < 0) fields.pulseDuration.value = 0; });
 document.getElementById("mode").addEventListener("change", updateControllerUIState);
