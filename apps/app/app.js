@@ -438,6 +438,8 @@ function updateControllerUIState() {
   fields.td.parentElement.style.display = (isP || isPI || isManual || isOnOff) ? "none" : "";
   fields.manualOutput.parentElement.style.display = isManual ? "" : "none";
   fields.antiWindup.parentElement.style.display = noIntegral ? "none" : "";
+  fields.hysteresLower.parentElement.style.display = isOnOff ? "" : "none";
+  fields.hysteresUpper.parentElement.style.display = isOnOff ? "" : "none";
   
   // Update controller parameters based on mode
   if (currentScenario && currentScenario.controller) {
