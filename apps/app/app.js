@@ -660,6 +660,7 @@ document.getElementById("modeGuided").addEventListener("click", () => setTestMod
 document.getElementById("modeTest").addEventListener("click", () => setTestMode(true));
 
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
+fields.pulseDuration.addEventListener("input", () => { if (Number(fields.pulseDuration.value) < 0) fields.pulseDuration.value = 0; });
 document.getElementById("mode").addEventListener("change", updateControllerUIState);
 document.getElementById("processType").addEventListener("change", updateProcessUIState);
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });

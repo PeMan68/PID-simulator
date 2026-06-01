@@ -42,9 +42,9 @@ Fältet "Puls steg" har `min="1"` i HTML vilket stoppar musklick från att gå u
 **Förväntat beteende:** Minvärde är 0 oavsett om tangentbord eller musklick används. Negativa tal accepteras inte.
 **Faktiskt beteende:** Musklick kan inte gå under 1, men tangentbord tillåter 0 och negativa tal.
 **Fix-noteringar:**
-`min="0"` i index.html. `Math.max(0, ...)` i `syncParamsFromUI()`. `triggerPulse()` återgår till `> 0`-check (fungerar eftersom `hydrateFields` visar 3 som default vid laddning).
+`min="0"` i index.html. `Math.max(0, ...)` i `syncParamsFromUI()`. `triggerPulse()` återgår till `> 0`-check. `input`-event på `pulseDuration` klampar negativt värde till 0 i realtid (TC-01 kräver omedelbar feedback vid tangentbordsinmatning).
 **Testdokument:** `tests/manual/2026-007-puls-steg-min-värde.md`
-**Status:** Fixad i branch — inväntar testning
+**Status:** Fixad i branch — TC-01 underkänd, TC-02–05 godkända. Ny fix tillagd — inväntar omtest av TC-01
 
 ---
 
