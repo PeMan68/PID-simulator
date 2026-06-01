@@ -153,6 +153,16 @@ Tydligare visuell feedback för OnOff-regulatorns hysteresis-gränser.
 
 ### Webbapp (`apps/app/`)
 
+### FEAT-020 — Flytta steg-knappar nedanför parametergrupperna
+**Status:** Klar
+
+---
+
+### FEAT-019 — Flytta Trigga puls-knappen till Störningar-gruppen
+**Status:** Klar
+
+---
+
 ### FEAT-018 — Logiska parametergrupper med collapse
 **Status:** Klar
 
