@@ -14,7 +14,7 @@ Varje feature-branch uppdaterar **endast sin egen post** (status, anteckningar).
 **Prioritet:** Medel
 **Beskrivning:**
 "Trigga puls"-knappen hör logiskt ihop med brus- och pulsinställningarna i Störningar-gruppen. Flytta knappen dit.
-**Status:** Öppen
+**Status:** Fixad i branch — inväntar testning
 
 ---
 
@@ -23,7 +23,7 @@ Varje feature-branch uppdaterar **endast sin egen post** (status, anteckningar).
 **Prioritet:** Medel
 **Beskrivning:**
 Knapparna "Stega 1" och "Kör 10 steg" ska ligga nedanför parametergrupperna, inte ovanför dem. Bättre flöde: konfigurera parametrar → kör simulering.
-**Status:** Öppen
+**Status:** Fixad i branch — inväntar testning
 
 ---
 

@@ -418,9 +418,6 @@
   <!-- ══ MAIN CONTENT ══ -->
   <main class="main-content">
     <div class="row">
-      <button id="step">Stega 1</button>
-      <button id="run10">Kör 10 steg</button>
-      <button id="pulse">Trigga puls</button>
       <button id="reset">Återställ</button>
     </div>
 
@@ -544,12 +541,17 @@
             <label for="pulseDuration">Puls steg <button class="help-btn" data-help="pulseDuration">?</button></label>
             <input id="pulseDuration" type="number" step="1" min="0" value="3">
           </div>
+          <div class="field" style="justify-content:flex-end;">
+            <button id="pulse">Trigga puls</button>
+          </div>
         </div>
       </div>
 
     </div>
 
     <div class="row">
+      <button id="step">Stega 1</button>
+      <button id="run10">Kör 10 steg</button>
       <button id="clearChart">Rensa graf</button>
       <button id="systemReset">Återställ system</button>
     </div>
