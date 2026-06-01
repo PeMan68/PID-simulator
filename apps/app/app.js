@@ -189,7 +189,7 @@ class Simulation {
     this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0] };
   }
   reset() { this.stepNo = 0; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0] }; }
-  triggerPulse() { const p = this.scenario.disturbance.pulse; this.pulseStepsLeft = Math.max(1, (p && p.durationSteps) || 3); }
+  triggerPulse() { const p = this.scenario.disturbance.pulse; if (p && p.durationSteps > 0) this.pulseStepsLeft = p.durationSteps; }
   step() {
     if (this.stepNo >= this.maxSteps) return null;
     const sp = this.scenario.runtime.setpoint;
@@ -374,7 +374,7 @@ function syncParamsFromUI() {
   currentScenario.controller.mode = nextMode;
   currentScenario.disturbance.noiseStd = readClamped(fields.noise, 0);
   currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
-  currentScenario.disturbance.pulse.durationSteps = Math.max(1, Number(fields.pulseDuration.value) || 3);
+  currentScenario.disturbance.pulse.durationSteps = Math.max(0, Number(fields.pulseDuration.value));
   if (!currentScenario.controller.hysteresis) currentScenario.controller.hysteresis = {};
   currentScenario.controller.hysteresis.lower = readClamped(fields.hysteresLower, 0);
   currentScenario.controller.hysteresis.upper = readClamped(fields.hysteresUpper, 0);
