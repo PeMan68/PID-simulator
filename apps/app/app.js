@@ -84,6 +84,10 @@ const HELP_CONTENT = {
     title: "Hysterese hög (OnOff)",
     body: "Övre hysteresgräns för OnOff-regulatorn.\n\nRegulatorn slår AV (u_min) när:\nPV > SP + hysteres_hög\n\nAsymmetrisk hysteres (låg ≠ hög) ger ett reglervärde som inte är exakt SP."
   },
+  normalValue: {
+    title: "Normalvärde — processvärde vid u=0",
+    body: "Det värde som processen naturligt återgår till när utsignalen u=0.\n\nMaximalt uppnåeligt PV:\ny_max = normalValue + K × u_max\n\nExempel: normalValue=20, K=0.5, u_max=100 → y_max=70.\n\nOm SP > y_max kan regulatorn aldrig nå börvärdet.\n\nGäller bara självreglerande processer — integrerande processer saknar naturlig vilopunkt."
+  },
   processType: {
     title: "Processtyp",
     body: "Självreglerande: Processen har en naturlig vilopunkt — vid u=0 återgår y till normalValue. Exempel: rumstemperatur, flöde i ett rör.\n\nIntegrerande: Processen integrerar nettoflödet — ingen naturlig vilopunkt. Exempel: tanknivå, position.\n\nJämvikt kräver att inflöde = utflöde: u_jämvikt = utflöde / Kv\n\nTips: Byt typ och ladda om för att se skillnaden i beteende."
@@ -234,6 +238,7 @@ const learnBody = document.getElementById("learnBody");
 const fields = {
   processType: document.getElementById("processType"),
   k: document.getElementById("k"), t: document.getElementById("t"), l: document.getElementById("l"),
+  normalValue: document.getElementById("normalValue"),
   outflow: document.getElementById("outflow"),
   kp: document.getElementById("kp"), ti: document.getElementById("ti"), td: document.getElementById("td"),
   sp: document.getElementById("sp"), umin: document.getElementById("umin"), umax: document.getElementById("umax"),
@@ -315,6 +320,7 @@ function updateStatus() {
 }
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;
+  fields.normalValue.value = s.process.normalValue ?? 0;
   fields.kp.value = s.controller.kp || 0; fields.ti.value = s.controller.ti || 0; fields.td.value = s.controller.td || 0;
   fields.manualOutput.value = s.controller.manualOutput ?? 0;
   fields.sp.value = s.runtime.setpoint; fields.umin.value = s.controller.outputLimits.min; fields.umax.value = s.controller.outputLimits.max;
@@ -350,6 +356,7 @@ function syncParamsFromUI() {
   currentScenario.process.K = readClamped(fields.k, isIntegrating ? 0.001 : 0.1);
   currentScenario.process.T = readClamped(fields.t, 1);
   currentScenario.process.L = readClamped(fields.l, 0);
+  currentScenario.process.normalValue = Number(fields.normalValue.value);
   currentScenario.process.outflow = readClamped(fields.outflow, 0);
   const noTi = nextMode === "p" || nextMode === "manual" || nextMode === "onoff";
   const noTd = nextMode === "p" || nextMode === "pi" || nextMode === "manual" || nextMode === "onoff";
@@ -425,20 +432,11 @@ function updateControllerUIState() {
   fields.manualOutput.disabled = !isManual;
   
   // Hide/show field groups
-  const tiField = fields.ti.parentElement;
-  const tdField = fields.td.parentElement;
-  const manualField = fields.manualOutput.parentElement;
-  tiField.style.opacity = (isP || isManual || isOnOff) ? "0.5" : "1";
-  tiField.style.pointerEvents = (isP || isManual || isOnOff) ? "none" : "auto";
-  tdField.style.opacity = (isP || isPI || isManual || isOnOff) ? "0.5" : "1";
-  tdField.style.pointerEvents = (isP || isPI || isManual || isOnOff) ? "none" : "auto";
-  manualField.style.opacity = isManual ? "1" : "0.5";
-  manualField.style.pointerEvents = isManual ? "auto" : "none";
   const noIntegral = isP || isManual || isOnOff;
-  fields.antiWindup.disabled = noIntegral;
-  const antiWindupField = fields.antiWindup.parentElement;
-  antiWindupField.style.opacity = noIntegral ? "0.5" : "1";
-  antiWindupField.style.pointerEvents = noIntegral ? "none" : "auto";
+  fields.ti.parentElement.style.display = (isP || isManual || isOnOff) ? "none" : "";
+  fields.td.parentElement.style.display = (isP || isPI || isManual || isOnOff) ? "none" : "";
+  fields.manualOutput.parentElement.style.display = isManual ? "" : "none";
+  fields.antiWindup.parentElement.style.display = noIntegral ? "none" : "";
   
   // Update controller parameters based on mode
   if (currentScenario && currentScenario.controller) {
@@ -458,14 +456,9 @@ function updateProcessUIState() {
   document.getElementById("kLabel").textContent = isIntegrating ? "Kv" : "K";
   document.getElementById("kHelpBtn").dataset.help = isIntegrating ? "kv" : "k";
   fields.k.step = isIntegrating ? "0.001" : "0.1";
-  const tField = fields.t.parentElement;
-  fields.t.disabled = isIntegrating;
-  tField.style.opacity = isIntegrating ? "0.5" : "1";
-  tField.style.pointerEvents = isIntegrating ? "none" : "auto";
-  const outflowField = fields.outflow.parentElement;
-  fields.outflow.disabled = !isIntegrating;
-  outflowField.style.opacity = isIntegrating ? "1" : "0.5";
-  outflowField.style.pointerEvents = isIntegrating ? "auto" : "none";
+  fields.t.parentElement.style.display = isIntegrating ? "none" : "";
+  fields.normalValue.parentElement.style.display = isIntegrating ? "none" : "";
+  fields.outflow.parentElement.style.display = isIntegrating ? "" : "none";
 }
 
 function updateScoreDisplay() {

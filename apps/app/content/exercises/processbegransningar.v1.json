@@ -2,7 +2,7 @@
   "id": "processbegransningar-v1",
   "version": "v1.0.0",
   "title": "Processens begränsningar",
-  "description": "Vad K, T och L egentligen betyder — och varför regulatorn inte alltid kan nå SP.",
+  "description": "Vad K, T och L egentligen betyder för en självreglerande process — och varför regulatorn inte alltid kan nå SP.",
   "difficulty": "intro",
   "steps": [
     {
@@ -20,7 +20,7 @@
     {
       "type": "scenario",
       "ref": "pi-step-self-regulating.json",
-      "title": "Svag process",
+      "title": "Svag process (självreglerande)",
       "objective": "Ändra K till 0.5 och SP till 80 — se att y fastnar vid ~50 trots PI-reglering.",
       "instruction": "PI-reglering laddad (eliminerar stationärt fel). Ändå fastnar y:\n1. Ändra K till 0.5\n2. Ändra SP till 80\n3. Kör 50 steg\n\ny_max = K × u_max = 0.5 × 100 = 50\nEftersom SP=80 > y_max=50 kan ingen regulator nå SP.",
       "checkpoint": {
