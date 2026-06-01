@@ -10,28 +10,6 @@ Varje bugfix-branch uppdaterar **endast sin egen post** (status, fix-noteringar)
 
 ### Webbapp (`apps/app/`)
 
-
-### 2026-004 — Trigga puls påverkar inte PV
-**Prio:** Medel
-**Datum:** 2026-06-01
-**Branch:** `bugfix/2026-004`
-**Beskrivning:**
-Pulsstörningen når inte processmodellen. Studenten kan inte testa hur regulatorn hanterar störningsimpulser, vilket är en central del av PID-pedagogiken.
-**Steg att reproducera:**
-1. Starta en simulering med PID-reglering
-2. Klicka "Trigga puls" under störningsinställningar
-3. Observera att PV inte påverkas
-**Förväntat beteende:** PV påverkas av pulsstörningen.
-**Faktiskt beteende:** Ingen effekt på PV.
-**Fix-noteringar:**
-Rotorsak: `triggerPulse()` krävde `durationSteps > 0` men de flesta scenarier hade `durationSteps: 0`. Dessutom saknades UI-fält och sync för `durationSteps`.
-Fix: `triggerPulse()` använder nu `Math.max(1, durationSteps || 3)` som fallback. Nytt UI-fält "Puls steg" (`pulseDuration`) tillagt i index.html, synkroniseras i `hydrateFields()` och `syncParamsFromUI()`.
-**Testdokument:** `tests/manual/2026-004-trigga-puls.md`
-**Processavvikelse:** Fix gjordes direkt på `develop` utan separat bugfix-branch. Ska inte upprepas.
-**Status:** Fixad i develop (utan branch — processavvikelse)
-
----
-
 ### 2026-006 — Hysteresfält visas oavsett läge
 **Prio:** Medel
 **Datum:** 2026-06-01
@@ -46,6 +24,25 @@ Inställningsfälten "Hyst. låg" och "Hyst. hög" visas alltid i kontrollpanele
 **Fix-noteringar:**
 Mönstret finns redan i `updateControllerUIState()` (app.js:422) — Ti, Td och Manuell u döljs redan baserat på läge. Samma logik ska läggas till för `hysteresLower` och `hysteresUpper`.
 **Testdokument:** `tests/manual/2026-006-hysteres-dolj-ej-onoff.md` (skapas i bugfix-branch)
+**Status:** Öppen
+
+---
+
+### 2026-007 — Puls steg tillåter 0 och negativa tal via tangentbord
+**Prio:** Låg
+**Datum:** 2026-06-01
+**Branch:** `bugfix/2026-007`
+**Beskrivning:**
+Fältet "Puls steg" har `min="1"` i HTML vilket stoppar musklick från att gå under 1, men tangentbord kan skriva in 0 och negativa tal. Minvärdet ska vara 0 oavsett inmatningsmetod — konsekvent beteende krävs.
+**Steg att reproducera:**
+1. Öppna appen
+2. Ladda ett scenario
+3. Klicka i fältet "Puls steg" och skriv `-5` via tangentbord
+4. Observera att värdet accepteras
+**Förväntat beteende:** Minvärde är 0 oavsett om tangentbord eller musklick används. Negativa tal accepteras inte.
+**Faktiskt beteende:** Musklick kan inte gå under 1, men tangentbord tillåter 0 och negativa tal.
+**Fix-noteringar:**
+Ändra `min="1"` till `min="0"` i index.html. Uppdatera `syncParamsFromUI()` att clampas till 0 (inte 1). Uppdatera `triggerPulse()` att använda original-logik med `> 0`-check (fungerar eftersom `hydrateFields` visar 3 som default).
 **Status:** Öppen
 
 ---
@@ -77,6 +74,11 @@ Flikarnas innehåll för Hjälp och Teori skapas inte korrekt i den paketerade e
 ---
 
 ## Stängda
+
+### 2026-004 — Trigga puls påverkar inte PV
+**Status:** Stängd — TC1-4 godkända 2026-06-01
+
+---
 
 ### 2026-001 — Integrerande processer simuleras felaktigt
 **Prio:** Hög

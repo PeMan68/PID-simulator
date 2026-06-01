@@ -9,6 +9,15 @@ Varje feature-branch uppdaterar **endast sin egen post** (status, anteckningar).
 
 ### Webbapp (`apps/app/`)
 
+### FEAT-017 — Versionsinformation i GUI
+**Branch:** `feature/version-info`
+**Prioritet:** Låg
+**Beskrivning:**
+Versionsinformation ska visas i gränssnittet så att användare och testare kan se vilken version av appen de kör. Exakt placering och format bestäms under implementation.
+**Status:** Öppen
+
+---
+
 ### FEAT-002 — Varning när SP är ouppnåeligt (SP > y_max)
 **Branch:** `feature/sp-uppnabarhet-varning`
 **Prioritet:** Medel
