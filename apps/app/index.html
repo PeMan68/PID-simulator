@@ -230,8 +230,12 @@
       border-radius: 8px;
       background: linear-gradient(180deg, var(--panel) 0%, var(--panel-strong) 100%);
     }
+    .param-group.collapsed { padding-bottom: 6px; }
     .param-group-label {
       grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       font-size: 10px;
       font-weight: 700;
       color: var(--muted);
@@ -239,7 +243,19 @@
       letter-spacing: 0.08em;
       padding-bottom: 4px;
       border-bottom: 1px solid var(--line);
+      cursor: pointer;
+      user-select: none;
     }
+    .param-group.collapsed .param-group-label { border-bottom: none; padding-bottom: 0; }
+    .group-toggle {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 9px; padding: 0 2px;
+      line-height: 1; transition: transform 150ms ease;
+      display: inline-flex; align-items: center;
+    }
+    .param-group.collapsed .group-toggle { transform: rotate(-90deg); }
+    .param-group-body { display: contents; }
+    .param-group.collapsed .param-group-body { display: none; }
     .field { display: flex; flex-direction: column; gap: 4px; transition: opacity 120ms ease; }
     .field label {
       font-size: 12px;
@@ -410,120 +426,123 @@
     <div class="params-container">
 
       <!-- Process -->
-      <div class="param-group">
-        <span class="param-group-label">Process</span>
-        <div class="field">
-          <label for="processType">Processtyp <button class="help-btn" data-help="processType">?</button></label>
-          <select id="processType">
-            <option value="self_regulating">Självreglerande</option>
-            <option value="integrating">Integrerande</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="k"><span id="kLabel">K</span> <button class="help-btn" id="kHelpBtn" data-help="k">?</button></label>
-          <input id="k" type="number" step="0.01" min="0.001">
-        </div>
-        <div class="field">
-          <label for="t">T <button class="help-btn" data-help="t">?</button></label>
-          <input id="t" type="number" step="0.1" min="1">
-        </div>
-        <div class="field">
-          <label for="l">L <button class="help-btn" data-help="l">?</button></label>
-          <input id="l" type="number" step="0.1" min="0">
-        </div>
-        <div class="field">
-          <label for="normalValue">Normalvärde <button class="help-btn" data-help="normalValue">?</button></label>
-          <input id="normalValue" type="number" step="0.1" min="0" max="100">
-        </div>
-        <div class="field">
-          <label for="outflow">Utflöde <button class="help-btn" data-help="outflow">?</button></label>
-          <input id="outflow" type="number" step="0.1" min="0">
+      <div class="param-group" id="groupProcess">
+        <span class="param-group-label" onclick="toggleParamGroup('groupProcess')">Process <button class="group-toggle">▼</button></span>
+        <div class="param-group-body">
+          <div class="field">
+            <label for="processType">Processtyp <button class="help-btn" data-help="processType">?</button></label>
+            <select id="processType">
+              <option value="self_regulating">Självreglerande</option>
+              <option value="integrating">Integrerande</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="k"><span id="kLabel">K</span> <button class="help-btn" id="kHelpBtn" data-help="k">?</button></label>
+            <input id="k" type="number" step="0.01" min="0.001">
+          </div>
+          <div class="field">
+            <label for="t">T <button class="help-btn" data-help="t">?</button></label>
+            <input id="t" type="number" step="0.1" min="1">
+          </div>
+          <div class="field">
+            <label for="l">L <button class="help-btn" data-help="l">?</button></label>
+            <input id="l" type="number" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label for="normalValue">Normalvärde <button class="help-btn" data-help="normalValue">?</button></label>
+            <input id="normalValue" type="number" step="0.1" min="0" max="100">
+          </div>
+          <div class="field">
+            <label for="outflow">Utflöde <button class="help-btn" data-help="outflow">?</button></label>
+            <input id="outflow" type="number" step="0.1" min="0">
+          </div>
         </div>
       </div>
 
       <!-- Regulator -->
-      <div class="param-group">
-        <span class="param-group-label">Regulator</span>
-        <div class="field">
-          <label for="mode">Läge <button class="help-btn" data-help="mode">?</button></label>
-          <select id="mode">
-            <option value="onoff">OnOff</option>
-            <option value="p">P</option>
-            <option value="pi">PI</option>
-            <option value="pid">PID</option>
-            <option value="manual">Manuell</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="kp">Kp <button class="help-btn" data-help="kp">?</button></label>
-          <input id="kp" type="number" step="0.1" min="0.1">
-        </div>
-        <div class="field">
-          <label for="ti">Ti <button class="help-btn" data-help="ti">?</button></label>
-          <input id="ti" type="number" step="0.1" min="0">
-        </div>
-        <div class="field">
-          <label for="td">Td <button class="help-btn" data-help="td">?</button></label>
-          <input id="td" type="number" step="0.1" min="0">
-        </div>
-        <div class="field">
-          <label for="bumpless">Bumpless <button class="help-btn" data-help="bumpless">?</button></label>
-          <input id="bumpless" type="checkbox" checked title="Mjuk övergång vid lägesbyte">
-        </div>
-        <div class="field">
-          <label for="antiWindup">Anti-windup <button class="help-btn" data-help="antiWindup">?</button></label>
-          <input id="antiWindup" type="checkbox" checked title="Förhindra integratoruppvridning vid mättning">
+      <div class="param-group" id="groupRegulator">
+        <span class="param-group-label" onclick="toggleParamGroup('groupRegulator')">Regulator <button class="group-toggle">▼</button></span>
+        <div class="param-group-body">
+          <div class="field">
+            <label for="mode">Läge <button class="help-btn" data-help="mode">?</button></label>
+            <select id="mode">
+              <option value="onoff">OnOff</option>
+              <option value="p">P</option>
+              <option value="pi">PI</option>
+              <option value="pid">PID</option>
+              <option value="manual">Manuell</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="kp">Kp <button class="help-btn" data-help="kp">?</button></label>
+            <input id="kp" type="number" step="0.1" min="0.1">
+          </div>
+          <div class="field">
+            <label for="ti">Ti <button class="help-btn" data-help="ti">?</button></label>
+            <input id="ti" type="number" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label for="td">Td <button class="help-btn" data-help="td">?</button></label>
+            <input id="td" type="number" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label for="bumpless">Bumpless <button class="help-btn" data-help="bumpless">?</button></label>
+            <input id="bumpless" type="checkbox" checked title="Mjuk övergång vid lägesbyte">
+          </div>
+          <div class="field">
+            <label for="antiWindup">Anti-windup <button class="help-btn" data-help="antiWindup">?</button></label>
+            <input id="antiWindup" type="checkbox" checked title="Förhindra integratoruppvridning vid mättning">
+          </div>
+          <div class="field">
+            <label for="hysteresLower">Hyst. låg <button class="help-btn" data-help="hysteresLower">?</button></label>
+            <input id="hysteresLower" type="number" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label for="hysteresUpper">Hyst. hög <button class="help-btn" data-help="hysteresUpper">?</button></label>
+            <input id="hysteresUpper" type="number" step="0.1" min="0">
+          </div>
         </div>
       </div>
 
       <!-- Styrning -->
-      <div class="param-group">
-        <span class="param-group-label">Styrning</span>
-        <div class="field">
-          <label for="sp">SP <button class="help-btn" data-help="sp">?</button></label>
-          <input id="sp" type="number" step="0.1" min="0" max="100">
-        </div>
-        <div class="field">
-          <label for="umin">U min <button class="help-btn" data-help="umin">?</button></label>
-          <input id="umin" type="number" step="0.1" min="0" max="100">
-        </div>
-        <div class="field">
-          <label for="umax">U max <button class="help-btn" data-help="umax">?</button></label>
-          <input id="umax" type="number" step="0.1" min="0" max="100">
-        </div>
-        <div class="field">
-          <label for="manualOutput">Manuell u <button class="help-btn" data-help="manualOutput">?</button></label>
-          <input id="manualOutput" type="number" step="0.1" min="0" max="100">
+      <div class="param-group" id="groupStyrning">
+        <span class="param-group-label" onclick="toggleParamGroup('groupStyrning')">Styrning <button class="group-toggle">▼</button></span>
+        <div class="param-group-body">
+          <div class="field">
+            <label for="sp">SP <button class="help-btn" data-help="sp">?</button></label>
+            <input id="sp" type="number" step="0.1" min="0" max="100">
+          </div>
+          <div class="field">
+            <label for="umin">U min <button class="help-btn" data-help="umin">?</button></label>
+            <input id="umin" type="number" step="0.1" min="0" max="100">
+          </div>
+          <div class="field">
+            <label for="umax">U max <button class="help-btn" data-help="umax">?</button></label>
+            <input id="umax" type="number" step="0.1" min="0" max="100">
+          </div>
+          <div class="field">
+            <label for="manualOutput">Manuell u <button class="help-btn" data-help="manualOutput">?</button></label>
+            <input id="manualOutput" type="number" step="0.1" min="0" max="100">
+          </div>
         </div>
       </div>
 
       <!-- Störningar -->
-      <div class="param-group">
-        <span class="param-group-label">Störningar</span>
-        <div class="field">
-          <label for="noise">Brus std <button class="help-btn" data-help="noise">?</button></label>
-          <input id="noise" type="number" step="0.1" min="0">
-        </div>
-        <div class="field">
-          <label for="pulseMag">Puls mag <button class="help-btn" data-help="pulseMag">?</button></label>
-          <input id="pulseMag" type="number" step="0.1">
-        </div>
-        <div class="field">
-          <label for="pulseDuration">Puls steg <button class="help-btn" data-help="pulseDuration">?</button></label>
-          <input id="pulseDuration" type="number" step="1" min="0" value="3">
-        </div>
-      </div>
-
-      <!-- On/Off (visas bara i OnOff-läge) -->
-      <div class="param-group" id="groupOnOff">
-        <span class="param-group-label">On/Off</span>
-        <div class="field">
-          <label for="hysteresLower">Hyst. låg <button class="help-btn" data-help="hysteresLower">?</button></label>
-          <input id="hysteresLower" type="number" step="0.1" min="0">
-        </div>
-        <div class="field">
-          <label for="hysteresUpper">Hyst. hög <button class="help-btn" data-help="hysteresUpper">?</button></label>
-          <input id="hysteresUpper" type="number" step="0.1" min="0">
+      <div class="param-group" id="groupStorningar">
+        <span class="param-group-label" onclick="toggleParamGroup('groupStorningar')">Störningar <button class="group-toggle">▼</button></span>
+        <div class="param-group-body">
+          <div class="field">
+            <label for="noise">Brus std <button class="help-btn" data-help="noise">?</button></label>
+            <input id="noise" type="number" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label for="pulseMag">Puls mag <button class="help-btn" data-help="pulseMag">?</button></label>
+            <input id="pulseMag" type="number" step="0.1">
+          </div>
+          <div class="field">
+            <label for="pulseDuration">Puls steg <button class="help-btn" data-help="pulseDuration">?</button></label>
+            <input id="pulseDuration" type="number" step="1" min="0" value="3">
+          </div>
         </div>
       </div>
 

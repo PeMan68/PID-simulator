@@ -440,7 +440,8 @@ function updateControllerUIState() {
   fields.td.parentElement.style.display = (isP || isPI || isManual || isOnOff) ? "none" : "";
   fields.manualOutput.parentElement.style.display = isManual ? "" : "none";
   fields.antiWindup.parentElement.style.display = noIntegral ? "none" : "";
-  document.getElementById("groupOnOff").style.display = isOnOff ? "" : "none";
+  fields.hysteresLower.parentElement.style.display = isOnOff ? "" : "none";
+  fields.hysteresUpper.parentElement.style.display = isOnOff ? "" : "none";
   
   // Update controller parameters based on mode
   if (currentScenario && currentScenario.controller) {
@@ -663,6 +664,15 @@ document.getElementById("modeGuided").addEventListener("click", () => setTestMod
 document.getElementById("modeTest").addEventListener("click", () => setTestMode(true));
 
 document.getElementById("appVersion").textContent = "v" + APP_VERSION;
+
+function toggleParamGroup(id) {
+  const group = document.getElementById(id);
+  const collapsed = group.classList.toggle("collapsed");
+  localStorage.setItem("pg-" + id, collapsed ? "1" : "0");
+}
+["groupProcess","groupRegulator","groupStyrning","groupStorningar"].forEach(id => {
+  if (localStorage.getItem("pg-" + id) === "1") document.getElementById(id).classList.add("collapsed");
+});
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
 fields.pulseDuration.addEventListener("input", () => { if (Number(fields.pulseDuration.value) < 0) fields.pulseDuration.value = 0; });
 document.getElementById("mode").addEventListener("change", updateControllerUIState);
