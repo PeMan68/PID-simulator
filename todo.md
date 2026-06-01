@@ -25,6 +25,7 @@ Varje feature-branch uppdaterar **endast sin egen post** (status, anteckningar).
 Knapparna "Stega 1" och "Kör 10 steg" ska ligga nedanför parametergrupperna, inte ovanför dem. Bättre flöde: konfigurera parametrar → kör simulering.
 **Status:** Fixad i branch — inväntar testning
 
+
 ---
 
 ### FEAT-002 — Varning när SP är ouppnåeligt (SP > y_max)
