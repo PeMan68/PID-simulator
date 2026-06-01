@@ -235,7 +235,8 @@
       grid-column: 1 / -1;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
+      gap: 6px;
       font-size: 10px;
       font-weight: 700;
       color: var(--muted);
@@ -427,7 +428,7 @@
 
       <!-- Process -->
       <div class="param-group" id="groupProcess">
-        <span class="param-group-label" onclick="toggleParamGroup('groupProcess')">Process <button class="group-toggle">▼</button></span>
+        <span class="param-group-label" onclick="toggleParamGroup('groupProcess')"><button class="group-toggle">▼</button> Process</span>
         <div class="param-group-body">
           <div class="field">
             <label for="processType">Processtyp <button class="help-btn" data-help="processType">?</button></label>
@@ -461,7 +462,7 @@
 
       <!-- Regulator -->
       <div class="param-group" id="groupRegulator">
-        <span class="param-group-label" onclick="toggleParamGroup('groupRegulator')">Regulator <button class="group-toggle">▼</button></span>
+        <span class="param-group-label" onclick="toggleParamGroup('groupRegulator')"><button class="group-toggle">▼</button> Regulator</span>
         <div class="param-group-body">
           <div class="field">
             <label for="mode">Läge <button class="help-btn" data-help="mode">?</button></label>
@@ -506,7 +507,7 @@
 
       <!-- Styrning -->
       <div class="param-group" id="groupStyrning">
-        <span class="param-group-label" onclick="toggleParamGroup('groupStyrning')">Styrning <button class="group-toggle">▼</button></span>
+        <span class="param-group-label" onclick="toggleParamGroup('groupStyrning')"><button class="group-toggle">▼</button> Styrning</span>
         <div class="param-group-body">
           <div class="field">
             <label for="sp">SP <button class="help-btn" data-help="sp">?</button></label>
@@ -529,7 +530,7 @@
 
       <!-- Störningar -->
       <div class="param-group" id="groupStorningar">
-        <span class="param-group-label" onclick="toggleParamGroup('groupStorningar')">Störningar <button class="group-toggle">▼</button></span>
+        <span class="param-group-label" onclick="toggleParamGroup('groupStorningar')"><button class="group-toggle">▼</button> Störningar</span>
         <div class="param-group-body">
           <div class="field">
             <label for="noise">Brus std <button class="help-btn" data-help="noise">?</button></label>
