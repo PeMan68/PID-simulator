@@ -44,7 +44,7 @@ Fältet "Puls steg" har `min="1"` i HTML vilket stoppar musklick från att gå u
 **Fix-noteringar:**
 `min="0"` i index.html. `Math.max(0, ...)` i `syncParamsFromUI()`. `triggerPulse()` återgår till `> 0`-check. `input`-event på `pulseDuration` klampar negativt värde till 0 i realtid (TC-01 kräver omedelbar feedback vid tangentbordsinmatning).
 **Testdokument:** `tests/manual/2026-007-puls-steg-min-värde.md`
-**Status:** Fixad i branch — TC-01 underkänd, TC-02–05 godkända. Ny fix tillagd — inväntar omtest av TC-01
+**Status:** Stängd — TC-01–05 godkända 2026-06-01
 
 ---
 
