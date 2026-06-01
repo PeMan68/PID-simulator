@@ -126,7 +126,20 @@ Datum:
 
 ---
 
-## Öppna frågor
+## Hotfix (bugg i produktion)
 
-- **Hotfix-flöde**: Om en kritisk bugg hittas direkt i `main` — behövs en snabbväg
-  förbi hela develop-flödet? Överväg `hotfix/<beskrivning>`-branch direkt från `main`.
+Om en kritisk bugg hittas i `main` gäller samma flöde — men branchar från `main`
+i stället för `develop` (develop kan ligga före och ska inte dras med).
+
+1. Registrera buggen i `buglog.md` på `develop` (spårbarhet)
+2. Skapa hotfix-branch från `main`:
+   ```
+   git checkout main
+   git checkout -b bugfix/ÅÅÅÅ-NNN
+   ```
+3. Fixa, testa i staging-branch (från `main`), merga tillbaka till `main`
+4. Merga även `main` → `develop` så fixen inte försvinner vid nästa release:
+   ```
+   git checkout develop
+   git merge main
+   ```
