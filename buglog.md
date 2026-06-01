@@ -26,7 +26,27 @@ Pulsstörningen når inte processmodellen. Studenten kan inte testa hur regulato
 **Fix-noteringar:**
 Rotorsak: `triggerPulse()` krävde `durationSteps > 0` men de flesta scenarier hade `durationSteps: 0`. Dessutom saknades UI-fält och sync för `durationSteps`.
 Fix: `triggerPulse()` använder nu `Math.max(1, durationSteps || 3)` som fallback. Nytt UI-fält "Puls steg" (`pulseDuration`) tillagt i index.html, synkroniseras i `hydrateFields()` och `syncParamsFromUI()`.
-**Status:** Fixad i branch
+**Testdokument:** `tests/manual/2026-004-trigga-puls.md`
+**Processavvikelse:** Fix gjordes direkt på `develop` utan separat bugfix-branch. Ska inte upprepas.
+**Status:** Fixad i develop (utan branch — processavvikelse)
+
+---
+
+### 2026-006 — Hysteresfält visas oavsett läge
+**Prio:** Medel
+**Datum:** 2026-06-01
+**Branch:** `bugfix/2026-006`
+**Beskrivning:**
+Inställningsfälten "Hyst. låg" och "Hyst. hög" visas alltid i kontrollpanelen, även när ett annat läge än On/Off är valt. Fälten är bara tillämpliga för On/Off-reglering och skapar visuellt brus för alla andra lägen (P, PI, PID, Manuell).
+**Steg att reproducera:**
+1. Ladda valfritt scenario med PID-läge
+2. Observera att "Hyst. låg" och "Hyst. hög" fortfarande visas i panelen
+**Förväntat beteende:** Hysteresfälten är dolda när läget inte är On/Off.
+**Faktiskt beteende:** Hysteresfälten visas alltid.
+**Fix-noteringar:**
+Mönstret finns redan i `updateControllerUIState()` (app.js:422) — Ti, Td och Manuell u döljs redan baserat på läge. Samma logik ska läggas till för `hysteresLower` och `hysteresUpper`.
+**Testdokument:** `tests/manual/2026-006-hysteres-dolj-ej-onoff.md` (skapas i bugfix-branch)
+**Status:** Öppen
 
 ---
 
