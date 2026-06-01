@@ -1,4 +1,4 @@
-# Feature Backlog
+ # Feature Backlog
 
 Nya features registreras här i `develop`-branchen innan en feature-branch skapas.
 Varje feature-branch uppdaterar **endast sin egen post** (status, anteckningar).
@@ -9,22 +9,21 @@ Varje feature-branch uppdaterar **endast sin egen post** (status, anteckningar).
 
 ### Webbapp (`apps/app/`)
 
-### FEAT-018 — Logiska parametergrupper som inte delas vid layout-ombrytning
-**Branch:** `feature/parameter-grupper`
-**Prioritet:** Hög
+### FEAT-019 — Flytta Trigga puls-knappen till Störningar-gruppen
+**Branch:** `feature/knapp-layout`
+**Prioritet:** Medel
 **Beskrivning:**
-När fält döljs/visas dynamiskt (t.ex. hysteres vid On/Off, Ti/Td vid P-läge) hoppar layouten eftersom fälten flödar fritt i ett CSS-grid. Fälten ska grupperas logiskt och en grupp ska aldrig delas över två rader eller två kolumner — gruppen ska hålla ihop som en enhet. Responsiv design ska fortfarande respekteras (grupper kan staplas vertikalt vid smal skärm), men en grupp bryts aldrig internt.
-**Grupper:** Process, Regulator, Styrning, Störningar, On/Off (döljs när ej OnOff-läge).
-**Status:** Fixad i branch — inväntar testning
+"Trigga puls"-knappen hör logiskt ihop med brus- och pulsinställningarna i Störningar-gruppen. Flytta knappen dit.
+**Status:** Öppen
 
 ---
 
-### FEAT-017 — Versionsinformation i GUI
-**Branch:** `feature/parameter-grupper`
-**Prioritet:** Låg
+### FEAT-020 — Flytta steg-knappar nedanför parametergrupperna
+**Branch:** `feature/knapp-layout`
+**Prioritet:** Medel
 **Beskrivning:**
-Versionsinformation visas i sidebar-titeln bredvid "PID Simulator". Konstanten `APP_VERSION` i app.js styr värdet.
-**Status:** Fixad i branch — inväntar testning
+Knapparna "Stega 1" och "Kör 10 steg" ska ligga nedanför parametergrupperna, inte ovanför dem. Bättre flöde: konfigurera parametrar → kör simulering.
+**Status:** Öppen
 
 ---
 
@@ -152,6 +151,16 @@ Tydligare visuell feedback för OnOff-regulatorns hysteresis-gränser.
 ## Klara
 
 ### Webbapp (`apps/app/`)
+
+### FEAT-018 — Logiska parametergrupper med collapse
+**Status:** Klar
+
+---
+
+### FEAT-017 — Versionsinformation i GUI
+**Status:** Klar
+
+---
 
 ### FEAT-001 — Sidebar för scenario/lärstig-väljare
 **Status:** Klar
