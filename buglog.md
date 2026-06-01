@@ -23,8 +23,8 @@ Inställningsfälten "Hyst. låg" och "Hyst. hög" visas alltid i kontrollpanele
 **Faktiskt beteende:** Hysteresfälten visas alltid.
 **Fix-noteringar:**
 Mönstret finns redan i `updateControllerUIState()` (app.js:422) — Ti, Td och Manuell u döljs redan baserat på läge. Samma logik ska läggas till för `hysteresLower` och `hysteresUpper`.
-**Testdokument:** `tests/manual/2026-006-hysteres-dolj-ej-onoff.md` (skapas i bugfix-branch)
-**Status:** Öppen
+**Testdokument:** `tests/manual/2026-006-hysteres-dolj-ej-onoff.md`
+**Status:** Fixad i branch — inväntar testning (TC-001–007)
 
 ---
 
