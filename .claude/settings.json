@@ -21,7 +21,8 @@
       "Bash(git log *)",
       "Bash(git diff *)",
       "Bash(node --check \"c:/Users/prmm00/dev/PID-simulator/apps/app/app.js\")",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(git mv *)"
     ]
   }
 }
