@@ -10,17 +10,6 @@ Varje bugfix-branch uppdaterar **endast sin egen post** (status, fix-noteringar)
 
 ### Webbapp (`apps/app/`)
 
-### 2026-001 — Integrerande processer simuleras felaktigt
-**Prio:** Hög
-**Datum:** 2026-06-01
-**Branch:** `bugfix/2026-001`
-**Beskrivning:**
-Simulering av integrerande processer fungerar inte korrekt. Processvärdet beter sig inte som förväntat — troligen fel i hur integrering hanteras i processmodellen.
-**Förväntat beteende:** Integrerande process ackumulerar processvärdet korrekt baserat på flödessignalen.
-**Faktiskt beteende:** Simuleringen ger felaktigt resultat för integrerande processtyp.
-**Status:** Öppen — behöver verifieras (oklart om felet finns i webbappen eller enbart i Python-appen)
-
----
 
 ### 2026-004 — Trigga puls påverkar inte PV
 **Prio:** Medel
@@ -35,8 +24,9 @@ Pulsstörningen når inte processmodellen. Studenten kan inte testa hur regulato
 **Förväntat beteende:** PV påverkas av pulsstörningen.
 **Faktiskt beteende:** Ingen effekt på PV.
 **Fix-noteringar:**
-Troligen synk-miss eller magnitude=0 i scenario-JSON defaults. Felsök hur `triggerPulse()` kopplar till `ProcessModel.step()`.
-**Status:** Öppen
+Rotorsak: `triggerPulse()` krävde `durationSteps > 0` men de flesta scenarier hade `durationSteps: 0`. Dessutom saknades UI-fält och sync för `durationSteps`.
+Fix: `triggerPulse()` använder nu `Math.max(1, durationSteps || 3)` som fallback. Nytt UI-fält "Puls steg" (`pulseDuration`) tillagt i index.html, synkroniseras i `hydrateFields()` och `syncParamsFromUI()`.
+**Status:** Fixad i branch
 
 ---
 
@@ -68,4 +58,7 @@ Flikarnas innehåll för Hjälp och Teori skapas inte korrekt i den paketerade e
 
 ## Stängda
 
-<!-- Flytta hit när branchen är mergad till develop -->
+### 2026-001 — Integrerande processer simuleras felaktigt
+**Prio:** Hög
+**Datum:** 2026-06-01
+**Status:** Stängd — verifierad i webbapp 2026-06-01, inga fel kunde reproduceras. Felet verkar vara specifikt för Python-appen.

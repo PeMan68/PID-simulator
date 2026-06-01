@@ -189,7 +189,7 @@ class Simulation {
     this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0] };
   }
   reset() { this.stepNo = 0; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0] }; }
-  triggerPulse() { const p = this.scenario.disturbance.pulse; if (p && p.durationSteps > 0) this.pulseStepsLeft = p.durationSteps; }
+  triggerPulse() { const p = this.scenario.disturbance.pulse; this.pulseStepsLeft = Math.max(1, (p && p.durationSteps) || 3); }
   step() {
     if (this.stepNo >= this.maxSteps) return null;
     const sp = this.scenario.runtime.setpoint;
@@ -243,7 +243,7 @@ const fields = {
   kp: document.getElementById("kp"), ti: document.getElementById("ti"), td: document.getElementById("td"),
   sp: document.getElementById("sp"), umin: document.getElementById("umin"), umax: document.getElementById("umax"),
   manualOutput: document.getElementById("manualOutput"),
-  mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"),
+  mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"), pulseDuration: document.getElementById("pulseDuration"),
   hysteresLower: document.getElementById("hysteresLower"), hysteresUpper: document.getElementById("hysteresUpper"),
   antiWindup: document.getElementById("antiWindup")
 };
@@ -324,7 +324,7 @@ function hydrateFields(s) {
   fields.kp.value = s.controller.kp || 0; fields.ti.value = s.controller.ti || 0; fields.td.value = s.controller.td || 0;
   fields.manualOutput.value = s.controller.manualOutput ?? 0;
   fields.sp.value = s.runtime.setpoint; fields.umin.value = s.controller.outputLimits.min; fields.umax.value = s.controller.outputLimits.max;
-  fields.mode.value = s.controller.mode; fields.noise.value = s.disturbance.noiseStd || 0; fields.pulseMag.value = s.disturbance.pulse.magnitude || 0;
+  fields.mode.value = s.controller.mode; fields.noise.value = s.disturbance.noiseStd || 0; fields.pulseMag.value = s.disturbance.pulse.magnitude || 0; fields.pulseDuration.value = s.disturbance.pulse.durationSteps || 3;
   fields.hysteresLower.value = s.controller.hysteresis?.lower ?? 2;
   fields.hysteresUpper.value = s.controller.hysteresis?.upper ?? 2;
   fields.antiWindup.checked = s.controller.antiWindup !== false;
@@ -374,6 +374,7 @@ function syncParamsFromUI() {
   currentScenario.controller.mode = nextMode;
   currentScenario.disturbance.noiseStd = readClamped(fields.noise, 0);
   currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
+  currentScenario.disturbance.pulse.durationSteps = Math.max(1, Number(fields.pulseDuration.value) || 3);
   if (!currentScenario.controller.hysteresis) currentScenario.controller.hysteresis = {};
   currentScenario.controller.hysteresis.lower = readClamped(fields.hysteresLower, 0);
   currentScenario.controller.hysteresis.upper = readClamped(fields.hysteresUpper, 0);
