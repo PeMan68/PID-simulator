@@ -1,0 +1,25 @@
+{
+  "id": "lambda-open-loop",
+  "version": "v1.0.0",
+  "title": "Lambda — processidentifiering",
+  "description": "Lågt Kp visar processens naturliga stegrespons. Läs av K=1.5, T=20, L=5 i Process-gruppen.",
+  "tags": ["lambda", "p", "self", "identification"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.5,
+    "T": 20.0,
+    "L": 5.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "p",
+    "kp": 0.2,
+    "ti": 0,
+    "td": 0,
+    "antiWindup": false,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 300, "setpoint": 60.0, "autopause": false }
+}

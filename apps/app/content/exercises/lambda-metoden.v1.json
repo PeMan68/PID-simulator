@@ -1,0 +1,88 @@
+{
+  "id": "lambda-metoden.v1",
+  "version": "v1.0.0",
+  "title": "Lambda-metoden",
+  "description": "Lär dig ställa in en PI-regulator med Lambda-metoden för självreglerande processer. Kp = T/(K×(λ+L)), Ti = T.",
+  "difficulty": "intermediate",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "theory/lambda-metoden.v1.json",
+      "title": "Lambda-metodens grunder",
+      "objective": "Förstå FOPDT-modellen, vad λ betyder och hur formlerna används.",
+      "checkpoint": {
+        "question": "Lambda-metoden sätter Ti = T. Vad är Ti för en process med tidskonstant T=15?",
+        "options": ["Ti = 5", "Ti = 15", "Ti = 30", "Ti = 1"],
+        "correct": 1,
+        "explanation": "Ti sätts alltid lika med processens tidskonstant T. Det innebär att integratorns tidskonstant matchar processens — vilket ger optimal eliminering av kvarstående fel."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "lambda-open-loop.json",
+      "title": "Identifiera processparametrarna",
+      "objective": "Läsa av K, T och L från Process-gruppen och beräkna Lambda-parametrarna.",
+      "instruction": "Titta i Process-gruppen: K=1.5, T=20, L=5. Vi väljer λ = T = 20 (måttlig inställning).\n\nBeräkna: Kp = T / (K × (λ + L)) = 20 / (1.5 × (20 + 5)) = 20 / 37.5 ≈ 0.53\nTi = T = 20\n\nKör 100 steg med den nuvarande P-regulatorn (Kp=0.2) för att se processens tröghet — notera dötiden L=5 och hur långsamt PV rör sig.",
+      "checkpoint": {
+        "question": "Du väljer λ = T = 20 för processen K=1.5, T=20, L=5. Vad blir Kp?",
+        "options": ["Kp = 0.13", "Kp = 0.53", "Kp = 1.33", "Kp = 2.00"],
+        "correct": 1,
+        "explanation": "Kp = T / (K × (λ + L)) = 20 / (1.5 × 25) = 20 / 37.5 = 0.53. Kom ihåg att λ och L adderas i nämnaren."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "lambda-pi-moderate.json",
+      "title": "Applicera Lambda-inställning (λ = T = 20)",
+      "objective": "Observera hur Lambda-tunad PI ger mjuk inreglering utan överskjutning.",
+      "instruction": "Scenariot har Lambda-beräknade parametrar: Kp=0.53, Ti=20 (λ=T=20).\n\nKör 200 steg. Observera:\n• PV når SP utan överskjutning\n• Inregleringstiden är ungefär λ + L = 25 steg\n• Utsignalen u startar högt och sjunker mjukt\n\nDetta är Lambda-metodens karakteristik: förutsägbar, mjuk inreglering.",
+      "checkpoint": {
+        "question": "Varför sätter Lambda-metoden Ti = T?",
+        "options": [
+          "För att minska utsignalens amplitud",
+          "Integratorns tidskonstant matchar processens — ger optimal eliminering av kvarstående fel",
+          "För att öka inregleringshastigheten",
+          "Ti = T är ett godtyckligt val utan matematisk grund"
+        ],
+        "correct": 1,
+        "explanation": "När Ti = T kancelleras processens pol av regulatorns nollställe, vilket ger ett rent first-order slutet system med tidskonstant λ. Det eliminerar kvarstående fel effektivt och ger förutsägbart beteende."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "lambda-pi-aggressive.json",
+      "title": "Aggressivt λ (λ = L = 5)",
+      "objective": "Se effekten av att välja λ lika med dödtiden — snabbast möjliga Lambda-inställning.",
+      "instruction": "Nu är λ = L = 5 (minsta rekommenderade värdet). Kp=1.33, Ti=20.\n\nKör 200 steg och jämför med föregående:\n• Inregleringen är snabbare\n• Men notera överskjutning och eventuell oscillation\n• Regulatorn är mer känslig för störningar och modellfel\n\nLambda-metoden kräver att λ ≥ L — detta är gränsen.",
+      "checkpoint": {
+        "question": "Vad är risken med att välja λ < L?",
+        "options": [
+          "Inregleringen blir för långsam",
+          "Ti-värdet blir negativt",
+          "Regulatorn kan bli instabil — processens dödtid hinner inte kompenseras",
+          "Kp-värdet överstiger outputlimits"
+        ],
+        "correct": 2,
+        "explanation": "Dödtiden L är en grundläggande begränsning — regulatorn ser inte effekten av sin åtgärd förrän efter L tidssteg. Om λ < L försöker regulatorn reagera snabbare än processen tillåter, vilket leder till instabilitet."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "lambda-pi-conservative.json",
+      "title": "Konservativt λ (λ = 3T = 60)",
+      "objective": "Uppleva det robusta men långsamma beteendet vid stort λ.",
+      "instruction": "Nu är λ = 3T = 60. Kp=0.21, Ti=20.\n\nKör 200 steg:\n• Inregleringen är markant långsammare\n• Ingen överskjutning alls\n• Utsignalen u ändras väldigt mjukt\n\nDetta val passar processer med stor modellosäkerhet, variabel last eller säkerhetskritiska tillämpningar där stabilitet är viktigare än hastighet.",
+      "checkpoint": {
+        "question": "När är det motiverat att välja ett stort λ (t.ex. λ = 3T eller mer)?",
+        "options": [
+          "När processen har kort dödtid",
+          "Vid säkerhetskritiska processer eller stor osäkerhet i processmodellen",
+          "När man vill maximera inregleringshastigheten",
+          "Lambda-metoden rekommenderar alltid λ = T"
+        ],
+        "correct": 1,
+        "explanation": "Stort λ minskar regulatorns förstärkning, vilket gör systemet mer tolerant mot modellfel, variationer i processparametrar och yttre störningar. Avvägningen är att inregleringen tar längre tid."
+      }
+    }
+  ]
+}

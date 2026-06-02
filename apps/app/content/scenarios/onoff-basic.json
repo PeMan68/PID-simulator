@@ -19,7 +19,7 @@
     "td": 0,
     "antiWindup": false,
     "outputLimits": { "min": 0.0, "max": 100.0 },
-    "hysteresis": { "lower": 2.0, "upper": 2.0 }
+    "hysteresis": { "lower": 10.0, "upper": 10.0 }
   },
   "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
   "runtime": { "dt": 1.0, "maxSteps": 300, "setpoint": 50.0, "autopause": false }
