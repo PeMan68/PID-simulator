@@ -10,12 +10,13 @@ function getBasePath() {
 
 async function loadCatalog() {
   const base = getBasePath();
-  const catalog = await fetch(base + '/content/catalog.json').then(r => { if (!r.ok) throw new Error('catalog.json: ' + r.status); return r.json(); });
+  const catalog = await fetch(base + '/content/catalog.json?t=' + Date.now()).then(r => { if (!r.ok) throw new Error('catalog.json: ' + r.status); return r.json(); });
+  const v = '?v=' + (catalog.version || '1');
   const [scenarioDatas, theoryDatas, pathDatas, helpData] = await Promise.all([
-    Promise.all(catalog.scenarios.map(s => fetch(base + '/content/' + s.file).then(r => r.json()))),
-    Promise.all(catalog.theory.map(t => fetch(base + '/content/' + t.file).then(r => r.json()))),
-    Promise.all(catalog.learning_paths.map(p => fetch(base + '/content/' + p.file).then(r => r.json()))),
-    fetch(base + '/content/' + catalog.help).then(r => r.json())
+    Promise.all(catalog.scenarios.map(s => fetch(base + '/content/' + s.file + v).then(r => r.json()))),
+    Promise.all(catalog.theory.map(t => fetch(base + '/content/' + t.file + v).then(r => r.json()))),
+    Promise.all(catalog.learning_paths.map(p => fetch(base + '/content/' + p.file + v).then(r => r.json()))),
+    fetch(base + '/content/' + catalog.help + v).then(r => r.json())
   ]);
   catalog.scenarios.forEach((entry, i) => { SCENARIOS[entry.file.split('/').pop()] = scenarioDatas[i]; });
   catalog.theory.forEach((entry, i) => { THEORY[entry.file.split('/').pop()] = theoryDatas[i]; });
