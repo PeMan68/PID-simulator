@@ -7,9 +7,9 @@
   "steps": [
     {
       "type": "theory",
-      "ref": "theory/lambda-metoden.v1.json",
+      "ref": "lambda-metoden.v1.json",
       "title": "Lambda-metodens grunder",
-      "objective": "Förstå FOPDT-modellen, vad λ betyder och hur formlerna används.",
+      "objective": "Förstå vad λ betyder och hur formlerna används.",
       "checkpoint": {
         "question": "Lambda-metoden sätter Ti = T. Vad är Ti för en process med tidskonstant T=15?",
         "options": ["Ti = 5", "Ti = 15", "Ti = 30", "Ti = 1"],
