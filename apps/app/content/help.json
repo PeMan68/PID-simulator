@@ -17,7 +17,7 @@
   },
   "ti": {
     "title": "Ti — Integreringstid",
-    "body": "Hur snabbt integratorn eliminerar kvarstående fel.\n\nu_I = (Kp / Ti) × ∫e dt\n\nLågt Ti → snabb integrering, risk för oscillation.\nHögt Ti → långsam, stabil eliminering.\nTi=0 → ingen I-verkan (P-läge).\n\nObs: Integratorn kan \"vinda upp\" (windup) om utsignalen är mättad länge."
+    "body": "Hur snabbt integratorn eliminerar kvarstående fel.\n\nu_I = (Kp / Ti) × ∫e dt\n\nLågt Ti → snabb integrering, risk för oscillation.\nHögt Ti → långsam, stabil eliminering.\nTi=0 → ingen I-verkan (P-läge).\n\nObs: Integratorn kan \"vridas upp\" (windup) om utsignalen är mättad länge."
   },
   "td": {
     "title": "Td — Deriveringstid",
@@ -61,7 +61,7 @@
   },
   "showPB": {
     "title": "Visa proportionalband (PB)",
-    "body": "Ritar ut proportionalbandet i grafen som ett lila skuggat område.\n\nPB = 100 / Kp (%)\n\nMed bias=0 (standard) gäller:\n• u = 0 % när PV = SP (övre gräns)\n• u = 100 % när PV = SP − PB (undre gräns, streckad linje)\n\nPV som faller under SP−PB ger full utsignal. PV vid SP ger noll utsignal.\n\nSambandet: hög Kp → smalt PB, låg Kp → brett PB.\n\nAnvändbart för att pedagogiskt koppla Kp till hur 'känslig' regulatorn är för felet."
+    "body": "Ritar ut proportionalbandet i grafen som ett lila skuggat område.\n\nPB = 100 / Kp (%)\n\nMed bias=0 (standard) gäller:\n• u = 0 % när PV = SP (övre gräns)\n• u = 100 % när PV = SP − PB (undre gräns, streckad linje)\n\nPV som faller under SP−PB ger full utsignal. PV vid SP ger noll utsignal.\n\nSambandet: hög Kp → smalt PB, låg Kp → brett PB."
   },
   "hysteresLower": {
     "title": "Hysterese låg (OnOff)",

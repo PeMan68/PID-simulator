@@ -14,7 +14,7 @@ Varje feature-branch uppdaterar **endast sin egen post** (status, anteckningar).
 **Prioritet:** Medel
 **Beskrivning:**
 HELP_CONTENT är hårdkodat i app.js (89 rader, 23 poster). Flytta till `content/help.json` och ladda via `fetch()` i `loadCatalog()` — samma mönster som scenarier och lärstigar. Hjälptexterna blir då redigerbara utan att röra app.js.
-**Status:** Fixad i branch — inväntar testning
+**Status:** Klar
 
 ---
 
