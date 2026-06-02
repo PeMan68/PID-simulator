@@ -1,5 +1,6 @@
 {
   "version": "v1.0.0",
+  "help": "help.json",
   "scenarios": [
     { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json" },
     { "id": "p-step-self-regulating",     "file": "scenarios/p-step-self-regulating.json" },
