@@ -18,6 +18,15 @@ HELP_CONTENT är hårdkodat i app.js (89 rader, 23 poster). Flytta till `content
 
 ---
 
+### FEAT-024 — Lärstig: Lambda-metoden för självreglerande system
+**Branch:** `feature/larstig-lambda`
+**Prioritet:** Hög
+**Beskrivning:**
+5-stegs lärstig för Lambda-metoden (modellbaserad PI-inställning). Kp = T/(K×(λ+L)), Ti = T. Inkluderar ny teorifil, 4 scenarion (open-loop, måttlig/aggressiv/konservativ λ) och lärstigs-JSON.
+**Status:** Öppen
+
+---
+
 ### FEAT-022 — Direktverkande / Omvänt verkande (verkningsriktning)
 **Branch:** `feature/verkningsriktning`
 **Prioritet:** Medel
