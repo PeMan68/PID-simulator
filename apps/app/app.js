@@ -78,6 +78,10 @@ const HELP_CONTENT = {
     title: "Puls mag — Pulsstörning",
     body: "Storleken på störningen som triggas med knappen 'Trigga puls'.\n\nPositiv → kortvarig ökning av PV (t.ex. tillflöde öppnas).\nNegativ → kortvarig minskning.\n\nBra för att testa hur regulatorn reagerar på störningar."
   },
+  showPB: {
+    title: "Visa proportionalband (PB)",
+    body: "Ritar ut proportionalbandet i grafen som ett lila skuggat område.\n\nPB = 100 / Kp (%)\n\nMed bias=0 (standard) gäller:\n• u = 0 % när PV = SP (övre gräns)\n• u = 100 % när PV = SP − PB (undre gräns, streckad linje)\n\nPV som faller under SP−PB ger full utsignal. PV vid SP ger noll utsignal.\n\nSambandet: hög Kp → smalt PB, låg Kp → brett PB.\n\nAnvändbart för att pedagogiskt koppla Kp till hur 'känslig' regulatorn är för felet."
+  },
   hysteresLower: {
     title: "Hysterese låg (OnOff)",
     body: "Undre hysteresgräns för OnOff-regulatorn.\n\nRegulatorn slår PÅ (u_max) när:\nPV < SP − hysteres_låg\n\nBredare hysteres → färre switchningar men sämre precision.\nSmalare hysteres → fler switchningar, bättre precision."
@@ -245,7 +249,7 @@ const fields = {
   kp: document.getElementById("kp"), ti: document.getElementById("ti"), td: document.getElementById("td"),
   sp: document.getElementById("sp"), umin: document.getElementById("umin"), umax: document.getElementById("umax"),
   manualOutput: document.getElementById("manualOutput"),
-  mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"), pulseDuration: document.getElementById("pulseDuration"),
+  mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"), pulseDuration: document.getElementById("pulseDuration"), showPB: document.getElementById("showPB"),
   hysteresLower: document.getElementById("hysteresLower"), hysteresUpper: document.getElementById("hysteresUpper"),
   antiWindup: document.getElementById("antiWindup")
 };
@@ -303,6 +307,30 @@ function drawChart() {
     ctx.beginPath(); ctx.moveTo(pad.left, lowerBound); ctx.lineTo(w - pad.right, lowerBound); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(pad.left, upperBound); ctx.lineTo(w - pad.right, upperBound); ctx.stroke();
     ctx.setLineDash([]);
+  }
+
+  // Proportionalband: u=0% vid SP, u=100% vid SP-PB (bias=0)
+  if (fields.showPB.checked && ["p","pi","pid"].includes(sim.scenario.controller.mode)) {
+    const sp_current = sp[sp.length - 1] ?? sim.scenario.runtime.setpoint;
+    const kp = sim.scenario.controller.kp || 1;
+    const pb = 100 / kp;
+    const pbLowerPV = Math.max(yMin, sp_current - pb); // klippt till grafens nedre gräns
+    const yTop = yScaleTop(sp_current);
+    const yBot = yScaleTop(pbLowerPV);
+    const chartW = w - pad.left - pad.right;
+    const chartBottom = yScaleTop(yMin);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pad.left, pad.top, chartW, chartBottom - pad.top);
+    ctx.clip();
+    ctx.fillStyle = "rgba(155,89,182,0.12)";
+    ctx.fillRect(pad.left, yTop, chartW, yBot - yTop);
+    ctx.restore();
+    ctx.strokeStyle = "#9b59b6"; ctx.lineWidth = 1.5; ctx.setLineDash([6, 3]);
+    ctx.beginPath(); ctx.moveTo(pad.left, yBot); ctx.lineTo(w - pad.right, yBot); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#9b59b6"; ctx.font = "10px Segoe UI"; ctx.textAlign = "right";
+    ctx.fillText("PB=" + pb.toFixed(1) + "% (u=100%)", w - pad.right - 4, yBot + 11);
   }
   
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
@@ -442,6 +470,7 @@ function updateControllerUIState() {
   fields.antiWindup.parentElement.style.display = noIntegral ? "none" : "";
   fields.hysteresLower.parentElement.style.display = isOnOff ? "" : "none";
   fields.hysteresUpper.parentElement.style.display = isOnOff ? "" : "none";
+  fields.showPB.parentElement.style.display = (isOnOff || isManual) ? "none" : "";
   
   // Update controller parameters based on mode
   if (currentScenario && currentScenario.controller) {
@@ -675,6 +704,7 @@ function toggleParamGroup(id) {
 });
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
 fields.pulseDuration.addEventListener("input", () => { if (Number(fields.pulseDuration.value) < 0) fields.pulseDuration.value = 0; });
+fields.showPB.addEventListener("change", drawChart);
 document.getElementById("mode").addEventListener("change", updateControllerUIState);
 document.getElementById("processType").addEventListener("change", updateProcessUIState);
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });
