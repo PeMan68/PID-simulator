@@ -1,5 +1,5 @@
 {
-  "version": "v1.0.0",
+  "version": "v1.1.0",
   "help": "help.json",
   "scenarios": [
     { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json" },
@@ -14,18 +14,24 @@
     { "id": "pi-windup-demo",              "file": "scenarios/pi-windup-demo.json" },
     { "id": "integrating-pi",             "file": "scenarios/integrating-pi.json" },
     { "id": "integrating-experimental",   "file": "scenarios/integrating-experimental.json" },
-    { "id": "unstable-experimental",      "file": "scenarios/unstable-experimental.json" }
+    { "id": "unstable-experimental",      "file": "scenarios/unstable-experimental.json" },
+    { "id": "lambda-open-loop",           "file": "scenarios/lambda-open-loop.json" },
+    { "id": "lambda-pi-moderate",         "file": "scenarios/lambda-pi-moderate.json" },
+    { "id": "lambda-pi-aggressive",       "file": "scenarios/lambda-pi-aggressive.json" },
+    { "id": "lambda-pi-conservative",     "file": "scenarios/lambda-pi-conservative.json" }
   ],
   "theory": [
     { "id": "pid-intro",      "file": "theory/pid-intro.v1.json" },
     { "id": "process-basics", "file": "theory/process-basics.v1.json" },
     { "id": "onoff-theory",          "file": "theory/onoff-theory.v1.json" },
     { "id": "integrator-windup",     "file": "theory/integrator-windup.v1.json" },
-    { "id": "integrating-process",   "file": "theory/integrating-process.v1.json" }
+    { "id": "integrating-process",   "file": "theory/integrating-process.v1.json" },
+    { "id": "lambda-metoden",         "file": "theory/lambda-metoden.v1.json" }
   ],
   "learning_paths": [
     { "id": "grundlaggande.v1",        "file": "exercises/grundlaggande.v1.json" },
     { "id": "processbegransningar.v1", "file": "exercises/processbegransningar.v1.json" },
-    { "id": "windup.v1",              "file": "exercises/windup.v1.json" }
+    { "id": "windup.v1",              "file": "exercises/windup.v1.json" },
+    { "id": "lambda-metoden.v1",      "file": "exercises/lambda-metoden.v1.json" }
   ]
 }

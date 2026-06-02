@@ -1,0 +1,15 @@
+{
+  "id": "lambda-metoden-v1",
+  "version": "v1.0.0",
+  "title": "Lambda-metoden",
+  "summary": "Modellbaserad PI-inställning via önskat slutet-slinga tidskonstant λ.",
+  "bullets": [
+    "Kräver känd processmodell: K (förstärkning), T (tidskonstant), L (dödtid).",
+    "Formel: Kp = T / (K × (λ + L))",
+    "Formel: Ti = T  — integratorns tidskonstant sätts lika med processens",
+    "λ (lambda) är det önskade tidskonstantet för slutet slinga — styr hur snabbt PV når SP.",
+    "Litet λ → snabb respons men känslig för modellosäkerhet och störningar.",
+    "Stort λ → robust och stabil men långsam inreglering.",
+    "Tumregel: λ ≥ L för stabil reglering. λ = T ger god balans mellan snabbhet och robusthet."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "lambda-pi-moderate",
+  "version": "v1.0.0",
+  "title": "Lambda PI — måttligt λ (λ = T = 20)",
+  "description": "PI-reglering med Lambda-inställning λ=T=20. Kp=0.53, Ti=20. Mjuk inreglering utan överskjutning.",
+  "tags": ["lambda", "pi", "self"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.5,
+    "T": 20.0,
+    "L": 5.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "pi",
+    "kp": 0.53,
+    "ti": 20.0,
+    "td": 0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 300, "setpoint": 60.0, "autopause": false }
+}

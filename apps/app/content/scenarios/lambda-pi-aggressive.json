@@ -1,0 +1,25 @@
+{
+  "id": "lambda-pi-aggressive",
+  "version": "v1.0.0",
+  "title": "Lambda PI — aggressivt λ (λ = L = 5)",
+  "description": "PI-reglering med Lambda-inställning λ=L=5. Kp=1.33, Ti=20. Snabb men med överskjutning.",
+  "tags": ["lambda", "pi", "self", "aggressive"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.5,
+    "T": 20.0,
+    "L": 5.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "pi",
+    "kp": 1.33,
+    "ti": 20.0,
+    "td": 0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 300, "setpoint": 60.0, "autopause": false }
+}
