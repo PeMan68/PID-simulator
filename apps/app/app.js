@@ -80,7 +80,7 @@ const HELP_CONTENT = {
   },
   showPB: {
     title: "Visa proportionalband (PB)",
-    body: "Ritar ut proportionalbandet som två streckade lila linjer i grafen.\n\nPB = 100 / Kp (%)\n\nPB är det PV-intervall kring SP inom vilket regulatorn arbetar linjärt. Utanför PB är utsignalen mättad (0 % eller 100 %).\n\nSambandet: hög Kp → smalt PB, lägre Kp → brett PB.\n\nAnvändbart för att pedagogiskt koppla Kp till hur 'känslig' regulatorn är."
+    body: "Ritar ut proportionalbandet i grafen som ett lila skuggat område.\n\nPB = 100 / Kp (%)\n\nMed bias=0 (standard) gäller:\n• u = 0 % när PV = SP (övre gräns)\n• u = 100 % när PV = SP − PB (undre gräns, streckad linje)\n\nPV som faller under SP−PB ger full utsignal. PV vid SP ger noll utsignal.\n\nSambandet: hög Kp → smalt PB, låg Kp → brett PB.\n\nAnvändbart för att pedagogiskt koppla Kp till hur 'känslig' regulatorn är för felet."
   },
   hysteresLower: {
     title: "Hysterese låg (OnOff)",
@@ -309,19 +309,21 @@ function drawChart() {
     ctx.setLineDash([]);
   }
 
-  // Proportionalband
+  // Proportionalband: u=0% vid SP, u=100% vid SP-PB (bias=0)
   if (fields.showPB.checked && ["p","pi","pid"].includes(sim.scenario.controller.mode)) {
     const sp_current = sp[sp.length - 1] ?? sim.scenario.runtime.setpoint;
     const kp = sim.scenario.controller.kp || 1;
     const pb = 100 / kp;
-    const upperPB = yScaleTop(sp_current + pb / 2);
-    const lowerPB = yScaleTop(sp_current - pb / 2);
+    const yTop = yScaleTop(sp_current);        // SP — övre gräns (u=0%)
+    const yBot = yScaleTop(sp_current - pb);   // SP-PB — undre gräns (u=100%)
+    const chartW = w - pad.left - pad.right;
+    ctx.fillStyle = "rgba(155,89,182,0.12)";
+    ctx.fillRect(pad.left, yTop, chartW, yBot - yTop);
     ctx.strokeStyle = "#9b59b6"; ctx.lineWidth = 1.5; ctx.setLineDash([6, 3]);
-    ctx.beginPath(); ctx.moveTo(pad.left, upperPB); ctx.lineTo(w - pad.right, upperPB); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(pad.left, lowerPB); ctx.lineTo(w - pad.right, lowerPB); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.left, yBot); ctx.lineTo(w - pad.right, yBot); ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = "#9b59b6"; ctx.font = "10px Segoe UI"; ctx.textAlign = "right";
-    ctx.fillText("PB=" + pb.toFixed(1) + "%", w - pad.right - 4, upperPB - 3);
+    ctx.fillText("PB=" + pb.toFixed(1) + "% (u=100%)", w - pad.right - 4, yBot + 11);
   }
   
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
