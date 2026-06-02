@@ -9,6 +9,15 @@ Varje feature-branch uppdaterar **endast sin egen post** (status, anteckningar).
 
 ### Webbapp (`apps/app/`)
 
+### FEAT-022 — Direktverkande / Omvänt verkande (verkningsriktning)
+**Branch:** `feature/verkningsriktning`
+**Prioritet:** Medel
+**Beskrivning:**
+Industriella regulatorer har en inställning för verkningsriktning: omvänt verkande (Kp > 0, t.ex. värme — utsignal ökar när PV sjunker) och direktverkande (Kp < 0, t.ex. kyla — utsignal ökar när PV stiger). Ska implementeras som en toggle i Regulator-gruppen och påverkar PB-bandets placering (ovanför SP vid direktverkande). Lämplig att inkludera i en lärstig om reglering av kylprocesser.
+**Status:** Öppen
+
+---
+
 ### FEAT-021 — Visa/dölj proportionalband som streckad linje i grafen
 **Branch:** `feature/proportionalband`
 **Prioritet:** Hög

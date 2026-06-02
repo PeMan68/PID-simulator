@@ -314,11 +314,18 @@ function drawChart() {
     const sp_current = sp[sp.length - 1] ?? sim.scenario.runtime.setpoint;
     const kp = sim.scenario.controller.kp || 1;
     const pb = 100 / kp;
-    const yTop = yScaleTop(sp_current);        // SP — övre gräns (u=0%)
-    const yBot = yScaleTop(sp_current - pb);   // SP-PB — undre gräns (u=100%)
+    const pbLowerPV = Math.max(yMin, sp_current - pb); // klippt till grafens nedre gräns
+    const yTop = yScaleTop(sp_current);
+    const yBot = yScaleTop(pbLowerPV);
     const chartW = w - pad.left - pad.right;
+    const chartBottom = yScaleTop(yMin);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pad.left, pad.top, chartW, chartBottom - pad.top);
+    ctx.clip();
     ctx.fillStyle = "rgba(155,89,182,0.12)";
     ctx.fillRect(pad.left, yTop, chartW, yBot - yTop);
+    ctx.restore();
     ctx.strokeStyle = "#9b59b6"; ctx.lineWidth = 1.5; ctx.setLineDash([6, 3]);
     ctx.beginPath(); ctx.moveTo(pad.left, yBot); ctx.lineTo(w - pad.right, yBot); ctx.stroke();
     ctx.setLineDash([]);
