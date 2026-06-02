@@ -22,10 +22,8 @@ Industriella regulatorer har en inställning för verkningsriktning: omvänt ver
 **Branch:** `feature/proportionalband`
 **Prioritet:** Hög
 **Beskrivning:**
-Proportionalbandet (PB = 100/Kp %) definierar det PV-intervall som ger full utslagsvariation i regulatorn. En toggel ska rita ut PB som streckade linjer ovanför och nedanför SP i grafen — pedagogiskt hjälpmedel för att visuellt koppla samman Kp och PB i en lärstig.
-**Lösningsidé:**
-Beräkna PB = 100/Kp. Rita SP ± PB/2 som streckade horisontella linjer i PV-grafen (liknande hysteresgränserna för OnOff). Toggel-kryssruta i Regulator-gruppen. Uppdateras direkt vid Kp-ändring. Gäller bara P/PI/PID-läge.
-**Status:** Fixad i branch — inväntar testning
+Proportionalbandet (PB = 100/Kp %) definierar det PV-intervall som ger full utslagsvariation i regulatorn. Skuggat lila område SP-PB → SP, streckad linje vid SP-PB (u=100%).
+**Status:** Klar
 
 ---
 
