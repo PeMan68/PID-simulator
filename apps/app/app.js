@@ -78,6 +78,10 @@ const HELP_CONTENT = {
     title: "Puls mag — Pulsstörning",
     body: "Storleken på störningen som triggas med knappen 'Trigga puls'.\n\nPositiv → kortvarig ökning av PV (t.ex. tillflöde öppnas).\nNegativ → kortvarig minskning.\n\nBra för att testa hur regulatorn reagerar på störningar."
   },
+  showPB: {
+    title: "Visa proportionalband (PB)",
+    body: "Ritar ut proportionalbandet som två streckade lila linjer i grafen.\n\nPB = 100 / Kp (%)\n\nPB är det PV-intervall kring SP inom vilket regulatorn arbetar linjärt. Utanför PB är utsignalen mättad (0 % eller 100 %).\n\nSambandet: hög Kp → smalt PB, lägre Kp → brett PB.\n\nAnvändbart för att pedagogiskt koppla Kp till hur 'känslig' regulatorn är."
+  },
   hysteresLower: {
     title: "Hysterese låg (OnOff)",
     body: "Undre hysteresgräns för OnOff-regulatorn.\n\nRegulatorn slår PÅ (u_max) när:\nPV < SP − hysteres_låg\n\nBredare hysteres → färre switchningar men sämre precision.\nSmalare hysteres → fler switchningar, bättre precision."
@@ -245,7 +249,7 @@ const fields = {
   kp: document.getElementById("kp"), ti: document.getElementById("ti"), td: document.getElementById("td"),
   sp: document.getElementById("sp"), umin: document.getElementById("umin"), umax: document.getElementById("umax"),
   manualOutput: document.getElementById("manualOutput"),
-  mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"), pulseDuration: document.getElementById("pulseDuration"),
+  mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"), pulseDuration: document.getElementById("pulseDuration"), showPB: document.getElementById("showPB"),
   hysteresLower: document.getElementById("hysteresLower"), hysteresUpper: document.getElementById("hysteresUpper"),
   antiWindup: document.getElementById("antiWindup")
 };
@@ -303,6 +307,21 @@ function drawChart() {
     ctx.beginPath(); ctx.moveTo(pad.left, lowerBound); ctx.lineTo(w - pad.right, lowerBound); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(pad.left, upperBound); ctx.lineTo(w - pad.right, upperBound); ctx.stroke();
     ctx.setLineDash([]);
+  }
+
+  // Proportionalband
+  if (fields.showPB.checked && ["p","pi","pid"].includes(sim.scenario.controller.mode)) {
+    const sp_current = sp[sp.length - 1] ?? sim.scenario.runtime.setpoint;
+    const kp = sim.scenario.controller.kp || 1;
+    const pb = 100 / kp;
+    const upperPB = yScaleTop(sp_current + pb / 2);
+    const lowerPB = yScaleTop(sp_current - pb / 2);
+    ctx.strokeStyle = "#9b59b6"; ctx.lineWidth = 1.5; ctx.setLineDash([6, 3]);
+    ctx.beginPath(); ctx.moveTo(pad.left, upperPB); ctx.lineTo(w - pad.right, upperPB); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.left, lowerPB); ctx.lineTo(w - pad.right, lowerPB); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#9b59b6"; ctx.font = "10px Segoe UI"; ctx.textAlign = "right";
+    ctx.fillText("PB=" + pb.toFixed(1) + "%", w - pad.right - 4, upperPB - 3);
   }
   
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
@@ -442,6 +461,7 @@ function updateControllerUIState() {
   fields.antiWindup.parentElement.style.display = noIntegral ? "none" : "";
   fields.hysteresLower.parentElement.style.display = isOnOff ? "" : "none";
   fields.hysteresUpper.parentElement.style.display = isOnOff ? "" : "none";
+  fields.showPB.parentElement.style.display = (isOnOff || isManual) ? "none" : "";
   
   // Update controller parameters based on mode
   if (currentScenario && currentScenario.controller) {
@@ -675,6 +695,7 @@ function toggleParamGroup(id) {
 });
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
 fields.pulseDuration.addEventListener("input", () => { if (Number(fields.pulseDuration.value) < 0) fields.pulseDuration.value = 0; });
+fields.showPB.addEventListener("change", drawChart);
 document.getElementById("mode").addEventListener("change", updateControllerUIState);
 document.getElementById("processType").addEventListener("change", updateProcessUIState);
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });
