@@ -1,0 +1,44 @@
+{
+  "id": "kom-igång.v1",
+  "version": "v1.0.0",
+  "title": "Kom igång med PID Simulator",
+  "description": "En snabb genomgång av appens funktioner — hur du laddar scenarier, kör simuleringar, ändrar parametrar och hittar hjälp.",
+  "difficulty": "intro",
+  "steps": [
+    {
+      "type": "scenario",
+      "ref": "basic-step-self-regulating.json",
+      "title": "Appen i översikt",
+      "objective": "Förstå appens tre paneler och hur de hänger ihop.",
+      "instruction": "Appen är uppdelad i tre paneler:\n• Vänster: välj scenario och lärstig\n• Mitten: parametrar och simulering\n• Höger: hjälptexter (öppnas med ?-knapparna)\n\nPanelerna går att storleksanpassa — dra i avdragets kanter för mer yta åt grafen eller parametrarna. På smal skärm kollapsar sidopanelerna automatiskt.\n\nEtt scenario är förladdat. Grafen är tom — du har inte kört något än."
+    },
+    {
+      "type": "scenario",
+      "ref": "pid-step-self-regulating.json",
+      "title": "Ladda ett scenario",
+      "objective": "Förstå vad ett scenario är och hur du byter mellan dem.",
+      "instruction": "Scenarier är färdiga experimentuppsättningar med förinställda processer och regulatorer — en startpunkt för olika situationer.\n\nI vänster sidebar: välj ett scenario i listan och klicka 'Ladda scenario'.\n\nDetta steg laddade ett PID-scenario automatiskt — se i Process- och Regulator-grupperna att parametrarna uppdaterades."
+    },
+    {
+      "type": "scenario",
+      "ref": "basic-step-self-regulating.json",
+      "title": "Kör din första simulering",
+      "objective": "Lära dig de tre simuleringsknapparna och vad grafen visar.",
+      "instruction": "Klicka 'Kör 10 steg' upprepade gånger och se hur den blå kurvan (PV — processvärdet) rör sig mot den röda streckade linjen (SP — börvärdet).\n\nStatusraden visar aktuellt steg, tid och värden i realtid. Prova 'Stega 1' för att gå ett steg i taget.\n\n'Rensa graf' nollställer kurvan utan att ändra parametrar. 'Återställ system' startar om simuleringen helt."
+    },
+    {
+      "type": "scenario",
+      "ref": "basic-step-self-regulating.json",
+      "title": "Ändra parametrar och få hjälp",
+      "objective": "Förstå parametergrupperna och hur ?-knapparna ger förklaringar.",
+      "instruction": "Parametergrupperna (Process, Regulator, Styrning, Störningar) kan fällas ihop med ▼ för att frigöra grafyta.\n\nProva: ändra SP till 70 i Styrning-gruppen och kör 20 steg — börvärdeslinjen i grafen ska flytta sig uppåt.\n\nKlicka '?' bredvid vilket fält som helst för en detaljerad förklaring i höger sidebar."
+    },
+    {
+      "type": "scenario",
+      "ref": "basic-step-self-regulating.json",
+      "title": "Guidade lärstigar",
+      "objective": "Förstå vad lärstigar är och hur du väljer rätt läge.",
+      "instruction": "Lärstigar är strukturerade kurser som kombinerar teori, simulering och övningar i ett flöde. De guidar dig från begrepp till praktisk tillämpning, steg för steg.\n\nDu väljer läge i vänster sidebar:\n• Guidat — fri utforskning i din egen takt, ingen poängräkning\n• Test — kunskapskontroll med frågor och poäng\n\nVälj en lärstig i listan och klicka 'Ladda lärstig' för att börja."
+    }
+  ]
+}

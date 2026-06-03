@@ -1,5 +1,5 @@
 {
-  "version": "v1.1.1",
+  "version": "v1.1.2",
   "help": "help.json",
   "scenarios": [
     { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json" },
@@ -32,6 +32,7 @@
     { "id": "grundlaggande.v1",        "file": "exercises/grundlaggande.v1.json" },
     { "id": "processbegransningar.v1", "file": "exercises/processbegransningar.v1.json" },
     { "id": "windup.v1",              "file": "exercises/windup.v1.json" },
-    { "id": "lambda-metoden.v1",      "file": "exercises/lambda-metoden.v1.json" }
+    { "id": "lambda-metoden.v1",      "file": "exercises/lambda-metoden.v1.json" },
+    { "id": "kom-igång.v1",           "file": "exercises/kom-igång.v1.json" }
   ]
 }

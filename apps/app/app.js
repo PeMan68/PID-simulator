@@ -514,10 +514,30 @@ function nextPathStep() {
   renderStep(step);
 }
 
+function showWelcome() {
+  learnBody.innerHTML = `<div class="welcome-panel">
+    <h3>Välkommen till PID Simulator!</h3>
+    <p>Simulera och utforska reglerteknik — från enkel on/off till avancerade metoder som Lambda-tuning.</p>
+    <p>Appen passar både nybörjare och den som vill repetera eller fördjupa sig.</p>
+    <button id="welcomeStart">Kom igång »</button>
+    <button id="welcomeSkip" class="secondary">Utforska fritt</button>
+  </div>`;
+  document.getElementById("welcomeStart").onclick = () => {
+    localStorage.setItem("pidSimWelcomed", "1");
+    loadPath("kom-igång.v1");
+    nextPathStep();
+  };
+  document.getElementById("welcomeSkip").onclick = () => {
+    localStorage.setItem("pidSimWelcomed", "1");
+    loadScenarioByName("basic-step-self-regulating.json");
+  };
+}
+
 function initUI() {
   Object.entries(SCENARIOS).forEach(([name, s]) => { const o = document.createElement("option"); o.value = name; o.textContent = s.title || name; scenarioSelect.appendChild(o); });
   Object.entries(LEARNING_PATHS).forEach(([id, p]) => { const o = document.createElement("option"); o.value = id; o.textContent = p.title || id; learningPathSelect.appendChild(o); });
   loadScenarioByName("basic-step-self-regulating.json");
+  if (!localStorage.getItem("pidSimWelcomed")) showWelcome();
 }
 
 // ── Sidebar resize ──
