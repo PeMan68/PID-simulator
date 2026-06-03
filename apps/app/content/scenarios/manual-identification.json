@@ -1,0 +1,26 @@
+{
+  "id": "manual-identification",
+  "version": "v1.0.0",
+  "title": "Processidentifiering (manuell)",
+  "description": "Manuellt läge för stegsvarexperiment. K=1.5, T=20, L=5 — tydlig dödtid och tidskonstant för identifiering.",
+  "tags": ["manual", "identification", "open-loop"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.5,
+    "T": 20.0,
+    "L": 5.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "manual",
+    "manualOutput": 30.0,
+    "kp": 0.0,
+    "ti": 0.0,
+    "td": 0.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 300, "setpoint": 50.0, "autopause": false }
+}

@@ -1,6 +1,6 @@
 /* Data laddas via fetch() från content/catalog.json vid uppstart */
 
-const APP_VERSION = "1.1";
+const APP_VERSION = "1.2";
 
 let SCENARIOS = {}, THEORY = {}, LEARNING_PATHS = {}, HELP_CONTENT = {};
 
@@ -174,6 +174,9 @@ let currentPathStep = -1;
 let testMode = false;
 let checkpointAnswered = false;
 let pathScore = { correct: 0, total: 0 };
+let measureMode = false;
+let measureCollapsedLeft = false;
+let hoverPos = null;
 
 function appendLog(line) { logEl.textContent += line + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 function fitCanvas() { const w = Math.max(680, chartCanvas.clientWidth); if (chartCanvas.width !== w) chartCanvas.width = w; }
@@ -252,6 +255,115 @@ function drawChart() {
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(Math.max(0, Math.min(100, u[i]))) })), "#2f9e44", false);
+
+  // ── Mätläge: hjälplinjer och crosshair ──
+  if (measureMode) {
+    const pv0 = parseFloat(document.getElementById("mpPv0").value);
+    const pvInf = parseFloat(document.getElementById("mpPvInf").value);
+    const hasRange = !isNaN(pv0) && !isNaN(pvInf) && Math.abs(pvInf - pv0) > 0.01;
+
+    // 63%-hjälplinje
+    if (document.getElementById("mp63Line").checked && hasRange) {
+      const y63 = pv0 + 0.632 * (pvInf - pv0);
+      const y63px = yScaleTop(y63);
+      ctx.save();
+      ctx.strokeStyle = "#c8870a"; ctx.lineWidth = 1.5; ctx.setLineDash([8, 5]);
+      ctx.beginPath(); ctx.moveTo(pad.left, y63px); ctx.lineTo(w - pad.right, y63px); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#c8870a"; ctx.font = "10px Segoe UI"; ctx.textAlign = "right";
+      ctx.fillText("63% = " + y63.toFixed(2), w - pad.right - 3, y63px - 3);
+      ctx.restore();
+    }
+
+    // Tangentlinje (Ziegler-Nichols)
+    if (document.getElementById("mpTangent").checked && y.length > 5) {
+      let iInfl = 2;
+      let maxSl = -Infinity;
+      for (let i = 2; i < y.length - 2; i++) {
+        const dt_w = t[i + 2] - t[i - 2];
+        if (dt_w <= 0) continue;
+        const sl = (y[i + 2] - y[i - 2]) / dt_w;
+        if (sl > maxSl) { maxSl = sl; iInfl = i; }
+      }
+      if (maxSl > 0.001) {
+        const tInfl = t[iInfl];
+        const pvInfl = y[iInfl];
+        const pvLineAt = tv => pvInfl + maxSl * (tv - tInfl);
+
+        ctx.save();
+        if (hasRange) {
+          const tL = tInfl - (pvInfl - pv0) / maxSl;
+          const tLT = tInfl + (pvInf - pvInfl) / maxSl;
+          const tLineStart = Math.max(0, tL);
+          const tLineEnd = Math.min(tMax, tLT);
+
+          ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 2; ctx.setLineDash([8, 4]);
+          ctx.beginPath();
+          ctx.moveTo(xScale(tLineStart), yScaleTop(pvLineAt(tLineStart)));
+          ctx.lineTo(xScale(tLineEnd), yScaleTop(pvLineAt(tLineEnd)));
+          ctx.stroke(); ctx.setLineDash([]);
+
+          if (tL >= 0 && tL <= tMax) {
+            const xL = xScale(tL), yL = yScaleTop(pv0);
+            ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(xL, yL - 8); ctx.lineTo(xL, yL + 8); ctx.stroke();
+            ctx.fillStyle = "#8e44ad"; ctx.font = "bold 10px Segoe UI"; ctx.textAlign = "center";
+            ctx.fillText("L≈" + tL.toFixed(1), xL, yL + 20);
+          }
+          if (tLT >= 0 && tLT <= tMax) {
+            const xLT = xScale(tLT), yLT = yScaleTop(pvInf);
+            ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(xLT, yLT - 8); ctx.lineTo(xLT, yLT + 8); ctx.stroke();
+            ctx.fillStyle = "#8e44ad"; ctx.font = "bold 10px Segoe UI"; ctx.textAlign = "center";
+            ctx.fillText("L+T≈" + tLT.toFixed(1), xLT, yLT - 12);
+          }
+        } else {
+          const ext = tMax * 0.25;
+          const tLineStart = Math.max(0, tInfl - ext);
+          const tLineEnd = Math.min(tMax, tInfl + ext * 1.5);
+          ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 2; ctx.setLineDash([8, 4]);
+          ctx.beginPath();
+          ctx.moveTo(xScale(tLineStart), yScaleTop(pvLineAt(tLineStart)));
+          ctx.lineTo(xScale(tLineEnd), yScaleTop(pvLineAt(tLineEnd)));
+          ctx.stroke(); ctx.setLineDash([]);
+        }
+        ctx.restore();
+      }
+    }
+
+    // Crosshair
+    if (hoverPos && t.length > 0) {
+      const mx = hoverPos.x;
+      if (mx >= pad.left && mx <= w - pad.right) {
+        const tHover = (mx - pad.left) / (w - pad.left - pad.right) * tMax;
+        let iNear = 0;
+        for (let i = 1; i < t.length; i++) {
+          if (Math.abs(t[i] - tHover) < Math.abs(t[iNear] - tHover)) iNear = i;
+        }
+        const pvH = y[iNear] != null ? y[iNear] : 0;
+        const uH = u[iNear] != null ? u[iNear] : 0;
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(30,30,30,0.38)"; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(mx, pad.top); ctx.lineTo(mx, h * 0.62); ctx.stroke();
+        ctx.setLineDash([]);
+
+        const lines = ["t  = " + tHover.toFixed(1), "PV = " + pvH.toFixed(2), "u  = " + uH.toFixed(2)];
+        ctx.font = "11px Consolas, monospace";
+        const lH = 15, pX = 7, pY = 5;
+        const ttW = Math.max(...lines.map(s => ctx.measureText(s).width)) + pX * 2;
+        const ttH = lines.length * lH + pY * 2;
+        const ttX = mx + 10 + ttW <= w - pad.right ? mx + 10 : mx - ttW - 8;
+        const ttY = Math.max(pad.top + 4, Math.min(h * 0.62 - ttH - 4, hoverPos.y - ttH / 2));
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.strokeStyle = "#bbb"; ctx.lineWidth = 1;
+        ctx.fillRect(ttX, ttY, ttW, ttH); ctx.strokeRect(ttX, ttY, ttW, ttH);
+        ctx.fillStyle = "#2c3a44"; ctx.textAlign = "left";
+        lines.forEach((s, i) => ctx.fillText(s, ttX + pX, ttY + pY + (i + 1) * lH - 2));
+        ctx.restore();
+      }
+    }
+  }
 }
 function updateStatus() {
   if (!sim) { statusEl.textContent = "Status: ej laddad"; return; }
@@ -275,6 +387,7 @@ function hydrateFields(s) {
   fields.outflow.value = s.process.outflow ?? 0;
 }
 function loadScenarioByName(name) {
+  if (measureMode) exitMeasureMode();
   currentScenario = deepClone(SCENARIOS[name]);
   sim = new Simulation(currentScenario, 42);
   hydrateFields(currentScenario);
@@ -648,6 +761,80 @@ document.getElementById("loadPath").addEventListener("click", () => loadPath(lea
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
 window.addEventListener("resize", drawChart);
+
+// ── Mätläge ──
+function enterMeasureMode() {
+  measureMode = true;
+  const sbLeft = document.getElementById("sidebarLeft");
+  if (!sbLeft.classList.contains("collapsed")) {
+    measureCollapsedLeft = true;
+    toggleSidebar("sidebarLeft", "toggleLeft", "resizeLeft", "»", "«");
+  } else {
+    measureCollapsedLeft = false;
+  }
+  document.querySelector(".params-container").classList.add("measure-locked");
+  document.getElementById("measurePanel").classList.add("active");
+  document.getElementById("btnMeasure").classList.add("active");
+  document.getElementById("btnMeasure").textContent = "✕ Stäng mätläge";
+  chartCanvas.style.cursor = "crosshair";
+  drawChart();
+}
+
+function exitMeasureMode() {
+  measureMode = false;
+  hoverPos = null;
+  if (measureCollapsedLeft) {
+    toggleSidebar("sidebarLeft", "toggleLeft", "resizeLeft", "»", "«");
+    measureCollapsedLeft = false;
+  }
+  document.querySelector(".params-container").classList.remove("measure-locked");
+  document.getElementById("measurePanel").classList.remove("active");
+  document.getElementById("facitBody").style.display = "none";
+  document.getElementById("btnFacit").textContent = "Visa facit";
+  document.getElementById("btnMeasure").classList.remove("active");
+  document.getElementById("btnMeasure").textContent = "Mät K/T/L";
+  chartCanvas.style.cursor = "";
+  drawChart();
+}
+
+document.getElementById("btnMeasure").addEventListener("click", () => {
+  if (measureMode) exitMeasureMode(); else enterMeasureMode();
+});
+
+document.getElementById("btnFacit").addEventListener("click", () => {
+  const fb = document.getElementById("facitBody");
+  const showing = fb.style.display !== "none" && fb.style.display !== "";
+  if (!showing) {
+    if (currentScenario) {
+      document.getElementById("facitK").textContent = currentScenario.process.K;
+      document.getElementById("facitT").textContent = currentScenario.process.T;
+      document.getElementById("facitL").textContent = currentScenario.process.L;
+    }
+    fb.style.display = "";
+    document.getElementById("btnFacit").textContent = "Dölj facit";
+  } else {
+    fb.style.display = "none";
+    document.getElementById("btnFacit").textContent = "Visa facit";
+  }
+});
+
+document.getElementById("mpPv0").addEventListener("input", () => { if (measureMode) drawChart(); });
+document.getElementById("mpPvInf").addEventListener("input", () => { if (measureMode) drawChart(); });
+document.getElementById("mp63Line").addEventListener("change", () => { if (measureMode) drawChart(); });
+document.getElementById("mpTangent").addEventListener("change", () => { if (measureMode) drawChart(); });
+
+chartCanvas.addEventListener("mousemove", e => {
+  if (!measureMode) return;
+  const rect = chartCanvas.getBoundingClientRect();
+  hoverPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  drawChart();
+});
+
+chartCanvas.addEventListener("mouseleave", () => {
+  if (!measureMode || !hoverPos) return;
+  hoverPos = null;
+  drawChart();
+});
 
 loadCatalog().then(initUI).catch(err => {
   document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;background:#1a1a2e;color:#e0e0e0;min-height:100vh"><h2 style="color:#f0a500">Kunde inte ladda data</h2><p>' + err.message + '</p><p>Appen kräver HTTP-server (GitHub Pages eller lokal server). Dubbel-klick på index.html stöds inte.</p></div>';
