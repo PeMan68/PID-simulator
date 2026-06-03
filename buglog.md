@@ -48,6 +48,18 @@ Fältet "Puls steg" har `min="1"` i HTML vilket stoppar musklick från att gå u
 
 ---
 
+### 2026-008 — Vänster sidebar minimeras inte, tömmer bara innehållet
+**Prio:** Medel
+**Datum:** 2026-06-03
+**Branch:** `bugfix/sidebar-collapse`
+**Beskrivning:**
+Klick på `«`-knappen döljer sidebars innehåll (opacity:0) men bredden förändras inte — sidebaren minimeras alltså inte visuellt.
+**Rotorsak:** `makeResizable()` sätter en inline `style.width` på sidebaren vid uppstart (sparad bredd från localStorage). CSS-regeln `.sidebar-left.collapsed { width: 28px }` vinner inte mot inline-stilen. Innehållet döljs via `.sidebar.collapsed .sidebar-inner { opacity: 0 }` (den regeln fungerar), men sidebaren förblir bred.
+**Fix:** Vid kollaps — spara och rensa inline-stilen. Vid expansion — återställ den.
+**Status:** Fixad i branch
+
+---
+
 ### Python-app (`main.py`)
 
 ### 2026-003 — PID-bidragsgraf visar fel y-axel-enhet

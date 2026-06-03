@@ -572,24 +572,23 @@ makeResizable("resizeLeft", "sidebarLeft", "left", "pid-sb-left-w");
 makeResizable("resizeRight", "sidebarRight", "right", "pid-sb-right-w");
 
 // ── Sidebar toggles ──
-document.getElementById("toggleLeft").addEventListener("click", () => {
-  const sb = document.getElementById("sidebarLeft");
-  const btn = document.getElementById("toggleLeft");
-  const handle = document.getElementById("resizeLeft");
+function toggleSidebar(sbId, btnId, handleId, collapsedText, expandedText) {
+  const sb = document.getElementById(sbId);
+  const btn = document.getElementById(btnId);
+  const handle = document.getElementById(handleId);
   sb.classList.toggle("collapsed");
   const collapsed = sb.classList.contains("collapsed");
-  btn.textContent = collapsed ? "»" : "«";
+  btn.textContent = collapsed ? collapsedText : expandedText;
   handle.style.display = collapsed ? "none" : "";
-});
-document.getElementById("toggleRight").addEventListener("click", () => {
-  const sb = document.getElementById("sidebarRight");
-  const btn = document.getElementById("toggleRight");
-  const handle = document.getElementById("resizeRight");
-  sb.classList.toggle("collapsed");
-  const collapsed = sb.classList.contains("collapsed");
-  btn.textContent = collapsed ? "«" : "»";
-  handle.style.display = collapsed ? "none" : "";
-});
+  if (collapsed) {
+    sb.dataset.savedWidth = sb.style.width;
+    sb.style.width = "";
+  } else {
+    if (sb.dataset.savedWidth) sb.style.width = sb.dataset.savedWidth;
+  }
+}
+document.getElementById("toggleLeft").addEventListener("click", () => toggleSidebar("sidebarLeft", "toggleLeft", "resizeLeft", "»", "«"));
+document.getElementById("toggleRight").addEventListener("click", () => toggleSidebar("sidebarRight", "toggleRight", "resizeRight", "«", "»"));
 
 // ── Help buttons ──
 document.querySelectorAll(".help-btn").forEach(btn => {
