@@ -18,6 +18,15 @@ HELP_CONTENT är hårdkodat i app.js (89 rader, 23 poster). Flytta till `content
 
 ---
 
+### FEAT-025 — Onboarding: välkomstpanel + intro-lärstig för nya användare
+**Branch:** `feature/onboarding`
+**Prioritet:** Hög
+**Beskrivning:**
+Vid första besök visas en välkomstpanel i vänster sidebar med appbeskrivning och knappar "Börja här →" (laddar intro-lärstigen) och "Utforska fritt". Tillståndet sparas i localStorage. Intro-lärstigen "Kom igång med PID Simulator" guidar igenom appens funktioner i 5 steg utan checkpoints: översikt → scenarier → simulering → parametrar/hjälp → lärstigar.
+**Status:** Öppen
+
+---
+
 ### FEAT-024 — Lärstig: Lambda-metoden för självreglerande system
 **Branch:** `feature/larstig-lambda`
 **Prioritet:** Hög
