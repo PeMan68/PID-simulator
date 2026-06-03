@@ -9,6 +9,14 @@ Varje feature-branch uppdaterar **endast sin egen post** (status, anteckningar).
 
 ### Webbapp (`apps/app/`)
 
+### BESLUT-001 — Ta ställning till appens namn inför slutlig prod-version
+**Prioritet:** Låg (innan release)
+**Beskrivning:**
+"PID Simulator" är tekniskt korrekt men kan vara exkluderande för nybörjare och speglar inte bredden (On/Off, Lambda-metoden, lärstigar). Kandidater: Reglerlab, PIDlab, Processlabb. Namnbyte kräver: byta repo-namn på GitHub, uppdatera GitHub Pages-URL, uppdatera `<title>`, sidebar-rubrik och `APP_VERSION`-text i appen. Överväg custom domain för stabilt URL.
+**Status:** Öppen — beslut krävs
+
+---
+
 ### FEAT-023 — Flytta hjälptexter till redigerbar JSON-fil
 **Branch:** `feature/help-json`
 **Prioritet:** Medel
