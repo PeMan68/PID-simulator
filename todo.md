@@ -26,6 +26,15 @@ HELP_CONTENT är hårdkodat i app.js (89 rader, 23 poster). Flytta till `content
 
 ---
 
+### FEAT-027 — Zoom i grafen för exaktare mätavläsning
+**Branch:** `feature/graph-zoom`
+**Prioritet:** Medel
+**Beskrivning:**
+Möjlighet att zooma in i PV-grafen för att avläsa exakta värden med crosshairen i mätläge. Scrollhjul + modifieringstangent (Ctrl eller Shift) zoomar horisontellt (t-axeln). Touchpad: tvåfingerspinch-scroll. Zoom-nivå visas och kan nollställas med dubbelklick eller en "Återställ zoom"-knapp.
+**Status:** Öppen
+
+---
+
 ### FEAT-025 — Onboarding: välkomstpanel + intro-lärstig för nya användare
 **Branch:** `feature/onboarding`
 **Prioritet:** Hög
