@@ -1,0 +1,17 @@
+{
+  "id": "tangentmetoden-v1",
+  "version": "v1.0.0",
+  "title": "Tangentmetoden — Ziegler-Nichols reaktionskurva",
+  "summary": "Grafisk identifieringsmetod: rita en tangent vid stegsvarets brantaste punkt och avläs dödtid L och tidskonstant T från skärningarna.",
+  "bullets": [
+    "Tangenten ritas vid inflexionspunkten — stegsvarets punkt med maximal lutning.",
+    "Enkapacitiv process (FOPDT, exponentiell kurva): max lutning är i STARTEN av uppgången, direkt när dödtiden löpt ut.",
+    "Flerkapacitiv process (S-kurva): inflexionspunkten är mitt i uppgången, där kurvan övergår från 'konkav uppåt' till 'konvex uppåt'.",
+    "Förlängt tangentlinje skär PV₀-nivån och PV∞-nivån. L = tid från stegändringen till PV₀-skärningen.",
+    "T = tid mellan de två skärningspunkterna (PV₀-skärning till PV∞-skärning).",
+    "K = (PV∞ − PV₀) / (u₁ − u₀) — identifieras separat från mätvärdena.",
+    "Viktigt: Ange PV₀ och PV∞ i mätpanelen — annars vet verktyget inte var tangentlinjen ska sträckas.",
+    "Jämförelse med 63%-metoden: tangentmetoden ger apparenta L och T via geometri; 63%-metoden mäter direkt från kurvan. Båda ger approximationer.",
+    "Lambda-metoden är INTE en identifieringsmetod — den beräknar Kp och Ti från redan identifierade K, T och L."
+  ]
+}

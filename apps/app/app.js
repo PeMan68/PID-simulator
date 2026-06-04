@@ -1,6 +1,6 @@
 /* Data laddas via fetch() från content/catalog.json vid uppstart */
 
-const APP_VERSION = "1.1";
+const APP_VERSION = "1.2";
 
 let SCENARIOS = {}, THEORY = {}, LEARNING_PATHS = {}, HELP_CONTENT = {};
 
@@ -71,8 +71,13 @@ class ProcessModel {
     this.dt = dt;
     this.y = cfg.normalValue;
     this.delay = cfg.L > 0 ? new Array(Math.max(1, Math.ceil(cfg.L / dt))).fill(0) : [];
+    this.stages = cfg.type === "self_regulating_2" ? [cfg.normalValue, cfg.normalValue] : [];
   }
-  reset() { this.y = this.cfg.normalValue; if (this.delay.length > 0) this.delay.fill(0); }
+  reset() {
+    this.y = this.cfg.normalValue;
+    if (this.delay.length > 0) this.delay.fill(0);
+    if (this.stages.length > 0) this.stages.fill(this.cfg.normalValue);
+  }
   step(u, dt, disturbance) {
     let ud;
     if (this.delay.length > 0) { this.delay.push(u); ud = this.delay.shift(); }
@@ -83,6 +88,12 @@ class ProcessModel {
       this.y += (this.cfg.K * ud - outflow) * dt;
     }
     else if (this.cfg.type === "unstable") this.y += ((this.y - this.cfg.normalValue + this.cfg.K * ud) * dt) / T;
+    else if (this.cfg.type === "self_regulating_2") {
+      const Ti = T / 3;
+      this.stages[0] += ((-(this.stages[0] - this.cfg.normalValue) + this.cfg.K * ud) * dt) / Ti;
+      this.stages[1] += (-(this.stages[1] - this.stages[0]) * dt) / Ti;
+      this.y += (-(this.y - this.stages[1]) * dt) / Ti;
+    }
     else this.y += ((-(this.y - this.cfg.normalValue) + this.cfg.K * ud) * dt) / T;
     this.y += disturbance;
     return this.y;
@@ -174,6 +185,12 @@ let currentPathStep = -1;
 let testMode = false;
 let checkpointAnswered = false;
 let pathScore = { correct: 0, total: 0 };
+let measureMode = false;
+let measureCollapsedLeft = false;
+let measureCollapsedGroups = [];
+let hoverPos = null;
+let zoomView   = null; // null = visa allt, { start, end } = zoomed t-range
+let pvZoomView = null; // null = visa allt, { min, max } = zoomed PV-range
 
 function appendLog(line) { logEl.textContent += line + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 function fitCanvas() { const w = Math.max(680, chartCanvas.clientWidth); if (chartCanvas.width !== w) chartCanvas.width = w; }
@@ -191,11 +208,13 @@ function drawChart() {
   const w = chartCanvas.width, h = chartCanvas.height;
   const pad = { left: 52, right: 16, top: 14, bottom: 28 };
   const t = sim.history.t, y = sim.history.y, sp = sim.history.sp, u = sim.history.u;
-  const tMax = Math.max(1, t[t.length - 1] || 1);
-  const yMin = Math.min(sim.scenario.process.measurementRange.min, 0);
-  const yMax = Math.max(sim.scenario.process.measurementRange.max, 100);
+  const tFull = Math.max(1, t[t.length - 1] || 1);
+  const tStart = zoomView ? zoomView.start : 0;
+  const tMax   = zoomView ? zoomView.end   : tFull;
+  const yMin = pvZoomView ? pvZoomView.min : Math.min(sim.scenario.process.measurementRange.min, 0);
+  const yMax = pvZoomView ? pvZoomView.max : Math.max(sim.scenario.process.measurementRange.max, 100);
   const uViewMin = 0, uViewMax = 100;
-  const xScale = v => pad.left + (v / tMax) * (w - pad.left - pad.right);
+  const xScale = v => pad.left + ((v - tStart) / (tMax - tStart || 1)) * (w - pad.left - pad.right);
   const yScaleTop = v => pad.top + (1 - (v - yMin) / (yMax - yMin || 1)) * (h * 0.62 - pad.top);
   const yScaleBot = v => h * 0.68 + (1 - (v - uViewMin) / (uViewMax - uViewMin || 1)) * (h - pad.bottom - h * 0.68);
   ctx.clearRect(0, 0, w, h); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
@@ -249,17 +268,164 @@ function drawChart() {
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
   ctx.fillText("PV/SP", pad.left + 6, pad.top + 14);
   ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top);
+  ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
+  ctx.restore();
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
+  ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(Math.max(0, Math.min(100, u[i]))) })), "#2f9e44", false);
+  ctx.restore();
+
+  // ── Mätläge: hjälplinjer och crosshair ──
+  if (measureMode) {
+    const pv0 = parseFloat(document.getElementById("mpPv0").value);
+    const pvInf = parseFloat(document.getElementById("mpPvInf").value);
+    const hasRange = !isNaN(pv0) && !isNaN(pvInf) && Math.abs(pvInf - pv0) > 0.01;
+
+    // 63%-hjälplinje
+    if (document.getElementById("mp63Line").checked && hasRange) {
+      const y63 = pv0 + 0.632 * (pvInf - pv0);
+      const y63px = yScaleTop(y63);
+      ctx.save();
+      ctx.strokeStyle = "#c8870a"; ctx.lineWidth = 1.5; ctx.setLineDash([8, 5]);
+      ctx.beginPath(); ctx.moveTo(pad.left, y63px); ctx.lineTo(w - pad.right, y63px); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#c8870a"; ctx.font = "10px Segoe UI"; ctx.textAlign = "right";
+      ctx.fillText("63% = " + y63.toFixed(2), w - pad.right - 3, y63px - 3);
+      ctx.restore();
+    }
+
+    // Tangentlinje (Ziegler-Nichols)
+    if (document.getElementById("mpTangent").checked && y.length > 5) {
+      // Hitta senaste signifikanta u-steg och sök bara i data därifrån
+      let stepIdx = 0;
+      for (let i = 1; i < u.length; i++) {
+        if (Math.abs(u[i] - u[i - 1]) > 1.0) stepIdx = i;
+      }
+      const yA = y.slice(stepIdx);
+      const tA = t.slice(stepIdx);
+
+      let iInfl = 0;
+      let maxSl = -Infinity;
+      for (let i = 0; i < yA.length - 1; i++) {
+        const dt_loc = tA[i + 1] - tA[i];
+        if (dt_loc <= 0) continue;
+        const sl = (yA[i + 1] - yA[i]) / dt_loc;
+        if (sl > maxSl) { maxSl = sl; iInfl = i; }
+      }
+      if (maxSl > 0.001) {
+        // Enkapacitiv process: yA[iInfl] ≈ PV₀ (flat dödtid), nästa punkt är första responspunkten.
+        // Använd den som ankare för att undvika -1 steg diskretiseringsfel.
+        const atDeadEnd = hasRange
+          && iInfl + 1 < yA.length
+          && Math.abs(yA[iInfl] - pv0) < Math.max(0.5, Math.abs(pvInf - pv0) * 0.02);
+        const tInfl = atDeadEnd ? tA[iInfl + 1] : tA[iInfl];
+        const pvInfl = atDeadEnd ? pv0 : yA[iInfl];
+        const pvLineAt = tv => pvInfl + maxSl * (tv - tInfl);
+
+        ctx.save();
+        if (hasRange) {
+          const tL = tInfl - (pvInfl - pv0) / maxSl;
+          const tLT = tInfl + (pvInf - pvInfl) / maxSl;
+          const tLineStart = Math.max(0, tL);
+          const tLineEnd = Math.min(tMax, tLT);
+
+          ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 2; ctx.setLineDash([8, 4]);
+          ctx.beginPath();
+          ctx.moveTo(xScale(tLineStart), yScaleTop(pvLineAt(tLineStart)));
+          ctx.lineTo(xScale(tLineEnd), yScaleTop(pvLineAt(tLineEnd)));
+          ctx.stroke(); ctx.setLineDash([]);
+
+          const tStep = t[stepIdx] ?? 0;
+          if (tL >= 0 && tL <= tMax) {
+            const xL = xScale(tL), yL = yScaleTop(pv0);
+            ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(xL, yL - 8); ctx.lineTo(xL, yL + 8); ctx.stroke();
+            ctx.fillStyle = "#8e44ad"; ctx.font = "bold 10px Segoe UI"; ctx.textAlign = "center";
+            ctx.fillText("L≈" + Math.round(tL - tStep), xL, yL + 20);
+          }
+          if (tLT >= 0 && tLT <= tMax) {
+            const xLT = xScale(tLT), yLT = yScaleTop(pvInf);
+            ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(xLT, yLT - 8); ctx.lineTo(xLT, yLT + 8); ctx.stroke();
+            ctx.fillStyle = "#8e44ad"; ctx.font = "bold 10px Segoe UI"; ctx.textAlign = "center";
+            ctx.fillText("T≈" + Math.round(tLT - tL), xLT, yLT - 12);
+          }
+        } else {
+          const ext = tMax * 0.25;
+          const tLineStart = Math.max(0, tInfl - ext);
+          const tLineEnd = Math.min(tMax, tInfl + ext * 1.5);
+          ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 2; ctx.setLineDash([8, 4]);
+          ctx.beginPath();
+          ctx.moveTo(xScale(tLineStart), yScaleTop(pvLineAt(tLineStart)));
+          ctx.lineTo(xScale(tLineEnd), yScaleTop(pvLineAt(tLineEnd)));
+          ctx.stroke(); ctx.setLineDash([]);
+        }
+        ctx.restore();
+      }
+    }
+
+    // Crosshair
+    if (hoverPos && t.length > 0) {
+      const mx = hoverPos.x;
+      if (mx >= pad.left && mx <= w - pad.right) {
+        const tHover = tStart + (mx - pad.left) / (w - pad.left - pad.right) * (tMax - tStart);
+        let iNear = 0;
+        for (let i = 1; i < t.length; i++) {
+          if (Math.abs(t[i] - tHover) < Math.abs(t[iNear] - tHover)) iNear = i;
+        }
+        const pvH = y[iNear] != null ? y[iNear] : 0;
+        const uH = u[iNear] != null ? u[iNear] : 0;
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(30,30,30,0.38)"; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(mx, pad.top); ctx.lineTo(mx, h * 0.62); ctx.stroke();
+        if (hoverPos.y >= pad.top && hoverPos.y <= h * 0.62) {
+          ctx.beginPath(); ctx.moveTo(pad.left, hoverPos.y); ctx.lineTo(w - pad.right, hoverPos.y); ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        const lines = ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(2), "u  = " + uH.toFixed(2)];
+        ctx.font = "11px Consolas, monospace";
+        const lH = 15, pX = 7, pY = 5;
+        const ttW = Math.max(...lines.map(s => ctx.measureText(s).width)) + pX * 2;
+        const ttH = lines.length * lH + pY * 2;
+        const ttX = mx + 10 + ttW <= w - pad.right ? mx + 10 : mx - ttW - 8;
+        const ttY = Math.max(pad.top + 4, Math.min(h * 0.62 - ttH - 4, hoverPos.y - ttH / 2));
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.strokeStyle = "#bbb"; ctx.lineWidth = 1;
+        ctx.fillRect(ttX, ttY, ttW, ttH); ctx.strokeRect(ttX, ttY, ttW, ttH);
+        ctx.fillStyle = "#2c3a44"; ctx.textAlign = "left";
+        lines.forEach((s, i) => ctx.fillText(s, ttX + pX, ttY + pY + (i + 1) * lH - 2));
+        ctx.restore();
+      }
+    }
+  }
 }
 function updateStatus() {
   if (!sim) { statusEl.textContent = "Status: ej laddad"; return; }
   const s = sim.getState();
-  const pidInfo = (s.pTerm !== 0 || s.iTerm !== 0 || s.dTerm !== 0) 
+  const pidInfo = (s.pTerm !== 0 || s.iTerm !== 0 || s.dTerm !== 0)
     ? " | P=" + s.pTerm.toFixed(2) + ", I=" + s.iTerm.toFixed(2) + ", D=" + s.dTerm.toFixed(2)
     : "";
-  statusEl.textContent = "Status: steg=" + s.step + ", t=" + s.t.toFixed(2) + ", y=" + s.y.toFixed(3) + ", u=" + s.u.toFixed(3) + ", e=" + s.e.toFixed(3) + pidInfo;
+  let warning = "";
+  if (currentScenario) {
+    const proc = currentScenario.process;
+    const isSR = proc.type === "self_regulating" || proc.type === "self_regulating_2" || !proc.type;
+    if (isSR) {
+      const yPhysMax = proc.normalValue + proc.K * currentScenario.controller.outputLimits.max;
+      if (currentScenario.runtime.setpoint > yPhysMax + 0.01)
+        warning = "  ⚠ SP ouppnåeligt (max≈" + yPhysMax.toFixed(1) + ")";
+    }
+  }
+  statusEl.textContent = "Status: steg=" + s.step + ", t=" + s.t.toFixed(2) + ", y=" + s.y.toFixed(3) + ", u=" + s.u.toFixed(3) + ", e=" + s.e.toFixed(3) + pidInfo + warning;
 }
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;
@@ -275,6 +441,8 @@ function hydrateFields(s) {
   fields.outflow.value = s.process.outflow ?? 0;
 }
 function loadScenarioByName(name) {
+  if (measureMode) exitMeasureMode();
+  zoomView = null; pvZoomView = null;
   currentScenario = deepClone(SCENARIOS[name]);
   sim = new Simulation(currentScenario, 42);
   hydrateFields(currentScenario);
@@ -340,10 +508,6 @@ function syncParamsFromUI() {
         sim.pid.biasFadePerStep = 0;
       }
     }
-    if (nextMode === "manual" && prevState) {
-      currentScenario.controller.manualOutput = prevState.u;
-      fields.manualOutput.value = prevState.u.toFixed(2);
-    }
   }
 
   sim.scenario = currentScenario;
@@ -352,6 +516,12 @@ function syncParamsFromUI() {
   if (sim.process.delay.length !== delayLen) {
     const fillValue = sim.process.delay.length ? sim.process.delay[sim.process.delay.length - 1] : (prevState ? prevState.u : 0);
     sim.process.delay = delayLen > 0 ? new Array(delayLen).fill(fillValue) : [];
+  }
+  const needsStages = currentScenario.process.type === "self_regulating_2";
+  if (needsStages && sim.process.stages.length < 2) {
+    sim.process.stages = [sim.process.y, sim.process.y];
+  } else if (!needsStages && sim.process.stages.length > 0) {
+    sim.process.stages = [];
   }
   sim.pid.kp = currentScenario.controller.kp || 0;
   sim.pid.ti = currentScenario.controller.ti || 0;
@@ -371,6 +541,7 @@ function updateControllerUIState() {
   
   // Enable/disable fields based on mode
   fields.kp.disabled = isManual || isOnOff;
+  fields.kp.parentElement.style.display = (isManual || isOnOff) ? "none" : "";
   fields.ti.disabled = isP || isManual || isOnOff;
   fields.td.disabled = isP || isPI || isManual || isOnOff;
   fields.manualOutput.disabled = !isManual;
@@ -637,17 +808,167 @@ function toggleParamGroup(id) {
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
 fields.pulseDuration.addEventListener("input", () => { if (Number(fields.pulseDuration.value) < 0) fields.pulseDuration.value = 0; });
 fields.showPB.addEventListener("change", drawChart);
-document.getElementById("mode").addEventListener("change", updateControllerUIState);
+document.getElementById("mode").addEventListener("change", () => {
+  const newMode = fields.mode.value;
+  const bumplessOn = document.getElementById("bumpless").checked;
+  if (sim && currentScenario) {
+    const prevMode = currentScenario.controller.mode;
+    if (newMode === "manual" && prevMode !== "manual") {
+      if (bumplessOn) {
+        const lastU = sim.getState().u;
+        fields.manualOutput.value = lastU.toFixed(2);
+        currentScenario.controller.manualOutput = lastU;
+      }
+      currentScenario.controller.mode = "manual";
+    }
+  }
+  updateControllerUIState();
+});
 document.getElementById("processType").addEventListener("change", updateProcessUIState);
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });
 document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); });
 document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); appendLog("Puls triggad."); });
-document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("Graf nollställd."); updateStatus(); drawChart(); });
-document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("System återställt."); updateStatus(); drawChart(); });
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("Graf nollställd."); updateStatus(); drawChart(); });
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("System återställt."); updateStatus(); drawChart(); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
 window.addEventListener("resize", drawChart);
+
+// ── Mätläge ──
+function enterMeasureMode() {
+  measureMode = true;
+  const sbLeft = document.getElementById("sidebarLeft");
+  if (!sbLeft.classList.contains("collapsed")) {
+    measureCollapsedLeft = true;
+    toggleSidebar("sidebarLeft", "toggleLeft", "resizeLeft", "»", "«");
+  } else {
+    measureCollapsedLeft = false;
+  }
+  measureCollapsedGroups = [];
+  ["groupProcess","groupRegulator","groupStyrning","groupStorningar"].forEach(id => {
+    const g = document.getElementById(id);
+    if (!g.classList.contains("collapsed")) {
+      g.classList.add("collapsed");
+      localStorage.setItem("pg-" + id, "1");
+      measureCollapsedGroups.push(id);
+    }
+  });
+  document.querySelector(".params-container").classList.add("measure-locked");
+  document.getElementById("measurePanel").classList.add("active");
+  document.getElementById("btnMeasure").classList.add("active");
+  document.getElementById("btnMeasure").textContent = "✕ Stäng mätläge";
+  chartCanvas.style.cursor = "crosshair";
+  drawChart();
+}
+
+function exitMeasureMode() {
+  measureMode = false;
+  hoverPos = null;
+  if (measureCollapsedLeft) {
+    toggleSidebar("sidebarLeft", "toggleLeft", "resizeLeft", "»", "«");
+    measureCollapsedLeft = false;
+  }
+  measureCollapsedGroups.forEach(id => {
+    document.getElementById(id).classList.remove("collapsed");
+    localStorage.setItem("pg-" + id, "0");
+  });
+  measureCollapsedGroups = [];
+  document.querySelector(".params-container").classList.remove("measure-locked");
+  document.getElementById("measurePanel").classList.remove("active");
+  document.getElementById("facitBody").style.display = "none";
+  document.getElementById("btnFacit").textContent = "Visa facit";
+  document.getElementById("btnMeasure").classList.remove("active");
+  document.getElementById("btnMeasure").textContent = "Mät K/T/L";
+  chartCanvas.style.cursor = "";
+  drawChart();
+}
+
+document.getElementById("btnMeasure").addEventListener("click", () => {
+  if (measureMode) exitMeasureMode(); else enterMeasureMode();
+});
+
+document.getElementById("btnFacit").addEventListener("click", () => {
+  const fb = document.getElementById("facitBody");
+  const showing = fb.style.display !== "none" && fb.style.display !== "";
+  if (!showing) {
+    if (currentScenario) {
+      document.getElementById("facitK").textContent = currentScenario.process.K;
+      document.getElementById("facitT").textContent = currentScenario.process.T;
+      document.getElementById("facitL").textContent = currentScenario.process.L;
+    }
+    fb.style.display = "";
+    document.getElementById("btnFacit").textContent = "Dölj facit";
+  } else {
+    fb.style.display = "none";
+    document.getElementById("btnFacit").textContent = "Visa facit";
+  }
+});
+
+document.getElementById("mpPv0").addEventListener("input", () => { if (measureMode) drawChart(); });
+document.getElementById("mpPvInf").addEventListener("input", () => { if (measureMode) drawChart(); });
+document.getElementById("mp63Line").addEventListener("change", () => { if (measureMode) drawChart(); });
+document.getElementById("mpTangent").addEventListener("change", () => { if (measureMode) drawChart(); });
+
+chartCanvas.addEventListener("mousemove", e => {
+  if (!measureMode) return;
+  const rect = chartCanvas.getBoundingClientRect();
+  hoverPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  drawChart();
+});
+
+chartCanvas.addEventListener("mouseleave", () => {
+  if (!measureMode || !hoverPos) return;
+  hoverPos = null;
+  drawChart();
+});
+
+chartCanvas.addEventListener("wheel", e => {
+  if (!sim || !measureMode) return;
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 0.8 : 1.25;
+  const rect = chartCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const cw = chartCanvas.width, ch = chartCanvas.height;
+  const padL = 52, padR = 16, padTop = 14;
+  const chartW = cw - padL - padR;
+
+  // X-zoom (båda graferna)
+  const tFull = sim.history.t.at(-1) || 1;
+  const cur = zoomView ?? { start: 0, end: tFull };
+  const span = cur.end - cur.start;
+  const newSpan = Math.max(10, Math.min(tFull, span * factor));
+  const xRatio = Math.max(0, Math.min(1, (mx - padL) / chartW));
+  const tAtMouse = cur.start + xRatio * span;
+  const newStart = Math.max(0, tAtMouse - xRatio * newSpan);
+  const newEnd = Math.min(tFull, newStart + newSpan);
+  zoomView = (newEnd - newStart >= tFull - 0.5) ? null : { start: newStart, end: newEnd };
+
+  // Y-zoom (endast PV-ytan)
+  if (my >= padTop && my <= ch * 0.62) {
+    const pvFullMin = Math.min(sim.scenario.process.measurementRange.min, 0);
+    const pvFullMax = Math.max(sim.scenario.process.measurementRange.max, 100);
+    const pvFullSpan = pvFullMax - pvFullMin;
+    const curPv = pvZoomView ?? { min: pvFullMin, max: pvFullMax };
+    const pvSpan = curPv.max - curPv.min;
+    const newPvSpan = Math.max(5, Math.min(pvFullSpan, pvSpan * factor));
+    // PV-värde vid musen (y-axeln är inverterad: top=max, bottom=min)
+    const yRatio = (my - padTop) / (ch * 0.62 - padTop);
+    const pvAtMouse = curPv.max - yRatio * pvSpan;
+    const newPvMax = Math.min(pvFullMax, pvAtMouse + yRatio * newPvSpan);
+    const newPvMin = Math.max(pvFullMin, newPvMax - newPvSpan);
+    pvZoomView = (newPvMax - newPvMin >= pvFullSpan - 0.5) ? null : { min: newPvMin, max: newPvMax };
+  }
+
+  drawChart();
+}, { passive: false });
+
+chartCanvas.addEventListener("dblclick", () => {
+  if (!measureMode) return;
+  zoomView = null; pvZoomView = null;
+  drawChart();
+});
 
 loadCatalog().then(initUI).catch(err => {
   document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;background:#1a1a2e;color:#e0e0e0;min-height:100vh"><h2 style="color:#f0a500">Kunde inte ladda data</h2><p>' + err.message + '</p><p>Appen kräver HTTP-server (GitHub Pages eller lokal server). Dubbel-klick på index.html stöds inte.</p></div>';

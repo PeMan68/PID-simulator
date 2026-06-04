@@ -1,0 +1,68 @@
+{
+  "id": "stegsvar-identifiering.v1",
+  "version": "v1.0.0",
+  "title": "Stegsvar och processidentifiering",
+  "description": "Identifiera processparametrarna K, T och L experimentellt med stegsvarsmetoden. Tangentmetoden och 63%-metoden.",
+  "difficulty": "intermediate",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "tangentmetoden.v1.json",
+      "title": "Tangentmetoden — teori",
+      "objective": "Förstå var tangenten ritas och hur L och T avläses från skärningspunkterna.",
+      "checkpoint": {
+        "question": "Var ritas tangenten för en enkapacitiv process (FOPDT)?",
+        "options": [
+          "Vid 63.2% av ΔPV",
+          "I starten av PV-uppgången, direkt när dödtiden löpt ut",
+          "Mitt i S-kurvan vid inflexionspunkten",
+          "Vid PV∞ (slutvärdet)"
+        ],
+        "correct": 1,
+        "explanation": "För en enkapacitiv process är lutningen maximal direkt i starten av uppgången — det är där tangenten ritas. För flerkapacitiva processer (S-kurva) är inflexionspunkten istället mitt i uppgången."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "manual-identification.json",
+      "title": "Förberedelse: stabilisera vid u=30",
+      "objective": "Köra processen i manuellt läge tills PV stabiliseras och notera PV₀.",
+      "instruction": "Scenariot kör i manuellt läge med u=30. Regulatorn är frånkopplad — processen styrs enbart av din manuella utsignal.\n\nKör 60 steg tills PV stabiliseras. Notera:\n• PV₀ = steadystate-värdet (PV slutar röra sig)\n• u₀ = 30\n\nDetta är din startpunkt för identifieringsexperimentet."
+    },
+    {
+      "type": "scenario",
+      "ref": "manual-identification.json",
+      "title": "Stegändring: ändra u till 60",
+      "objective": "Göra en stegändring i u och observera processens svar.",
+      "instruction": "Ändra 'Manuell u' till 60 och kör 120 steg.\n\nObservera hur PV stiger och sakta stabiliseras vid ett nytt värde PV∞. Notera:\n• u₁ = 60 (steget: Δu = 30)\n• PV∞ = det nya steadystate-värdet\n• Dödtiden L syns som den inledande fördröjningen — PV rör sig inte direkt vid stegändringen\n\nHåll musen över grafen för att se exakta värden (t, PV, u) i crosshair-tooltip."
+    },
+    {
+      "type": "scenario",
+      "ref": "manual-identification.json",
+      "title": "Aktivera mätläge och avläs PV-värden",
+      "objective": "Öppna mätpanelen och mata in PV₀ och PV∞.",
+      "instruction": "Klicka på 'Mät K/T/L' i verktygsfältet.\n\nMätpanelen öppnas och grafytan expanderar. Processparametrarna döljs — du ska identifiera dem experimentellt.\n\nAnvänd crosshairen för att avläsa:\n• PV₀ (steadystate FÖRE steget) → mata in i panelen\n• PV∞ (steadystate EFTER steget) → mata in i panelen\n\nProcessförstärkningen K beräknar du på papper:\nK = ΔPV / Δu = (PV∞ − PV₀) / (u₁ − u₀)\n\nKlicka 'Visa facit' för att kontrollera ditt K-värde mot processens faktiska parametrar."
+    },
+    {
+      "type": "scenario",
+      "ref": "manual-identification.json",
+      "title": "Mät T och L med 63%-metoden",
+      "objective": "Identifiera dödtid L och tidskonstant T med 63%-metoden.",
+      "instruction": "Aktivera 'Visa 63%-linje' i mätpanelen (kräver att PV₀ och PV∞ är ifyllda).\n\nEn streckad horisontell linje ritas vid:\n63%-nivå = PV₀ + 0,632 × (PV∞ − PV₀)\n\nMed crosshairen avläser du:\n1. L — tidpunkten när PV börjar röra sig efter stegändringen\n2. t₆₃ — tidpunkten när PV passerar 63%-linjen\n\nBeräkna på papper: T = t₆₃ − L\n\nGör beräkningarna och notera dina K, T, L."
+    },
+    {
+      "type": "scenario",
+      "ref": "manual-identification.json",
+      "title": "Mät T och L med tangentmetoden",
+      "objective": "Jämföra 63%-metoden med Ziegler-Nichols tangentmetod.",
+      "instruction": "Aktivera 'Visa tangentlinje' i mätpanelen.\n\nEn tangent ritas automatiskt vid PV-kurvans brantaste punkt (inflexionspunkten — max lutning). Tangenten utsträcks tills den skär PV₀- och PV∞-nivåerna.\n\nSkärningspunkterna markeras med L och L+T:\n• Skärning med PV₀-nivå → L (dödtid)\n• Skärning med PV∞-nivå → L+T\n\nBeräkna: T = (L+T) − L\n\nJämför tangentmetodens T och L med 63%-metodens värden. Stämmer de överens?"
+    },
+    {
+      "type": "scenario",
+      "ref": "manual-identification.json",
+      "title": "Facit och Lambda-beräkning",
+      "objective": "Kontrollera uppmätta värden och beräkna Lambda-regulatorparametrar.",
+      "instruction": "Klicka 'Visa facit' i mätpanelen för att se processens faktiska K, T och L.\n\nJämför dina experimentella värden med de faktiska. Typiska frågor för labbrapport:\n• Hur nära kom du med respektive metod?\n• Vilken metod gav bäst resultat på denna process?\n\nMed dina identifierade K, T, L: beräkna Lambda-PI-parametrar (välj λ = T):\nKp = T / (K × (λ + L))\nTi = T\n\nLadda sedan scenariot 'lambda-pi-moderate' och se om din process beter sig som förväntat med dessa parametrar."
+    }
+  ]
+}

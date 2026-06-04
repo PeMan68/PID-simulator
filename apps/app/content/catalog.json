@@ -1,5 +1,5 @@
 {
-  "version": "v1.1.2",
+  "version": "v1.3.1",
   "help": "help.json",
   "scenarios": [
     { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json" },
@@ -18,7 +18,9 @@
     { "id": "lambda-open-loop",           "file": "scenarios/lambda-open-loop.json" },
     { "id": "lambda-pi-moderate",         "file": "scenarios/lambda-pi-moderate.json" },
     { "id": "lambda-pi-aggressive",       "file": "scenarios/lambda-pi-aggressive.json" },
-    { "id": "lambda-pi-conservative",     "file": "scenarios/lambda-pi-conservative.json" }
+    { "id": "lambda-pi-conservative",     "file": "scenarios/lambda-pi-conservative.json" },
+    { "id": "manual-identification",        "file": "scenarios/manual-identification.json" },
+    { "id": "second-order-identification", "file": "scenarios/second-order-identification.json" }
   ],
   "theory": [
     { "id": "pid-intro",      "file": "theory/pid-intro.v1.json" },
@@ -26,13 +28,15 @@
     { "id": "onoff-theory",          "file": "theory/onoff-theory.v1.json" },
     { "id": "integrator-windup",     "file": "theory/integrator-windup.v1.json" },
     { "id": "integrating-process",   "file": "theory/integrating-process.v1.json" },
-    { "id": "lambda-metoden",         "file": "theory/lambda-metoden.v1.json" }
+    { "id": "lambda-metoden",          "file": "theory/lambda-metoden.v1.json" },
+    { "id": "tangentmetoden",          "file": "theory/tangentmetoden.v1.json" }
   ],
   "learning_paths": [
     { "id": "grundlaggande.v1",        "file": "exercises/grundlaggande.v1.json" },
     { "id": "processbegransningar.v1", "file": "exercises/processbegransningar.v1.json" },
     { "id": "windup.v1",              "file": "exercises/windup.v1.json" },
     { "id": "lambda-metoden.v1",      "file": "exercises/lambda-metoden.v1.json" },
-    { "id": "kom-igång.v1",           "file": "exercises/kom-igång.v1.json" }
+    { "id": "kom-igång.v1",               "file": "exercises/kom-igång.v1.json" },
+    { "id": "stegsvar-identifiering.v1", "file": "exercises/stegsvar-identifiering.v1.json" }
   ]
 }

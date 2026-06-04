@@ -9,11 +9,47 @@ Varje feature-branch uppdaterar **endast sin egen post** (status, anteckningar).
 
 ### Webbapp (`apps/app/`)
 
+### BESLUT-001 — Ta ställning till appens namn inför slutlig prod-version
+**Prioritet:** Låg (innan release)
+**Beskrivning:**
+"PID Simulator" är tekniskt korrekt men kan vara exkluderande för nybörjare och speglar inte bredden (On/Off, Lambda-metoden, lärstigar). Kandidater: Reglerlab, PIDlab, Processlabb. Namnbyte kräver: byta repo-namn på GitHub, uppdatera GitHub Pages-URL, uppdatera `<title>`, sidebar-rubrik och `APP_VERSION`-text i appen. Överväg custom domain för stabilt URL.
+**Status:** Öppen — beslut krävs
+
+---
+
 ### FEAT-023 — Flytta hjälptexter till redigerbar JSON-fil
 **Branch:** `feature/help-json`
 **Prioritet:** Medel
 **Beskrivning:**
 HELP_CONTENT är hårdkodat i app.js (89 rader, 23 poster). Flytta till `content/help.json` och ladda via `fetch()` i `loadCatalog()` — samma mönster som scenarier och lärstigar. Hjälptexterna blir då redigerbara utan att röra app.js.
+**Status:** Klar
+
+---
+
+### FEAT-029 — Crosshair horisontell linje
+**Branch:** `feature/crosshair-hline`
+**Prioritet:** Låg
+**Beskrivning:**
+Crosshairen i mätläge visar idag bara en vertikal linje. Lägg till en horisontell linje på muspositionen inom PV-grafens yta för att lättare avläsa exakta PV-värden.
+**Status:** Klar
+
+---
+
+### FEAT-028 — Flerkapacitiv (högre ordningens) självreglerande process
+**Branch:** `feature/multi-capacity`
+**Prioritet:** Medel
+**Beskrivning:**
+Nuvarande `self_regulating`-modell är enkapacitiv (FOPDT). En flerkapacitiv process (N kaskadkopplade element) ger ett S-format stegsvar med tydlig inflexionspunkt — mer likt industriella processer och bättre testfall för tangentmetoden.
+Modell: N element med tidskonstant T/N vardera. Nytt fält `"order": N` i process-config. Nytt `processType`-alternativ i dropdown. Nytt identifieringsscenario (order=2).
+**Status:** Klar
+
+---
+
+### FEAT-027 — Zoom i grafen för exaktare mätavläsning
+**Branch:** `feature/graph-zoom`
+**Prioritet:** Medel
+**Beskrivning:**
+Möjlighet att zooma in i PV-grafen för att avläsa exakta värden med crosshairen i mätläge. Scrollhjul + modifieringstangent (Ctrl eller Shift) zoomar horisontellt (t-axeln). Touchpad: tvåfingerspinch-scroll. Zoom-nivå visas och kan nollställas med dubbelklick eller en "Återställ zoom"-knapp.
 **Status:** Klar
 
 ---
@@ -32,7 +68,7 @@ Vid första besök visas en välkomstpanel i vänster sidebar med appbeskrivning
 **Prioritet:** Hög
 **Beskrivning:**
 5-stegs lärstig för Lambda-metoden (modellbaserad PI-inställning). Kp = T/(K×(λ+L)), Ti = T. Inkluderar ny teorifil, 4 scenarion (open-loop, måttlig/aggressiv/konservativ λ) och lärstigs-JSON.
-**Status:** Fixad i branch — inväntar testning
+**Status:** Klar
 
 ---
 
@@ -54,31 +90,12 @@ Proportionalbandet (PB = 100/Kp %) definierar det PV-intervall som ger full utsl
 
 ---
 
-### FEAT-019 — Flytta Trigga puls-knappen till Störningar-gruppen
-**Branch:** `feature/knapp-layout`
-**Prioritet:** Medel
-**Beskrivning:**
-"Trigga puls"-knappen hör logiskt ihop med brus- och pulsinställningarna i Störningar-gruppen. Flytta knappen dit.
-**Status:** Fixad i branch — inväntar testning
-
----
-
-### FEAT-020 — Flytta steg-knappar nedanför parametergrupperna
-**Branch:** `feature/knapp-layout`
-**Prioritet:** Medel
-**Beskrivning:**
-Knapparna "Stega 1" och "Kör 10 steg" ska ligga nedanför parametergrupperna, inte ovanför dem. Bättre flöde: konfigurera parametrar → kör simulering.
-**Status:** Fixad i branch — inväntar testning
-
-
----
-
 ### FEAT-002 — Varning när SP är ouppnåeligt (SP > y_max)
 **Branch:** `feature/sp-uppnabarhet-varning`
 **Prioritet:** Medel
 **Beskrivning:**
 En självreglerande process har ett fysikaliskt tak: y_max = normalValue + K × u_max. Om SP sätts över y_max integrerar PID:en upp u till 100 % men y fastnar — studenter tror att PID:en är felinställd. Behöver en varning i statusraden, t.ex. "⚠ SP ouppnåeligt (y_max=50.0)".
-**Status:** Kanske klar — behöver verifieras
+**Status:** Klar
 
 ---
 

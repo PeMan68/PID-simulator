@@ -90,5 +90,9 @@
   "antiWindup": {
     "title": "Anti-windup",
     "body": "Förhindrar att integratorn 'vider upp' (windup) när utsignalen är mättad.\n\nNÄR WINDUP UPPSTÅR:\nOm u är vid max/min under lång tid men felet kvarstår fortsätter integralen att växa — även om mer integrering inte hjälper. När felet sedan minskar är integratorn uppladdad med ett stort värde → kraftig överskjutning.\n\nMED ANTI-WINDUP PÅ:\nIntegralen fryses när u = u_min eller u = u_max. Överskjutningen reduceras markant.\n\nAV (pedagogik): Stäng av för att tydligt se windup-effekten. Läs av I-bidraget i statusraden under mättning.\n\nTips: Ladda 'PI – integratoruppvridning' och jämför med/utan."
+  },
+  "tangentlinje": {
+    "title": "Tangentlinje — Ziegler-Nichols reaktionskurva",
+    "body": "Tangenten ritas vid stegsvarets brantaste punkt (inflexionspunkten).\n\nEnkapacitiv process: max lutning är i STARTEN av PV-uppgången (direkt när dödtiden löpt ut).\nFlerkapacitiv (S-kurva): inflexionspunkten är mitt i uppgången.\n\nFörlängd tangent skär PV₀- och PV∞-nivåerna:\n• L = tid från stegändringen till PV₀-skärningen\n• T = tid mellan PV₀- och PV∞-skärningarna\n\nKrav: Ange PV₀ och PV∞ i mätpanelen för att skärningspunkterna ska beräknas rätt.\n\nJämför med 63%-metoden: tangentmetoden ger en geometrisk approximation via tangentlinjens skärningar; 63%-metoden läser direkt av vid 63.2% av ΔPV."
   }
 }

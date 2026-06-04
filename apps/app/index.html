@@ -371,6 +371,23 @@
     }
 
     /* ── Responsive ── */
+    /* ── Measure panel ── */
+    #btnMeasure.active { background: linear-gradient(180deg, #aadde8 0%, var(--accent-2) 100%); color: #fff; border-color: var(--accent-2); font-weight: 700; }
+    .measure-locked { opacity: 0.38; pointer-events: none; user-select: none; }
+    #measurePanel { display: none; padding: 10px 14px; background: var(--panel); border: 1px solid var(--accent-2); border-radius: 8px; flex-direction: column; gap: 10px; }
+    #measurePanel.active { display: flex; }
+    .measure-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+    .measure-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+    .measure-sep { width: 1px; background: var(--line); align-self: stretch; margin: 0 2px; flex-shrink: 0; }
+    .measure-field { display: flex; flex-direction: column; gap: 3px; }
+    .measure-field label { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.04em; }
+    .measure-field input[type="number"] { width: 82px; }
+    .measure-check { display: flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; padding: 5px 0; }
+    .measure-check .help-btn { opacity: 0.55; }
+    .facit-table { border-collapse: collapse; font-size: 12px; }
+    .facit-table td { padding: 3px 20px 3px 0; }
+    .facit-table th { color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 20px 3px 0; border-bottom: 1px solid var(--line); }
+
     @media (max-width: 1200px) {
       .param-group { grid-template-columns: repeat(4, minmax(110px, 1fr)); }
     }
@@ -435,6 +452,7 @@
             <label for="processType">Processtyp <button class="help-btn" data-help="processType">?</button></label>
             <select id="processType">
               <option value="self_regulating">Självreglerande</option>
+              <option value="self_regulating_2">Självreglerande 2:a ordn.</option>
               <option value="integrating">Integrerande</option>
             </select>
           </div>
@@ -562,6 +580,7 @@
       <button id="run10">Kör 10 steg</button>
       <button id="clearChart">Rensa graf</button>
       <button id="systemReset">Återställ system</button>
+      <button id="btnMeasure">Mät K/T/L</button>
     </div>
 
     <div class="row" id="status">Status: ej laddad</div>
@@ -569,6 +588,40 @@
     <div id="chartWrap">
       <canvas id="chart" width="980" height="280"></canvas>
       <div class="legend">Blå: PV &nbsp;&nbsp; Röd streckad: SP &nbsp;&nbsp; Grön: u</div>
+    </div>
+
+    <div id="measurePanel">
+      <div class="measure-toolbar">
+        <div class="measure-group">
+          <div class="measure-field">
+            <label for="mpPv0">PV₀</label>
+            <input type="number" id="mpPv0" step="0.1" placeholder="–">
+          </div>
+          <div class="measure-field">
+            <label for="mpPvInf">PV∞</label>
+            <input type="number" id="mpPvInf" step="0.1" placeholder="–">
+          </div>
+        </div>
+        <div class="measure-sep"></div>
+        <div class="measure-group">
+          <label class="measure-check"><input type="checkbox" id="mp63Line"> Visa 63%-linje</label>
+          <label class="measure-check"><input type="checkbox" id="mpTangent"> Visa tangentlinje <button class="help-btn" data-help="tangentlinje">?</button></label>
+        </div>
+        <div class="measure-sep"></div>
+        <div class="measure-group">
+          <button id="btnFacit">Visa facit</button>
+        </div>
+      </div>
+      <div id="facitBody" style="display:none">
+        <table class="facit-table">
+          <thead><tr><th>Parameter</th><th>Scenariots värde</th></tr></thead>
+          <tbody>
+            <tr><td>K (processförstärkning)</td><td id="facitK">—</td></tr>
+            <tr><td>T (tidskonstant)</td><td id="facitT">—</td></tr>
+            <tr><td>L (dödtid)</td><td id="facitL">—</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div id="log"></div>
