@@ -68,7 +68,7 @@ Vid första besök visas en välkomstpanel i vänster sidebar med appbeskrivning
 **Prioritet:** Hög
 **Beskrivning:**
 5-stegs lärstig för Lambda-metoden (modellbaserad PI-inställning). Kp = T/(K×(λ+L)), Ti = T. Inkluderar ny teorifil, 4 scenarion (open-loop, måttlig/aggressiv/konservativ λ) och lärstigs-JSON.
-**Status:** Mergad till develop — inväntar manuellt test
+**Status:** Klar
 
 ---
 
