@@ -95,7 +95,7 @@ Proportionalbandet (PB = 100/Kp %) definierar det PV-intervall som ger full utsl
 **Prioritet:** Medel
 **Beskrivning:**
 En självreglerande process har ett fysikaliskt tak: y_max = normalValue + K × u_max. Om SP sätts över y_max integrerar PID:en upp u till 100 % men y fastnar — studenter tror att PID:en är felinställd. Behöver en varning i statusraden, t.ex. "⚠ SP ouppnåeligt (y_max=50.0)".
-**Status:** Implementerad — inväntar test
+**Status:** Klar
 
 ---
 
