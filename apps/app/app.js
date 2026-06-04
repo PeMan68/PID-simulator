@@ -361,6 +361,9 @@ function drawChart() {
         ctx.save();
         ctx.strokeStyle = "rgba(30,30,30,0.38)"; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
         ctx.beginPath(); ctx.moveTo(mx, pad.top); ctx.lineTo(mx, h * 0.62); ctx.stroke();
+        if (hoverPos.y >= pad.top && hoverPos.y <= h * 0.62) {
+          ctx.beginPath(); ctx.moveTo(pad.left, hoverPos.y); ctx.lineTo(w - pad.right, hoverPos.y); ctx.stroke();
+        }
         ctx.setLineDash([]);
 
         const lines = ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(2), "u  = " + uH.toFixed(2)];
