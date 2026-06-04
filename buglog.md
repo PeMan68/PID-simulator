@@ -21,6 +21,7 @@ När användaren byter läge till "Manuell" via dropdown, matar in ett värde i 
 **Fix:**
 Flytta bumpless-till-manuell-logiken till mode-dropdown-ändringslyssnaren. Ta bort `if (nextMode === "manual" && prevState)` från `syncParamsFromUI`.
 Tangentlinjens etiketter visar nu varaktigheter (L = tL−t_steg, T = tLT−tL) istället för absoluta tidpunkter.
+Tangentalgoritmen använder nu enkla grannpunktsdifferenser (söker från i=0) — hittar korrekt startpunkt för enkapacitiva processer och inflexionspunkt för flerkapacitiva.
 **Status:** Åtgärdad — verifieras i staging
 
 ### 2026-006 — Hysteresfält visas oavsett läge

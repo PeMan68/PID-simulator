@@ -286,12 +286,12 @@ function drawChart() {
       const yA = y.slice(stepIdx);
       const tA = t.slice(stepIdx);
 
-      let iInfl = 2;
+      let iInfl = 0;
       let maxSl = -Infinity;
-      for (let i = 2; i < yA.length - 2; i++) {
-        const dt_w = tA[i + 2] - tA[i - 2];
-        if (dt_w <= 0) continue;
-        const sl = (yA[i + 2] - yA[i - 2]) / dt_w;
+      for (let i = 0; i < yA.length - 1; i++) {
+        const dt_loc = tA[i + 1] - tA[i];
+        if (dt_loc <= 0) continue;
+        const sl = (yA[i + 1] - yA[i]) / dt_loc;
         if (sl > maxSl) { maxSl = sl; iInfl = i; }
       }
       if (maxSl > 0.001) {
