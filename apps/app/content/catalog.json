@@ -1,5 +1,5 @@
 {
-  "version": "v1.2.0",
+  "version": "v1.3.0",
   "help": "help.json",
   "scenarios": [
     { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json" },
@@ -19,7 +19,8 @@
     { "id": "lambda-pi-moderate",         "file": "scenarios/lambda-pi-moderate.json" },
     { "id": "lambda-pi-aggressive",       "file": "scenarios/lambda-pi-aggressive.json" },
     { "id": "lambda-pi-conservative",     "file": "scenarios/lambda-pi-conservative.json" },
-    { "id": "manual-identification",      "file": "scenarios/manual-identification.json" }
+    { "id": "manual-identification",        "file": "scenarios/manual-identification.json" },
+    { "id": "second-order-identification", "file": "scenarios/second-order-identification.json" }
   ],
   "theory": [
     { "id": "pid-intro",      "file": "theory/pid-intro.v1.json" },

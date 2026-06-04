@@ -71,8 +71,13 @@ class ProcessModel {
     this.dt = dt;
     this.y = cfg.normalValue;
     this.delay = cfg.L > 0 ? new Array(Math.max(1, Math.ceil(cfg.L / dt))).fill(0) : [];
+    this.stages = cfg.type === "self_regulating_2" ? [cfg.normalValue] : [];
   }
-  reset() { this.y = this.cfg.normalValue; if (this.delay.length > 0) this.delay.fill(0); }
+  reset() {
+    this.y = this.cfg.normalValue;
+    if (this.delay.length > 0) this.delay.fill(0);
+    if (this.stages.length > 0) this.stages.fill(this.cfg.normalValue);
+  }
   step(u, dt, disturbance) {
     let ud;
     if (this.delay.length > 0) { this.delay.push(u); ud = this.delay.shift(); }
@@ -83,6 +88,11 @@ class ProcessModel {
       this.y += (this.cfg.K * ud - outflow) * dt;
     }
     else if (this.cfg.type === "unstable") this.y += ((this.y - this.cfg.normalValue + this.cfg.K * ud) * dt) / T;
+    else if (this.cfg.type === "self_regulating_2") {
+      const Ti = T / 2;
+      this.stages[0] += ((-(this.stages[0] - this.cfg.normalValue) + this.cfg.K * ud) * dt) / Ti;
+      this.y += (-(this.y - this.stages[0]) * dt) / Ti;
+    }
     else this.y += ((-(this.y - this.cfg.normalValue) + this.cfg.K * ud) * dt) / T;
     this.y += disturbance;
     return this.y;
@@ -395,7 +405,7 @@ function updateStatus() {
   let warning = "";
   if (currentScenario) {
     const proc = currentScenario.process;
-    const isSR = proc.type === "self_regulating" || !proc.type;
+    const isSR = proc.type === "self_regulating" || proc.type === "self_regulating_2" || !proc.type;
     if (isSR) {
       const yPhysMax = proc.normalValue + proc.K * currentScenario.controller.outputLimits.max;
       if (currentScenario.runtime.setpoint > yPhysMax + 0.01)
