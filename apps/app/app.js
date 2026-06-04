@@ -178,6 +178,7 @@ let measureMode = false;
 let measureCollapsedLeft = false;
 let measureCollapsedGroups = [];
 let hoverPos = null;
+let zoomView = null; // null = visa allt, { start, end } = zoomed t-range
 
 function appendLog(line) { logEl.textContent += line + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 function fitCanvas() { const w = Math.max(680, chartCanvas.clientWidth); if (chartCanvas.width !== w) chartCanvas.width = w; }
@@ -195,11 +196,13 @@ function drawChart() {
   const w = chartCanvas.width, h = chartCanvas.height;
   const pad = { left: 52, right: 16, top: 14, bottom: 28 };
   const t = sim.history.t, y = sim.history.y, sp = sim.history.sp, u = sim.history.u;
-  const tMax = Math.max(1, t[t.length - 1] || 1);
+  const tFull = Math.max(1, t[t.length - 1] || 1);
+  const tStart = zoomView ? zoomView.start : 0;
+  const tMax   = zoomView ? zoomView.end   : tFull;
   const yMin = Math.min(sim.scenario.process.measurementRange.min, 0);
   const yMax = Math.max(sim.scenario.process.measurementRange.max, 100);
   const uViewMin = 0, uViewMax = 100;
-  const xScale = v => pad.left + (v / tMax) * (w - pad.left - pad.right);
+  const xScale = v => pad.left + ((v - tStart) / (tMax - tStart || 1)) * (w - pad.left - pad.right);
   const yScaleTop = v => pad.top + (1 - (v - yMin) / (yMax - yMin || 1)) * (h * 0.62 - pad.top);
   const yScaleBot = v => h * 0.68 + (1 - (v - uViewMin) / (uViewMax - uViewMin || 1)) * (h - pad.bottom - h * 0.68);
   ctx.clearRect(0, 0, w, h); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
@@ -350,7 +353,7 @@ function drawChart() {
     if (hoverPos && t.length > 0) {
       const mx = hoverPos.x;
       if (mx >= pad.left && mx <= w - pad.right) {
-        const tHover = (mx - pad.left) / (w - pad.left - pad.right) * tMax;
+        const tHover = tStart + (mx - pad.left) / (w - pad.left - pad.right) * (tMax - tStart);
         let iNear = 0;
         for (let i = 1; i < t.length; i++) {
           if (Math.abs(t[i] - tHover) < Math.abs(t[iNear] - tHover)) iNear = i;
@@ -416,6 +419,7 @@ function hydrateFields(s) {
 }
 function loadScenarioByName(name) {
   if (measureMode) exitMeasureMode();
+  zoomView = null;
   currentScenario = deepClone(SCENARIOS[name]);
   sim = new Simulation(currentScenario, 42);
   hydrateFields(currentScenario);
@@ -795,8 +799,8 @@ document.getElementById("processType").addEventListener("change", updateProcessU
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });
 document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); });
 document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); appendLog("Puls triggad."); });
-document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("Graf nollställd."); updateStatus(); drawChart(); });
-document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("System återställt."); updateStatus(); drawChart(); });
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("Graf nollställd."); updateStatus(); drawChart(); });
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("System återställt."); updateStatus(); drawChart(); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
@@ -887,6 +891,31 @@ chartCanvas.addEventListener("mousemove", e => {
 chartCanvas.addEventListener("mouseleave", () => {
   if (!measureMode || !hoverPos) return;
   hoverPos = null;
+  drawChart();
+});
+
+chartCanvas.addEventListener("wheel", e => {
+  if (!sim || !measureMode) return;
+  e.preventDefault();
+  const tFull = sim.history.t.at(-1) || 1;
+  const cur = zoomView ?? { start: 0, end: tFull };
+  const span = cur.end - cur.start;
+  const factor = e.deltaY < 0 ? 0.8 : 1.25;
+  const newSpan = Math.max(10, Math.min(tFull, span * factor));
+  const rect = chartCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const chartW = chartCanvas.width - 52 - 16;
+  const ratio = Math.max(0, Math.min(1, (mx - 52) / chartW));
+  const tAtMouse = cur.start + ratio * span;
+  const newStart = Math.max(0, tAtMouse - ratio * newSpan);
+  const newEnd = Math.min(tFull, newStart + newSpan);
+  zoomView = (newEnd - newStart >= tFull - 0.5) ? null : { start: newStart, end: newEnd };
+  drawChart();
+}, { passive: false });
+
+chartCanvas.addEventListener("dblclick", () => {
+  if (!measureMode) return;
+  zoomView = null;
   drawChart();
 });
 
