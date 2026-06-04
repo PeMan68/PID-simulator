@@ -31,7 +31,7 @@ HELP_CONTENT är hårdkodat i app.js (89 rader, 23 poster). Flytta till `content
 **Prioritet:** Låg
 **Beskrivning:**
 Crosshairen i mätläge visar idag bara en vertikal linje. Lägg till en horisontell linje på muspositionen inom PV-grafens yta för att lättare avläsa exakta PV-värden.
-**Status:** Öppen
+**Status:** Klar
 
 ---
 
