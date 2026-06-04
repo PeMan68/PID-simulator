@@ -266,9 +266,20 @@ function drawChart() {
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
   ctx.fillText("PV/SP", pad.left + 6, pad.top + 14);
   ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top);
+  ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
+  ctx.restore();
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
+  ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(Math.max(0, Math.min(100, u[i]))) })), "#2f9e44", false);
+  ctx.restore();
 
   // ── Mätläge: hjälplinjer och crosshair ──
   if (measureMode) {
