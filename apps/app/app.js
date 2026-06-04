@@ -295,8 +295,13 @@ function drawChart() {
         if (sl > maxSl) { maxSl = sl; iInfl = i; }
       }
       if (maxSl > 0.001) {
-        const tInfl = tA[iInfl];
-        const pvInfl = yA[iInfl];
+        // Enkapacitiv process: yA[iInfl] ≈ PV₀ (flat dödtid), nästa punkt är första responspunkten.
+        // Använd den som ankare för att undvika -1 steg diskretiseringsfel.
+        const atDeadEnd = hasRange
+          && iInfl + 1 < yA.length
+          && Math.abs(yA[iInfl] - pv0) < Math.max(0.5, Math.abs(pvInf - pv0) * 0.02);
+        const tInfl = atDeadEnd ? tA[iInfl + 1] : tA[iInfl];
+        const pvInfl = atDeadEnd ? pv0 : yA[iInfl];
         const pvLineAt = tv => pvInfl + maxSl * (tv - tInfl);
 
         ctx.save();
