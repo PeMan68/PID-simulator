@@ -516,6 +516,12 @@ function syncParamsFromUI() {
     const fillValue = sim.process.delay.length ? sim.process.delay[sim.process.delay.length - 1] : (prevState ? prevState.u : 0);
     sim.process.delay = delayLen > 0 ? new Array(delayLen).fill(fillValue) : [];
   }
+  const needsStages = currentScenario.process.type === "self_regulating_2";
+  if (needsStages && sim.process.stages.length === 0) {
+    sim.process.stages = [sim.process.y];
+  } else if (!needsStages && sim.process.stages.length > 0) {
+    sim.process.stages = [];
+  }
   sim.pid.kp = currentScenario.controller.kp || 0;
   sim.pid.ti = currentScenario.controller.ti || 0;
   sim.pid.td = currentScenario.controller.td || 0;
