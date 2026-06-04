@@ -176,6 +176,7 @@ let checkpointAnswered = false;
 let pathScore = { correct: 0, total: 0 };
 let measureMode = false;
 let measureCollapsedLeft = false;
+let measureCollapsedGroups = [];
 let hoverPos = null;
 
 function appendLog(line) { logEl.textContent += line + "\n"; logEl.scrollTop = logEl.scrollHeight; }
@@ -277,17 +278,25 @@ function drawChart() {
 
     // Tangentlinje (Ziegler-Nichols)
     if (document.getElementById("mpTangent").checked && y.length > 5) {
+      // Hitta senaste signifikanta u-steg och sök bara i data därifrån
+      let stepIdx = 0;
+      for (let i = 1; i < u.length; i++) {
+        if (Math.abs(u[i] - u[i - 1]) > 1.0) stepIdx = i;
+      }
+      const yA = y.slice(stepIdx);
+      const tA = t.slice(stepIdx);
+
       let iInfl = 2;
       let maxSl = -Infinity;
-      for (let i = 2; i < y.length - 2; i++) {
-        const dt_w = t[i + 2] - t[i - 2];
+      for (let i = 2; i < yA.length - 2; i++) {
+        const dt_w = tA[i + 2] - tA[i - 2];
         if (dt_w <= 0) continue;
-        const sl = (y[i + 2] - y[i - 2]) / dt_w;
+        const sl = (yA[i + 2] - yA[i - 2]) / dt_w;
         if (sl > maxSl) { maxSl = sl; iInfl = i; }
       }
       if (maxSl > 0.001) {
-        const tInfl = t[iInfl];
-        const pvInfl = y[iInfl];
+        const tInfl = tA[iInfl];
+        const pvInfl = yA[iInfl];
         const pvLineAt = tv => pvInfl + maxSl * (tv - tInfl);
 
         ctx.save();
@@ -348,7 +357,7 @@ function drawChart() {
         ctx.beginPath(); ctx.moveTo(mx, pad.top); ctx.lineTo(mx, h * 0.62); ctx.stroke();
         ctx.setLineDash([]);
 
-        const lines = ["t  = " + tHover.toFixed(1), "PV = " + pvH.toFixed(2), "u  = " + uH.toFixed(2)];
+        const lines = ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(2), "u  = " + uH.toFixed(2)];
         ctx.font = "11px Consolas, monospace";
         const lH = 15, pX = 7, pY = 5;
         const ttW = Math.max(...lines.map(s => ctx.measureText(s).width)) + pX * 2;
@@ -484,6 +493,7 @@ function updateControllerUIState() {
   
   // Enable/disable fields based on mode
   fields.kp.disabled = isManual || isOnOff;
+  fields.kp.parentElement.style.display = (isManual || isOnOff) ? "none" : "";
   fields.ti.disabled = isP || isManual || isOnOff;
   fields.td.disabled = isP || isPI || isManual || isOnOff;
   fields.manualOutput.disabled = !isManual;
@@ -772,6 +782,15 @@ function enterMeasureMode() {
   } else {
     measureCollapsedLeft = false;
   }
+  measureCollapsedGroups = [];
+  ["groupProcess","groupRegulator","groupStyrning","groupStorningar"].forEach(id => {
+    const g = document.getElementById(id);
+    if (!g.classList.contains("collapsed")) {
+      g.classList.add("collapsed");
+      localStorage.setItem("pg-" + id, "1");
+      measureCollapsedGroups.push(id);
+    }
+  });
   document.querySelector(".params-container").classList.add("measure-locked");
   document.getElementById("measurePanel").classList.add("active");
   document.getElementById("btnMeasure").classList.add("active");
@@ -787,6 +806,11 @@ function exitMeasureMode() {
     toggleSidebar("sidebarLeft", "toggleLeft", "resizeLeft", "»", "«");
     measureCollapsedLeft = false;
   }
+  measureCollapsedGroups.forEach(id => {
+    document.getElementById(id).classList.remove("collapsed");
+    localStorage.setItem("pg-" + id, "0");
+  });
+  measureCollapsedGroups = [];
   document.querySelector(".params-container").classList.remove("measure-locked");
   document.getElementById("measurePanel").classList.remove("active");
   document.getElementById("facitBody").style.display = "none";
