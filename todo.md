@@ -41,7 +41,7 @@ Crosshairen i mätläge visar idag bara en vertikal linje. Lägg till en horison
 **Beskrivning:**
 Nuvarande `self_regulating`-modell är enkapacitiv (FOPDT). En flerkapacitiv process (N kaskadkopplade element) ger ett S-format stegsvar med tydlig inflexionspunkt — mer likt industriella processer och bättre testfall för tangentmetoden.
 Modell: N element med tidskonstant T/N vardera. Nytt fält `"order": N` i process-config. Nytt `processType`-alternativ i dropdown. Nytt identifieringsscenario (order=2).
-**Status:** Öppen
+**Status:** Klar
 
 ---
 
@@ -50,7 +50,7 @@ Modell: N element med tidskonstant T/N vardera. Nytt fält `"order": N` i proces
 **Prioritet:** Medel
 **Beskrivning:**
 Möjlighet att zooma in i PV-grafen för att avläsa exakta värden med crosshairen i mätläge. Scrollhjul + modifieringstangent (Ctrl eller Shift) zoomar horisontellt (t-axeln). Touchpad: tvåfingerspinch-scroll. Zoom-nivå visas och kan nollställas med dubbelklick eller en "Återställ zoom"-knapp.
-**Status:** Öppen
+**Status:** Klar
 
 ---
 
