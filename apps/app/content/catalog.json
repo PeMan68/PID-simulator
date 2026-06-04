@@ -1,5 +1,5 @@
 {
-  "version": "v1.3.0",
+  "version": "v1.3.1",
   "help": "help.json",
   "scenarios": [
     { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json" },
@@ -28,7 +28,8 @@
     { "id": "onoff-theory",          "file": "theory/onoff-theory.v1.json" },
     { "id": "integrator-windup",     "file": "theory/integrator-windup.v1.json" },
     { "id": "integrating-process",   "file": "theory/integrating-process.v1.json" },
-    { "id": "lambda-metoden",         "file": "theory/lambda-metoden.v1.json" }
+    { "id": "lambda-metoden",          "file": "theory/lambda-metoden.v1.json" },
+    { "id": "tangentmetoden",          "file": "theory/tangentmetoden.v1.json" }
   ],
   "learning_paths": [
     { "id": "grundlaggande.v1",        "file": "exercises/grundlaggande.v1.json" },

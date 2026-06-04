@@ -6,6 +6,23 @@
   "difficulty": "intermediate",
   "steps": [
     {
+      "type": "theory",
+      "ref": "tangentmetoden.v1.json",
+      "title": "Tangentmetoden — teori",
+      "objective": "Förstå var tangenten ritas och hur L och T avläses från skärningspunkterna.",
+      "checkpoint": {
+        "question": "Var ritas tangenten för en enkapacitiv process (FOPDT)?",
+        "options": [
+          "Vid 63.2% av ΔPV",
+          "I starten av PV-uppgången, direkt när dödtiden löpt ut",
+          "Mitt i S-kurvan vid inflexionspunkten",
+          "Vid PV∞ (slutvärdet)"
+        ],
+        "correct": 1,
+        "explanation": "För en enkapacitiv process är lutningen maximal direkt i starten av uppgången — det är där tangenten ritas. För flerkapacitiva processer (S-kurva) är inflexionspunkten istället mitt i uppgången."
+      }
+    },
+    {
       "type": "scenario",
       "ref": "manual-identification.json",
       "title": "Förberedelse: stabilisera vid u=30",
