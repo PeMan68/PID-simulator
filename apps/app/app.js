@@ -462,10 +462,6 @@ function syncParamsFromUI() {
         sim.pid.biasFadePerStep = 0;
       }
     }
-    if (nextMode === "manual" && prevState) {
-      currentScenario.controller.manualOutput = prevState.u;
-      fields.manualOutput.value = prevState.u.toFixed(2);
-    }
   }
 
   sim.scenario = currentScenario;
@@ -760,7 +756,19 @@ function toggleParamGroup(id) {
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
 fields.pulseDuration.addEventListener("input", () => { if (Number(fields.pulseDuration.value) < 0) fields.pulseDuration.value = 0; });
 fields.showPB.addEventListener("change", drawChart);
-document.getElementById("mode").addEventListener("change", updateControllerUIState);
+document.getElementById("mode").addEventListener("change", () => {
+  const newMode = fields.mode.value;
+  const bumplessOn = document.getElementById("bumpless").checked;
+  if (newMode === "manual" && sim && currentScenario && bumplessOn) {
+    const prevMode = currentScenario.controller.mode;
+    if (prevMode !== "manual") {
+      const lastU = sim.getState().u;
+      fields.manualOutput.value = lastU.toFixed(2);
+      currentScenario.controller.manualOutput = lastU;
+    }
+  }
+  updateControllerUIState();
+});
 document.getElementById("processType").addEventListener("change", updateProcessUIState);
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });
 document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); });

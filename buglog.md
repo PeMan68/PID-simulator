@@ -20,7 +20,7 @@ När användaren byter läge till "Manuell" via dropdown, matar in ett värde i 
 `currentScenario.controller.mode` uppdateras inte direkt när dropdown ändras — bara via `syncParamsFromUI` (vid steg-klick). Första gången "Stega" klickas detekteras en mode-ändring (`prevMode ≠ nextMode`) och bumpless-blocket i `syncParamsFromUI` skriver över `manualOutput` med `prevState.u` (=0 om inga steg körts).
 **Fix:**
 Flytta bumpless-till-manuell-logiken till mode-dropdown-ändringslyssnaren. Ta bort `if (nextMode === "manual" && prevState)` från `syncParamsFromUI`.
-**Status:** Öppen
+**Status:** Åtgärdad — verifieras i staging
 
 ### 2026-006 — Hysteresfält visas oavsett läge
 **Prio:** Medel
