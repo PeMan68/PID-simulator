@@ -20,7 +20,10 @@ När användaren byter läge till "Manuell" via dropdown, matar in ett värde i 
 `currentScenario.controller.mode` uppdateras inte direkt när dropdown ändras — bara via `syncParamsFromUI` (vid steg-klick). Första gången "Stega" klickas detekteras en mode-ändring (`prevMode ≠ nextMode`) och bumpless-blocket i `syncParamsFromUI` skriver över `manualOutput` med `prevState.u` (=0 om inga steg körts).
 **Fix:**
 Flytta bumpless-till-manuell-logiken till mode-dropdown-ändringslyssnaren. Ta bort `if (nextMode === "manual" && prevState)` från `syncParamsFromUI`.
-**Status:** Öppen
+Tangentlinjens etiketter visar nu varaktigheter (L = tL−t_steg, T = tLT−tL) istället för absoluta tidpunkter.
+Tangentalgoritmen använder nu enkla grannpunktsdifferenser (söker från i=0) — hittar korrekt startpunkt för enkapacitiva processer och inflexionspunkt för flerkapacitiva.
+L-ankare korrigeras för diskretisering: om yA[iInfl] ≈ PV₀ används nästa punkt → L=5 korrekt för FOPDT.
+**Status:** Stängd — TC-01–07 godkända 2026-06-04
 
 ### 2026-006 — Hysteresfält visas oavsett läge
 **Prio:** Medel

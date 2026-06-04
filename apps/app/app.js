@@ -286,17 +286,22 @@ function drawChart() {
       const yA = y.slice(stepIdx);
       const tA = t.slice(stepIdx);
 
-      let iInfl = 2;
+      let iInfl = 0;
       let maxSl = -Infinity;
-      for (let i = 2; i < yA.length - 2; i++) {
-        const dt_w = tA[i + 2] - tA[i - 2];
-        if (dt_w <= 0) continue;
-        const sl = (yA[i + 2] - yA[i - 2]) / dt_w;
+      for (let i = 0; i < yA.length - 1; i++) {
+        const dt_loc = tA[i + 1] - tA[i];
+        if (dt_loc <= 0) continue;
+        const sl = (yA[i + 1] - yA[i]) / dt_loc;
         if (sl > maxSl) { maxSl = sl; iInfl = i; }
       }
       if (maxSl > 0.001) {
-        const tInfl = tA[iInfl];
-        const pvInfl = yA[iInfl];
+        // Enkapacitiv process: yA[iInfl] ≈ PV₀ (flat dödtid), nästa punkt är första responspunkten.
+        // Använd den som ankare för att undvika -1 steg diskretiseringsfel.
+        const atDeadEnd = hasRange
+          && iInfl + 1 < yA.length
+          && Math.abs(yA[iInfl] - pv0) < Math.max(0.5, Math.abs(pvInf - pv0) * 0.02);
+        const tInfl = atDeadEnd ? tA[iInfl + 1] : tA[iInfl];
+        const pvInfl = atDeadEnd ? pv0 : yA[iInfl];
         const pvLineAt = tv => pvInfl + maxSl * (tv - tInfl);
 
         ctx.save();
@@ -312,19 +317,20 @@ function drawChart() {
           ctx.lineTo(xScale(tLineEnd), yScaleTop(pvLineAt(tLineEnd)));
           ctx.stroke(); ctx.setLineDash([]);
 
+          const tStep = t[stepIdx] ?? 0;
           if (tL >= 0 && tL <= tMax) {
             const xL = xScale(tL), yL = yScaleTop(pv0);
             ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1.5;
             ctx.beginPath(); ctx.moveTo(xL, yL - 8); ctx.lineTo(xL, yL + 8); ctx.stroke();
             ctx.fillStyle = "#8e44ad"; ctx.font = "bold 10px Segoe UI"; ctx.textAlign = "center";
-            ctx.fillText("L≈" + tL.toFixed(1), xL, yL + 20);
+            ctx.fillText("L≈" + Math.round(tL - tStep), xL, yL + 20);
           }
           if (tLT >= 0 && tLT <= tMax) {
             const xLT = xScale(tLT), yLT = yScaleTop(pvInf);
             ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1.5;
             ctx.beginPath(); ctx.moveTo(xLT, yLT - 8); ctx.lineTo(xLT, yLT + 8); ctx.stroke();
             ctx.fillStyle = "#8e44ad"; ctx.font = "bold 10px Segoe UI"; ctx.textAlign = "center";
-            ctx.fillText("L+T≈" + tLT.toFixed(1), xLT, yLT - 12);
+            ctx.fillText("T≈" + Math.round(tLT - tL), xLT, yLT - 12);
           }
         } else {
           const ext = tMax * 0.25;
@@ -461,10 +467,6 @@ function syncParamsFromUI() {
         sim.pid.biasFadeSteps = 0;
         sim.pid.biasFadePerStep = 0;
       }
-    }
-    if (nextMode === "manual" && prevState) {
-      currentScenario.controller.manualOutput = prevState.u;
-      fields.manualOutput.value = prevState.u.toFixed(2);
     }
   }
 
@@ -760,7 +762,22 @@ function toggleParamGroup(id) {
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
 fields.pulseDuration.addEventListener("input", () => { if (Number(fields.pulseDuration.value) < 0) fields.pulseDuration.value = 0; });
 fields.showPB.addEventListener("change", drawChart);
-document.getElementById("mode").addEventListener("change", updateControllerUIState);
+document.getElementById("mode").addEventListener("change", () => {
+  const newMode = fields.mode.value;
+  const bumplessOn = document.getElementById("bumpless").checked;
+  if (sim && currentScenario) {
+    const prevMode = currentScenario.controller.mode;
+    if (newMode === "manual" && prevMode !== "manual") {
+      if (bumplessOn) {
+        const lastU = sim.getState().u;
+        fields.manualOutput.value = lastU.toFixed(2);
+        currentScenario.controller.manualOutput = lastU;
+      }
+      currentScenario.controller.mode = "manual";
+    }
+  }
+  updateControllerUIState();
+});
 document.getElementById("processType").addEventListener("change", updateProcessUIState);
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });
 document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); });
