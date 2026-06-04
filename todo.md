@@ -26,6 +26,15 @@ HELP_CONTENT är hårdkodat i app.js (89 rader, 23 poster). Flytta till `content
 
 ---
 
+### FEAT-029 — Crosshair horisontell linje
+**Branch:** `feature/crosshair-hline`
+**Prioritet:** Låg
+**Beskrivning:**
+Crosshairen i mätläge visar idag bara en vertikal linje. Lägg till en horisontell linje på muspositionen inom PV-grafens yta för att lättare avläsa exakta PV-värden.
+**Status:** Öppen
+
+---
+
 ### FEAT-028 — Flerkapacitiv (högre ordningens) självreglerande process
 **Branch:** `feature/multi-capacity`
 **Prioritet:** Medel
