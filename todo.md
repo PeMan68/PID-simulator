@@ -26,6 +26,16 @@ HELP_CONTENT är hårdkodat i app.js (89 rader, 23 poster). Flytta till `content
 
 ---
 
+### FEAT-028 — Flerkapacitiv (högre ordningens) självreglerande process
+**Branch:** `feature/multi-capacity`
+**Prioritet:** Medel
+**Beskrivning:**
+Nuvarande `self_regulating`-modell är enkapacitiv (FOPDT). En flerkapacitiv process (N kaskadkopplade element) ger ett S-format stegsvar med tydlig inflexionspunkt — mer likt industriella processer och bättre testfall för tangentmetoden.
+Modell: N element med tidskonstant T/N vardera. Nytt fält `"order": N` i process-config. Nytt `processType`-alternativ i dropdown. Nytt identifieringsscenario (order=2).
+**Status:** Öppen
+
+---
+
 ### FEAT-027 — Zoom i grafen för exaktare mätavläsning
 **Branch:** `feature/graph-zoom`
 **Prioritet:** Medel
