@@ -10,6 +10,18 @@ Varje bugfix-branch uppdaterar **endast sin egen post** (status, fix-noteringar)
 
 ### Webbapp (`apps/app/`)
 
+### 2026-010 — Manuell u: första värdet sparas inte, skrivs över med 0.00
+**Prio:** Hög
+**Datum:** 2026-06-04
+**Branch:** `bugfix/2026-010`
+**Beskrivning:**
+När användaren byter läge till "Manuell" via dropdown, matar in ett värde i "Manuell u" och klickar "Stega 1", återställs fältet till 0.00 och värdet används inte. Fungerar korrekt från och med andra försöket.
+**Rotorsak:**
+`currentScenario.controller.mode` uppdateras inte direkt när dropdown ändras — bara via `syncParamsFromUI` (vid steg-klick). Första gången "Stega" klickas detekteras en mode-ändring (`prevMode ≠ nextMode`) och bumpless-blocket i `syncParamsFromUI` skriver över `manualOutput` med `prevState.u` (=0 om inga steg körts).
+**Fix:**
+Flytta bumpless-till-manuell-logiken till mode-dropdown-ändringslyssnaren. Ta bort `if (nextMode === "manual" && prevState)` från `syncParamsFromUI`.
+**Status:** Öppen
+
 ### 2026-006 — Hysteresfält visas oavsett läge
 **Prio:** Medel
 **Datum:** 2026-06-01
