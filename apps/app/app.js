@@ -386,10 +386,20 @@ function drawChart() {
 function updateStatus() {
   if (!sim) { statusEl.textContent = "Status: ej laddad"; return; }
   const s = sim.getState();
-  const pidInfo = (s.pTerm !== 0 || s.iTerm !== 0 || s.dTerm !== 0) 
+  const pidInfo = (s.pTerm !== 0 || s.iTerm !== 0 || s.dTerm !== 0)
     ? " | P=" + s.pTerm.toFixed(2) + ", I=" + s.iTerm.toFixed(2) + ", D=" + s.dTerm.toFixed(2)
     : "";
-  statusEl.textContent = "Status: steg=" + s.step + ", t=" + s.t.toFixed(2) + ", y=" + s.y.toFixed(3) + ", u=" + s.u.toFixed(3) + ", e=" + s.e.toFixed(3) + pidInfo;
+  let warning = "";
+  if (currentScenario) {
+    const proc = currentScenario.process;
+    const isSR = proc.type === "self_regulating" || !proc.type;
+    if (isSR) {
+      const yPhysMax = proc.normalValue + proc.K * currentScenario.controller.outputLimits.max;
+      if (currentScenario.runtime.setpoint > yPhysMax + 0.01)
+        warning = "  ⚠ SP ouppnåeligt (max≈" + yPhysMax.toFixed(1) + ")";
+    }
+  }
+  statusEl.textContent = "Status: steg=" + s.step + ", t=" + s.t.toFixed(2) + ", y=" + s.y.toFixed(3) + ", u=" + s.u.toFixed(3) + ", e=" + s.e.toFixed(3) + pidInfo + warning;
 }
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;
