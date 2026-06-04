@@ -312,19 +312,20 @@ function drawChart() {
           ctx.lineTo(xScale(tLineEnd), yScaleTop(pvLineAt(tLineEnd)));
           ctx.stroke(); ctx.setLineDash([]);
 
+          const tStep = t[stepIdx] ?? 0;
           if (tL >= 0 && tL <= tMax) {
             const xL = xScale(tL), yL = yScaleTop(pv0);
             ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1.5;
             ctx.beginPath(); ctx.moveTo(xL, yL - 8); ctx.lineTo(xL, yL + 8); ctx.stroke();
             ctx.fillStyle = "#8e44ad"; ctx.font = "bold 10px Segoe UI"; ctx.textAlign = "center";
-            ctx.fillText("L≈" + tL.toFixed(1), xL, yL + 20);
+            ctx.fillText("L≈" + Math.round(tL - tStep), xL, yL + 20);
           }
           if (tLT >= 0 && tLT <= tMax) {
             const xLT = xScale(tLT), yLT = yScaleTop(pvInf);
             ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1.5;
             ctx.beginPath(); ctx.moveTo(xLT, yLT - 8); ctx.lineTo(xLT, yLT + 8); ctx.stroke();
             ctx.fillStyle = "#8e44ad"; ctx.font = "bold 10px Segoe UI"; ctx.textAlign = "center";
-            ctx.fillText("L+T≈" + tLT.toFixed(1), xLT, yLT - 12);
+            ctx.fillText("T≈" + Math.round(tLT - tL), xLT, yLT - 12);
           }
         } else {
           const ext = tMax * 0.25;
