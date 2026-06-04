@@ -760,12 +760,15 @@ fields.showPB.addEventListener("change", drawChart);
 document.getElementById("mode").addEventListener("change", () => {
   const newMode = fields.mode.value;
   const bumplessOn = document.getElementById("bumpless").checked;
-  if (newMode === "manual" && sim && currentScenario && bumplessOn) {
+  if (sim && currentScenario) {
     const prevMode = currentScenario.controller.mode;
-    if (prevMode !== "manual") {
-      const lastU = sim.getState().u;
-      fields.manualOutput.value = lastU.toFixed(2);
-      currentScenario.controller.manualOutput = lastU;
+    if (newMode === "manual" && prevMode !== "manual") {
+      if (bumplessOn) {
+        const lastU = sim.getState().u;
+        fields.manualOutput.value = lastU.toFixed(2);
+        currentScenario.controller.manualOutput = lastU;
+      }
+      currentScenario.controller.mode = "manual";
     }
   }
   updateControllerUIState();
