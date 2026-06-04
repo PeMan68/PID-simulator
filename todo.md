@@ -68,7 +68,7 @@ Vid första besök visas en välkomstpanel i vänster sidebar med appbeskrivning
 **Prioritet:** Hög
 **Beskrivning:**
 5-stegs lärstig för Lambda-metoden (modellbaserad PI-inställning). Kp = T/(K×(λ+L)), Ti = T. Inkluderar ny teorifil, 4 scenarion (open-loop, måttlig/aggressiv/konservativ λ) och lärstigs-JSON.
-**Status:** Fixad i branch — inväntar testning
+**Status:** Mergad till develop — inväntar manuellt test
 
 ---
 
@@ -90,31 +90,12 @@ Proportionalbandet (PB = 100/Kp %) definierar det PV-intervall som ger full utsl
 
 ---
 
-### FEAT-019 — Flytta Trigga puls-knappen till Störningar-gruppen
-**Branch:** `feature/knapp-layout`
-**Prioritet:** Medel
-**Beskrivning:**
-"Trigga puls"-knappen hör logiskt ihop med brus- och pulsinställningarna i Störningar-gruppen. Flytta knappen dit.
-**Status:** Fixad i branch — inväntar testning
-
----
-
-### FEAT-020 — Flytta steg-knappar nedanför parametergrupperna
-**Branch:** `feature/knapp-layout`
-**Prioritet:** Medel
-**Beskrivning:**
-Knapparna "Stega 1" och "Kör 10 steg" ska ligga nedanför parametergrupperna, inte ovanför dem. Bättre flöde: konfigurera parametrar → kör simulering.
-**Status:** Fixad i branch — inväntar testning
-
-
----
-
 ### FEAT-002 — Varning när SP är ouppnåeligt (SP > y_max)
 **Branch:** `feature/sp-uppnabarhet-varning`
 **Prioritet:** Medel
 **Beskrivning:**
 En självreglerande process har ett fysikaliskt tak: y_max = normalValue + K × u_max. Om SP sätts över y_max integrerar PID:en upp u till 100 % men y fastnar — studenter tror att PID:en är felinställd. Behöver en varning i statusraden, t.ex. "⚠ SP ouppnåeligt (y_max=50.0)".
-**Status:** Kanske klar — behöver verifieras
+**Status:** Öppen — ej implementerad (ingen kod hittad)
 
 ---
 
