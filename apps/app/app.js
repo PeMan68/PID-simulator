@@ -71,7 +71,7 @@ class ProcessModel {
     this.dt = dt;
     this.y = cfg.normalValue;
     this.delay = cfg.L > 0 ? new Array(Math.max(1, Math.ceil(cfg.L / dt))).fill(0) : [];
-    this.stages = cfg.type === "self_regulating_2" ? [cfg.normalValue] : [];
+    this.stages = cfg.type === "self_regulating_2" ? [cfg.normalValue, cfg.normalValue] : [];
   }
   reset() {
     this.y = this.cfg.normalValue;
@@ -89,9 +89,10 @@ class ProcessModel {
     }
     else if (this.cfg.type === "unstable") this.y += ((this.y - this.cfg.normalValue + this.cfg.K * ud) * dt) / T;
     else if (this.cfg.type === "self_regulating_2") {
-      const Ti = T / 2;
+      const Ti = T / 3;
       this.stages[0] += ((-(this.stages[0] - this.cfg.normalValue) + this.cfg.K * ud) * dt) / Ti;
-      this.y += (-(this.y - this.stages[0]) * dt) / Ti;
+      this.stages[1] += (-(this.stages[1] - this.stages[0]) * dt) / Ti;
+      this.y += (-(this.y - this.stages[1]) * dt) / Ti;
     }
     else this.y += ((-(this.y - this.cfg.normalValue) + this.cfg.K * ud) * dt) / T;
     this.y += disturbance;
@@ -517,8 +518,8 @@ function syncParamsFromUI() {
     sim.process.delay = delayLen > 0 ? new Array(delayLen).fill(fillValue) : [];
   }
   const needsStages = currentScenario.process.type === "self_regulating_2";
-  if (needsStages && sim.process.stages.length === 0) {
-    sim.process.stages = [sim.process.y];
+  if (needsStages && sim.process.stages.length < 2) {
+    sim.process.stages = [sim.process.y, sim.process.y];
   } else if (!needsStages && sim.process.stages.length > 0) {
     sim.process.stages = [];
   }
