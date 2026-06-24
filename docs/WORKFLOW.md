@@ -15,14 +15,14 @@ main          ← produktion (GitHub Pages)
 ## 1. Registrera en feature
 
 1. Växla till `develop`
-2. Lägg till post i `todo.md` under **Öppna** (använd mallen)
+2. Lägg till post i `todo.md` (använd mallen)
 3. Commit: `"feat(todo): registrera FEAT-NNN <kortnamn>"`
 4. Skapa branch: `git checkout -b feature/<kortnamn>`
 
 ## 2. Registrera en bugg
 
 1. Växla till `develop`
-2. Lägg till post i `buglog.md` under **Öppna** (använd mallen, tilldela nästa `ÅÅÅÅ-NNN`)
+2. Lägg till post i `buglog.md` (använd mallen, tilldela nästa `ÅÅÅÅ-NNN`)
 3. Commit: `"bug(buglog): registrera 2026-NNN <kort beskrivning>"`
 4. Skapa branch: `git checkout -b bugfix/2026-NNN`
 
@@ -64,7 +64,7 @@ När alla tester är gröna:
    git checkout develop
    git merge test/<kortnamn>
    ```
-2. Uppdatera `todo.md`/`buglog.md`: flytta klara poster till **Klara/Stängda**
+2. Flytta klara features från `todo.md` till `todo-done.md`, stängda buggar från `buglog.md` till `buglog-done.md`
 3. Radera alla involverade brancher (feature, bugfix, test):
    ```
    git branch -d feature/<kortnamn>
