@@ -9,7 +9,16 @@ Stängda buggar finns i [buglog-done.md](buglog-done.md).
 
 ## Webbapp (`apps/app/`)
 
-*(inga öppna)*
+### 2026-011 — Sidopaneler kollapsas inte, tömmer bara innehållet
+**Prio:** Medel
+**Datum:** 2026-06-26
+**Branch:** `bugfix/2026-011`
+**Beskrivning:**
+Klick på kollaps-knappen (`«`/`»`) på vänster sidebar och höger kontrollpanel döljer panelens innehåll men bredden förblir oförändrad. Panelen minimeras alltså inte — mittenytan (grafen) får ingen extra plats.
+Relaterat till 2026-008 som stängdes 2026-06-03, men problemet kvarstår på båda panelerna.
+**Förväntat beteende:** Panel krymper till minimal bredd (ikonstorlek), grafen expanderar och fyller utrymmet.
+**Faktiskt beteende:** Panelens innehåll döljs men bredden är oförändrad.
+**Status:** Öppen
 
 ---
 
