@@ -5,6 +5,19 @@ Buggar som är fixade, testade och mergade till `develop`.
 
 ---
 
+## Python-app (`main.py`) — nedlagd
+
+Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande buggar stängs
+**utan fix** — de kommer aldrig åtgärdas.
+
+### 2026-003 — PID-bidragsgraf visar fel y-axel-enhet
+**Status:** Stängd — nedlagd, se BESLUT-002
+
+### 2026-005 — Hjälp/teori-flikar fungerar inte i exe
+**Status:** Stängd — nedlagd, se BESLUT-002
+
+---
+
 ## Webbapp (`apps/app/`)
 
 ### 2026-010 — Manuell u: första värdet sparas inte, skrivs över med 0.00

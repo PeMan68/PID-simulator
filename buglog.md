@@ -24,24 +24,5 @@ Relaterat till 2026-008 som stängdes 2026-06-03, men problemet kvarstår på b�
 
 ## Python-app (`main.py`)
 
-### 2026-003 — PID-bidragsgraf visar fel y-axel-enhet
-**Prio:** Medel
-**Datum:** 2026-06-01
-**Branch:** `bugfix/2026-003`
-**Beskrivning:**
-Y-axeln för PID-bidragsgrafen visar enheten celsius (°C) men ska visa procent (%).
-**Förväntat beteende:** Y-axeln visar %.
-**Faktiskt beteende:** Y-axeln visar °C.
-**Status:** Öppen
-
----
-
-### 2026-005 — Hjälp/teori-flikar fungerar inte i exe
-**Prio:** Hög
-**Datum:** 2026-06-01
-**Branch:** `bugfix/2026-005`
-**Beskrivning:**
-Flikarnas innehåll för Hjälp och Teori skapas inte korrekt i den paketerade exe-filen (PyInstaller packaging-problem). Flikarna visas men innehållet är tomt eller felaktigt.
-**Förväntat beteende:** Hjälp- och teori-innehåll visas korrekt i exe.
-**Faktiskt beteende:** Innehållet saknas eller är felaktigt i exe-versionen.
-**Status:** Öppen
+Python-appen är nedlagd — se BESLUT-002 i [todo.md](todo.md). Alla öppna Python-buggar
+är stängda utan fix och flyttade till [buglog-done.md](buglog-done.md).

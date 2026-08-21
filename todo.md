@@ -16,6 +16,16 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ---
 
+### BESLUT-002 — Ingen vidare utveckling av Python-appen, allt fokus på webbappen
+**Prioritet:** Hög
+**Beskrivning:**
+Produktbeslut 2026-08-21: `main.py` (tkinter-appen) läggs ner till förmån för webbappen (`apps/app/`). Webbkärnan (`packages/sim-core`) har redan uppnått funktionsparitet enligt `docs/architecture/python-parity-matrix.md`, och Python-appen har inte utvecklats sedan 2025-09-25. Ingen CI/deploy-koppling finns till Python-filerna.
+**Genomförande:**
+Nuvarande tillstånd taggat `archive/python-app-v1.7.0` för framtida referens. `main.py`, `requirements.txt`, `docs/python-app/` samt Python-specifika release notes (`docs/releases/CHANGELOG.md`, `release-notes-v1.5.0–v1.7.0.md`) borttagna från arbetsträdet i `feature/arkivera-python-app`. Öppna Python-features (FEAT-006, 008, 012–016) och -buggar (2026-003, 2026-005) stängda utan implementation.
+**Status:** Beslutad och genomförd — se `todo-done.md` och `buglog-done.md`
+
+---
+
 ### FEAT-022 — Direktverkande / Omvänt verkande (verkningsriktning)
 **Branch:** `feature/verkningsriktning`
 **Prioritet:** Medel
@@ -74,63 +84,5 @@ Verktyg för design med störningsreserver (gain margin, phase margin).
 
 ## Python-app (`main.py`)
 
-### FEAT-006 — Utökad historik — jämförelse och export
-**Branch:** `feature/python-historik-utokad`
-**Prioritet:** Medel
-**Beskrivning:**
-Fler jämförelsemöjligheter mellan körningar och utökade exportalternativ utöver befintlig CSV-export.
-**Status:** Öppen
-
----
-
-### FEAT-008 — Utökad tooltip-funktionalitet
-**Branch:** `feature/python-tooltips-utokad`
-**Prioritet:** Medel
-**Beskrivning:**
-Mer kontextuell hjälp för avancerade funktioner via tooltips.
-**Status:** Öppen
-
----
-
-### FEAT-012 — Optimerad graf-rendering
-**Branch:** `feature/python-graf-rendering`
-**Prioritet:** Låg
-**Beskrivning:**
-Bättre prestanda vid många historiska kurvor simultant.
-**Status:** Öppen
-
----
-
-### FEAT-013 — Förbättrad export-funktionalitet
-**Branch:** `feature/python-export-utokad`
-**Prioritet:** Låg
-**Beskrivning:**
-Fler exportformat och dataanpassningar.
-**Status:** Öppen
-
----
-
-### FEAT-014 — Unicode/emoji-kompatibilitet
-**Branch:** `feature/python-unicode`
-**Prioritet:** Hög
-**Beskrivning:**
-Fullständig emoji-support för äldre Python/Tcl-versioner. Identifierat i v1.6.1 release notes.
-**Status:** Öppen
-
----
-
-### FEAT-015 — Förbättrad dialog-positionering
-**Branch:** `feature/python-dialog-pos`
-**Prioritet:** Medel
-**Beskrivning:**
-Mer robust centrering av dialogrutor på alla skärmkonfigurationer. Identifierat i v1.6.1 release notes.
-**Status:** Öppen
-
----
-
-### FEAT-016 — Förbättrad hysteresis-visualisering (OnOff)
-**Branch:** `feature/python-hysteresis-ui`
-**Prioritet:** Medel
-**Beskrivning:**
-Tydligare visuell feedback för OnOff-regulatorns hysteresis-gränser.
-**Status:** Öppen
+Python-appen är nedlagd — se BESLUT-002. Alla öppna Python-features är stängda utan
+implementation och flyttade till [todo-done.md](todo-done.md).

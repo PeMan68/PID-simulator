@@ -5,6 +5,34 @@ Features som är implementerade, testade och mergade till `develop`.
 
 ---
 
+## Python-app (`main.py`) — nedlagd
+
+Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande features stängs
+**utan implementation** — de kommer aldrig byggas.
+
+### FEAT-006 — Utökad historik — jämförelse och export
+**Status:** Stängd — nedlagd, se BESLUT-002
+
+### FEAT-008 — Utökad tooltip-funktionalitet
+**Status:** Stängd — nedlagd, se BESLUT-002
+
+### FEAT-012 — Optimerad graf-rendering
+**Status:** Stängd — nedlagd, se BESLUT-002
+
+### FEAT-013 — Förbättrad export-funktionalitet
+**Status:** Stängd — nedlagd, se BESLUT-002
+
+### FEAT-014 — Unicode/emoji-kompatibilitet
+**Status:** Stängd — nedlagd, se BESLUT-002
+
+### FEAT-015 — Förbättrad dialog-positionering
+**Status:** Stängd — nedlagd, se BESLUT-002
+
+### FEAT-016 — Förbättrad hysteresis-visualisering (OnOff)
+**Status:** Stängd — nedlagd, se BESLUT-002
+
+---
+
 ## Webbapp (`apps/app/`)
 
 ### FEAT-029 — Crosshair horisontell linje
