@@ -9,8 +9,8 @@
       "type": "scenario",
       "ref": "pi-step-self-regulating.json",
       "title": "PI-reglering",
-      "objective": "Integratorn eliminerar det stationära felet.",
-      "instruction": "Kör 60 steg. Jämför med P-steget — når PV nu SP? Tar det längre tid?",
+      "objective": "Se hur integraldelen eliminerar det stationära reglerfelet.",
+      "instruction": "Kör 60 steg. Observera om PV når SP och notera ungefär hur många steg det tar innan PV har stabiliserats nära SP.\n\nJämför med den tidigare P-regleringen:\n• finns det fortfarande ett kvarstående reglerfel?\n• syns någon översläng?\n\nSpara din observation av insvängningstiden. I nästa steg ska PI-regleringens förlopp jämföras med PID-reglering.",
       "checkpoint": {
         "question": "Vad gör I-delen (integratorn) som P-delen inte klarar?",
         "options": [
@@ -28,7 +28,7 @@
       "ref": "pid-step-self-regulating.json",
       "title": "PID-reglering",
       "objective": "D-delen dämpar svängningar — samma process som PI-steget för direkt jämförelse.",
-      "instruction": "Kör 40 steg. Samma process som PI (K=1.3, T=15) — jämför insvängningen. Är överskjutningen mindre med D-delen aktiv?",
+      "instruction": "Kör 40 steg. Samma process som i föregående steg (K=1.3, T=15) — nu med D-delen aktiv.\n\nJämför med din PI-observation från förra steget:\n• Är insvängningstiden ungefär densamma, kortare eller längre?\n• Är överskjutningen mindre?\n• Är förloppet mer eller mindre dämpat — svänger det mindre innan det stabiliseras?\n• Finns fortfarande ett kvarstående reglerfel?",
       "checkpoint": {
         "question": "Vad är D-delens huvudsakliga funktion i PID-regulatorn?",
         "options": [

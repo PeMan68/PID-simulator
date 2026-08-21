@@ -21,18 +21,18 @@
       "type": "scenario",
       "ref": "manual-open-loop.json",
       "title": "Öppen slinga (utan reglering)",
-      "objective": "Se hur processen beter sig utan någon regulator — bara en fast, manuell utsignal.",
-      "instruction": "Scenariot kör i manuellt läge med en fast utsignal u=50. Ingen regulator är aktiv — u ändras aldrig automatiskt.\n\nKör 40 steg och observera vart PV stabiliserar sig. Ändra sedan SP till valfritt värde och kör igen — märker du att PV inte påverkas av SP alls?",
+      "objective": "Förstå skillnaden mellan en manuell utsignal och återkopplad reglering.",
+      "instruction": "Kör 40 steg och observera var PV stabiliserar sig. Regulatorn är inte aktiv. Utsignalen u är fast och påverkas inte av SP.\n\nI det här scenariot är processförstärkningen K = 1. Därför stabiliseras PV på ungefär samma värde som u. Om SP råkar ha samma värde betyder det inte att processen regleras mot SP.\n\nÄndra sedan SP och kör vidare utan att ändra u. Observera om PV påverkas.",
       "checkpoint": {
-        "question": "Varför påverkas inte PV av SP i det här scenariot?",
+        "question": "Vad visar försöket om sambandet mellan SP och u när regulatorn är i manuellt läge?",
         "options": [
-          "SP är satt till samma värde som PV",
-          "Ingen regulator är aktiv — utsignalen u är fast oavsett fel e",
-          "Processen är för långsam för att reagera",
-          "K-värdet är för lågt"
+          "SP styr u direkt, fast med viss fördröjning",
+          "SP påverkar inte u alls — u är fast tills du ändrar den manuellt",
+          "SP och u är alltid lika stora i manuellt läge",
+          "SP påverkar u men bara om K är litet"
         ],
         "correct": 1,
-        "explanation": "Utan en regulator som jämför PV mot SP och justerar u finns ingen koppling mellan börvärde och utsignal. u förblir konstant (u=50) oavsett vad SP eller PV är — det är detta som kallas öppen slinga (open loop)."
+        "explanation": "I manuellt läge finns ingen koppling mellan SP och u — det är precis poängen med öppen slinga. Att PV råkade stämma med SP tidigare berodde bara på att K=1 gjorde att PV stabiliserades vid samma numeriska värde som u, inte på att SP styrde något."
       }
     },
     {
@@ -74,10 +74,10 @@
       "type": "scenario",
       "ref": "p-step-self-regulating.json",
       "title": "P-reglering",
-      "objective": "Se att P-reglering stabiliserar men lämnar ett kvarstående fel.",
-      "instruction": "Kör 50 steg. PV stabiliserar sig — men når den SP? Notera skillnaden mot on/off.",
+      "objective": "Se att P-reglering stabiliserar processen men lämnar ett kvarstående reglerfel.",
+      "instruction": "Kör 50 steg och observera var PV stabiliserar sig. Jämför PV med SP och notera reglerfelet e = SP - PV.\n\nTeoriledtråd: För en P-regulator gäller u = Kp × e. Regulatorn behöver alltså ett reglerfel för att skapa en bestående utsignal. Om felet blir noll blir även P-regulatorns bidrag noll.",
       "checkpoint": {
-        "question": "Varför når PV inte exakt SP med bara P-reglering?",
+        "question": "Varför måste ett kvarstående reglerfel finnas för att P-regulatorn ska kunna hålla den utsignal som processen behöver?",
         "options": [
           "Kp är för litet — öka det",
           "P-regulatorn behöver ett fel (e≠0) för att hålla utsignalen — vid e=0 faller u till noll",
