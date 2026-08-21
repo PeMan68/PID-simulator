@@ -40,8 +40,27 @@ kursprogressionen i "Industriell Mät- och Reglerteknik", vecka 35–40, baserat
 omsorterad enligt kursprogressionen, version bumpad till v1.4.0. Nytt valideringsskript
 `tests/validate-content.mjs`. Se PED-003-sammanfattningen i PR/commit-historik för fullständig
 detaljlista över skapade/ändrade filer, föräldralösa filer och risker.
-**Status:** Implementerad och testad i feature-branchen. Väntar på merge till `develop`,
-därefter på gemensam release (ingen egen release branch skapas av detta uppdrag).
+**Status:** Mergad till `develop` och testpublicerad (PED-003-TESTDEPLOY, 2026-08-21). PO:s
+pedagogiska granskning pausad i väntan på PED-003A. Väntar på gemensam release.
+
+---
+
+### PED-003A — Pedagogiska korrigeringar och presentationsläge för lärstigar
+**Branch:** `feature/PED-003A-presentation-and-text-fixes`
+**Prioritet:** Hög
+**Beskrivning:**
+Uppföljningsuppdrag från PO/PM efter första pedagogiska granskningen av PED-003. Två delar:
+(1) ett enkelt presentationsläge ("Presentera steg") som visar aktuellt lärstigssteg i stor
+overlay för projektorbruk, (2) tre pedagogiska textkorrigeringar (öppen slinga-steget, P-steget,
+PI-stegets jämförelsefråga) enligt PO:s exakta kärnformuleringar.
+**Genomförande:**
+Ny overlay + knapp i `index.html`/`app.js` (`buildPresentHtml`, `openPresentMode`,
+`closePresentMode`) — rör aldrig simulatorns state, visar aldrig checkpointens
+svarsalternativ. Textkorrigeringar i `oppen-slinga-onoff-p.v1.json` (steg 2 och 5) och
+`pi-pid.v1.json` (steg 1 och 2). Ingen ändring av progression, scenario- eller
+teorireferenser.
+**Status:** Implementerad och testad i feature-branchen. Väntar på merge till `develop` och
+testpublicering (PED-003-TESTDEPLOY-mönstret), därefter på PO:s nästa pedagogiska granskning.
 
 ---
 
