@@ -26,6 +26,25 @@ Nuvarande tillstånd taggat `archive/python-app-v1.7.0` för framtida referens. 
 
 ---
 
+### PED-003 — Omstrukturera lärstigar enligt kursens progression
+**Branch:** `feature/PED-003-learning-path-progression`
+**Prioritet:** Hög
+**Beskrivning:**
+Uppdrag från PO/PM (Per Manholm / Microsoft Copilot) att omstrukturera lärstigarna enligt
+kursprogressionen i "Industriell Mät- och Reglerteknik", vecka 35–40, baserat på
+`docs/reports/PED-001_NULAGE.md` och `docs/planning/PED-002_PROGRESSIONSKARTLAGGNING.md`.
+**Genomförande:**
+`grundlaggande.v1` delad i `oppen-slinga-onoff-p.v1` (v35) och `pi-pid.v1` (v36).
+`windup.v1` delad i `windup-antiwindup.v1` (v36) och `integrerande-process-niva.v1` (v37).
+`stegsvar-identifiering.v1` utökad med steg 8 (`second-order-identification`). `catalog.json`
+omsorterad enligt kursprogressionen, version bumpad till v1.4.0. Nytt valideringsskript
+`tests/validate-content.mjs`. Se PED-003-sammanfattningen i PR/commit-historik för fullständig
+detaljlista över skapade/ändrade filer, föräldralösa filer och risker.
+**Status:** Implementerad och testad i feature-branchen. Väntar på merge till `develop`,
+därefter på gemensam release (ingen egen release branch skapas av detta uppdrag).
+
+---
+
 ### FEAT-022 — Direktverkande / Omvänt verkande (verkningsriktning)
 **Branch:** `feature/verkningsriktning`
 **Prioritet:** Medel
