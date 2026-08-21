@@ -15,14 +15,14 @@ main          ← produktion (GitHub Pages)
 ## 1. Registrera en feature
 
 1. Växla till `develop`
-2. Lägg till post i `todo.md` (använd mallen)
+2. Lägg till post i `docs/tracking/todo.md` (använd mallen)
 3. Commit: `"feat(todo): registrera FEAT-NNN <kortnamn>"`
 4. Skapa branch: `git checkout -b feature/<kortnamn>`
 
 ## 2. Registrera en bugg
 
 1. Växla till `develop`
-2. Lägg till post i `buglog.md` (använd mallen, tilldela nästa `ÅÅÅÅ-NNN`)
+2. Lägg till post i `docs/tracking/buglog.md` (använd mallen, tilldela nästa `ÅÅÅÅ-NNN`)
 3. Commit: `"bug(buglog): registrera 2026-NNN <kort beskrivning>"`
 4. Skapa branch: `git checkout -b bugfix/2026-NNN`
 
@@ -32,7 +32,7 @@ main          ← produktion (GitHub Pages)
 ## 3. Arbeta i feature/bugfix-branch
 
 - Committa regelbundet med meningsfulla meddelanden (se konvention nedan)
-- Uppdatera **endast din egen post** i `todo.md` eller `buglog.md` (ändra Status, lägg till noteringar)
+- Uppdatera **endast din egen post** i `docs/tracking/todo.md` eller `docs/tracking/buglog.md` (ändra Status, lägg till noteringar)
 - Commit för varje meningsfull uppdatering av dokumentet: `"feat(todo): FEAT-NNN pågår"`
 
 ## 4. Staging och testning
@@ -64,7 +64,7 @@ När alla tester är gröna:
    git checkout develop
    git merge test/<kortnamn>
    ```
-2. Flytta klara features från `todo.md` till `todo-done.md`, stängda buggar från `buglog.md` till `buglog-done.md`
+2. Flytta klara features från `docs/tracking/todo.md` till `docs/tracking/todo-done.md`, stängda buggar från `docs/tracking/buglog.md` till `docs/tracking/buglog-done.md`
 3. Radera alla involverade brancher (feature, bugfix, test):
    ```
    git branch -d feature/<kortnamn>
@@ -131,7 +131,7 @@ Datum:
 Om en kritisk bugg hittas i `main` gäller samma flöde — men branchar från `main`
 i stället för `develop` (develop kan ligga före och ska inte dras med).
 
-1. Registrera buggen i `buglog.md` på `develop` (spårbarhet)
+1. Registrera buggen i `docs/tracking/buglog.md` på `develop` (spårbarhet)
 2. Skapa hotfix-branch från `main`:
    ```
    git checkout main

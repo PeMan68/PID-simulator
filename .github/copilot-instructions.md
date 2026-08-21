@@ -4,7 +4,7 @@
 
 Detta repo innehåller **PID-simulator** – ett pedagogiskt webbverktyg (`apps/app/`, HTML/JS, hostas på GitHub Pages) för att demonstrera och simulera PID-reglering i processindustriella system.
 
-Repot innehöll tidigare även en Python/tkinter-app (`main.py`). Den är nedlagd (se BESLUT-002 i `todo.md`) — allt utvecklingsfokus ligger på webbappen. Slutversionen finns kvar i git-taggen `archive/python-app-v1.7.0`.
+Repot innehöll tidigare även en Python/tkinter-app (`main.py`). Den är nedlagd (se BESLUT-002 i `docs/tracking/todo.md`) — allt utvecklingsfokus ligger på webbappen. Slutversionen finns kvar i git-taggen `archive/python-app-v1.7.0`.
 
 Det finns också ett **webbläsarbaserat lärspel** (`reglerteknik-spel`, separat repo) byggt i ren HTML/JS utan beroenden. Båda apparna delar samma pedagogiska syfte och processmodell, och målet är att de på sikt ska kunna **samköras** – t.ex. att simulatorn kan exportera processparametrar eller scenarion som spelet kan ladda in, eller att de delar ett gemensamt format för FOPDT-processkonfiguration.
 
