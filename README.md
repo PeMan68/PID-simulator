@@ -57,9 +57,10 @@ docs/
   planning/         ← Backlog och iakttagelser (webbapp)
   releases/         ← CHANGELOG och release notes
   exercises/        ← Övningsmaterial och pedagogiska PDF:er
-  python-app/       ← Legacy Python/tkinter-app dokumentation
-main.py             ← Original Python/tkinter-app (referens)
 ```
+
+Python/tkinter-appen (`main.py`) är nedlagd, se BESLUT-002 i `todo.md`. Slutversionen
+finns kvar i git-taggen `archive/python-app-v1.7.0`.
 
 ## Gitflow
 
