@@ -388,6 +388,69 @@
     .facit-table td { padding: 3px 20px 3px 0; }
     .facit-table th { color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 20px 3px 0; border-bottom: 1px solid var(--line); }
 
+    /* ── Presentationsläge ── */
+    .present-btn { width: 100%; }
+    .present-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 26, 31, 0.82);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 4vh 4vw;
+    }
+    .present-overlay[hidden] { display: none; }
+    .present-modal {
+      background: #fff;
+      color: var(--ink);
+      width: 100%;
+      height: 100%;
+      max-width: 1400px;
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+      padding: 40px 56px 56px;
+      overflow-y: auto;
+      position: relative;
+    }
+    .present-close {
+      position: sticky;
+      top: 0;
+      float: right;
+      margin-bottom: 16px;
+      font-size: 16px;
+      padding: 10px 18px;
+      z-index: 1;
+    }
+    .present-body { clear: both; max-width: 1100px; margin: 0 auto; }
+    .present-step-num {
+      display: block;
+      font-size: 18px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .present-title { font-size: 40px; font-weight: 700; line-height: 1.2; margin-bottom: 20px; color: var(--ink); }
+    .present-objective { font-size: 24px; color: var(--accent-2); font-style: italic; margin-bottom: 26px; }
+    .present-text { font-size: 28px; line-height: 1.65; margin-bottom: 20px; }
+    .present-question {
+      font-size: 28px;
+      line-height: 1.6;
+      background: var(--panel-strong);
+      border-left: 6px solid var(--accent);
+      padding: 20px 24px;
+      border-radius: 8px;
+      margin-top: 28px;
+    }
+    @media (max-width: 900px) {
+      .present-modal { padding: 24px; }
+      .present-title { font-size: 28px; }
+      .present-objective { font-size: 18px; }
+      .present-text, .present-question { font-size: 19px; }
+      .present-step-num { font-size: 14px; }
+    }
+
     @media (max-width: 1200px) {
       .param-group { grid-template-columns: repeat(4, minmax(110px, 1fr)); }
     }
@@ -432,6 +495,7 @@
           <button id="prevStep">« Föreg.</button>
           <button id="nextStep">Nästa »</button>
         </div>
+        <button id="btnPresent" class="present-btn">🖥 Presentera steg</button>
         <div id="learnBody">Ingen lärstig laddad.</div>
       </div>
     </div>
@@ -641,6 +705,15 @@
   </aside>
 
 </div>
+
+<!-- ══ PRESENTATIONSLÄGE (overlay) ══ -->
+<div id="presentOverlay" class="present-overlay" hidden>
+  <div class="present-modal">
+    <button id="presentClose" class="present-close" title="Stäng (Esc)">✕ Stäng</button>
+    <div id="presentBody" class="present-body"></div>
+  </div>
+</div>
+
 <script src="./app.js"></script>
 </body>
 </html>

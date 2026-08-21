@@ -592,6 +592,7 @@ function updateNavButtons() {
   prev.style.display = testMode ? "none" : "";
   prev.disabled = !currentPath || currentPathStep <= 0;
   if (!testMode) next.disabled = false;
+  document.getElementById("btnPresent").disabled = !currentPath || currentPathStep < 0;
 }
 function loadPath(name) {
   currentPath = LEARNING_PATHS[name];
@@ -834,6 +835,47 @@ document.getElementById("loadPath").addEventListener("click", () => loadPath(lea
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
 window.addEventListener("resize", drawChart);
+
+// ── Presentationsläge ──
+// Visar samma innehåll som currentPath.steps[currentPathStep] i stor stil.
+// Rör aldrig simulatorns state (sim, currentScenario) — bara läsning av
+// redan laddat lärstigsinnehåll. Svarsalternativ renderas medvetet inte
+// här, oavsett Guidat/Test-läge, så att rätt svar aldrig kan avslöjas.
+function buildPresentHtml(step, stepIndex, totalSteps) {
+  let html = '<span class="present-step-num">Steg ' + (stepIndex + 1) + '/' + totalSteps + '</span>';
+  html += '<div class="present-title">' + step.title + '</div>';
+  if (step.objective) html += '<div class="present-objective">Mål: ' + step.objective + '</div>';
+  if (step.type === "theory") {
+    const th = THEORY[step.ref];
+    if (th) {
+      html += '<div class="present-text"><strong>' + th.summary + '</strong></div>';
+      html += '<div class="present-text">' + th.bullets.map(b => "• " + b).join("<br>") + '</div>';
+    }
+  } else if (step.instruction) {
+    html += '<div class="present-text">' + step.instruction.replace(/\n/g, "<br>") + '</div>';
+  }
+  if (step.checkpoint) {
+    html += '<div class="present-question">💭 Fundera: ' + step.checkpoint.question + '</div>';
+  }
+  return html;
+}
+function openPresentMode() {
+  if (!currentPath || currentPathStep < 0) return;
+  const step = currentPath.steps[currentPathStep];
+  document.getElementById("presentBody").innerHTML = buildPresentHtml(step, currentPathStep, currentPath.steps.length);
+  document.getElementById("presentOverlay").hidden = false;
+}
+function closePresentMode() {
+  document.getElementById("presentOverlay").hidden = true;
+}
+document.getElementById("btnPresent").addEventListener("click", openPresentMode);
+document.getElementById("presentClose").addEventListener("click", closePresentMode);
+document.getElementById("presentOverlay").addEventListener("click", (e) => {
+  if (e.target.id === "presentOverlay") closePresentMode();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !document.getElementById("presentOverlay").hidden) closePresentMode();
+});
 
 // ── Mätläge ──
 function enterMeasureMode() {
