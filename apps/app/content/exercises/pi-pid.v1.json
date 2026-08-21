@@ -1,0 +1,45 @@
+{
+  "id": "pi-pid.v1",
+  "version": "v1.0.0",
+  "title": "PI- och PID-reglering",
+  "description": "Del 2 av 2: fortsättning på \"Öppen slinga, On/Off och P-reglering\" — bygger vidare på samma process med PI- och PID-reglering.",
+  "difficulty": "intro",
+  "steps": [
+    {
+      "type": "scenario",
+      "ref": "pi-step-self-regulating.json",
+      "title": "PI-reglering",
+      "objective": "Integratorn eliminerar det stationära felet.",
+      "instruction": "Kör 60 steg. Jämför med P-steget — når PV nu SP? Tar det längre tid?",
+      "checkpoint": {
+        "question": "Vad gör I-delen (integratorn) som P-delen inte klarar?",
+        "options": [
+          "Reagerar snabbare på plötsliga störningar",
+          "Ackumulerar felet över tid och driver u tills e = 0",
+          "Minskar oscillationen",
+          "Begränsar utsignalens maximala värde"
+        ],
+        "correct": 1,
+        "explanation": "Integratorn summerar felet för varje steg. Även ett litet kvarstående fel byggs upp och driver till slut u tillräckligt högt för att hålla y = SP — stationärt fel = 0."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pid-step-self-regulating.json",
+      "title": "PID-reglering",
+      "objective": "D-delen dämpar svängningar — samma process som PI-steget för direkt jämförelse.",
+      "instruction": "Kör 40 steg. Samma process som PI (K=1.3, T=15) — jämför insvängningen. Är överskjutningen mindre med D-delen aktiv?",
+      "checkpoint": {
+        "question": "Vad är D-delens huvudsakliga funktion i PID-regulatorn?",
+        "options": [
+          "Eliminera stationärt fel",
+          "Reagera på felets förändringshastighet och bromsa svängningar",
+          "Öka regulatorförstärkningen automatiskt",
+          "Minska dötiden i processen"
+        ],
+        "correct": 1,
+        "explanation": "D-delen beräknar u_D = −Kp × Td × (dPV/dt). Den 'ser' att PV förändras snabbt och bromsar i förväg — som att lyfta foten från gasen innan en kurva."
+      }
+    }
+  ]
+}

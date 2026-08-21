@@ -1,0 +1,92 @@
+{
+  "id": "oppen-slinga-onoff-p.v1",
+  "version": "v1.0.0",
+  "title": "Öppen slinga, On/Off och P-reglering",
+  "description": "Del 1 av 2: från ingen reglering alls till proportionell reglering — se vad en regulator faktiskt tillför.",
+  "difficulty": "intro",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "pid-intro.v1.json",
+      "title": "Vad är reglering?",
+      "objective": "Förstå begreppen PV, SP, u och felet e.",
+      "checkpoint": {
+        "question": "Vad kallas skillnaden mellan börvärde (SP) och processvärde (PV)?",
+        "options": ["Utsignalen (u)", "Felet (e)", "Tidskonstanten (T)", "Dötiden (L)"],
+        "correct": 1,
+        "explanation": "Felet e = SP − PV är grunden i all reglering. Regulatorn försöker alltid driva e mot noll."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "manual-open-loop.json",
+      "title": "Öppen slinga (utan reglering)",
+      "objective": "Se hur processen beter sig utan någon regulator — bara en fast, manuell utsignal.",
+      "instruction": "Scenariot kör i manuellt läge med en fast utsignal u=50. Ingen regulator är aktiv — u ändras aldrig automatiskt.\n\nKör 40 steg och observera vart PV stabiliserar sig. Ändra sedan SP till valfritt värde och kör igen — märker du att PV inte påverkas av SP alls?",
+      "checkpoint": {
+        "question": "Varför påverkas inte PV av SP i det här scenariot?",
+        "options": [
+          "SP är satt till samma värde som PV",
+          "Ingen regulator är aktiv — utsignalen u är fast oavsett fel e",
+          "Processen är för långsam för att reagera",
+          "K-värdet är för lågt"
+        ],
+        "correct": 1,
+        "explanation": "Utan en regulator som jämför PV mot SP och justerar u finns ingen koppling mellan börvärde och utsignal. u förblir konstant (u=50) oavsett vad SP eller PV är — det är detta som kallas öppen slinga (open loop)."
+      }
+    },
+    {
+      "type": "theory",
+      "ref": "onoff-theory.v1.json",
+      "title": "On/Off-reglering — teori",
+      "objective": "Förstå hysteresens roll i den enklaste formen av reglering.",
+      "checkpoint": {
+        "question": "Vad används hysteres till i en on/off-regulator?",
+        "options": [
+          "Öka processförstärkningen K",
+          "Undvika för täta växlingar av utsignalen nära SP",
+          "Eliminera stationärt reglerfel",
+          "Öka regulatorns hastighet"
+        ],
+        "correct": 1,
+        "explanation": "Utan hysteres skulle regulatorn växla mellan på och av varje gång PV passerar SP i endera riktningen — extremt tätt och sliter på utrustningen. Hysteresen skapar ett band runt SP inom vilket ingen växling sker."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "onoff-basic.json",
+      "title": "On/Off-reglering",
+      "objective": "Observera oscillationen kring SP — on/off kan inte stanna exakt.",
+      "instruction": "Kör 40 steg. Notera att PV (blå) oscillerar runt SP (röd streckad). u (grön) växlar bara mellan 0 och 100.",
+      "checkpoint": {
+        "question": "Varför oscillerar PV ständigt runt SP med on/off-reglering?",
+        "options": [
+          "Kp är felaktigt inställt",
+          "On/off har ingen mellannivå — den kan bara välja fullt på eller helt av",
+          "Processen är för snabb",
+          "SP är satt för högt"
+        ],
+        "correct": 1,
+        "explanation": "On/off kan bara ge u_max eller u_min, aldrig ett mellanvärde. Processen overshoots alltid och regulatorn slår om igen — resultatet är kontinuerlig oscillation."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "p-step-self-regulating.json",
+      "title": "P-reglering",
+      "objective": "Se att P-reglering stabiliserar men lämnar ett kvarstående fel.",
+      "instruction": "Kör 50 steg. PV stabiliserar sig — men når den SP? Notera skillnaden mot on/off.",
+      "checkpoint": {
+        "question": "Varför når PV inte exakt SP med bara P-reglering?",
+        "options": [
+          "Kp är för litet — öka det",
+          "P-regulatorn behöver ett fel (e≠0) för att hålla utsignalen — vid e=0 faller u till noll",
+          "Processen är för trög",
+          "On/off hade fungerat bättre"
+        ],
+        "correct": 1,
+        "explanation": "u = Kp × e. Om e = 0 ger P-regulatorn u = 0, vilket inte räcker för att hålla processen på SP. Därför kvarstår alltid ett litet fel — det kallas stationärt fel."
+      }
+    }
+  ]
+}

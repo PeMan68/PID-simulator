@@ -2,7 +2,7 @@
   "id": "stegsvar-identifiering.v1",
   "version": "v1.0.0",
   "title": "Stegsvar och processidentifiering",
-  "description": "Identifiera processparametrarna K, T och L experimentellt med stegsvarsmetoden. Tangentmetoden och 63%-metoden.",
+  "description": "Identifiera processparametrarna K, T och L experimentellt med stegsvarsmetoden. Tangentmetoden och 63%-metoden — samt jämförelse mot en flerkapacitiv process (S-kurva).",
   "difficulty": "intermediate",
   "steps": [
     {
@@ -63,6 +63,24 @@
       "title": "Facit och Lambda-beräkning",
       "objective": "Kontrollera uppmätta värden och beräkna Lambda-regulatorparametrar.",
       "instruction": "Klicka 'Visa facit' i mätpanelen för att se processens faktiska K, T och L.\n\nJämför dina experimentella värden med de faktiska. Typiska frågor för labbrapport:\n• Hur nära kom du med respektive metod?\n• Vilken metod gav bäst resultat på denna process?\n\nMed dina identifierade K, T, L: beräkna Lambda-PI-parametrar (välj λ = T):\nKp = T / (K × (λ + L))\nTi = T\n\nLadda sedan scenariot 'lambda-pi-moderate' och se om din process beter sig som förväntat med dessa parametrar."
+    },
+    {
+      "type": "scenario",
+      "ref": "second-order-identification.json",
+      "title": "Jämför med en flerkapacitiv process (S-kurva)",
+      "objective": "Se hur tangentmetoden skiljer sig för en process med flera kaskadkopplade kapaciteter.",
+      "instruction": "Ladda scenariot 'Processidentifiering 2:a ordningen' (manuellt läge, u=30). Kör 60 steg för att stabilisera, ändra sedan 'Manuell u' till 60 och kör 150 steg till. Aktivera mätläget och rita tangentlinjen precis som tidigare.\n\nJämför med förra processen: var ligger inflexionspunkten (tangentens beröringspunkt) den här gången — i början av kurvan, eller mitt i uppgången? Vad säger det om hur många kapacitiva element (t.ex. tankar eller värmemassor i serie) processen har?",
+      "checkpoint": {
+        "question": "Var ligger inflexionspunkten för en flerkapacitiv process (S-kurva), jämfört med en enkapacitiv process (FOPDT)?",
+        "options": [
+          "Alltid vid samma tidpunkt oavsett processtyp",
+          "I starten av uppgången för S-kurvan, mitt i för FOPDT — tvärtom mot verkligheten",
+          "Mitt i uppgången för S-kurvan, i starten för FOPDT",
+          "Inflexionspunkten finns bara för FOPDT-processer"
+        ],
+        "correct": 2,
+        "explanation": "En enkapacitiv (FOPDT) process har maximal lutning direkt i starten av responsen. En flerkapacitiv process (S-kurva) har istället inflexionspunkten mitt i uppgången, där kurvan går från konkav till konvex — precis som teorin i det första steget beskrev."
+      }
     }
   ]
 }
