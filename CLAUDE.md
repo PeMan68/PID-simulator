@@ -18,7 +18,6 @@ Kortversion:
 | `buglog.md` | Öppna buggar (ÅÅÅÅ-NNN) |
 | `buglog-done.md` | Stängda buggar |
 | `docs/planning/WEB-IAKTTAGELSER.md` | Löpande iakttagelser — källa till features/buggar |
-| `docs/planning/BACKLOG.md` | Längre backlog och prioritering |
 
 ## Kodbasen
 
