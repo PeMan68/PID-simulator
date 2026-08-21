@@ -2,7 +2,7 @@ name: Deploy PID-simulator till GitHub Pages
 
 on:
   push:
-    branches: [main]          # Triggar bara vid push till main
+    branches: [develop]       # TILLFÄLLIGT under testperiod — byt till main inför release
     paths:
       - 'apps/app/**'         # Och bara om något i apps/app/ ändrades
 
