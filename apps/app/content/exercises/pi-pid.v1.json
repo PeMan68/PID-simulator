@@ -1,44 +1,62 @@
 {
   "id": "pi-pid.v1",
-  "version": "v1.0.0",
+  "version": "v2.0.0",
   "title": "PI- och PID-reglering",
-  "description": "Del 2 av 2: fortsättning på \"Öppen slinga, On/Off och P-reglering\" — bygger vidare på samma process med PI- och PID-reglering.",
+  "description": "Kontrollerad jämförelse mellan PI och PID på samma process: PI ger tydlig men kontrollerad översläng, PID dämpar den. Bygger vidare på P/PI-jämförelsen i föregående lärstig.",
   "difficulty": "intro",
   "steps": [
     {
       "type": "scenario",
-      "ref": "pi-step-self-regulating.json",
-      "title": "PI-reglering",
-      "objective": "Se hur integraldelen eliminerar det stationära reglerfelet.",
-      "instruction": "Kör 60 steg. Observera om PV når SP och notera ungefär hur många steg det tar innan PV har stabiliserats nära SP.\n\nJämför med den tidigare P-regleringen:\n• finns det fortfarande ett kvarstående reglerfel?\n• syns någon översläng?\n\nSpara din observation av insvängningstiden. I nästa steg ska PI-regleringens förlopp jämföras med PID-reglering.",
+      "ref": "pi-pid-comparison-pi.json",
+      "title": "PI-försök",
+      "objective": "Se PI-regulatorns förlopp med tydlig men kontrollerad översläng, som underlag för jämförelse med PID i nästa steg.",
+      "instruction": "Ladda scenariot 'PI/PID-jämförelse — PI-reglering'. Processen startar vid 0 och SP är 60 — det är själva stegsvaret vi studerar.\n\nKör minst 90 steg (parameterstudien visar att förloppet stabiliserar sig kring steg 60–65).\n\nNotera:\n• Maximalt PV (översläng)\n• Ungefär hur många steg det tar innan PV planar ut\n• Om det syns någon oscillation (fler än en topp/dal)\n• Om det kvarstående felet elimineras",
       "checkpoint": {
-        "question": "Vad gör I-delen (integratorn) som P-delen inte klarar?",
+        "question": "PI-regulatorn ger en tydlig översläng innan PV stabiliseras vid SP. Vad orsakar det?",
         "options": [
-          "Reagerar snabbare på plötsliga störningar",
-          "Ackumulerar felet över tid och driver u tills e = 0",
-          "Minskar oscillationen",
-          "Begränsar utsignalens maximala värde"
+          "Integraldelen fortsätter driva upp utsignalen så länge felet är positivt, så PV hinner skjuta förbi SP innan effekten vänder",
+          "Kp är för lågt inställt",
+          "Processens dötid L är noll",
+          "Anti-windup är avstängt"
         ],
-        "correct": 1,
-        "explanation": "Integratorn summerar felet för varje steg. Även ett litet kvarstående fel byggs upp och driver till slut u tillräckligt högt för att hålla y = SP — stationärt fel = 0."
+        "correct": 0,
+        "explanation": "Så länge e>0 fortsätter I-delen bidra till u. Kombinerat med processens dötid och tidskonstant hinner PV 'skjuta förbi' SP innan regulatorn hunnit reagera på att felet blivit negativt — det är grundorsaken till PI:s typiska översläng."
       }
     },
     {
       "type": "scenario",
-      "ref": "pid-step-self-regulating.json",
-      "title": "PID-reglering",
-      "objective": "D-delen dämpar svängningar — samma process som PI-steget för direkt jämförelse.",
-      "instruction": "Kör 40 steg. Samma process som i föregående steg (K=1.3, T=15) — nu med D-delen aktiv.\n\nJämför med din PI-observation från förra steget:\n• Är insvängningstiden ungefär densamma, kortare eller längre?\n• Är överskjutningen mindre?\n• Är förloppet mer eller mindre dämpat — svänger det mindre innan det stabiliseras?\n• Finns fortfarande ett kvarstående reglerfel?",
+      "ref": "pi-pid-comparison-pid.json",
+      "title": "PID-försök",
+      "objective": "Se hur D-delen dämpar samma förlopp — samma process, samma Kp och Ti, bara Td tillagt.",
+      "instruction": "Ladda scenariot 'PI/PID-jämförelse — PID-reglering' (samma Kp=1.5, Ti=10 som i PI-försöket, med Td=2 tillagt). Kör samma antal steg som i PI-försöket, minst 90.\n\nNotera samma sak som i förra steget: maximalt PV, ungefär hur många steg till PV planar ut, ev. oscillation, kvarstående fel.",
       "checkpoint": {
-        "question": "Vad är D-delens huvudsakliga funktion i PID-regulatorn?",
+        "question": "Vad gör D-delen som gör att översläng och insvängningstid minskar jämfört med PI?",
         "options": [
-          "Eliminera stationärt fel",
-          "Reagera på felets förändringshastighet och bromsa svängningar",
-          "Öka regulatorförstärkningen automatiskt",
-          "Minska dötiden i processen"
+          "D-delen ökar Kp automatiskt",
+          "D-delen reagerar på hur snabbt PV förändras och bromsar utsignalen innan PV hunnit skjuta för långt förbi SP",
+          "D-delen eliminerar dötiden i processen",
+          "D-delen stänger av integraldelen permanent"
         ],
         "correct": 1,
-        "explanation": "D-delen beräknar u_D = −Kp × Td × (dPV/dt). Den 'ser' att PV förändras snabbt och bromsar i förväg — som att lyfta foten från gasen innan en kurva."
+        "explanation": "u_D = −Kp × Td × (dPV/dt). När PV stiger snabbt mot SP bromsar D-delen utsignalen i förväg, innan I-delen hunnit driva upp den för mycket — det dämpar både översläng och insvängningstid."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pi-pid-comparison-pid.json",
+      "title": "Jämför PI och PID",
+      "objective": "Sammanfatta skillnaden mellan PI och PID utifrån dina egna observationer — inte som en generell regel.",
+      "instruction": "Jämför dina två försök (bläddra tillbaka i grafloggen eller kör om PI-scenariot om du vill se det igen):\n• Översläng — hur mycket mindre var den med PID?\n• Insvängningstid — hur mycket snabbare stabiliserades PID-förloppet?\n• Oscillation eller dämpning — vilket förlopp var mjukast?\n• Kvarstående fel — eliminerades det i båda fallen?\n\nResultatet du sett gäller för just den här processen och de här regulatorinställningarna — inte som ett bevis för att PID alltid är bättre än PI. En dåligt inställd D-del kan lika gärna göra en regulator känsligare för mätbrus och svårare att ställa in.",
+      "checkpoint": {
+        "question": "Stämmer det att PID-reglering alltid ger bättre resultat än PI-reglering?",
+        "options": [
+          "Ja, PID har alltid alla fördelar eftersom den har fler termer",
+          "Nej — resultatet beror på processen, hur regulatorn är inställd och vad försöket faktiskt visar; en dåligt inställd D-del kan försämra regleringen",
+          "Ja, men bara för integrerande processer",
+          "Nej, PID fungerar aldrig bättre än PI"
+        ],
+        "correct": 1,
+        "explanation": "PID gav ett bättre resultat i just det här verifierade försöket, med de här processparametrarna och de här Kp/Ti/Td-värdena. Det är inte en generell sanning — en illa vald Td kan till exempel göra regulatorn känsligare för brus utan att ge någon fördel."
       }
     }
   ]

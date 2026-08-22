@@ -1,0 +1,111 @@
+{
+  "id": "proportionalband-forstarkning.v1",
+  "version": "v1.0.0",
+  "title": "Proportionalband och regulatorförstärkning",
+  "description": "Sambandet mellan PB och Kp, hur P-regulatorns beteende närmar sig On/Off vid litet PB, samt en verifierad jämförelse mellan P- och PI-reglering.",
+  "difficulty": "intro",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "proportionalband.v1.json",
+      "title": "Vad är proportionalbandet?",
+      "objective": "Förstå sambandet PB = 100/Kp och vad det betyder fysikaliskt.",
+      "checkpoint": {
+        "question": "Vad händer med PB om Kp fördubblas?",
+        "options": ["PB fördubblas också", "PB halveras", "PB är opåverkat av Kp", "PB blir noll"],
+        "correct": 1,
+        "explanation": "PB = 100 / Kp — de är omvänt proportionella. Om Kp fördubblas halveras PB."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "p-pi-comparison-p.json",
+      "title": "Stort PB — försiktig regulator",
+      "objective": "Se hur ett stort proportionalband ger en försiktig, långsam regulator med stort kvarstående fel.",
+      "instruction": "Ändra Kp till 0.5 (PB blir då 200%). Aktivera kryssrutan 'Visa PB' i Regulator-gruppen — ett lila skuggat område och en streckad linje visas i grafen.\n\nKör minst 30 steg. PV planar ut väl innan dess.\n\nNotera var PV stabiliserar sig och var PB-linjen (u=100%-nivån) ligger i förhållande till SP.",
+      "checkpoint": {
+        "question": "Den streckade PB-linjen i grafen markerar var u = 100%. Vad betyder det?",
+        "options": [
+          "Vid det PV-värdet ger regulatorn exakt 0% utsignal",
+          "Vid det PV-värdet (SP − PB) ger regulatorn full utsignal — mellan den linjen och SP minskar u linjärt mot 0%",
+          "Det är gränsen för mätområdet",
+          "Det är alltid samma som SP"
+        ],
+        "correct": 1,
+        "explanation": "PB-bandet sträcker sig från SP (u=0%) ner till SP−PB (u=100%). Utanför bandet (PV under SP−PB) är u mättad vid 100%."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "p-pi-comparison-p.json",
+      "title": "Minska PB — kraftigare regulator",
+      "objective": "Observera hur regulatorns reaktion blir kraftigare när PB minskar (Kp ökar).",
+      "instruction": "Fortsätt med samma scenario. Minska PB stegvis genom att öka Kp: prova Kp=2, klicka 'Återställ system' och kör minst 30 steg, notera resultatet. Gör om med Kp=5.\n\nJämför de tre försöken (Kp=0.5, 2 och 5):\n• Hur mycket krymper PB-bandet i grafen?\n• Hur mycket minskar det kvarstående felet?\n• Vid Kp=5 börjar en liten översläng synas — PV skjuter förbi SP och rör sig tillbaka. Ser du den?",
+      "checkpoint": {
+        "question": "Vad händer när Kp ökas stegvis (PB minskar) på samma process?",
+        "options": [
+          "Regulatorn blir alltid stabilare ju högre Kp blir",
+          "Reaktionen blir kraftigare och snabbare — vid tillräckligt högt Kp börjar översläng, och till slut oscillation, uppstå",
+          "Reglerfelet ökar",
+          "Utsignalen slutar reagera på fel"
+        ],
+        "correct": 1,
+        "explanation": "Ökat Kp (minskat PB) gör regulatorn känsligare för fel — bra för att minska stationärt fel, men för högt Kp gör att processen 'skjuter över' målet och kan börja svänga."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "p-pi-comparison-p.json",
+      "title": "Mycket litet PB — jämför med On/Off",
+      "objective": "Se att P-reglering med mycket litet PB alltmer liknar On/Off-reglering.",
+      "instruction": "Öka Kp kraftigt till 20 (PB blir 5%). Klicka 'Återställ system' och kör minst 50 steg.\n\nUtsignalen växlar nu nästan direkt mellan 0% och 100% varje gång PV passerar SP-området — jämför med hur On/Off-scenariot betedde sig i lärstigen 'Öppen slinga, On/Off och P-reglering'.\n\nPB-bandet är nu så smalt att det knappt syns i grafen.",
+      "checkpoint": {
+        "question": "Varför liknar P-reglering med mycket litet PB alltmer On/Off-reglering?",
+        "options": [
+          "Eftersom Ti och Td automatiskt sätts till noll vid litet PB",
+          "Eftersom PB-bandet blir så smalt att u hoppar nästan direkt mellan 0% och 100% när PV passerar SP",
+          "Eftersom regulatorn byter läge automatiskt till On/Off",
+          "Eftersom processförstärkningen K minskar"
+        ],
+        "correct": 1,
+        "explanation": "Vid mycket litet PB krävs bara en försumbar avvikelse från SP för att u ska gå från 0% till 100%. Övergången blir så brant att den i praktiken ser ut som en ren på/av-växling, även om det matematiskt fortfarande är u = Kp × e."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "p-pi-comparison-p.json",
+      "title": "P-reglering — kvarstående fel (referens)",
+      "objective": "Etablera ett jämförelseresultat med P-reglering innan samma process regleras med PI.",
+      "instruction": "Ladda om scenariot så Kp återgår till 1.0 (klicka 'Ladda scenario' igen om du ändrade Kp i tidigare steg). Kör minst 30 steg — PV har då stabiliserat sig.\n\nNotera slutvärdet på PV och det kvarstående felet e = SP − PV. Du kommer jämföra med nästa steg.",
+      "checkpoint": {
+        "question": "P-regulatorn (Kp=1.0) stabiliserar PV en bit under SP=60. Vad är orsaken?",
+        "options": [
+          "Kp är fel inställt och bör ökas till exakt 60",
+          "P-regulatorn kräver ett reglerfel (e≠0) för att hålla en bestående utsignal — vid e=0 blir u=0",
+          "Processen är felkonfigurerad",
+          "SP är för högt satt för att processen någonsin ska kunna nå det"
+        ],
+        "correct": 1,
+        "explanation": "u = Kp × e. Ett stabilt läge kräver att u matchar vad processen behöver för att hålla PV konstant — men u=0 när e=0. Därför måste ett kvarstående fel finnas kvar så länge regulatorn bara har en P-del."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "p-pi-comparison-pi.json",
+      "title": "PI-reglering — felet elimineras",
+      "objective": "Jämföra med föregående steg: samma Kp, men med en I-del tillagd.",
+      "instruction": "Ladda scenariot 'P/PI-jämförelse — PI-reglering' (samma Kp=1.0 som i föregående steg, men nu med Ti=12 tillagt). Kör samma antal steg som i föregående steg, minst 30.\n\nJämför med ditt resultat från förra steget:\n• Vad hände med det kvarstående felet?\n• Är insvängningen fortfarande snabb, eller tar den något längre tid?",
+      "checkpoint": {
+        "question": "Samma process och samma Kp=1.0 som i föregående steg — men nu med Ti=12 tillagt. Vad förklarar att PV nu når SP?",
+        "options": [
+          "PI-regulatorn har ett högre Kp",
+          "Integraldelen fortsätter bidra till utsignalen så länge ett reglerfel finns kvar, ända tills felet är noll",
+          "PB är nu noll",
+          "Processen ändras automatiskt av regulatorläget"
+        ],
+        "correct": 1,
+        "explanation": "I-delen adderar Kp × ∫e/Ti till utsignalen. Så länge e≠0 fortsätter detta bidrag att växa och höjer u tills e=0 — det är detta som eliminerar det stationära fel som P ensam inte klarar av."
+      }
+    }
+  ]
+}
