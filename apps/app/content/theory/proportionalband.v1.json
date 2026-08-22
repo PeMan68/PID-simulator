@@ -4,7 +4,9 @@
   "title": "Proportionalband (PB) och regulatorförstärkning",
   "summary": "PB anger hur stort reglerfel som krävs för att P-regulatorn ska köra utsignalen genom hela sitt arbetsområde (0–100 %).",
   "bullets": [
+    "Simulatorn normaliserar PV, SP och utsignalen u till samma skala, 0–100 %. PB anges i procentenheter av den skalan — inte som en andel av det aktuella SP-värdet.",
     "PB = 100 / Kp (%) — appens exakta formel (samma som i fältet \"Visa PB\").",
+    "Exempel: PB = 20 % betyder att ett reglerfel på 20 procentenheter (t.ex. PV 20 enheter under SP) krävs för att utsignalen ska gå från 0 % till 100 %.",
     "Med bias=0 gäller: u = 0 % när PV = SP, och u = 100 % när PV = SP − PB.",
     "Stort PB (lågt Kp) → regulatorn behöver ett stort fel för full utsignal — försiktig, trög reaktion.",
     "Litet PB (högt Kp) → redan ett litet fel ger full utsignal — kraftig, snabb reaktion.",
