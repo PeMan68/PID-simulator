@@ -59,8 +59,38 @@ Ny overlay + knapp i `index.html`/`app.js` (`buildPresentHtml`, `openPresentMode
 svarsalternativ. Textkorrigeringar i `oppen-slinga-onoff-p.v1.json` (steg 2 och 5) och
 `pi-pid.v1.json` (steg 1 och 2). Ingen ändring av progression, scenario- eller
 teorireferenser.
-**Status:** Implementerad och testad i feature-branchen. Väntar på merge till `develop` och
-testpublicering (PED-003-TESTDEPLOY-mönstret), därefter på PO:s nästa pedagogiska granskning.
+**Status:** Mergad till `develop` och testpublicerad 2026-08-22. Granskning pausad av PO i
+väntan på PED-003B (identifierade hinder: PB/Kp-samband, öppen slinga-steget för litet PB,
+P/PI-jämförelsens tydlighet).
+
+---
+
+### PED-003B — Proportionalband, P/PI-jämförelse, pedagogiska PI/PID-scenarier och återanvändbar simuleringsanalys
+**Branch:** `feature/PED-003B-pb-and-pid-comparison`
+**Prioritet:** Hög
+**Beskrivning:**
+Uppföljningsuppdrag efter PO:s andra granskning. Bygger ett återanvändbart simulerings- och
+kalibreringsverktyg, använder det för en parameterstudie (inte visuell gissning), och
+omstrukturerar innehållet: ny lärstig om proportionalband/Kp, P/PI-jämförelsen flyttad dit,
+`pi-pid.v1` renodlad till en kontrollerad PI/PID-jämförelse.
+**Genomförande:**
+- `apps/app/sim-core.js` — simuleringskärnan extraherad ur `app.js` (oförändrad, ingen
+  duplicering) så både appen och analysverktyget delar exakt samma kod.
+- `tests/simulation/` — återanvändbart CLI + bibliotek (`runAnalysis`), 11 egna tester.
+  Se `tests/simulation/README.md`.
+- Fyra nya, parameterstudieverifierade scenarier: `p-pi-comparison-p/-pi`,
+  `pi-pid-comparison-pi/-pid`. Ny teorimodul `proportionalband.v1.json` (PB = 100/Kp, samma
+  notation som appens befintliga "Visa PB"-funktion).
+- Ny lärstig `proportionalband-forstarkning.v1` (6 steg), insatt mellan
+  `oppen-slinga-onoff-p.v1` och `pi-pid.v1` i `catalog.json`.
+- `pi-pid.v1` innehåller inte längre P-delen — renodlad PI/PID-jämförelse.
+- PB=0 kontrollerat och dokumenterat: PB är en ren visningsberäkning (`100/Kp`) i `app.js`,
+  inte en del av simuleringskärnan. Kp är UI-klampat till min 0.1, så PB=0 är aldrig
+  tekniskt nåbart — lärstigen beskriver gränsfallet (PB→0 vid högt Kp) istället för ett
+  påstått specialfall, i linje med uppdragets instruktion.
+- Fullständig parameterstudie, förkastade kandidater och framtida kalibreringskandidater i
+  `docs/reports/PED-003B_PARAMETERSTUDIE.md`.
+**Status:** Implementerad och testad i feature-branchen. Inga stoppvillkor triggades.
 
 ---
 
