@@ -22,7 +22,7 @@
       "ref": "manual-open-loop.json",
       "title": "Öppen slinga (utan reglering)",
       "objective": "Förstå skillnaden mellan en manuell utsignal och återkopplad reglering.",
-      "instruction": "Kör 40 steg och observera var PV stabiliserar sig. Regulatorn är inte aktiv. Utsignalen u är fast och påverkas inte av SP.\n\nI det här scenariot är processförstärkningen K = 1. Därför stabiliseras PV på ungefär samma värde som u. Om SP råkar ha samma värde betyder det inte att processen regleras mot SP.\n\nÄndra sedan SP och kör vidare utan att ändra u. Observera om PV påverkas.",
+      "instruction": "Kör 100 steg och observera var PV stabiliserar sig. Regulatorn är inte aktiv. Utsignalen u är fast och påverkas inte av SP.\n\nI det här scenariot är processförstärkningen K = 1. Därför stabiliseras PV på ungefär samma värde som u. Om SP råkar ha samma värde betyder det inte att processen regleras mot SP.\n\nÄndra sedan SP och kör vidare utan att ändra u. Observera om PV påverkas.",
       "checkpoint": {
         "question": "Vad visar försöket om sambandet mellan SP och u när regulatorn är i manuellt läge?",
         "options": [
