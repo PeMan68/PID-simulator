@@ -7,7 +7,7 @@
     "Termostat är ett klassiskt exempel — värmer på eller av beroende på temperatur.",
     "Hysteres används för att undvika för täta switchningar nära SP.",
     "Lägre hysteres → bättre precision men fler switchningar.",
-    "Höger hysteres → färre switchningar men mer svängning runt SP.",
+    "Högre hysteres → färre switchningar men mer svängning runt SP.",
     "On/Off ger alltid oscillation — det finns ingen mellannivå."
   ]
 }
