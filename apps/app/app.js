@@ -3,7 +3,7 @@
    Simulation kommer från sim-core.js (laddas som separat <script> före
    denna fil) — se apps/app/sim-core.js. Delad med tests/simulation/. */
 
-const APP_VERSION = "1.2";
+const APP_VERSION = "1.3";
 
 let SCENARIOS = {}, THEORY = {}, LEARNING_PATHS = {}, HELP_CONTENT = {};
 
