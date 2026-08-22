@@ -1,0 +1,25 @@
+{
+  "id": "p-pi-comparison-p",
+  "version": "v1.0.0",
+  "title": "P/PI-jämförelse — P-reglering",
+  "description": "Parameterstudieverifierad (PED-003B): tydligt kvarstående reglerfel utan översläng, för direkt jämförelse med p-pi-comparison-pi.",
+  "tags": ["p", "comparison", "self"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.5,
+    "T": 15.0,
+    "L": 1.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "p",
+    "kp": 1.0,
+    "ti": 0.0,
+    "td": 0.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 300, "setpoint": 60.0, "autopause": false }
+}
