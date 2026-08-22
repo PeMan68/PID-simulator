@@ -90,7 +90,37 @@ omstrukturerar innehållet: ny lärstig om proportionalband/Kp, P/PI-jämförels
   påstått specialfall, i linje med uppdragets instruktion.
 - Fullständig parameterstudie, förkastade kandidater och framtida kalibreringskandidater i
   `docs/reports/PED-003B_PARAMETERSTUDIE.md`.
-**Status:** Implementerad och testad i feature-branchen. Inga stoppvillkor triggades.
+**Status:** Mergad till `develop` och testpublicerad 2026-08-22. PO:s tredje granskning gav
+godkänt för presentationsläge och PI/PID-lärstig, med två avgränsade uppföljningskrav (PB:s
+referensområde, PID-hjälpens D-term) — se PED-003C.
+
+---
+
+### PED-003C — Förtydliga PB:s referensområde och PID-regulatorns D-del
+**Branch:** `feature/PED-003C-pb-and-pid-help`
+**Prioritet:** Hög
+**Beskrivning:**
+Uppföljningsuppdrag efter PO:s tredje granskning. Rent förtydligande — ingen ny funktion,
+inga parameter- eller kodändringar. Två avgränsade textkorrigeringar, båda föregångna av
+verifiering mot `apps/app/sim-core.js` och samtliga scenariofiler.
+**Genomförande:**
+- Verifierat: alla 23 scenarier använder `measurementRange` och `outputLimits` {0,100} — PV,
+  SP och u är genomgående normaliserade 0–100 % i praktiken (om än inte schema-tvingat).
+  `PB = 100/Kp` är dimensionsmässigt korrekt givet detta. `proportionalband.v1.json`
+  kompletterad med referensområdet och ett konkret exempel; PB=100/Kp-formeln var redan
+  korrekt och är oförändrad.
+- Verifierat i `sim-core.js`: D-termen beräknas som `-Kp×Td×(dPV/dt)` — derivata på PV, INTE
+  på reglerfelet (derivative-on-measurement, undviker derivatakick vid SP-ändringar).
+  `help.json`s `mode`-post kompletterad med denna exakta formel och en upplysning om att D
+  beräknas på PV. Den redan korrekta `td`-hjälptexten var oförändrad.
+- "Bäst prestanda men känslig för brus" ersatt med en neutral formulering i linje med
+  `pi-pid.v1`s pedagogiska poäng (PID inte alltid bättre än PI).
+- `APP_VERSION` 1.2→1.3 och content-version 1.5.0→1.5.1 (användarönskemål utöver PM:s
+  uppdrag, för att synas i UI:t).
+- Presentationsläge, scenarioparametrar, jämförelsescenarier och progression rörda inte.
+  Verifierat att scenarioresultat är byte-identiska med PED-003B.
+**Status:** Implementerad och testad i feature-branchen. Inga stoppvillkor triggades — ingen
+avvikelse hittades mellan specifikation, teori och kod.
 
 ---
 
