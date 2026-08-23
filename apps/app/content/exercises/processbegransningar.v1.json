@@ -44,27 +44,27 @@
     },
     {
       "type": "scenario",
-      "ref": "pi-step-self-regulating.json",
+      "ref": "pi-deadtime-comparison.json",
       "title": "Dötid och reglering — försök 1: utan dötid",
       "objective": "Skapa ett referensförlopp utan dötid, för att jämföra med samma regulator vid dötid i nästa steg.",
-      "instruction": "Ladda om scenariot. Kontrollera att L = 0 och SP = 60 (scenariots standardvärden). Kör minst 80 steg.\n\nAnvänd gärna 'Mät K/T/L' för att läsa av kurvans form.\n\nNotera:\n• Högsta PV\n• Om förloppet skjuter förbi SP (översläng) innan det stabiliseras\n• Ungefär vid vilket steg PV planar ut"
+      "instruction": "Ladda scenariot 'Dötidsjämförelse — PI-reglering'. Kontrollera att K=1.5, Kp=1.5, L=0 och SP=60 (scenariots standardvärden). Kör minst 80 steg.\n\nAnvänd gärna 'Mät K/T/L' för att läsa av kurvans form.\n\nNotera:\n• Högsta PV\n• Eventuell översläng\n• Ungefär vid vilket steg PV planar ut"
     },
     {
       "type": "scenario",
-      "ref": "pi-step-self-regulating.json",
+      "ref": "pi-deadtime-comparison.json",
       "title": "Dötid och reglering — försök 2: med dötid",
-      "objective": "Jämföra samma PI-regulator med och utan dötid.",
-      "instruction": "Ladda om scenariot till samma startläge. Ändra endast L från 0 till 5 — behåll samma Kp, Ti och SP=60. Kör samma antal steg som i försök 1, minst 80.\n\nNotera samma sak som i försök 1: högsta PV, ev. översläng, ungefär vid vilket steg PV planar ut.\n\nJämför de två försöken: skiljer sig förloppen åt, och i så fall hur?",
+      "objective": "Jämför samma PI-regulator med och utan dötid.",
+      "instruction": "Ladda om scenariot till samma startläge. Ändra endast L från 0 till 5. Behåll K=1.5, Kp=1.5, samma Ti och SP=60.\n\nKör samma antal steg som i försök 1, minst 80.\n\nAnvänd 'Mät K/T/L' för att läsa av och jämföra kurvorna.\n\nNotera:\n• Högsta PV\n• Översläng\n• Ungefär vid vilket steg PV planar ut\n\nJämför:\n• Ger försöket med L=5 större översläng?\n• Tar processen längre tid att stabilisera?\n• Syns oscillationer som inte fanns vid L=0?",
       "checkpoint": {
-        "question": "Varför försämrar dötid (L) regleringen, även när systemet fortfarande är stabilt?",
+        "question": "Varför ger L=5 en tydligt större översläng än L=0, trots att samma PI-regulator används i båda försöken?",
         "options": [
-          "Regulatorn agerar på gammal information — processen svarar L steg senare än regulatorn 'tror', vilket ökar överslängen",
-          "L minskar processförstärkningen K",
-          "L ökar tidskonstanten T",
-          "Dötid påverkar bara On/Off-reglering"
+          "Regulatorn ser effekten av sin utsignal L steg försenat och fortsätter öka u baserat på ett fel som redan är på väg att försvinna — när effekten väl syns i PV har regulatorn redan gett för mycket",
+          "Dötiden minskar processförstärkningen K",
+          "Dötiden ökar tidskonstanten T",
+          "Dötiden gör att integratorn stängs av"
         ],
         "correct": 0,
-        "explanation": "Under dötiden ser regulatorn ingen effekt av sin egen utsignal. Den fortsätter reglera utifrån ett fel som redan är på väg att ändras, vilket gör att utsignalen ligger kvar högre än nödvändigt en stund för länge. Jämfört med L=0, där förloppet är helt monotont utan någon topp, ger L=5 en mätbar (om än måttlig) översläng."
+        "explanation": "Under dötiden är PV opåverkad av vad regulatorn precis gjort. Regulatorn fortsätter därför reglera mot ett fel som redan håller på att minska, och hinner driva upp u för mycket innan den ser resultatet. Det är detta 'överarbetade' bidrag som ger den tydligt större överslängen vid L=5 jämfört med det nästan överslängsfria förloppet vid L=0."
       }
     }
   ]

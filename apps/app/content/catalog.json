@@ -1,5 +1,5 @@
 {
-  "version": "v1.5.2",
+  "version": "v1.5.3",
   "help": "help.json",
   "scenarios": [
     { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json" },
@@ -24,7 +24,8 @@
     { "id": "p-pi-comparison-p",           "file": "scenarios/p-pi-comparison-p.json" },
     { "id": "p-pi-comparison-pi",          "file": "scenarios/p-pi-comparison-pi.json" },
     { "id": "pi-pid-comparison-pi",        "file": "scenarios/pi-pid-comparison-pi.json" },
-    { "id": "pi-pid-comparison-pid",       "file": "scenarios/pi-pid-comparison-pid.json" }
+    { "id": "pi-pid-comparison-pid",       "file": "scenarios/pi-pid-comparison-pid.json" },
+    { "id": "pi-deadtime-comparison",      "file": "scenarios/pi-deadtime-comparison.json" }
   ],
   "theory": [
     { "id": "pid-intro",      "file": "theory/pid-intro.v1.json" },
