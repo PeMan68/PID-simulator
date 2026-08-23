@@ -103,7 +103,7 @@ function drawChart() {
   
   // Hystersgränser för on/off
   if (sim.scenario.controller.mode === "onoff") {
-    const sp_current = sp[sp.length - 1] ?? sim.scenario.runtime.setpoint;
+    const sp_current = sim.scenario.runtime.setpoint;
     const hysteresis = sim.scenario.controller.hysteresis || { lower: 2, upper: 2 };
     const lowerBound = yScaleTop(sp_current - hysteresis.lower);
     const upperBound = yScaleTop(sp_current + hysteresis.upper);
@@ -115,7 +115,7 @@ function drawChart() {
 
   // Proportionalband: u=0% vid SP, u=100% vid SP-PB (bias=0)
   if (fields.showPB.checked && ["p","pi","pid"].includes(sim.scenario.controller.mode)) {
-    const sp_current = sp[sp.length - 1] ?? sim.scenario.runtime.setpoint;
+    const sp_current = sim.scenario.runtime.setpoint;
     const kp = sim.scenario.controller.kp || 1;
     const pb = 100 / kp;
     const pbLowerPV = Math.max(yMin, sp_current - pb); // klippt till grafens nedre gräns
@@ -681,6 +681,12 @@ function toggleParamGroup(id) {
 document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
 fields.pulseDuration.addEventListener("input", () => { if (Number(fields.pulseDuration.value) < 0) fields.pulseDuration.value = 0; });
 fields.showPB.addEventListener("change", drawChart);
+// Kp, SP och hysteresgränserna ritas i grafen (PB-band, SP-linje,
+// hysteresband) redan innan ett steg körts — synka och rita om direkt
+// vid ändring istället för att vänta på nästa Stega/Kör-klick.
+[fields.kp, fields.sp, fields.hysteresLower, fields.hysteresUpper].forEach(f => {
+  f.addEventListener("change", () => { syncParamsFromUI(); drawChart(); });
+});
 document.getElementById("mode").addEventListener("change", () => {
   const newMode = fields.mode.value;
   const bumplessOn = document.getElementById("bumpless").checked;
