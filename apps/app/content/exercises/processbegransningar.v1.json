@@ -1,8 +1,8 @@
 {
   "id": "processbegransningar-v1",
-  "version": "v1.0.0",
+  "version": "v2.0.0",
   "title": "Processens begränsningar",
-  "description": "Vad K, T och L egentligen betyder för en självreglerande process — och varför regulatorn inte alltid kan nå SP.",
+  "description": "Vad K, T och L egentligen betyder för en självreglerande process — och varför regulatorn inte alltid kan nå SP. Två jämförelseförsök: processförstärkning och dötid.",
   "difficulty": "intro",
   "steps": [
     {
@@ -14,43 +14,57 @@
         "question": "Vad är det maximalt uppnåeliga PV för en process med K=0.5, normalValue=0 och u_max=100?",
         "options": ["100", "50", "0.5", "Beror på regulatorns Kp"],
         "correct": 1,
-        "explanation": "y_max = normalValue + K × u_max = 0 + 0.5 × 100 = 50. Ingen regulator kan ta PV förbi detta tak — det är en ren processbegränsning."
+        "explanation": "PV_max = normalValue + K × u_max = 0 + 0.5 × 100 = 50. Ingen regulator kan ta PV förbi detta tak — det är en ren processbegränsning."
       }
     },
     {
       "type": "scenario",
       "ref": "pi-step-self-regulating.json",
-      "title": "Svag process (självreglerande)",
-      "objective": "Ändra K till 0.5 och SP till 80 — se att y fastnar vid ~50 trots PI-reglering.",
-      "instruction": "PI-reglering laddad (eliminerar stationärt fel). Ändå fastnar y:\n1. Ändra K till 0.5\n2. Ändra SP till 80\n3. Kör 50 steg\n\ny_max = K × u_max = 0.5 × 100 = 50\nEftersom SP=80 > y_max=50 kan ingen regulator nå SP.",
+      "title": "Svag process — försök 1: referens",
+      "objective": "Skapa ett referensförlopp med den ursprungliga processförstärkningen, för att jämföra med en svagare process i nästa steg.",
+      "instruction": "Ladda scenariot. Ändra SP till 80. Kör minst 80 steg.\n\nAnvänd gärna knappen 'Mät K/T/L' och håll musen över grafen för att läsa av PV vid olika tidpunkter i crosshair-tooltipen.\n\nNotera:\n• SP (80)\n• Slutligt PV\n• Högsta u\n• Om PV når SP\n• Ungefär vid vilket steg PV planar ut"
+    },
+    {
+      "type": "scenario",
+      "ref": "pi-step-self-regulating.json",
+      "title": "Svag process — försök 2: svagare process",
+      "objective": "Se hur processförstärkningen K begränsar vilket PV processen kan nå, även när regulatorn ger maximal utsignal.",
+      "instruction": "Ladda om scenariot (samma startläge som försök 1). Ändra K till 0.5. Ändra SP till 80 igen. Kör samma antal steg som i försök 1, minst 80.\n\nNotera samma sak som i försök 1: slutligt PV, högsta u, om PV når SP, ungefär vid vilket steg PV planar ut.\n\nPV_max = K × u_max = 0.5 × 100 = 50\nEftersom SP = 80 är större än PV_max = 50 kan ingen regulator få processen att nå SP — regulatorn kan inte kompensera för en process som saknar tillräcklig kapacitet.",
       "checkpoint": {
-        "question": "PV fastnar på ~50 trots att u = 100 %. Vad är förklaringen?",
+        "question": "Varför fastnar PV nära 50 trots att u ligger på 100 %, medan försök 1 (K=1.3) nådde nära SP=80?",
         "options": [
+          "Processförstärkningen K är för låg — processen är fysikaliskt för svag att nå SP, oavsett regulatorinställning",
           "Ti behöver sänkas för att hjälpa integratorn",
-          "Processförstärkning K är för låg — processen är fysikaliskt för svag att nå SP",
           "Kp behöver ökas kraftigt",
-          "Dötiden L blockerar processen"
+          "Skillnaden beror på att försök 2 kördes fler steg"
         ],
-        "correct": 1,
-        "explanation": "Med K=0.5 är y_max = 50. Det spelar ingen roll hur regulatorn är inställd — processen kan inte producera mer. Lösningen i verkligheten: större ventil, starkare pump, eller sänk SP."
+        "correct": 0,
+        "explanation": "Med K=0.5 är PV_max = K × u_max = 50 — processens fysikaliska tak. Det spelar ingen roll hur regulatorn är inställd; den kan bara påverka utsignalen, inte processens förmåga att omvandla den till PV. I försök 1 (K=1.3) är PV_max = 130, långt över SP=80, så processen hade tillräcklig kapacitet."
       }
     },
     {
       "type": "scenario",
       "ref": "pi-step-self-regulating.json",
-      "title": "Dötid och reglering",
-      "objective": "Sätt L=5 och observera hur PI-regleringen destabiliseras av dötiden.",
-      "instruction": "PI-reglering laddad (K=1.3, L=0). Lägg till dötid:\n1. Ändra L till 5\n2. Kör 80 steg\n\nVad händer med insvängningen jämfört med L=0?",
+      "title": "Dötid och reglering — försök 1: utan dötid",
+      "objective": "Skapa ett referensförlopp utan dötid, för att jämföra med samma regulator vid dötid i nästa steg.",
+      "instruction": "Ladda om scenariot. Kontrollera att L = 0 och SP = 60 (scenariots standardvärden). Kör minst 80 steg.\n\nAnvänd gärna 'Mät K/T/L' för att läsa av kurvans form.\n\nNotera:\n• Högsta PV\n• Om förloppet skjuter förbi SP (översläng) innan det stabiliseras\n• Ungefär vid vilket steg PV planar ut"
+    },
+    {
+      "type": "scenario",
+      "ref": "pi-step-self-regulating.json",
+      "title": "Dötid och reglering — försök 2: med dötid",
+      "objective": "Jämföra samma PI-regulator med och utan dötid.",
+      "instruction": "Ladda om scenariot till samma startläge. Ändra endast L från 0 till 5 — behåll samma Kp, Ti och SP=60. Kör samma antal steg som i försök 1, minst 80.\n\nNotera samma sak som i försök 1: högsta PV, ev. översläng, ungefär vid vilket steg PV planar ut.\n\nJämför de två försöken: skiljer sig förloppen åt, och i så fall hur?",
       "checkpoint": {
-        "question": "Varför försämrar dötid (L) regleringen?",
+        "question": "Varför försämrar dötid (L) regleringen, även när systemet fortfarande är stabilt?",
         "options": [
+          "Regulatorn agerar på gammal information — processen svarar L steg senare än regulatorn 'tror', vilket ökar överslängen",
           "L minskar processförstärkningen K",
-          "Regulatorn agerar på gammal information — processen svarar L steg senare än väntat",
           "L ökar tidskonstanten T",
-          "Dötid påverkar bara on/off-reglering"
+          "Dötid påverkar bara On/Off-reglering"
         ],
-        "correct": 1,
-        "explanation": "Under dötiden ser regulatorn ingen effekt av sin utsignal. Den tror att processen inte reagerar och ökar u ytterligare — när svarstiden väl kommer har regulatorn överstimulerat, vilket ger oscillation."
+        "correct": 0,
+        "explanation": "Under dötiden ser regulatorn ingen effekt av sin egen utsignal. Den fortsätter reglera utifrån ett fel som redan är på väg att ändras, vilket gör att utsignalen ligger kvar högre än nödvändigt en stund för länge. Jämfört med L=0, där förloppet är helt monotont utan någon topp, ger L=5 en mätbar (om än måttlig) översläng."
       }
     }
   ]
