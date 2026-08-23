@@ -161,9 +161,41 @@ användarsynligt innehåll (tidigare "y"), (3) förtydliga jämförelseförsöke
   leveransrapport.
 - Kollationsrapport för samtliga 12 checkpoints i de tre lärstigarna:
   `docs/reports/PED-003D_TESTFRAGOR.md`.
-**Status:** Implementerad och testad i feature-branchen. Inga formella stoppvillkor
-utlöstes, men ett verifieringsfynd (e vs SP−PV under transienter) redovisas tydligt
-för PO/PM — se ovan och leveransrapporten.
+**Status:** Mergad till `develop` och testpublicerad 2026-08-23. Inga formella
+stoppvillkor utlöstes, men ett verifieringsfynd (e vs SP−PV under transienter)
+redovisades tydligt för PO/PM.
+
+---
+
+### PED-003E — Tydligare dötidsjämförelse och förenklad statusrad
+**Branch:** `feature/PED-003E-deadtime-and-status-format`
+**Prioritet:** Hög
+**Beskrivning:**
+Uppföljningsuppdrag efter PO:s granskning av dötidsförsöket och statusraden. Två
+avgränsade fixar: starkare dötidskontrast (PO:s hypotes K=1,5/Kp=1,5 verifierad) och
+statusraden begränsad till en decimal.
+**Genomförande:**
+- PO:s hypotes verifierad med `tests/simulation/` över Ti=10–30: K=1.5, Kp=1.5 ger
+  genomgående L=0 → obetydlig översläng, L=5 → tydlig översläng. Vald konfiguration
+  (Ti=20, 80 steg): L=0 ger 0.3 % översläng (i praktiken monotont), L=5 ger 9.4 % —
+  en klar förbättring mot PED-003D:s ursprungliga ~0 % / ~1 %.
+- `pi-step-self-regulating.json` (K=1.3) används fortsatt av lärstigens egna "Svag
+  process"-steg — kunde inte ändras utan att påverka den redan godkända
+  jämförelsen. Nytt dedikerat scenario `pi-deadtime-comparison.json` skapat istället
+  (K=1.5, Kp=1.5, Ti=20, L=0 startvärde, SP=60), registrerat i `catalog.json`
+  (content-version v1.5.2→v1.5.3).
+- `processbegransningar.v1`s två dötidssteg omskrivna för det nya scenariot och den
+  tydligare skillnaden. Checkpointen i steg 5 omskriven i linje med det starkare
+  resultatet — se tillägg i `docs/reports/PED-003D_TESTFRAGOR.md`.
+- Statusraden: ny `fmt1()`-hjälpfunktion, en decimal för t/SP/PV/e/u/P/I/D (steg
+  fortsatt heltal), `-0.0` särhanterat till `0.0`. Ren visningsformatering —
+  verifierat att underliggande värden, historik och analysverktygets precision är
+  oförändrade (regressionstest: pi-pid-comparison-pid ger samma tal som innan, nu
+  bara med färre decimaler).
+- Det kända e/SP−PV-tidsförhållandet från PED-003D är oförändrat och odolt — kod-
+  kommentaren utökad för att förtydliga att decimalavrundningen inte döljer det.
+**Status:** Implementerad och testad i feature-branchen. Inga stoppvillkor
+triggades — K=1.5/Kp=1.5 gav precis den skillnad PO förutspådde.
 
 ---
 
