@@ -199,6 +199,38 @@ triggades — K=1.5/Kp=1.5 gav precis den skillnad PO förutspådde.
 
 ---
 
+### PROD-001A — Publiceringsunderlag för första undervisningsreleasen
+**Branch:** `feature/PROD-001A-publication-inventory`
+**Prioritet:** Hög
+**Beskrivning:**
+Uppdrag från PO/PM att ta fram ett fullständigt, rent analytiskt beslutsunderlag inför
+publiceringsbeslut för lärstigar, scenarier, teorimoduler och funktioner — ingen
+implementation.
+**Genomförande:**
+`docs/reports/PROD-001A_PUBLICERINGSUNDERLAG.md` (11 avsnitt) och tvillingfilen
+`PROD-001A_PUBLICERINGSUNDERLAG.json` (55 poster). Samtliga `poPmDecision` står som
+"Ej beslutat" — CC:s klassificeringar är rekommendationer, inte beslut.
+**Status:** Mergad till `develop`. Väntar på PO/PM:s genomgång av beslutslistan
+(rapportens avsnitt 10) innan PROD-001B kan formuleras.
+
+---
+
+### HANDOFF-001 — Överlämning till nästa CC-session (datorbyte)
+**Branch:** `feature/HANDOFF-001-cross-pc-handover`
+**Prioritet:** Hög
+**Beskrivning:**
+Rent dokumentationsuppdrag inför att PO fortsätter projektet på en annan dator. CC:s
+lokala sessionskontext följer inte med — en versionshanterad överlämningsfil skapas som
+primär ingång för nästa CC-session.
+**Genomförande:**
+`docs/handoffs/HANDOFF_2026-08-23.md` — roller, Gitflow, git-status, sammanfattning av
+PED-001–PED-003E och PROD-001A, redan fattade principbeslut, ej fattade beslut, kända
+tekniska förhållanden, obligatorisk läsordning och startkontroll för nästa session.
+**Status:** Mergad till `develop`. Nästa CC-session ska vänta på ett konkret uppdrag
+från PO/PM — inget arbete påbörjas automatiskt.
+
+---
+
 ### FEAT-022 — Direktverkande / Omvänt verkande (verkningsriktning)
 **Branch:** `feature/verkningsriktning`
 **Prioritet:** Medel
