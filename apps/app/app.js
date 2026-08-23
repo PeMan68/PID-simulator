@@ -281,11 +281,18 @@ function drawChart() {
     }
   }
 }
+// Statusraden visar en decimal. Ren visningsformatering — rör aldrig det
+// underliggande talet (historik, analysverktyg och scenariofiler är
+// opåverkade). fmt1 undviker "-0.0" för värden som avrundar till noll.
+function fmt1(v) {
+  const s = v.toFixed(1);
+  return s === "-0.0" ? "0.0" : s;
+}
 function updateStatus() {
   if (!sim) { statusEl.textContent = "Status: ej laddad"; return; }
   const s = sim.getState();
   const pidInfo = (s.pTerm !== 0 || s.iTerm !== 0 || s.dTerm !== 0)
-    ? " | P=" + s.pTerm.toFixed(2) + ", I=" + s.iTerm.toFixed(2) + ", D=" + s.dTerm.toFixed(2)
+    ? " | P=" + fmt1(s.pTerm) + ", I=" + fmt1(s.iTerm) + ", D=" + fmt1(s.dTerm)
     : "";
   let warning = "";
   if (currentScenario) {
@@ -294,14 +301,24 @@ function updateStatus() {
     if (isSR) {
       const yPhysMax = proc.normalValue + proc.K * currentScenario.controller.outputLimits.max;
       if (currentScenario.runtime.setpoint > yPhysMax + 0.01)
-        warning = "  ⚠ SP ouppnåeligt (max≈" + yPhysMax.toFixed(1) + ")";
+        warning = "  ⚠ SP ouppnåeligt (max≈" + fmt1(yPhysMax) + ")";
     }
   }
   // SP hämtas från samma historikpost som PV/e (index sist i sim.history.sp)
   // istället för sim.scenario.runtime.setpoint direkt, så att SP-PV=e alltid
   // stämmer exakt även om SP-fältet ändrats sedan senaste körda steg.
+  //
+  // KÄNT FÖRHÅLLANDE (PED-003D, oförändrat i PED-003E): e beräknas i
+  // PIDController.step() mot PV FÖRE processens uppdatering det steget,
+  // men skrivs till historiken tillsammans med PV EFTER uppdateringen.
+  // Under aktiva transienter kan alltså e ≠ SP-PV skilja sig något (störst
+  // tidigt i förloppet, exakt noll vid sann steady-state) — se
+  // docs/tracking/todo.md för fullständig analys. Avrundningen till en
+  // decimal nedan är ren visningsformatering och varken döljer eller
+  // korrigerar denna tidsskillnad; simuleringskärnans beräkning av e är
+  // oförändrad.
   const spAtStep = sim.history.sp[sim.history.sp.length - 1] ?? sim.scenario.runtime.setpoint;
-  statusEl.textContent = "Status: steg=" + s.step + ", t=" + s.t.toFixed(2) + ", SP=" + spAtStep.toFixed(3) + ", PV=" + s.y.toFixed(3) + ", e=" + s.e.toFixed(3) + ", u=" + s.u.toFixed(3) + pidInfo + warning;
+  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning;
 }
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;
