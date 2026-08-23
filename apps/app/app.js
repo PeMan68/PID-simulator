@@ -297,7 +297,11 @@ function updateStatus() {
         warning = "  ⚠ SP ouppnåeligt (max≈" + yPhysMax.toFixed(1) + ")";
     }
   }
-  statusEl.textContent = "Status: steg=" + s.step + ", t=" + s.t.toFixed(2) + ", y=" + s.y.toFixed(3) + ", u=" + s.u.toFixed(3) + ", e=" + s.e.toFixed(3) + pidInfo + warning;
+  // SP hämtas från samma historikpost som PV/e (index sist i sim.history.sp)
+  // istället för sim.scenario.runtime.setpoint direkt, så att SP-PV=e alltid
+  // stämmer exakt även om SP-fältet ändrats sedan senaste körda steg.
+  const spAtStep = sim.history.sp[sim.history.sp.length - 1] ?? sim.scenario.runtime.setpoint;
+  statusEl.textContent = "Status: steg=" + s.step + ", t=" + s.t.toFixed(2) + ", SP=" + spAtStep.toFixed(3) + ", PV=" + s.y.toFixed(3) + ", e=" + s.e.toFixed(3) + ", u=" + s.u.toFixed(3) + pidInfo + warning;
 }
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;

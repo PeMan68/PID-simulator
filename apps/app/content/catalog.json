@@ -1,5 +1,5 @@
 {
-  "version": "v1.5.1",
+  "version": "v1.5.2",
   "help": "help.json",
   "scenarios": [
     { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json" },
