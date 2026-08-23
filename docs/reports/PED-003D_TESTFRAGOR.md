@@ -71,3 +71,32 @@ borttaget). 2 helt nya checkpoints skapade som en direkt följd av att
 processbegränsningar-lärstigens två jämförelseförsök delades i tydliga
 försök 1/försök 2-par. Inga frågor identifierades som kräver information från
 parameterstudierapporten, avslöjar svaret direkt, eller bryter mot kriterium 9/10.
+
+---
+
+## Tillägg — PED-003E (2026-08-23)
+
+Dötidsförsökets grundscenario ändrat till K=1.5, Kp=1.5 (dedikerat scenario
+`pi-deadtime-comparison.json`, se `todo.md`). Berör checkpointen i
+"Dötid och reglering — försök 2: med dötid" (processbegransningar.v1, steg 5).
+
+| Kontroll (uppdragets 11 punkter) | Resultat |
+|---|---|
+| 1. Stämmer med K=1.5 | ✓ Frågan nämner inte K explicit men bygger på scenariot där K=1.5 |
+| 2. Stämmer med Kp=1.5 | ✓ Samma |
+| 3. Jämför L=0 med L=5 | ✓ Frågan frågar uttryckligen varför L=5 ger större översläng än L=0 |
+| 4. Stämmer med simuleringsresultaten | ✓ Verifierat: 0.3 % (L=0) vs 9.4 % (L=5) — "tydligt större" är korrekt |
+| 5. Beskriver större översläng endast om det faktiskt syns | ✓ Ja, verifierat — se ovan |
+| 6. Påstår inte att dötid alltid gör systemet instabilt | ✓ Explanation talar om "överarbetat bidrag", inte instabilitet; systemet stabiliseras i båda fallen |
+| 7. Kan besvaras från försöken | ✓ Bygger på att jämföra de två körda förloppen |
+| 8. Entydigt korrekt svar | ✓ Alternativ 0 (mät-eftersläpning) är den enda tekniskt korrekta förklaringen |
+| 9. Använder PV, inte y | ✓ |
+| 10. Hänvisar inte till parameterstudien eller interna tester | ✓ |
+| 11. Avslöjar inte rätt svar i presentationsläget | ✓ Arkitekturellt garanterat (oförändrat sedan PED-003A), verifierat i webbläsartest |
+
+**Ändring gjord:** frågetext och samtliga fyra svarsalternativ omskrivna för att
+matcha den nu mycket tydligare skillnaden (tidigare "varför försämrar dötid
+regleringen, även när systemet fortfarande är stabilt?" → nu "varför ger L=5 en
+tydligt större översläng än L=0?"). Korrekt svar (index 0) och explanation
+omskrivna i linje med det nya, starkare resultatet. Övriga 11 checkpoints i de
+tre lärstigarna oförändrade av PED-003E (utanför uppdragets scope).
