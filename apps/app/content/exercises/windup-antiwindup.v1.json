@@ -27,14 +27,14 @@
       "ref": "pi-windup-demo.json",
       "title": "Observera windup utan anti-windup",
       "objective": "Se hur integratorn vider upp under lång mättning och ger kraftig överskjutning.",
-      "instruction": "Anti-windup-rutan är AVCHECKAT (inläst från scenario). Kör 150 steg. Notera:\n• u (grön) mättas omedelbart vid 100%\n• y (blå) stiger sakta mot SP=80\n• När y passerar SP=80 är u fortfarande hög → kraftig överskjutning\n\nTitta på statusraden: I-bidraget (I=...) är enormt trots att y redan passerat SP.",
+      "instruction": "Anti-windup-rutan är AVCHECKAT (inläst från scenario). Kör 150 steg. Notera:\n• u (grön) mättas omedelbart vid 100%\n• PV (blå) stiger sakta mot SP=80\n• När PV passerar SP=80 är u fortfarande hög → kraftig överskjutning\n\nTitta på statusraden: I-bidraget (I=...) är enormt trots att PV redan passerat SP.",
       "checkpoint": {
         "question": "Vad händer med I-bidraget (I-termen) när u är mättad vid 100% utan anti-windup?",
         "options": [
           "I-termen fryser och väntar tills u sjunker under 100%",
           "I-termen fortsätter växa varje steg, även om u inte kan öka mer",
           "I-termen nollställs automatiskt vid mättning",
-          "I-termen minskar eftersom felet minskar när y stiger"
+          "I-termen minskar eftersom felet minskar när PV stiger"
         ],
         "correct": 1,
         "explanation": "Utan anti-windup ackumuleras integralen oavsett om u kan agera på den. Varje steg med e > 0 ökar integralen — även när u redan är 100%. Det leder till det enorma överskjutningen du såg."
@@ -45,7 +45,7 @@
       "ref": "pi-windup-demo.json",
       "title": "Anti-windup aktiverat — jämför effekten",
       "objective": "Aktivera anti-windup och se hur överskjutningen minskar dramatiskt.",
-      "instruction": "Återställ systemet (knappen 'Återställ system'). Kryssa NU I Anti-windup-rutan. Kör 150 steg igen.\n\nJämför:\n• Hur stor är överskjutningen nu jämfört med utan anti-windup?\n• Hur snabbt stabiliseras systemet?\n\nI-termen i statusraden ska nu vara betydligt lägre när y når SP.",
+      "instruction": "Återställ systemet (knappen 'Återställ system'). Kryssa NU I Anti-windup-rutan. Kör 150 steg igen.\n\nJämför:\n• Hur stor är överskjutningen nu jämfört med utan anti-windup?\n• Hur snabbt stabiliseras systemet?\n\nI-termen i statusraden ska nu vara betydligt lägre när PV når SP.",
       "checkpoint": {
         "question": "Varför ger anti-windup mindre överskjutning?",
         "options": [
