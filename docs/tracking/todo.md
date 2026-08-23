@@ -119,8 +119,51 @@ verifiering mot `apps/app/sim-core.js` och samtliga scenariofiler.
   uppdrag, för att synas i UI:t).
 - Presentationsläge, scenarioparametrar, jämförelsescenarier och progression rörda inte.
   Verifierat att scenarioresultat är byte-identiska med PED-003B.
-**Status:** Implementerad och testad i feature-branchen. Inga stoppvillkor triggades — ingen
-avvikelse hittades mellan specifikation, teori och kod.
+**Status:** Mergad till `develop` och testpublicerad 2026-08-23. Inga stoppvillkor
+triggades — ingen avvikelse hittades mellan specifikation, teori och kod. Följdes av
+bugg 2026-012 (PB/SP/hysteresband uppdaterades inte utan steg, upptäckt av PO under
+granskning av just denna lärstig) — se `buglog-done.md`.
+
+---
+
+### PED-003D — Enhetlig PV-notation, mätbara jämförelser och rensning av intern analysinformation
+**Branch:** `feature/PED-003D-pv-measurement-and-instructions`
+**Prioritet:** Hög
+**Beskrivning:**
+Uppföljningsuppdrag efter PO:s Test 1–3. Tre huvuddelar: (1) ta bort hänvisningar till
+parameterstudien från appens instruktioner, (2) enhetlig PV-notation i allt
+användarsynligt innehåll (tidigare "y"), (3) förtydliga jämförelseförsöken i
+"Processens begränsningar" till tydliga försök 1/försök 2-par, med stöd av knappen
+"Mät K/T/L". Test 4 (checkpoints) var pausat i väntan på denna kollation.
+**Genomförande:**
+- Statusraden visar nu `SP=...`, `PV=...` (ej `y=`) i ordningen steg/t/SP/PV/e/u/P/I/D.
+  SP läses från samma historikindex som PV/e för konsistens.
+- **Viktigt verifierat fynd:** `e` stämmer inte exakt med `SP−PV` under aktiva
+  transienter (uppmätt diff 2.008 vid start → 0.014 vid steg 100 → 0.000 vid sann
+  steady-state, för samma scenario). Orsak: `ctrl.error` i `sim-core.js` beräknas mot
+  PV *före* processens uppdatering det steget, sparas i historiken tillsammans med PV
+  *efter* uppdateringen — ett inbyggt ett-stegs mät→beräkna→agera-mönster, likt ett
+  verkligt diskret reglersystem. Förväntat och korrekt, inte en bugg. Rörde inte
+  beräkningen av `e` (i linje med uppdraget). Avvikelsen är exakt noll vid den
+  steady-state lärstigarna faktiskt ber studenten läsa av.
+- `y` → `PV` (och `dy/dt` → `dPV/dt`) i `help.json`, tre teorimoduler, samt de aktiva
+  lärstigarna `integrerande-process-niva.v1` och `windup-antiwindup.v1`. De föräldralösa
+  `grundlaggande.v1.json`/`windup.v1.json` innehåller fortfarande `y` men laddas aldrig
+  (inte i `catalog.json`) — lämnade orörda, rapporterade.
+- Parameterstudiehänvisning borttagen ur `pi-pid.v1`s instruktion.
+- `processbegransningar.v1` omstrukturerad: 3→5 steg (1 teori + 2+2 scenario), båda
+  jämförelserna (K=1.3 vs K=0.5, L=0 vs L=5) nu uttryckliga försök 1/försök 2-par,
+  verifierade med `tests/simulation/`. Dötidsresultatet blev måttligt (mätbar men
+  begränsad översläng, ingen oscillation) — texten skriven därefter, undviker
+  "destabiliserar".
+- "Mät K/T/L" tillagd i `processbegransningar.v1` (båda jämförelsernas första försök)
+  och `pi-pid.v1` (båda försöken). Övriga kandidater inventerade, ej ändrade — se
+  leveransrapport.
+- Kollationsrapport för samtliga 12 checkpoints i de tre lärstigarna:
+  `docs/reports/PED-003D_TESTFRAGOR.md`.
+**Status:** Implementerad och testad i feature-branchen. Inga formella stoppvillkor
+utlöstes, men ett verifieringsfynd (e vs SP−PV under transienter) redovisas tydligt
+för PO/PM — se ovan och leveransrapporten.
 
 ---
 
