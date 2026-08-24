@@ -264,9 +264,63 @@ stegsvar-identifiering och lambda-metoden döljs tills vidare (kvar i DEV).
 - Verifierat med Playwright mot lokala DEV- och PROD-förhandsvisningar: samtliga 9
   DEV-lärstigar och alla 5 PROD-lärstigar går att stega igenom utan konsolfel eller
   nätverksfel; Test-läge kan inte tvingas fram i PROD ens via direkt konsolanrop.
-**Status:** Mergad till `develop`. Ingen release, inget till `main`, ingen ändring av
-GitHub Pages-deployen i detta uppdrag. Väntar på PO:s kontroll av PROD-förhandsvisningen
-innan RELEASE-v1.3.0.
+**Status:** Mergad till `develop`. PO/PM kontrollerade och godkände DEV- och
+PROD-förhandsvisningen — se RELEASE-v1.3.0, som publicerade detta produktionsurval.
+
+---
+
+### RELEASE-v1.3.0 — Första stabila undervisningsversionen publicerad
+**Branch:** `release/v1.3.0` (raderad efter lyckad release, se genomförande)
+**Prioritet:** Hög
+**Beskrivning:**
+Uppdrag från PO/PM att publicera v1.3.0 enligt Gitflow: hela `develop` (inklusive
+PROD-001A/B) till `release/v1.3.0`, mergad till `main`, taggad, GitHub Pages omställd att
+publicera uteslutande PROD-profilen från `main`, mergad tillbaka till `develop`. Ingen
+selektiv merge eller cherry-pick — main och develop delar samma källkod, skillnaden är
+enbart miljöprofil och produktionsurval.
+**Genomförande:**
+- Förkontroll: `develop`/`origin/develop` matchade (`26eeb7e`), `main` var strikt bakom
+  utan unikt innehåll, arbetskatalogen ren, inga stashar/opushade brancher.
+- `apps/app/app.js`: `APP_VERSION` → `1.3.0` (visas "v1.3.0" i UI). Content-version
+  (`catalog.json`/`catalog.prod.json`, `v1.5.3`/`v1.5.3-prod`) oförändrad — inget innehåll
+  ändrat i releasen.
+- Ny `CHANGELOG.md` (repo-rot) med användarinriktade releaseanteckningar för v1.3.0.
+- Nytt `.github/workflows/ci.yml`: DEV-/PROD-/allowlist-validering, simuleringsanalys,
+  DEV- och PROD-byggning på push till `develop`/`feature/**`/`release/**` och PR mot
+  `develop`/`main`. Publicerar aldrig Pages.
+- `.github/workflows/deploy-pid-simulator.yml`: triggar nu **endast** på push till `main`
+  (tidigare `develop`, tillfälligt). Kör PROD-validering och simuleringsanalys, bygger med
+  `node tests/build-preview.mjs prod`, publicerar `dist/prod/` (aldrig `apps/app/` direkt
+  eller `dist/dev/`). Concurrency-grupp `pages` tillagd.
+- `release/v1.3.0` innehöll hela `develop` som linjär förfader (`git merge-base
+  --is-ancestor` bekräftat) — enda tillägget var version/changelog/workflows, verifierat
+  via `git diff origin/develop release/v1.3.0 --stat`.
+- Mergad till `main` med synlig merge-commit `17564e1` ("release: PID Simulator v1.3.0"),
+  pushad. `main` verifierat filträds-identiskt med `release/v1.3.0`.
+- Taggad `v1.3.0` (annoterad, pekar på `17564e1`), pushad.
+- GitHub Actions kördes automatiskt på push till `main`: samtliga steg i den nya
+  deploy-workflowen lyckades (PROD-validering, allowlist-validering, simuleringsanalys,
+  PROD-byggning, Pages-publicering).
+- Live smoke-test mot `https://peman68.github.io/PID-simulator/`: appversion v1.3.0, exakt
+  fem lärstigar i rätt ordning, ingen DEV-märkning, Test-läge/poäng dolda och kan inte
+  tvingas fram (varken via konsolanrop eller URL-parametrar), presentationsläge och Mät
+  K/T/L fungerar, `pi-deadtime-comparison.json` bekräftat hämtad via nätverket endast när
+  lärstigen laddar den (inte i scenarioväljaren), 0 konsolfel, 0 nätverksfel.
+- Mergad tillbaka till `develop` (`0ee7b55`), pushad. Efter återmerge: DEV visar
+  fortfarande 9 lärstigar/Test-läge/poäng/DEV-märkning, PROD-byggning från `develop` visar
+  5/inget Test-läge/ingen poäng/ingen DEV-märkning — identiskt med `main`.
+- `release/v1.3.0` raderad lokalt och på origin efter att samtliga steg verifierats.
+- Verifierat i Actions-loggen: push till `develop` (`0ee7b55`) triggade endast CI, ingen
+  Pages-deploy — den nya deploy-workflowen på `develop` kan strukturellt inte längre
+  publicera Pages.
+- GitHub Release kunde inte skapas automatiskt (ingen `gh`-CLI eller annan autentiserad
+  GitHub-åtkomst på arbetsmaskinen) — PO gav manuell instruktion i leveransrapporten.
+  Branschskydd på `main` kunde inte läsas utan autentisering (rulesets-listan var tom,
+  klassisk branch protection-status okänd) — rekommenderade regler rapporterade, inget
+  aktiverat.
+**Status:** Publicerad. `main` = stabil undervisningsversion v1.3.0, `develop` = fortsatt
+utveckling med samma kodbas. Se `docs/development/ENVIRONMENTS.md` för
+STEG 1–5-livscykeln (feature → tekniskt klar → produktionsgodkänd → release → publicerad).
 
 ---
 

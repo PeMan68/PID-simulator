@@ -102,11 +102,12 @@ python -m http.server 8001 --directory dist/prod
 
 `dist/` är inte versionshanterad (se `.gitignore`) — byggs på begäran, kastas fritt.
 
-**Produktionsförhandsvisningen är avsedd att vara exakt vad en framtida release till `main`
-kommer att innehålla:** samma `apps/app/`-kod, samma `env.prod.js` (döpt om till `env.js`),
-samma `catalog.prod.json`. Ett framtida releaseuppdrag kan återanvända precis detta skript
-(eller motsvarande fil-swap) när `main` förbereds — det finns ingen separat, avvikande
-previewmekanism.
+**Produktionsförhandsvisningen är avsedd att vara exakt vad en release till `main`
+innehåller:** samma `apps/app/`-kod, samma `env.prod.js` (döpt om till `env.js`), samma
+`catalog.prod.json`. Detta verifierades i RELEASE-v1.3.0 (2026-08-24) — GitHub Actions
+kör `node tests/build-preview.mjs prod` direkt från `main` och publicerar `dist/prod/`,
+byte-identiskt (bortsett från radslutsformat) med den lokala PROD-previewen. Det finns
+ingen separat, avvikande previewmekanism.
 
 ## Validering
 
@@ -118,3 +119,55 @@ node tests/simulation/analyze.test.mjs              # Simuleringskärnans egna t
 ```
 
 Samtliga fyra ska köras rent innan `develop` mergas eller en release förbereds.
+
+## Livscykel — från idé till publicerad funktion
+
+En funktion eller lärstig går igenom fyra tydliga statusnivåer. Vilken nivå den befinner
+sig på avgör var i repot den syns och vem som bestämmer nästa steg.
+
+**STEG 1 — Under utveckling.** Arbetet sker i `feature/<uppdrags-id>-<namn>`, avgrenad från
+`develop`. Funktionen stannar i feature-branchen tills den är tekniskt klar.
+
+**STEG 2 — Tekniskt klar.** Feature-branchen testas och mergeas till `develop`. Funktionen
+får nu visas i DEV (`catalog.json`, `env.js`) — men ska vara avstängd eller osynlig i PROD
+om den inte redan är produktionsgodkänd (styrt av `catalog.prod.json`/`env.prod.js` och
+verifierat av `tests/validate-prod.mjs`).
+
+**STEG 3 — Produktionsgodkänd.** När PO godkänner en funktion eller lärstig för
+undervisningsversionen skapas en separat, liten feature branch för själva
+produktionsaktiveringen, t.ex. `feature/PROD-enable-<id>`. Den branchen får omfatta:
+PROD-allowlistet (`catalog.prod.json`), PROD-konfiguration (`env.prod.js`),
+scenarioberoenden, teoriberoenden, PROD-validering och ett PROD-preview-test. Den mergeas
+till `develop` som vilken feature som helst — produktionsgodkännande är ett
+katalogbeslut, inte en release i sig.
+
+**STEG 4 — Release.** Hela `develop` går till en `release/<version>`-branch. Ingen
+cherry-pick, ingen selektiv borttagning av innehåll. Release-branchen får bara tillföra
+version, changelog, releasedokumentation och CI/deploy-konfiguration. Den mergeas till
+`main` (synlig merge-commit, taggad) och sedan tillbaka till `develop`.
+
+**STEG 5 — Publicerad.** GitHub Pages bygger och publicerar PROD-profilen (`dist/prod/`)
+uteslutande från `main`, triggat endast av push till `main`. `main` och `develop`
+innehåller samma kodbas — miljöprofilen (`env.js` vs `env.prod.js`) och allowlistet
+(`catalog.json` vs `catalog.prod.json`) avgör vad användaren faktiskt ser, inte vilken
+Git-branch koden råkar ligga i.
+
+> **Merge till `develop` betyder tekniskt klar. Aktivering i PROD betyder
+> produktionsgodkänd. Publicering från `main` betyder releasad.**
+
+Dessa tre är olika beslut, fattade av olika roller, och ska aldrig sammanblandas: CC gör
+steg 1 och (efter uppdrag) steg 2 och 4; PO/PM beslutar steg 3 (vad som ska synas i PROD)
+och godkänner steg 4/5 (att en release faktiskt får ske).
+
+### Exempel: RELEASE-v1.3.0 (2026-08-24)
+
+Första gången hela livscykeln kördes i praktiken:
+
+- PROD-001A (analys) → PROD-001B (STEG 2: DEV/PROD-infrastrukturen mergad till `develop`,
+  produktionsurvalet för de fem godkända lärstigarna satt direkt i samma uppdrag, motsvarande
+  STEG 3) → RELEASE-v1.3.0 (STEG 4–5: `release/v1.3.0` → `main`, taggad `v1.3.0`, mergad
+  tillbaka till `develop`, GitHub Pages publicerad från `main`).
+- Fyra lärstigar (windup-antiwindup.v1, integrerande-process-niva.v1,
+  stegsvar-identifiering.v1, lambda-metoden.v1) stannade på STEG 2 — tekniskt klara, synliga
+  i DEV, men inte i `catalog.prod.json` och därmed osynliga i PROD. De väntar på ett eget
+  `feature/PROD-enable-<id>`-uppdrag när PO bedömer dem pedagogiskt granskade.
