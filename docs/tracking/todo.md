@@ -231,6 +231,45 @@ från PO/PM — inget arbete påbörjas automatiskt.
 
 ---
 
+### PROD-001B — DEV/PROD-miljöprofiler och beslutat produktionsurval
+**Branch:** `feature/PROD-001B-environment-profiles`
+**Prioritet:** Hög
+**Beskrivning:**
+Implementationsuppdrag från PO/PM efter PROD-001A. Inför en DEV- och en PROD-profil i
+samma kodbas, styrda av konfiguration och katalogurval — inga permanenta manuella
+kodskillnader mellan branches. PO/PM:s beslutade första produktionsurval: 5 lärstigar
+(kom-igång, oppen-slinga-onoff-p, proportionalband-forstarkning, pi-pid,
+processbegransningar); windup-antiwindup, integrerande-process-niva,
+stegsvar-identifiering och lambda-metoden döljs tills vidare (kvar i DEV).
+**Genomförande:**
+- `apps/app/env.js` (aktiv, DEV) / `env.prod.js` (mall) — `ENV_CONFIG`: environment,
+  showTestMode, showScore, showExperimentalContent, catalogFile. Laddas som separat
+  `<script>` före `app.js`. Ingen URL-parameter, inget tangentbord och ingen dold knapp
+  kan byta profil — verifierat i webbläsarkonsol och via manipulerad URL.
+- `content/catalog.prod.json` — allowlist med de 5 godkända lärstigarna, deras 11
+  beroendescenarier och 4 teorimoduler. Scenario-fältet `standalone` styr om ett
+  beroendescenario syns i den fristående väljaren (10 av 11 gör det —
+  `pi-deadtime-comparison` är CC:s enda avsteg, dolt pga. dess egen
+  återanvändningsvarning; se leveransrapporten).
+- `app.js`: `loadCatalog()` läser `ENV_CONFIG.catalogFile`; `setTestMode(true)` är ett
+  no-op om `showTestMode` är false; `updateScoreDisplay()` döljer poängraden ovillkorat
+  om `showScore` är false; ny `applyEnvironmentUI()` döljer Guidat/Test-togglen och
+  styr DEV-badgen (`#envBadge`).
+- `tests/build-preview.mjs` — bygger `dist/dev/` och `dist/prod/` (ren filkopiering,
+  inget byggsystem) för lokal förhandsvisning med valfri statisk server.
+- `tests/validate-content.mjs` tar nu valfri katalogfil som argument.
+  `tests/validate-prod.mjs` (ny): exakt de 5 beslutade lärstigarna i rätt ordning, inga
+  dolda/experimentella läcker in, alla beroenden finns, Test-läge/poäng avstängda.
+- `docs/development/ENVIRONMENTS.md` — fullständig dokumentation av profilerna.
+- Verifierat med Playwright mot lokala DEV- och PROD-förhandsvisningar: samtliga 9
+  DEV-lärstigar och alla 5 PROD-lärstigar går att stega igenom utan konsolfel eller
+  nätverksfel; Test-läge kan inte tvingas fram i PROD ens via direkt konsolanrop.
+**Status:** Mergad till `develop`. Ingen release, inget till `main`, ingen ändring av
+GitHub Pages-deployen i detta uppdrag. Väntar på PO:s kontroll av PROD-förhandsvisningen
+innan RELEASE-v1.3.0.
+
+---
+
 ### FEAT-022 — Direktverkande / Omvänt verkande (verkningsriktning)
 **Branch:** `feature/verkningsriktning`
 **Prioritet:** Medel
