@@ -1,7 +1,8 @@
 # DEV och PROD — miljöprofiler (PROD-001B)
 
 Detta dokument beskriver hur PID Simulator skiljer mellan en utvecklingsprofil (DEV) och en
-undervisningsprofil (PROD), infört i uppdrag PROD-001B. Samma kodbas (`apps/app/`) används i
+undervisningsprofil (PROD), infört i uppdrag PROD-001B och skärpt i HOTFIX-v1.3.1 (PROD-
+artifakten filtreras nu fysiskt, inte bara i UI:t). Samma kodbas (`apps/app/`) används i
 båda — skillnaderna styrs uteslutande av konfiguration och katalogurval, aldrig av permanenta
 manuella kodskillnader mellan branches.
 
@@ -54,6 +55,14 @@ tester, se leveransrapporten).
 godkänt — inte "allt utom några undantag". Ett innehåll som läggs till i `catalog.json`
 (DEV) syns därför aldrig i PROD förrän det explicit läggs till i `catalog.prod.json` också.
 
+**Allowlistet gäller den byggda artifakten, inte bara appens gränssnitt** (sedan
+HOTFIX-v1.3.1). Fram till v1.3.0 kopierade PROD-byggningen hela `apps/app/` rakt av — UI:t
+visade rätt sak, men dolda lärstigars innehållsfiler (inklusive checkpoint-facit) låg
+fysiskt kvar och gick att hämta direkt om man kände till URL:en. `tests/build-preview.mjs`
+härleder nu PROD:s tillåtna filer genom att faktiskt läsa varje publicerad lärstigs
+`steps[]` och slå upp referenserna (`tests/lib/prod-content-set.mjs`) — bara det som
+behövs kopieras till `dist/prod`. Se avsnittet "Lokal förhandsvisning" nedan.
+
 Varje scenario-post i katalogen kan ha ett `standalone`-fält:
 
 ```json
@@ -88,33 +97,42 @@ Ingen kod i `app.js` behöver ändras för att godkänna eller dölja innehåll 
 
 ## Lokal förhandsvisning
 
-Inget nytt byggsystem — `tests/build-preview.mjs` gör en ren filkopiering.
+Inget nytt byggsystem. DEV-byggningen är en ren filkopiering; PROD-byggningen är en
+härledd, filtrerad kopiering (se ovan).
 
 ```bash
-# DEV — identisk med att köra apps/app/ direkt
+# DEV — identisk med att köra apps/app/ direkt: allt DEV-innehåll
 node tests/build-preview.mjs dev
 python -m http.server 8000 --directory dist/dev
 
-# PROD — env.js ersatt med env.prod.js:s innehåll, allt annat identiskt
+# PROD — env.js ersatt med env.prod.js:s innehåll, content-filer begränsade
+# till det som härleds från catalog.prod.json (se tests/lib/prod-content-set.mjs)
 node tests/build-preview.mjs prod
 python -m http.server 8001 --directory dist/prod
 ```
 
 `dist/` är inte versionshanterad (se `.gitignore`) — byggs på begäran, kastas fritt.
+`node tests/build-preview.mjs prod` avbryter med ett tydligt felmeddelande om ett
+publicerat lärsteg refererar en teori- eller scenariofil som saknas i `catalog.prod.json`
+eller på disk — det byggs aldrig en ofullständig eller felaktig artifakt tyst.
 
-**Produktionsförhandsvisningen är avsedd att vara exakt vad en framtida release till `main`
-kommer att innehålla:** samma `apps/app/`-kod, samma `env.prod.js` (döpt om till `env.js`),
-samma `catalog.prod.json`. Ett framtida releaseuppdrag kan återanvända precis detta skript
-(eller motsvarande fil-swap) när `main` förbereds — det finns ingen separat, avvikande
-previewmekanism.
+**Produktionsförhandsvisningen är avsedd att vara exakt vad en release till `main`
+innehåller:** samma `apps/app/`-kod, samma `env.prod.js` (döpt om till `env.js`), samma
+härledda innehållsfiler. Detta verifierades i RELEASE-v1.3.0 (byggmekanismen är identisk
+oavsett om den körs lokalt eller i GitHub Actions från `main`) och gäller fortsatt efter
+HOTFIX-v1.3.1:s filtrering.
 
 ## Validering
 
 ```bash
 node tests/validate-content.mjs                    # DEV: samtliga 9 lärstigar, 24 scenarier, 8 teorimoduler
 node tests/validate-content.mjs catalog.prod.json   # PROD: referenskontroll av catalog.prod.json
-node tests/validate-prod.mjs                        # PROD: allowlist — exakt 5 lärstigar, rätt ordning, inga dolda/experimentella läckor, Test-läge/poäng avstängda
-node tests/simulation/analyze.test.mjs              # Simuleringskärnans egna tester (opåverkad av PROD-001B)
+node tests/build-preview.mjs prod                   # Bygg PROD-artifakten FÖRST — validate-prod.mjs kontrollerar den byggda dist/prod
+node tests/validate-prod.mjs                        # PROD: allowlist på källnivå OCH på den byggda artifakten (inga dolda filer, ingen DEV-katalog)
+node tests/simulation/analyze.test.mjs              # Simuleringskärnans egna tester
+node tests/build-preview.test.mjs                   # Automatiska tester för artifaktfiltreringen (syntetiska fixturer, rör aldrig apps/app/content/)
 ```
 
-Samtliga fyra ska köras rent innan `develop` mergas eller en release förbereds.
+`validate-prod.mjs` kräver att `dist/prod/` redan är byggd (ordningen ovan) — annars
+avbryter det med ett tydligt fel istället för att bara kontrollera källfilerna. Samtliga
+ska köras rent innan `develop` mergas eller en release förbereds.
