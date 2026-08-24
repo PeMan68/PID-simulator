@@ -2,6 +2,20 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.3.1] — 2026-08-24
+
+Hotfix. PROD-artifakten innehåller nu endast produktionsgodkända lärstigar,
+teorimoduler och scenarier. DEV-innehåll och checkpoint-facit för lärstigar som
+inte ännu är produktionsgodkända publiceras inte längre. Inga användarfunktioner
+eller produktionsmenyer har ändrats.
+
+### Version
+
+- Appversion: **v1.3.1**.
+- Content-version oförändrad (`v1.5.3` DEV, `v1.5.3-prod` PROD) — inget
+  lärstigs-, scenario- eller teoriinnehåll ändrades, bara vilka filer som
+  byggs in i den publicerade artifakten.
+
 ## [v1.3.0] — 2026-08-24
 
 Första stabila undervisningsversionen.
