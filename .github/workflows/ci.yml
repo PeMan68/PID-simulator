@@ -31,17 +31,20 @@ jobs:
       - name: PROD-innehållsvalidering (referenser)
         run: node tests/validate-content.mjs catalog.prod.json
 
-      - name: PROD-allowlist-validering
-        run: node tests/validate-prod.mjs
-
       - name: Simuleringsanalys (sim-core-regressionstester)
         run: node tests/simulation/analyze.test.mjs
+
+      - name: Artifaktfiltreringstester (syntetiska fixturer)
+        run: node tests/build-preview.test.mjs
 
       - name: Bygg DEV-förhandsvisning (rök-test av byggsteget)
         run: node tests/build-preview.mjs dev
 
       - name: Bygg PROD-förhandsvisning (samma steg som Pages-deployen använder)
         run: node tests/build-preview.mjs prod
+
+      - name: PROD-allowlist-validering (byggd artifakt)
+        run: node tests/validate-prod.mjs
 
 # Playwright-baserade webbläsartester körs INTE i denna workflow — projektet
 # har inget etablerat, stabilt Playwright-upplägg i GitHub Actions (endast

@@ -36,14 +36,14 @@ jobs:
       - name: PROD-innehållsvalidering (referenser)
         run: node tests/validate-content.mjs catalog.prod.json
 
-      - name: PROD-allowlist-validering
-        run: node tests/validate-prod.mjs
-
       - name: Simuleringsanalys
         run: node tests/simulation/analyze.test.mjs
 
       - name: Bygg PROD-profilen
         run: node tests/build-preview.mjs prod
+
+      - name: PROD-allowlist-validering (byggd artifakt)
+        run: node tests/validate-prod.mjs
 
       - name: Konfigurera Pages
         uses: actions/configure-pages@v5
