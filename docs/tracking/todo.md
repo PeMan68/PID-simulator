@@ -26,6 +26,20 @@ Nuvarande tillstånd taggat `archive/python-app-v1.7.0` för framtida referens. 
 
 ---
 
+### BESLUT-003 — Välj licens för det publika repositoryt
+**Prioritet:** Låg
+**Beskrivning:**
+Upptäckt under DOCS-001 (dokumentationsrevision efter RELEASE-v1.3.0): projektet saknar
+en licensfil. Repositoryt är publikt sedan tidigare, men ingen `LICENSE`/`LICENCE.md`
+finns, och ingen licens är dokumenterad i README. Utan en explicit licens gäller
+upphovsrättens standardläge (allt är rättighetsskyddat, ingen återanvändning tillåten
+utan tillstånd) — vilket kan vara oavsiktligt givet att repot är publikt och avsett för
+undervisning. DOCS-001 varken valde eller skapade en licens, i linje med uppdragets
+avgränsning; README dokumenterar bara sakligt att frågan är öppen.
+**Status:** Öppen — beslut krävs av PO
+
+---
+
 ### PED-003 — Omstrukturera lärstigar enligt kursens progression
 **Branch:** `feature/PED-003-learning-path-progression`
 **Prioritet:** Hög
@@ -321,6 +335,44 @@ enbart miljöprofil och produktionsurval.
 **Status:** Publicerad. `main` = stabil undervisningsversion v1.3.0, `develop` = fortsatt
 utveckling med samma kodbas. Se `docs/development/ENVIRONMENTS.md` för
 STEG 1–5-livscykeln (feature → tekniskt klar → produktionsgodkänd → release → publicerad).
+
+---
+
+### DOCS-001 — Revidera publik dokumentation efter release v1.3.0
+**Branch:** `feature/DOCS-001-public-documentation`
+**Prioritet:** Medel
+**Beskrivning:**
+Uppdrag från PO/PM att revidera repositoryts publika dokumentation efter RELEASE-v1.3.0 —
+README.md var kraftigt föråldrat och beskrev varken DEV/PROD-profilerna eller det
+publicerade produktionsurvalet. Ren dokumentationsrevision, ingen appkod eller
+produktionskonfiguration ändrad.
+**Genomförande:**
+- `README.md` omskrivet i sin helhet: officiell version/URL, PROD-funktionslista och de
+  fem publicerade lärstigarna i rätt ordning, DEV/PROD-tabell, verifierade lokala
+  bygg-/testkommandon, Gitflow med produktionsgodkännande-regeln, projektstatus,
+  licensstatus.
+- `apps/app/README.md` omskrivet — beskrev tidigare en helt annan, övergiven arkitektur
+  ("helt offline", "ingen fetch") som direkt motsade hur appen faktiskt fungerar och som
+  skeppades rakt in i den publicerade PROD-artifakten.
+- `docs/development/ENVIRONMENTS.md` kompletterad med avsnitt om repositoryts synlighet.
+- Ny **BESLUT-003** (licensfråga, öppen punkt för PO — projektet saknar licensfil).
+- Fullständig säkerhets-/integritetsgenomgång av hela det versionshanterade filträdet:
+  0 hemligheter/tokens/nycklar, inga tredjepartspersonuppgifter. Två låggradiga fynd
+  rapporterade (ett lokalt Windows-användarnamn i `.claude/settings.json`, PO:s eget
+  namn/jobbmejl i en commits författaruppgift) — ingen åtgärd krävd.
+- **Viktigt, ej åtgärdat fynd:** PROD-artifakten (`dist/prod/`, byggd med
+  `tests/build-preview.mjs`) innehåller fysiskt samtliga DEV-innehållsfiler — inklusive de
+  fyra dolda lärstigarnas checkpoint-facit — eftersom byggskriptet kopierar hela
+  `apps/app/` utan att filtrera mot `catalog.prod.json`s allowlist. Filerna visas aldrig i
+  UI och hämtas aldrig av den körande appen, men är direkt nåbara för den som känner till
+  URL:en. Detta är ett bygg-/produktfel upptäckt genom dokumentationsgranskningen, inte
+  ett dokumentationsfel — rättades därför inte inom DOCS-001, i linje med uppdragets
+  uttryckliga avgränsning. Se `docs/reports/DOCS-001_DOKUMENTATIONSREVISION.md` för
+  fullständig beskrivning och rekommenderad åtgärd (ett litet, avgränsat tekniskt
+  uppdrag som filtrerar byggstegets filkopiering).
+- Fullständig rapport: `docs/reports/DOCS-001_DOKUMENTATIONSREVISION.md`.
+**Status:** Mergad till `develop`. Väntar på PO:s och PM:s dokumentationsgranskning —
+inget beslut fattat om publicering till `main` (separat uppdrag, se rapporten).
 
 ---
 
