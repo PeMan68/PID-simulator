@@ -1,9 +1,20 @@
-/* Data laddas via fetch() från content/catalog.json vid uppstart */
+/* Data laddas via fetch() från content/catalog.json (DEV) eller
+   content/catalog.prod.json (PROD) vid uppstart — se ENV_CONFIG.catalogFile. */
 /* OnOffController, PIDController, ProcessModel, seededRandom, gaussian och
    Simulation kommer från sim-core.js (laddas som separat <script> före
    denna fil) — se apps/app/sim-core.js. Delad med tests/simulation/. */
 
 const APP_VERSION = "1.3";
+
+/* ENV_CONFIG sätts av env.js (laddas som separat <script> FÖRE denna fil,
+   se index.html och docs/development/ENVIRONMENTS.md). Fallback här är en
+   säkerhetsnät om env.js av någon anledning inte laddats — motsvarar DEV,
+   det historiska beteendet innan PROD-001B. Miljön kan INTE bytas via
+   URL-parameter, tangentbord eller dold knapp — enda källan är env.js. */
+const ENV_CONFIG = window.ENV_CONFIG || (function () {
+  console.warn("env.js saknas — faller tillbaka till development-profil.");
+  return { environment: "development", showTestMode: true, showScore: true, showExperimentalContent: true, catalogFile: "catalog.json" };
+})();
 
 let SCENARIOS = {}, THEORY = {}, LEARNING_PATHS = {}, HELP_CONTENT = {};
 
@@ -13,7 +24,8 @@ function getBasePath() {
 
 async function loadCatalog() {
   const base = getBasePath();
-  const catalog = await fetch(base + '/content/catalog.json?t=' + Date.now()).then(r => { if (!r.ok) throw new Error('catalog.json: ' + r.status); return r.json(); });
+  const catalogFile = ENV_CONFIG.catalogFile || 'catalog.json';
+  const catalog = await fetch(base + '/content/' + catalogFile + '?t=' + Date.now()).then(r => { if (!r.ok) throw new Error(catalogFile + ': ' + r.status); return r.json(); });
   const v = '?v=' + (catalog.version || '1');
   const [scenarioDatas, theoryDatas, pathDatas, helpData] = await Promise.all([
     Promise.all(catalog.scenarios.map(s => fetch(base + '/content/' + s.file + v).then(r => r.json()))),
@@ -21,7 +33,11 @@ async function loadCatalog() {
     Promise.all(catalog.learning_paths.map(p => fetch(base + '/content/' + p.file + v).then(r => r.json()))),
     fetch(base + '/content/' + catalog.help + v).then(r => r.json())
   ]);
-  catalog.scenarios.forEach((entry, i) => { SCENARIOS[entry.file.split('/').pop()] = scenarioDatas[i]; });
+  catalog.scenarios.forEach((entry, i) => {
+    const s = scenarioDatas[i];
+    s._standalone = entry.standalone !== false; // saknas fältet (DEV) = synlig, som tidigare
+    SCENARIOS[entry.file.split('/').pop()] = s;
+  });
   catalog.theory.forEach((entry, i) => { THEORY[entry.file.split('/').pop()] = theoryDatas[i]; });
   catalog.learning_paths.forEach((entry, i) => { LEARNING_PATHS[entry.id] = pathDatas[i]; });
   HELP_CONTENT = helpData;
@@ -476,6 +492,7 @@ function updateScoreDisplay() {
   const el = document.getElementById("scoreDisplay");
   const txt = document.getElementById("scoreText");
   if (!el || !txt) return;
+  if (!ENV_CONFIG.showScore) { el.style.display = "none"; return; }
   if (testMode && currentPath) { el.style.display = ""; txt.textContent = pathScore.correct + "/" + pathScore.total; }
   else { el.style.display = "none"; }
 }
@@ -599,10 +616,20 @@ function showWelcome() {
 }
 
 function initUI() {
-  Object.entries(SCENARIOS).forEach(([name, s]) => { const o = document.createElement("option"); o.value = name; o.textContent = s.title || name; scenarioSelect.appendChild(o); });
+  Object.entries(SCENARIOS).forEach(([name, s]) => { if (!s._standalone) return; const o = document.createElement("option"); o.value = name; o.textContent = s.title || name; scenarioSelect.appendChild(o); });
   Object.entries(LEARNING_PATHS).forEach(([id, p]) => { const o = document.createElement("option"); o.value = id; o.textContent = p.title || id; learningPathSelect.appendChild(o); });
   loadScenarioByName("basic-step-self-regulating.json");
   if (!localStorage.getItem("pidSimWelcomed")) showWelcome();
+  applyEnvironmentUI();
+}
+
+// ── Miljöstyrd UI (PROD-001B) ──
+function applyEnvironmentUI() {
+  const modeToggle = document.querySelector(".mode-toggle");
+  if (modeToggle) modeToggle.style.display = ENV_CONFIG.showTestMode ? "" : "none";
+  const badge = document.getElementById("envBadge");
+  if (badge) badge.style.display = ENV_CONFIG.environment === "development" ? "" : "none";
+  updateScoreDisplay();
 }
 
 // ── Sidebar resize ──
@@ -671,6 +698,7 @@ document.querySelectorAll(".help-btn").forEach(btn => {
 
 // ── Test/Guidat mode toggle ──
 function setTestMode(on) {
+  if (on && !ENV_CONFIG.showTestMode) return; // PROD: Test-läge kan aldrig aktiveras, oavsett anropsväg
   testMode = on;
   document.getElementById("modeGuided").classList.toggle("active", !on);
   document.getElementById("modeTest").classList.toggle("active", on);
