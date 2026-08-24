@@ -159,6 +159,20 @@ Dessa tre är olika beslut, fattade av olika roller, och ska aldrig sammanblanda
 steg 1 och (efter uppdrag) steg 2 och 4; PO/PM beslutar steg 3 (vad som ska synas i PROD)
 och godkänner steg 4/5 (att en release faktiskt får ske).
 
+## Repositoryts synlighet
+
+Repositoryt är **publikt** vid v1.3.0. GitHub Pages publicerar en offentlig webbapp från
+`main` — det är en separat fråga från om själva repositoryt (källkod, historik, `develop`,
+alla brancher) är publikt eller privat. Ett publikt repository innebär att **hela**
+`develop`-innehållet (samtliga 9 lärstigar, Test-läge, poäng, källan till de fyra ännu
+inte produktionsgodkända lärstigarna) är läsbart för vem som helst som klonar repot —
+oavsett vad PROD-profilen visar i webbläsaren. Inget känsligt får därför någonsin läggas
+in i källkoden eller innehållsfilerna med antagandet att "det syns ju bara i DEV" — DEV är
+inte skyddat, bara den publicerade webbappen är filtrerad.
+
+Byte till privat repository är ett separat, administrativt beslut för PO — inget som styrs
+av eller ingår i DEV/PROD-profilerna som beskrivs i detta dokument.
+
 ### Exempel: RELEASE-v1.3.0 (2026-08-24)
 
 Första gången hela livscykeln kördes i praktiken:
