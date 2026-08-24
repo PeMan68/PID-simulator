@@ -1,0 +1,49 @@
+name: CI — validering och tester
+
+# Kör innehålls- och simuleringsvalidering på push/PR. Publicerar ALDRIG
+# GitHub Pages — det gör uteslutande deploy-pid-simulator.yml, och bara vid
+# push till main. Se docs/development/ENVIRONMENTS.md.
+
+on:
+  push:
+    branches: [develop, 'feature/**', 'release/**']
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hämta koden
+        uses: actions/checkout@v4
+
+      - name: Sätt upp Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: DEV-innehållsvalidering
+        run: node tests/validate-content.mjs
+
+      - name: PROD-innehållsvalidering (referenser)
+        run: node tests/validate-content.mjs catalog.prod.json
+
+      - name: PROD-allowlist-validering
+        run: node tests/validate-prod.mjs
+
+      - name: Simuleringsanalys (sim-core-regressionstester)
+        run: node tests/simulation/analyze.test.mjs
+
+      - name: Bygg DEV-förhandsvisning (rök-test av byggsteget)
+        run: node tests/build-preview.mjs dev
+
+      - name: Bygg PROD-förhandsvisning (samma steg som Pages-deployen använder)
+        run: node tests/build-preview.mjs prod
+
+# Playwright-baserade webbläsartester körs INTE i denna workflow — projektet
+# har inget etablerat, stabilt Playwright-upplägg i GitHub Actions (endast
+# manuella lokala körningar under utveckling). Att införa det är en separat,
+# medveten CI-utökning, inte del av RELEASE-v1.3.0.

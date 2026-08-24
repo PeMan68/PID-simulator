@@ -1,15 +1,21 @@
 name: Deploy PID-simulator till GitHub Pages
 
+# Publicerar UTESLUTANDE PROD-profilen, byggd från main. Triggas ALDRIG av
+# push till develop, feature/**, release/** eller pull requests — se
+# docs/development/ENVIRONMENTS.md för hela DEV/PROD-livscykeln.
+
 on:
   push:
-    branches: [develop]       # TILLFÄLLIGT under testperiod — byt till main inför release
-    paths:
-      - 'apps/app/**'         # Och bara om något i apps/app/ ändrades
+    branches: [main]
 
 permissions:
   contents: read
   pages: write
   id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -22,13 +28,30 @@ jobs:
       - name: Hämta koden
         uses: actions/checkout@v4
 
+      - name: Sätt upp Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: PROD-innehållsvalidering (referenser)
+        run: node tests/validate-content.mjs catalog.prod.json
+
+      - name: PROD-allowlist-validering
+        run: node tests/validate-prod.mjs
+
+      - name: Simuleringsanalys
+        run: node tests/simulation/analyze.test.mjs
+
+      - name: Bygg PROD-profilen
+        run: node tests/build-preview.mjs prod
+
       - name: Konfigurera Pages
         uses: actions/configure-pages@v5
 
-      - name: Ladda upp apps/app/ som webbplats
+      - name: Ladda upp dist/prod/ som webbplats
         uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/app          # <-- Allt i apps/app/ blir webbplatsen
+          path: dist/prod          # <-- ENDAST den byggda PROD-artifakten, aldrig apps/app eller dist/dev
 
       - name: Publicera till GitHub Pages
         id: deployment
