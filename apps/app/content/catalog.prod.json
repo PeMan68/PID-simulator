@@ -12,19 +12,22 @@
     { "id": "pi-pid-comparison-pi",       "file": "scenarios/pi-pid-comparison-pi.json",        "standalone": true },
     { "id": "pi-pid-comparison-pid",      "file": "scenarios/pi-pid-comparison-pid.json",       "standalone": true },
     { "id": "pi-step-self-regulating",    "file": "scenarios/pi-step-self-regulating.json",     "standalone": true },
-    { "id": "pi-deadtime-comparison",     "file": "scenarios/pi-deadtime-comparison.json",      "standalone": false }
+    { "id": "pi-deadtime-comparison",     "file": "scenarios/pi-deadtime-comparison.json",      "standalone": false },
+    { "id": "pi-windup-demo",             "file": "scenarios/pi-windup-demo.json",              "standalone": true }
   ],
   "theory": [
     { "id": "pid-intro",         "file": "theory/pid-intro.v1.json" },
     { "id": "onoff-theory",      "file": "theory/onoff-theory.v1.json" },
     { "id": "proportionalband",  "file": "theory/proportionalband.v1.json" },
-    { "id": "process-basics",    "file": "theory/process-basics.v1.json" }
+    { "id": "process-basics",    "file": "theory/process-basics.v1.json" },
+    { "id": "integrator-windup", "file": "theory/integrator-windup.v1.json" }
   ],
   "learning_paths": [
     { "id": "kom-igång.v1",                     "file": "exercises/kom-igång.v1.json" },
     { "id": "oppen-slinga-onoff-p.v1",          "file": "exercises/oppen-slinga-onoff-p.v1.json" },
     { "id": "proportionalband-forstarkning.v1", "file": "exercises/proportionalband-forstarkning.v1.json" },
     { "id": "pi-pid.v1",                        "file": "exercises/pi-pid.v1.json" },
-    { "id": "processbegransningar.v1",          "file": "exercises/processbegransningar.v1.json" }
+    { "id": "processbegransningar.v1",          "file": "exercises/processbegransningar.v1.json" },
+    { "id": "windup-antiwindup.v1",             "file": "exercises/windup-antiwindup.v1.json" }
   ]
 }
