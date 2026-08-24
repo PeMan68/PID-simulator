@@ -2,6 +2,47 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.4.0] — 2026-08-24
+
+### Nytt i denna release
+
+- Ny publicerad lärstig: **Windup och anti-windup** — sjätte lärstigen i undervisnings-
+  versionen, placerad efter Processens begränsningar. Visar hur en PI/PID-regulators
+  integratordel kan "ladda upp" (windup) vid långvarig utsignalsmättning, och hur
+  anti-windup förhindrar det.
+- Reviderad publik dokumentation: nytt `README.md` med korrekt beskrivning av DEV/PROD-
+  profilerna, aktuellt produktionsurval, verifierade lokala kommandon och Gitflow.
+  `apps/app/README.md` rättat (beskrev tidigare en övergiven, offline-baserad arkitektur).
+
+### Produktionsurval i v1.4.0
+
+Sex lärstigar är publicerade i undervisningsversionen, i denna ordning:
+
+1. Kom igång med PID Simulator
+2. Öppen slinga, On/Off och P-reglering
+3. Proportionalband och regulatorförstärkning
+4. PI- och PID-reglering
+5. Processens begränsningar
+6. Windup och anti-windup
+
+### Kända förhållanden
+
+- Test-läge (kontrollfrågor med poängräkning) ingår fortfarande inte i den publicerade
+  undervisningsversionen.
+- Tre lärstigar (Integrerande process och nivåreglering, Stegsvar och
+  processidentifiering, Lambda-metoden) ligger kvar i utvecklingsversionen för fortsatt
+  pedagogisk granskning innan de publiceras.
+- Under aktiva transienter kan det visade felet (e) och det visade processvärdet (PV) avse
+  närliggande men olika beräkningsögonblick, till följd av appens mät → beräkna → agera-
+  ordning. Detta påverkar inte avläsningar vid steady state.
+
+### Version
+
+- Appversion: **v1.4.0**.
+- Content-version oförändrad (`v1.5.3` DEV, `v1.5.3-prod` PROD) — de tillkommande
+  filerna (lärstig, teori, scenario för windup/anti-windup) fanns redan sedan tidigare
+  och har inte ändrats i sig, bara lagts till i produktionskatalogens allowlist.
+
 ## [v1.3.1] — 2026-08-24
 
 Hotfix. PROD-artifakten innehåller nu endast produktionsgodkända lärstigar,
