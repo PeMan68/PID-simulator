@@ -371,8 +371,56 @@ produktionskonfiguration ändrad.
   fullständig beskrivning och rekommenderad åtgärd (ett litet, avgränsat tekniskt
   uppdrag som filtrerar byggstegets filkopiering).
 - Fullständig rapport: `docs/reports/DOCS-001_DOKUMENTATIONSREVISION.md`.
-**Status:** Mergad till `develop`. Väntar på PO:s och PM:s dokumentationsgranskning —
-inget beslut fattat om publicering till `main` (separat uppdrag, se rapporten).
+**Status:** Mergad till `develop`. Det tidigare "viktiga, ej åtgärdade fyndet" (PROD-
+artifakten innehöll fysiskt hela DEV-innehållet) är åtgärdat — se **HOTFIX-v1.3.1** nedan.
+Väntar fortsatt på PO:s och PM:s dokumentationsgranskning — inget beslut fattat om
+publicering av README-revisionen till `main` (separat uppdrag).
+
+---
+
+### HOTFIX-v1.3.1 — Filtrera PROD-artifakten enligt produktionskatalogens allowlist
+**Branch:** `hotfix/v1.3.1-prod-artifact-filtering` (raderad efter lyckad release)
+**Prioritet:** Hög — pedagogisk exponeringsrisk inför undervisningen
+**Beskrivning:**
+PM-beslutad hotfix på det fynd DOCS-001 rapporterade men uttryckligen inte fick rätta:
+`tests/build-preview.mjs` kopierade hela `apps/app/` till PROD-artifakten istället för att
+filtrera mot `catalog.prod.json`. UI:t visade alltid rätt (bara fem lärstigar), men fyra
+dolda lärstigars checkpoint-facit, oanvända/experimentella scenarier och hela DEV-katalogen
+låg fysiskt hämtningsbara på den publicerade webbplatsen för den som kände till URL:en.
+Ingen säkerhets- eller personuppgiftsincident — klassad som pedagogisk exponeringsrisk.
+**Genomförande:**
+- Ny `tests/lib/prod-content-set.mjs`: härleder PROD:s tillåtna innehållsfiler genom att
+  faktiskt läsa varje publicerad lärstigs `steps[]` och slå upp teori-/scenarioreferenserna
+  mot `catalog.prod.json` — inte en hårdkodad lista, inte katalogens `theory[]`/
+  `scenarios[]` rakt av. Fristående scenarier (`standalone !== false`) tas alltid med. Ett
+  lärsteg som refererar något som saknas ger ett tydligt byggfel istället för att tyst
+  hoppas över.
+- Ny `tests/lib/build-prod.mjs` (testbar kärna) och omskrivet `tests/build-preview.mjs`
+  (tunn CLI). DEV-byggningen oförändrad — fortsatt en ren kopia av `apps/app/`.
+- `tests/validate-prod.mjs` utökad: kontrollerar nu även den faktiskt byggda
+  `dist/prod/`-artifakten (kräver att `build-preview.mjs prod` körts först) — inga
+  otillåtna toppnivåkataloger, ingen DEV-katalog, exakt de härledda filerna i
+  exercises/theory/scenarios, `pi-deadtime-comparison` finns men är inte fristående,
+  samtliga filer giltig JSON.
+- Ny `tests/build-preview.test.mjs`: 10 tester mot syntetiska content-fixturer i
+  `os.tmpdir()` (rör aldrig `apps/app/content/`) — täcker bl.a. att en dold lärstigs
+  checkpoint-facit inte finns någonstans i den byggda artifakten, och att en gammal fil
+  från en tidigare byggning rensas bort.
+- `.github/workflows/ci.yml` och `deploy-pid-simulator.yml`: byggordningen ändrad till
+  bygg → validera (tidigare validera → bygg), eftersom valideringen nu kontrollerar den
+  byggda artifakten.
+- `APP_VERSION` → `1.3.1`. Content-version oförändrad (inget lärstigs-/scenario-/
+  teoriinnehåll ändrat, bara vilka filer som byggs in).
+- Verifierat live på https://peman68.github.io/PID-simulator/ efter deployment: samtliga
+  tidigare hämtningsbara dolda/föräldralösa/experimentella filer och DEV-katalogen svarar
+  nu 404; alla fem publicerade lärstigars beroenden (inkl. `pi-deadtime-comparison`, som
+  fortsatt laddas via lärstigen men inte visas fristående) svarar 200; 0 konsolfel,
+  0 nätverksfel; DEV oförändrat (9 lärstigar, Test-läge, poäng, DEV-märkning).
+- Mergad till `main` (`3cc26cc`), taggad `v1.3.1`, mergad tillbaka till `develop`
+  (`70e2f36`, en konflikt i `docs/development/ENVIRONMENTS.md` löst manuellt utan att
+  tappa DOCS-001:s tillägg).
+**Status:** Publicerad. `main` = v1.3.1. Se `docs/development/ENVIRONMENTS.md` för
+uppdaterad byggdokumentation.
 
 ---
 

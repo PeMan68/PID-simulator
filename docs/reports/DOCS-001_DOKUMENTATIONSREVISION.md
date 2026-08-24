@@ -16,13 +16,12 @@ helhet. `apps/app/README.md` beskrev en helt annan, sedan länge övergiven arki
 ("helt offline", "ingen fetch") som direkt motsäger hur appen faktiskt fungerar — rättad.
 `CHANGELOG.md` och `docs/development/ENVIRONMENTS.md` klarade granskningen utan sakfel och
 har bara kompletterats (licensstatus, repositoryts synlighet). Inga hemligheter, tokens
-eller tredjepartspersonuppgifter hittades. **Ett viktigt, ej åtgärdat fynd:** PROD-artifakten
-(`dist/prod/`) innehåller fysiskt samtliga DEV-innehållsfiler (inklusive de fyra dolda
-lärstigarnas checkpoint-svar) eftersom byggskriptet kopierar hela `apps/app/` — filerna
-visas aldrig i UI eller hämtas av den körande appen, men är direkt nåbara för den som
-känner till eller gissar URL:en. Detta är ett bygg-/produktfel, inte ett
-dokumentationsfel, och har därför **inte** åtgärdats inom DOCS-001 (se avsnitt "Viktigt
-fynd — ej åtgärdat" nedan och stoppvillkorsredovisningen i leveransrapporten).
+eller tredjepartspersonuppgifter hittades. **Ett viktigt fynd** (PROD-artifakten innehöll
+fysiskt samtliga DEV-innehållsfiler, inklusive de fyra dolda lärstigarnas checkpoint-svar,
+trots att UI:t alltid visade rätt) rapporterades men rättades avsiktligt **inte** inom
+DOCS-001 — det var ett bygg-/produktfel, inte ett dokumentationsfel. PM klassade det direkt
+efter denna rapport som en hotfix med hög prioritet; **fyndet är åtgärdat och publicerat
+som v1.3.1 samma dag**, se avsnittet nedan.
 
 ---
 
@@ -207,7 +206,12 @@ rätt ordning.
 
 ---
 
-## Viktigt fynd — ej åtgärdat (kräver separat uppdrag)
+## Viktigt fynd — ÅTGÄRDAT i HOTFIX-v1.3.1 (2026-08-24)
+
+> PM klassade fyndet nedan som en hotfix med hög prioritet omedelbart efter denna
+> rapports leverans. Rättat, testat och publicerat som **v1.3.1** samma dag — se
+> `docs/tracking/todo.md` (HOTFIX-v1.3.1-posten) för fullständigt genomförande.
+> Ursprunglig analys bevarad nedan oförändrad, som underlag till hotfixen.
 
 **PROD-artifakten innehåller samtliga DEV-innehållsfiler som statiska, direkt hämtningsbara
 filer**, trots att den körande appen aldrig refererar dem. Konkret: en teknisk besökare som
@@ -255,8 +259,7 @@ README dokumenterar nu sakligt att licensfrågan är öppen, och en ny öppen pu
 
 ## Kvarstående dokumentationsfrågor
 
-1. **PROD-artifaktens filfiltrering** (se ovan) — rekommenderas som eget litet
-   tekniskt uppdrag, inte dokumentation.
+1. ~~PROD-artifaktens filfiltrering~~ — **åtgärdat i HOTFIX-v1.3.1** (2026-08-24, v1.3.1).
 2. **Licensbeslut** — BESLUT-003 i todo.md, väntar på PO.
 3. `.github/copilot-instructions.md` innehåller föråldrat material (externt spelrepo,
    en "känd bugg" i integrerande processer som inte längre existerar) — låg prioritet,
