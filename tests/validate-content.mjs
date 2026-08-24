@@ -2,9 +2,15 @@
 // Fristående valideringsskript för apps/app/content/ — inga beroenden.
 // Kontrollerar att catalog.json, scenarier, teorimoduler och lärstigar är
 // giltig JSON, att alla filreferenser existerar, och att varje lärstigssteg
-// refererar till en scenario/teori-fil som faktiskt laddas av catalog.json.
+// refererar till en scenario/teori-fil som faktiskt laddas av katalogen.
 //
-// Körs manuellt: node tests/validate-content.mjs
+// Körs manuellt:
+//   node tests/validate-content.mjs                    → validerar catalog.json (DEV)
+//   node tests/validate-content.mjs catalog.prod.json   → validerar valfri katalogfil (t.ex. PROD)
+//
+// PROD-specifika allowlist-krav (exakt fem lärstigar, rätt ordning, inga
+// dolda/experimentella scenarier synliga fristående osv.) kontrolleras INTE
+// här — se tests/validate-prod.mjs.
 
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -12,6 +18,7 @@ import path from "node:path";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CONTENT_DIR = path.join(__dirname, "..", "apps", "app", "content");
+const CATALOG_FILE = process.argv[2] || "catalog.json";
 
 let errors = [];
 let warnings = [];
@@ -30,9 +37,9 @@ function readJson(relPath) {
   }
 }
 
-const catalog = readJson("catalog.json");
+const catalog = readJson(CATALOG_FILE);
 if (!catalog) {
-  console.error("catalog.json kunde inte läsas — avbryter.");
+  console.error(`${CATALOG_FILE} kunde inte läsas — avbryter.`);
   process.exit(1);
 }
 
@@ -62,7 +69,7 @@ readJson(catalog.help);
 function checkDupeIds(list, label) {
   const seen = new Set();
   for (const entry of list) {
-    if (seen.has(entry.id)) errors.push(`Dubblett-id i catalog.json (${label}): ${entry.id}`);
+    if (seen.has(entry.id)) errors.push(`Dubblett-id i ${CATALOG_FILE} (${label}): ${entry.id}`);
     seen.add(entry.id);
   }
 }
@@ -100,6 +107,7 @@ for (const [pathId, pathData] of Object.entries(LEARNING_PATHS)) {
   });
 }
 
+console.log(`Katalog: ${CATALOG_FILE}`);
 console.log(`Scenarier: ${Object.keys(SCENARIOS).length}/${catalog.scenarios.length} laddade`);
 console.log(`Teorimoduler: ${Object.keys(THEORY).length}/${catalog.theory.length} laddade`);
 console.log(`Lärstigar: ${Object.keys(LEARNING_PATHS).length}/${catalog.learning_paths.length} laddade`);
