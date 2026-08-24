@@ -32,17 +32,18 @@ function readJson(dir, relPath) {
   return JSON.parse(readFileSync(full, "utf8"));
 }
 
-// PO/PM:s beslutade produktionsurval (PROD-001B, DEL 1) — facit denna
-// validering kontrollerar mot. Ändras ENDAST efter ett nytt PO/PM-beslut.
+// PO/PM:s beslutade produktionsurval (PROD-001B, DEL 1; utökat i
+// feature/PROD-enable-windup-antiwindup) — facit denna validering
+// kontrollerar mot. Ändras ENDAST efter ett nytt PO/PM-beslut.
 const EXPECTED_LEARNING_PATHS = [
   "kom-igång.v1",
   "oppen-slinga-onoff-p.v1",
   "proportionalband-forstarkning.v1",
   "pi-pid.v1",
-  "processbegransningar.v1"
+  "processbegransningar.v1",
+  "windup-antiwindup.v1"
 ];
 const HIDDEN_LEARNING_PATHS = [
-  "windup-antiwindup.v1",
   "integrerande-process-niva.v1",
   "stegsvar-identifiering.v1",
   "lambda-metoden.v1"
@@ -55,7 +56,7 @@ const KNOWN_EXPERIMENTAL_SCENARIOS = [
 const catalog = readJson(CONTENT_DIR, "catalog.prod.json");
 if (!catalog) { console.error("catalog.prod.json kunde inte läsas — avbryter."); process.exit(1); }
 
-// ── 1. Exakt de fem godkända lärstigarna, i rätt ordning ──
+// ── 1. Exakt de godkända lärstigarna, i rätt ordning ──
 const actualIds = catalog.learning_paths.map(p => p.id);
 if (JSON.stringify(actualIds) !== JSON.stringify(EXPECTED_LEARNING_PATHS)) {
   errors.push(
@@ -64,14 +65,14 @@ if (JSON.stringify(actualIds) !== JSON.stringify(EXPECTED_LEARNING_PATHS)) {
     `    Faktiskt:  ${actualIds.join(", ")}`
   );
 }
-if (actualIds.length !== 5) errors.push(`catalog.prod.json innehåller ${actualIds.length} lärstigar, förväntat exakt 5.`);
+if (actualIds.length !== EXPECTED_LEARNING_PATHS.length) errors.push(`catalog.prod.json innehåller ${actualIds.length} lärstigar, förväntat exakt ${EXPECTED_LEARNING_PATHS.length}.`);
 
 // ── 2. Inga dolda lärstigar läcker in ──
 for (const hiddenId of HIDDEN_LEARNING_PATHS) {
   if (actualIds.includes(hiddenId)) errors.push(`Dold lärstig "${hiddenId}" finns i catalog.prod.json — ska inte visas i PROD.`);
 }
 
-// ── 3. Alla scenario-/teoriberoenden för de fem lärstigarna finns med ──
+// ── 3. Alla scenario-/teoriberoenden för de godkända lärstigarna finns med ──
 const scenarioIds = new Set(catalog.scenarios.map(s => s.id));
 const scenarioFileNames = new Set(catalog.scenarios.map(s => s.file.split("/").pop()));
 const theoryFileNames = new Set(catalog.theory.map(t => t.file.split("/").pop()));

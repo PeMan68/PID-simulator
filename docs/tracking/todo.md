@@ -26,6 +26,20 @@ Nuvarande tillstånd taggat `archive/python-app-v1.7.0` för framtida referens. 
 
 ---
 
+### BESLUT-003 — Välj licens för det publika repositoryt
+**Prioritet:** Låg
+**Beskrivning:**
+Upptäckt under DOCS-001 (dokumentationsrevision efter RELEASE-v1.3.0): projektet saknar
+en licensfil. Repositoryt är publikt sedan tidigare, men ingen `LICENSE`/`LICENCE.md`
+finns, och ingen licens är dokumenterad i README. Utan en explicit licens gäller
+upphovsrättens standardläge (allt är rättighetsskyddat, ingen återanvändning tillåten
+utan tillstånd) — vilket kan vara oavsiktligt givet att repot är publikt och avsett för
+undervisning. DOCS-001 varken valde eller skapade en licens, i linje med uppdragets
+avgränsning; README dokumenterar bara sakligt att frågan är öppen.
+**Status:** Öppen — beslut krävs av PO
+
+---
+
 ### PED-003 — Omstrukturera lärstigar enligt kursens progression
 **Branch:** `feature/PED-003-learning-path-progression`
 **Prioritet:** Hög
@@ -264,9 +278,149 @@ stegsvar-identifiering och lambda-metoden döljs tills vidare (kvar i DEV).
 - Verifierat med Playwright mot lokala DEV- och PROD-förhandsvisningar: samtliga 9
   DEV-lärstigar och alla 5 PROD-lärstigar går att stega igenom utan konsolfel eller
   nätverksfel; Test-läge kan inte tvingas fram i PROD ens via direkt konsolanrop.
-**Status:** Mergad till `develop`. Ingen release, inget till `main`, ingen ändring av
-GitHub Pages-deployen i detta uppdrag. Väntar på PO:s kontroll av PROD-förhandsvisningen
-innan RELEASE-v1.3.0.
+**Status:** Mergad till `develop`. PO/PM kontrollerade och godkände DEV- och
+PROD-förhandsvisningen — se RELEASE-v1.3.0, som publicerade detta produktionsurval.
+
+---
+
+### RELEASE-v1.3.0 — Första stabila undervisningsversionen publicerad
+**Branch:** `release/v1.3.0` (raderad efter lyckad release, se genomförande)
+**Prioritet:** Hög
+**Beskrivning:**
+Uppdrag från PO/PM att publicera v1.3.0 enligt Gitflow: hela `develop` (inklusive
+PROD-001A/B) till `release/v1.3.0`, mergad till `main`, taggad, GitHub Pages omställd att
+publicera uteslutande PROD-profilen från `main`, mergad tillbaka till `develop`. Ingen
+selektiv merge eller cherry-pick — main och develop delar samma källkod, skillnaden är
+enbart miljöprofil och produktionsurval.
+**Genomförande:**
+- Förkontroll: `develop`/`origin/develop` matchade (`26eeb7e`), `main` var strikt bakom
+  utan unikt innehåll, arbetskatalogen ren, inga stashar/opushade brancher.
+- `apps/app/app.js`: `APP_VERSION` → `1.3.0` (visas "v1.3.0" i UI). Content-version
+  (`catalog.json`/`catalog.prod.json`, `v1.5.3`/`v1.5.3-prod`) oförändrad — inget innehåll
+  ändrat i releasen.
+- Ny `CHANGELOG.md` (repo-rot) med användarinriktade releaseanteckningar för v1.3.0.
+- Nytt `.github/workflows/ci.yml`: DEV-/PROD-/allowlist-validering, simuleringsanalys,
+  DEV- och PROD-byggning på push till `develop`/`feature/**`/`release/**` och PR mot
+  `develop`/`main`. Publicerar aldrig Pages.
+- `.github/workflows/deploy-pid-simulator.yml`: triggar nu **endast** på push till `main`
+  (tidigare `develop`, tillfälligt). Kör PROD-validering och simuleringsanalys, bygger med
+  `node tests/build-preview.mjs prod`, publicerar `dist/prod/` (aldrig `apps/app/` direkt
+  eller `dist/dev/`). Concurrency-grupp `pages` tillagd.
+- `release/v1.3.0` innehöll hela `develop` som linjär förfader (`git merge-base
+  --is-ancestor` bekräftat) — enda tillägget var version/changelog/workflows, verifierat
+  via `git diff origin/develop release/v1.3.0 --stat`.
+- Mergad till `main` med synlig merge-commit `17564e1` ("release: PID Simulator v1.3.0"),
+  pushad. `main` verifierat filträds-identiskt med `release/v1.3.0`.
+- Taggad `v1.3.0` (annoterad, pekar på `17564e1`), pushad.
+- GitHub Actions kördes automatiskt på push till `main`: samtliga steg i den nya
+  deploy-workflowen lyckades (PROD-validering, allowlist-validering, simuleringsanalys,
+  PROD-byggning, Pages-publicering).
+- Live smoke-test mot `https://peman68.github.io/PID-simulator/`: appversion v1.3.0, exakt
+  fem lärstigar i rätt ordning, ingen DEV-märkning, Test-läge/poäng dolda och kan inte
+  tvingas fram (varken via konsolanrop eller URL-parametrar), presentationsläge och Mät
+  K/T/L fungerar, `pi-deadtime-comparison.json` bekräftat hämtad via nätverket endast när
+  lärstigen laddar den (inte i scenarioväljaren), 0 konsolfel, 0 nätverksfel.
+- Mergad tillbaka till `develop` (`0ee7b55`), pushad. Efter återmerge: DEV visar
+  fortfarande 9 lärstigar/Test-läge/poäng/DEV-märkning, PROD-byggning från `develop` visar
+  5/inget Test-läge/ingen poäng/ingen DEV-märkning — identiskt med `main`.
+- `release/v1.3.0` raderad lokalt och på origin efter att samtliga steg verifierats.
+- Verifierat i Actions-loggen: push till `develop` (`0ee7b55`) triggade endast CI, ingen
+  Pages-deploy — den nya deploy-workflowen på `develop` kan strukturellt inte längre
+  publicera Pages.
+- GitHub Release kunde inte skapas automatiskt (ingen `gh`-CLI eller annan autentiserad
+  GitHub-åtkomst på arbetsmaskinen) — PO gav manuell instruktion i leveransrapporten.
+  Branschskydd på `main` kunde inte läsas utan autentisering (rulesets-listan var tom,
+  klassisk branch protection-status okänd) — rekommenderade regler rapporterade, inget
+  aktiverat.
+**Status:** Publicerad. `main` = stabil undervisningsversion v1.3.0, `develop` = fortsatt
+utveckling med samma kodbas. Se `docs/development/ENVIRONMENTS.md` för
+STEG 1–5-livscykeln (feature → tekniskt klar → produktionsgodkänd → release → publicerad).
+
+---
+
+### DOCS-001 — Revidera publik dokumentation efter release v1.3.0
+**Branch:** `feature/DOCS-001-public-documentation`
+**Prioritet:** Medel
+**Beskrivning:**
+Uppdrag från PO/PM att revidera repositoryts publika dokumentation efter RELEASE-v1.3.0 —
+README.md var kraftigt föråldrat och beskrev varken DEV/PROD-profilerna eller det
+publicerade produktionsurvalet. Ren dokumentationsrevision, ingen appkod eller
+produktionskonfiguration ändrad.
+**Genomförande:**
+- `README.md` omskrivet i sin helhet: officiell version/URL, PROD-funktionslista och de
+  fem publicerade lärstigarna i rätt ordning, DEV/PROD-tabell, verifierade lokala
+  bygg-/testkommandon, Gitflow med produktionsgodkännande-regeln, projektstatus,
+  licensstatus.
+- `apps/app/README.md` omskrivet — beskrev tidigare en helt annan, övergiven arkitektur
+  ("helt offline", "ingen fetch") som direkt motsade hur appen faktiskt fungerar och som
+  skeppades rakt in i den publicerade PROD-artifakten.
+- `docs/development/ENVIRONMENTS.md` kompletterad med avsnitt om repositoryts synlighet.
+- Ny **BESLUT-003** (licensfråga, öppen punkt för PO — projektet saknar licensfil).
+- Fullständig säkerhets-/integritetsgenomgång av hela det versionshanterade filträdet:
+  0 hemligheter/tokens/nycklar, inga tredjepartspersonuppgifter. Två låggradiga fynd
+  rapporterade (ett lokalt Windows-användarnamn i `.claude/settings.json`, PO:s eget
+  namn/jobbmejl i en commits författaruppgift) — ingen åtgärd krävd.
+- **Viktigt, ej åtgärdat fynd:** PROD-artifakten (`dist/prod/`, byggd med
+  `tests/build-preview.mjs`) innehåller fysiskt samtliga DEV-innehållsfiler — inklusive de
+  fyra dolda lärstigarnas checkpoint-facit — eftersom byggskriptet kopierar hela
+  `apps/app/` utan att filtrera mot `catalog.prod.json`s allowlist. Filerna visas aldrig i
+  UI och hämtas aldrig av den körande appen, men är direkt nåbara för den som känner till
+  URL:en. Detta är ett bygg-/produktfel upptäckt genom dokumentationsgranskningen, inte
+  ett dokumentationsfel — rättades därför inte inom DOCS-001, i linje med uppdragets
+  uttryckliga avgränsning. Se `docs/reports/DOCS-001_DOKUMENTATIONSREVISION.md` för
+  fullständig beskrivning och rekommenderad åtgärd (ett litet, avgränsat tekniskt
+  uppdrag som filtrerar byggstegets filkopiering).
+- Fullständig rapport: `docs/reports/DOCS-001_DOKUMENTATIONSREVISION.md`.
+**Status:** Mergad till `develop`. Det tidigare "viktiga, ej åtgärdade fyndet" (PROD-
+artifakten innehöll fysiskt hela DEV-innehållet) är åtgärdat — se **HOTFIX-v1.3.1** nedan.
+Väntar fortsatt på PO:s och PM:s dokumentationsgranskning — inget beslut fattat om
+publicering av README-revisionen till `main` (separat uppdrag).
+
+---
+
+### HOTFIX-v1.3.1 — Filtrera PROD-artifakten enligt produktionskatalogens allowlist
+**Branch:** `hotfix/v1.3.1-prod-artifact-filtering` (raderad efter lyckad release)
+**Prioritet:** Hög — pedagogisk exponeringsrisk inför undervisningen
+**Beskrivning:**
+PM-beslutad hotfix på det fynd DOCS-001 rapporterade men uttryckligen inte fick rätta:
+`tests/build-preview.mjs` kopierade hela `apps/app/` till PROD-artifakten istället för att
+filtrera mot `catalog.prod.json`. UI:t visade alltid rätt (bara fem lärstigar), men fyra
+dolda lärstigars checkpoint-facit, oanvända/experimentella scenarier och hela DEV-katalogen
+låg fysiskt hämtningsbara på den publicerade webbplatsen för den som kände till URL:en.
+Ingen säkerhets- eller personuppgiftsincident — klassad som pedagogisk exponeringsrisk.
+**Genomförande:**
+- Ny `tests/lib/prod-content-set.mjs`: härleder PROD:s tillåtna innehållsfiler genom att
+  faktiskt läsa varje publicerad lärstigs `steps[]` och slå upp teori-/scenarioreferenserna
+  mot `catalog.prod.json` — inte en hårdkodad lista, inte katalogens `theory[]`/
+  `scenarios[]` rakt av. Fristående scenarier (`standalone !== false`) tas alltid med. Ett
+  lärsteg som refererar något som saknas ger ett tydligt byggfel istället för att tyst
+  hoppas över.
+- Ny `tests/lib/build-prod.mjs` (testbar kärna) och omskrivet `tests/build-preview.mjs`
+  (tunn CLI). DEV-byggningen oförändrad — fortsatt en ren kopia av `apps/app/`.
+- `tests/validate-prod.mjs` utökad: kontrollerar nu även den faktiskt byggda
+  `dist/prod/`-artifakten (kräver att `build-preview.mjs prod` körts först) — inga
+  otillåtna toppnivåkataloger, ingen DEV-katalog, exakt de härledda filerna i
+  exercises/theory/scenarios, `pi-deadtime-comparison` finns men är inte fristående,
+  samtliga filer giltig JSON.
+- Ny `tests/build-preview.test.mjs`: 10 tester mot syntetiska content-fixturer i
+  `os.tmpdir()` (rör aldrig `apps/app/content/`) — täcker bl.a. att en dold lärstigs
+  checkpoint-facit inte finns någonstans i den byggda artifakten, och att en gammal fil
+  från en tidigare byggning rensas bort.
+- `.github/workflows/ci.yml` och `deploy-pid-simulator.yml`: byggordningen ändrad till
+  bygg → validera (tidigare validera → bygg), eftersom valideringen nu kontrollerar den
+  byggda artifakten.
+- `APP_VERSION` → `1.3.1`. Content-version oförändrad (inget lärstigs-/scenario-/
+  teoriinnehåll ändrat, bara vilka filer som byggs in).
+- Verifierat live på https://peman68.github.io/PID-simulator/ efter deployment: samtliga
+  tidigare hämtningsbara dolda/föräldralösa/experimentella filer och DEV-katalogen svarar
+  nu 404; alla fem publicerade lärstigars beroenden (inkl. `pi-deadtime-comparison`, som
+  fortsatt laddas via lärstigen men inte visas fristående) svarar 200; 0 konsolfel,
+  0 nätverksfel; DEV oförändrat (9 lärstigar, Test-läge, poäng, DEV-märkning).
+- Mergad till `main` (`3cc26cc`), taggad `v1.3.1`, mergad tillbaka till `develop`
+  (`70e2f36`, en konflikt i `docs/development/ENVIRONMENTS.md` löst manuellt utan att
+  tappa DOCS-001:s tillägg).
+**Status:** Publicerad. `main` = v1.3.1. Se `docs/development/ENVIRONMENTS.md` för
+uppdaterad byggdokumentation.
 
 ---
 

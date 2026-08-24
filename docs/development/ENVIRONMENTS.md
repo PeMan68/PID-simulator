@@ -118,9 +118,11 @@ eller på disk — det byggs aldrig en ofullständig eller felaktig artifakt tys
 
 **Produktionsförhandsvisningen är avsedd att vara exakt vad en release till `main`
 innehåller:** samma `apps/app/`-kod, samma `env.prod.js` (döpt om till `env.js`), samma
-härledda innehållsfiler. Detta verifierades i RELEASE-v1.3.0 (byggmekanismen är identisk
-oavsett om den körs lokalt eller i GitHub Actions från `main`) och gäller fortsatt efter
-HOTFIX-v1.3.1:s filtrering.
+härledda innehållsfiler. Detta verifierades i RELEASE-v1.3.0 (2026-08-24) — GitHub Actions
+kör `node tests/build-preview.mjs prod` direkt från `main` och publicerar `dist/prod/`,
+byte-identiskt (bortsett från radslutsformat) med den lokala PROD-previewen — och gäller
+fortsatt efter HOTFIX-v1.3.1:s filtrering, verifierat på samma sätt. Det finns ingen
+separat, avvikande previewmekanism.
 
 ## Validering
 
@@ -136,3 +138,74 @@ node tests/build-preview.test.mjs                   # Automatiska tester för ar
 `validate-prod.mjs` kräver att `dist/prod/` redan är byggd (ordningen ovan) — annars
 avbryter det med ett tydligt fel istället för att bara kontrollera källfilerna. Samtliga
 ska köras rent innan `develop` mergas eller en release förbereds.
+
+## Livscykel — från idé till publicerad funktion
+
+En funktion eller lärstig går igenom fyra tydliga statusnivåer. Vilken nivå den befinner
+sig på avgör var i repot den syns och vem som bestämmer nästa steg.
+
+**STEG 1 — Under utveckling.** Arbetet sker i `feature/<uppdrags-id>-<namn>`, avgrenad från
+`develop`. Funktionen stannar i feature-branchen tills den är tekniskt klar.
+
+**STEG 2 — Tekniskt klar.** Feature-branchen testas och mergeas till `develop`. Funktionen
+får nu visas i DEV (`catalog.json`, `env.js`) — men ska vara avstängd eller osynlig i PROD
+om den inte redan är produktionsgodkänd (styrt av `catalog.prod.json`/`env.prod.js` och
+verifierat av `tests/validate-prod.mjs`).
+
+**STEG 3 — Produktionsgodkänd.** När PO godkänner en funktion eller lärstig för
+undervisningsversionen skapas en separat, liten feature branch för själva
+produktionsaktiveringen, t.ex. `feature/PROD-enable-<id>`. Den branchen får omfatta:
+PROD-allowlistet (`catalog.prod.json`), PROD-konfiguration (`env.prod.js`),
+scenarioberoenden, teoriberoenden, PROD-validering och ett PROD-preview-test. Den mergeas
+till `develop` som vilken feature som helst — produktionsgodkännande är ett
+katalogbeslut, inte en release i sig.
+
+**STEG 4 — Release.** Hela `develop` går till en `release/<version>`-branch. Ingen
+cherry-pick, ingen selektiv borttagning av innehåll. Release-branchen får bara tillföra
+version, changelog, releasedokumentation och CI/deploy-konfiguration. Den mergeas till
+`main` (synlig merge-commit, taggad) och sedan tillbaka till `develop`.
+
+**STEG 5 — Publicerad.** GitHub Pages bygger och publicerar PROD-profilen (`dist/prod/`)
+uteslutande från `main`, triggat endast av push till `main`. `main` och `develop`
+innehåller samma kodbas — miljöprofilen (`env.js` vs `env.prod.js`) och allowlistet
+(`catalog.json` vs `catalog.prod.json`) avgör vad användaren faktiskt ser, inte vilken
+Git-branch koden råkar ligga i.
+
+> **Merge till `develop` betyder tekniskt klar. Aktivering i PROD betyder
+> produktionsgodkänd. Publicering från `main` betyder releasad.**
+
+Dessa tre är olika beslut, fattade av olika roller, och ska aldrig sammanblandas: CC gör
+steg 1 och (efter uppdrag) steg 2 och 4; PO/PM beslutar steg 3 (vad som ska synas i PROD)
+och godkänner steg 4/5 (att en release faktiskt får ske).
+
+## Repositoryts synlighet
+
+Repositoryt är **publikt** vid v1.3.0. GitHub Pages publicerar en offentlig webbapp från
+`main` — det är en separat fråga från om själva repositoryt (källkod, historik, `develop`,
+alla brancher) är publikt eller privat. Ett publikt repository innebär att **hela**
+`develop`-innehållet (samtliga 9 lärstigar, Test-läge, poäng, källan till de fyra ännu
+inte produktionsgodkända lärstigarna) är läsbart för vem som helst som klonar repot —
+oavsett vad PROD-profilen visar i webbläsaren. Inget känsligt får därför någonsin läggas
+in i källkoden eller innehållsfilerna med antagandet att "det syns ju bara i DEV" — DEV är
+inte skyddat, bara den publicerade webbappen är filtrerad.
+
+Byte till privat repository är ett separat, administrativt beslut för PO — inget som styrs
+av eller ingår i DEV/PROD-profilerna som beskrivs i detta dokument.
+
+### Exempel: RELEASE-v1.3.0 (2026-08-24)
+
+Första gången hela livscykeln kördes i praktiken:
+
+- PROD-001A (analys) → PROD-001B (STEG 2: DEV/PROD-infrastrukturen mergad till `develop`,
+  produktionsurvalet för de fem godkända lärstigarna satt direkt i samma uppdrag, motsvarande
+  STEG 3) → RELEASE-v1.3.0 (STEG 4–5: `release/v1.3.0` → `main`, taggad `v1.3.0`, mergad
+  tillbaka till `develop`, GitHub Pages publicerad från `main`).
+- Fyra lärstigar (windup-antiwindup.v1, integrerande-process-niva.v1,
+  stegsvar-identifiering.v1, lambda-metoden.v1) stannade på STEG 2 — tekniskt klara, synliga
+  i DEV, men inte i `catalog.prod.json` och därmed osynliga i PROD. De väntar på ett eget
+  `feature/PROD-enable-<id>`-uppdrag när PO bedömer dem pedagogiskt granskade.
+- HOTFIX-v1.3.1 (samma dag) rättade ett fel i STEG 5: PROD-byggningen kopierade tidigare
+  hela `apps/app/` istället för att härleda allowlistet, så dolda lärstigars innehåll (inkl.
+  checkpoint-facit) låg fysiskt kvar i den publicerade artifakten trots att UI:t var
+  korrekt. Gick via samma `hotfix/<version>-<namn>`-mönster som Gitflow beskriver:
+  branch från `main`, merge till `main` (taggad `v1.3.1`), merge tillbaka till `develop`.
