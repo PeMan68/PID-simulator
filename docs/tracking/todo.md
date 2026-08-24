@@ -371,10 +371,11 @@ produktionskonfiguration ändrad.
   fullständig beskrivning och rekommenderad åtgärd (ett litet, avgränsat tekniskt
   uppdrag som filtrerar byggstegets filkopiering).
 - Fullständig rapport: `docs/reports/DOCS-001_DOKUMENTATIONSREVISION.md`.
-**Status:** Mergad till `develop`. Det tidigare "viktiga, ej åtgärdade fyndet" (PROD-
-artifakten innehöll fysiskt hela DEV-innehållet) är åtgärdat — se **HOTFIX-v1.3.1** nedan.
-Väntar fortsatt på PO:s och PM:s dokumentationsgranskning — inget beslut fattat om
-publicering av README-revisionen till `main` (separat uppdrag).
+**Status:** Publicerad till `main` i **RELEASE-v1.4.0**. Det tidigare "viktiga, ej
+åtgärdade fyndet" (PROD-artifakten innehöll fysiskt hela DEV-innehållet) åtgärdades i
+**HOTFIX-v1.3.1**. PO/PM beslutade att låta README-revisionen följa med i samma release
+som produktionsaktiveringen av Windup och anti-windup, istället för en separat
+dokumentationsrelease.
 
 ---
 
@@ -421,6 +422,64 @@ Ingen säkerhets- eller personuppgiftsincident — klassad som pedagogisk expone
   tappa DOCS-001:s tillägg).
 **Status:** Publicerad. `main` = v1.3.1. Se `docs/development/ENVIRONMENTS.md` för
 uppdaterad byggdokumentation.
+
+---
+
+### PROD-enable-windup-antiwindup — Produktionsaktivera Windup och anti-windup
+**Branch:** `feature/PROD-enable-windup-antiwindup` (raderad efter merge)
+**Prioritet:** Medel
+**Beskrivning:**
+PO/PM-beslut efter HOTFIX-v1.3.1: lärstigen Windup och anti-windup är pedagogiskt
+granskad och godkänd för undervisningsversionen. Placeras sist, efter Processens
+begränsningar.
+**Genomförande:**
+`catalog.prod.json` utökad med `windup-antiwindup.v1` (sjätte lärstigen) samt dess
+beroenden — teori `integrator-windup`, scenario `pi-windup-demo` (`standalone: true`,
+inget känt återanvändningsproblem, passar den fristående väljaren). `EXPECTED_LEARNING_
+PATHS` i `tests/validate-prod.mjs` utökad till sex lärstigar; en kvarglömd hårdkodad
+`!== 5`-kontroll rättad till att jämföra mot facitlistans längd. Lärstigens eget
+innehåll (steg, checkpoints) oförändrat — verifierat med `git diff`. Beroenden härledda
+automatiskt av `tests/lib/prod-content-set.mjs`, inga andra filer påverkade.
+**Status:** Mergad till `develop`, publicerad till `main` i RELEASE-v1.4.0.
+
+---
+
+### RELEASE-v1.4.0 — Windup och anti-windup samt reviderad dokumentation publicerade
+**Branch:** `release/v1.4.0` (raderad efter lyckad release)
+**Prioritet:** Hög
+**Beskrivning:**
+PM-beslutad ordinarie release enligt Gitflow: hela `develop` (DOCS-001 +
+HOTFIX-v1.3.1:s artifaktfiltrering + produktionsaktiverad Windup/anti-windup) till
+`release/v1.4.0`, mergad till `main`, taggad, mergad tillbaka till `develop`. Version
+v1.4.0 (inte en patch) eftersom en ny lärstig blir synlig för användarna — en ny
+produktfunktion, inte bara en felrättning.
+**Genomförande:**
+- Förkontroll: `develop`/`origin/develop` matchade (`fcaca0c`), `main` innehöll `v1.3.1`
+  utan oidentifierade tillägg, arbetskatalogen ren.
+- `APP_VERSION` → `1.4.0`. Content-version oförändrad (inget innehåll ändrat i sig, bara
+  produktionsurvalet).
+- `CHANGELOG.md` uppdaterad: sex publicerade lärstigar, README-revisionen nämnd.
+- `release/v1.4.0` verifierad som en linjär fortsättning av `develop` (`git merge-base
+  --is-ancestor`) — enda tillägget var version/changelog, verifierat via `git diff`.
+- Fullständig testsvit grön (DEV-/PROD-validering, allowlist-validering på byggd
+  artifakt, simuleringsanalys, artifaktfiltreringstester) samt lokal Playwright-
+  regression: 6 lärstigar i PROD, Windup-lärstigen genomförbar felfritt, DEV oförändrat.
+- Mergad till `main` (`2e13295`, "release: PID Simulator v1.4.0"), pushad. `main`
+  verifierat filträds-identiskt med `release/v1.4.0`.
+- Taggad `v1.4.0` → `2e13295`, pushad.
+- GitHub Actions kördes automatiskt på push till `main` och lyckades (PROD-validering →
+  simuleringsanalys → PROD-byggning → allowlist-validering på byggd artifakt → Pages).
+- Live smoke-test mot `https://peman68.github.io/PID-simulator/`: appversion v1.4.0, sex
+  lärstigar i rätt ordning, Windup-lärstigens filer (`windup-antiwindup.v1.json`,
+  `integrator-windup.v1.json`, `pi-windup-demo.json`) svarar 200, övriga tre fortsatt
+  dolda lärstigar och DEV-katalogen svarar fortsatt 404, presentationsläge och Mät K/T/L
+  fungerar, 0 konsolfel, 0 nätverksfel.
+- Mergad tillbaka till `develop` (`a4c147a`) utan konflikter (release-branchen innehöll
+  bara version/changelog ovanpå det som redan låg i `develop`). `main` och `develop`
+  filträds-identiska efter återmergen — DOCS-001 ligger nu på båda.
+- `release/v1.4.0` raderad lokalt och på origin efter att samtliga steg verifierats.
+**Status:** Publicerad. `main` = stabil undervisningsversion v1.4.0, `develop` =
+fortsatt utveckling med samma kodbas och samma filträd som `main`.
 
 ---
 
