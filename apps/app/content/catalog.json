@@ -1,5 +1,5 @@
 {
-  "version": "v1.3.1",
+  "version": "v1.5.3",
   "help": "help.json",
   "scenarios": [
     { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json" },
@@ -20,7 +20,12 @@
     { "id": "lambda-pi-aggressive",       "file": "scenarios/lambda-pi-aggressive.json" },
     { "id": "lambda-pi-conservative",     "file": "scenarios/lambda-pi-conservative.json" },
     { "id": "manual-identification",        "file": "scenarios/manual-identification.json" },
-    { "id": "second-order-identification", "file": "scenarios/second-order-identification.json" }
+    { "id": "second-order-identification", "file": "scenarios/second-order-identification.json" },
+    { "id": "p-pi-comparison-p",           "file": "scenarios/p-pi-comparison-p.json" },
+    { "id": "p-pi-comparison-pi",          "file": "scenarios/p-pi-comparison-pi.json" },
+    { "id": "pi-pid-comparison-pi",        "file": "scenarios/pi-pid-comparison-pi.json" },
+    { "id": "pi-pid-comparison-pid",       "file": "scenarios/pi-pid-comparison-pid.json" },
+    { "id": "pi-deadtime-comparison",      "file": "scenarios/pi-deadtime-comparison.json" }
   ],
   "theory": [
     { "id": "pid-intro",      "file": "theory/pid-intro.v1.json" },
@@ -29,14 +34,18 @@
     { "id": "integrator-windup",     "file": "theory/integrator-windup.v1.json" },
     { "id": "integrating-process",   "file": "theory/integrating-process.v1.json" },
     { "id": "lambda-metoden",          "file": "theory/lambda-metoden.v1.json" },
-    { "id": "tangentmetoden",          "file": "theory/tangentmetoden.v1.json" }
+    { "id": "tangentmetoden",          "file": "theory/tangentmetoden.v1.json" },
+    { "id": "proportionalband",        "file": "theory/proportionalband.v1.json" }
   ],
   "learning_paths": [
-    { "id": "grundlaggande.v1",        "file": "exercises/grundlaggande.v1.json" },
-    { "id": "processbegransningar.v1", "file": "exercises/processbegransningar.v1.json" },
-    { "id": "windup.v1",              "file": "exercises/windup.v1.json" },
-    { "id": "lambda-metoden.v1",      "file": "exercises/lambda-metoden.v1.json" },
-    { "id": "kom-igång.v1",               "file": "exercises/kom-igång.v1.json" },
-    { "id": "stegsvar-identifiering.v1", "file": "exercises/stegsvar-identifiering.v1.json" }
+    { "id": "kom-igång.v1",                    "file": "exercises/kom-igång.v1.json" },
+    { "id": "oppen-slinga-onoff-p.v1",         "file": "exercises/oppen-slinga-onoff-p.v1.json" },
+    { "id": "proportionalband-forstarkning.v1", "file": "exercises/proportionalband-forstarkning.v1.json" },
+    { "id": "pi-pid.v1",                       "file": "exercises/pi-pid.v1.json" },
+    { "id": "processbegransningar.v1",         "file": "exercises/processbegransningar.v1.json" },
+    { "id": "windup-antiwindup.v1",            "file": "exercises/windup-antiwindup.v1.json" },
+    { "id": "integrerande-process-niva.v1",    "file": "exercises/integrerande-process-niva.v1.json" },
+    { "id": "stegsvar-identifiering.v1",       "file": "exercises/stegsvar-identifiering.v1.json" },
+    { "id": "lambda-metoden.v1",               "file": "exercises/lambda-metoden.v1.json" }
   ]
 }

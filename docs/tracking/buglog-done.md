@@ -20,6 +20,20 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande buggar st
 
 ## Webbapp (`apps/app/`)
 
+### 2026-012 — PB-band, SP-linje och hysteresband uppdateras inte förrän ett steg körs
+**Prio:** Medel
+**Datum:** 2026-08-23
+**Branch:** `bugfix/2026-012`
+**Beskrivning:**
+Upptäckt av PO under pedagogisk granskning av lärstigen "Proportionalband och regulatorförstärkning": att ändra Kp och lämna fältet, eller att toggla kryssrutan "Visa PB", ritar inte om PB-bandet i grafen förrän minst ett simuleringssteg körts. Samma sak gäller ändring av SP och av On/Off-hysteresgränserna (Hyst. låg/hög).
+**Rotorsak:**
+`fields.kp`/`fields.sp`/`fields.hysteresLower`/`fields.hysteresUpper` saknade helt change-lyssnare — värdena lästes bara in via `syncParamsFromUI()`, som bara anropades från Stega/Kör-knapparna. Dessutom använde `drawChart()`s PB- och hysteresband-kod `sp[sp.length-1] ?? sim.scenario.runtime.setpoint` för att avgöra aktuellt SP — eftersom `sim.history.sp` alltid har minst ett element (initieras i konstruktorn) är `??`-fallbacken död kod, så banden positionerades alltid mot det senast *körda* SP-värdet, inte det aktuella fältvärdet.
+**Fix:**
+Change-lyssnare tillagda på de fyra fälten (synkar + ritar om direkt). `sp_current` i `drawChart()` läser nu `sim.scenario.runtime.setpoint` direkt istället för det historiebaserade uttrycket, på båda ställena (hysteresband och PB-band).
+**Status:** Stängd — verifierad 2026-08-23 (Playwright: PB-band, SP-position och hysteresband uppdateras direkt vid fältändring; full regression av samtliga 9 lärstigar, `tests/validate-content.mjs` och `tests/simulation/analyze.test.mjs` gröna; scenarioresultat oförändrade; 0 konsolfel)
+
+---
+
 ### 2026-010 — Manuell u: första värdet sparas inte, skrivs över med 0.00
 **Prio:** Hög
 **Datum:** 2026-06-04

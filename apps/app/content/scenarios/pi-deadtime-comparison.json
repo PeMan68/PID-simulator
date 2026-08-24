@@ -1,0 +1,25 @@
+{
+  "id": "pi-deadtime-comparison",
+  "version": "v1.0.0",
+  "title": "Dötidsjämförelse — PI-reglering",
+  "description": "Dedikerat scenario för dötidsförsöket i Processens begränsningar (PED-003E). K=1.5, Kp=1.5, Ti=20: L=0 ger obetydlig översläng, L=5 ger en tydlig översläng. Använd inte detta scenario för andra jämförelser utan att verifiera resultatet på nytt.",
+  "tags": ["pi", "deadtime", "comparison", "self"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.5,
+    "T": 15.0,
+    "L": 0.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "pi",
+    "kp": 1.5,
+    "ti": 20.0,
+    "td": 0.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 300, "setpoint": 60.0, "autopause": false }
+}

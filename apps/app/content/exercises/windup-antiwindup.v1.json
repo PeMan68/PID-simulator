@@ -1,0 +1,62 @@
+{
+  "id": "windup-antiwindup.v1",
+  "version": "v1.0.0",
+  "title": "Windup och anti-windup",
+  "description": "Vad som händer när integratorn \"laddar upp\" under lång mättning av utsignalen — och hur anti-windup löser det.",
+  "difficulty": "intermediate",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "integrator-windup.v1.json",
+      "title": "Vad är integratoruppvridning?",
+      "objective": "Förstå när och varför windup uppstår i PI/PID-regulatorer.",
+      "checkpoint": {
+        "question": "När uppstår integratoruppvridning (windup)?",
+        "options": [
+          "När Kp är för stort och processen svänger",
+          "När utsignalen är mättad (vid max eller min) och integratorn fortsätter ackumulera fel",
+          "När D-delen är för stor och derivatan överstiger gränsen",
+          "När SP sänks snabbt och integratorn måste minska snabbt"
+        ],
+        "correct": 1,
+        "explanation": "Windup uppstår när u = u_max (eller u_min) men felet är kvar. Integratorn summerar fortfarande felet, även om mer integrering inte hjälper — u är ju redan maxad. Resultatet är ett enormt integral-värde som ger kraftig överskjutning när u till slut kan minska."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pi-windup-demo.json",
+      "title": "Observera windup utan anti-windup",
+      "objective": "Se hur integratorn vider upp under lång mättning och ger kraftig överskjutning.",
+      "instruction": "Anti-windup-rutan är AVCHECKAT (inläst från scenario). Kör 150 steg. Notera:\n• u (grön) mättas omedelbart vid 100%\n• PV (blå) stiger sakta mot SP=80\n• När PV passerar SP=80 är u fortfarande hög → kraftig överskjutning\n\nTitta på statusraden: I-bidraget (I=...) är enormt trots att PV redan passerat SP.",
+      "checkpoint": {
+        "question": "Vad händer med I-bidraget (I-termen) när u är mättad vid 100% utan anti-windup?",
+        "options": [
+          "I-termen fryser och väntar tills u sjunker under 100%",
+          "I-termen fortsätter växa varje steg, även om u inte kan öka mer",
+          "I-termen nollställs automatiskt vid mättning",
+          "I-termen minskar eftersom felet minskar när PV stiger"
+        ],
+        "correct": 1,
+        "explanation": "Utan anti-windup ackumuleras integralen oavsett om u kan agera på den. Varje steg med e > 0 ökar integralen — även när u redan är 100%. Det leder till det enorma överskjutningen du såg."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pi-windup-demo.json",
+      "title": "Anti-windup aktiverat — jämför effekten",
+      "objective": "Aktivera anti-windup och se hur överskjutningen minskar dramatiskt.",
+      "instruction": "Återställ systemet (knappen 'Återställ system'). Kryssa NU I Anti-windup-rutan. Kör 150 steg igen.\n\nJämför:\n• Hur stor är överskjutningen nu jämfört med utan anti-windup?\n• Hur snabbt stabiliseras systemet?\n\nI-termen i statusraden ska nu vara betydligt lägre när PV når SP.",
+      "checkpoint": {
+        "question": "Varför ger anti-windup mindre överskjutning?",
+        "options": [
+          "Anti-windup ökar Kp automatiskt för att kompensera",
+          "Anti-windup fryser integralen när u är mättad — den kan inte laddas upp i onödan",
+          "Anti-windup nollställer integralen vid varje steg",
+          "Anti-windup minskar Ti automatiskt vid saturation"
+        ],
+        "correct": 1,
+        "explanation": "Med anti-windup tillåts integralen bara ackumuleras när u INTE är mättad (dvs. när u kan påverka processen). Under mättningstiden hålls integralen konstant — den 'vider inte upp'. När felet minskar är integratorn inte överladdad och responsen blir kontrollerad."
+      }
+    }
+  ]
+}

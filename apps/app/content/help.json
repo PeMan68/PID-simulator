@@ -1,7 +1,7 @@
 {
   "k": {
     "title": "K — Processförstärkning",
-    "body": "Bestämmer hur mycket processen påverkas av utsignalen.\n\nK=0.5 och u=100 ger y_max = 50 (vid normalValue=0). Vill du nå SP=80 krävs K≥0.8.\n\nJämförelse: K är som motorns effekt — en svag motor (lågt K) når aldrig höga hastigheter oavsett hur mycket gas du ger."
+    "body": "Bestämmer hur mycket processen påverkas av utsignalen.\n\nK=0.5 och u=100 ger PV_max = 50 (vid normalValue=0). Vill du nå SP=80 krävs K≥0.8.\n\nJämförelse: K är som motorns effekt — en svag motor (lågt K) når aldrig höga hastigheter oavsett hur mycket gas du ger."
   },
   "t": {
     "title": "T — Tidskonstant",
@@ -25,7 +25,7 @@
   },
   "sp": {
     "title": "SP — Börvärde (Setpoint)",
-    "body": "Det värde som processen ska regleras till.\n\nMåste vara inom mätområdet 0–100.\n\nObs: Om SP > normalValue + K × u_max kan processen aldrig nå börvärdet — regulatorn kör mot 100% men y fastnar under SP."
+    "body": "Det värde som processen ska regleras till.\n\nMåste vara inom mätområdet 0–100.\n\nObs: Om SP > normalValue + K × u_max kan processen aldrig nå börvärdet — regulatorn kör mot 100% men PV fastnar under SP."
   },
   "umin": {
     "title": "U min — Lägsta tillåtna utsignal",
@@ -33,11 +33,11 @@
   },
   "umax": {
     "title": "U max — Högsta tillåtna utsignal",
-    "body": "Begränsar regulatorns utsignal uppifrån (0–100).\n\nMaximalt uppnåeligt processvärde:\ny_max = normalValue + K × U max\n\nDefault: 100"
+    "body": "Begränsar regulatorns utsignal uppifrån (0–100).\n\nMaximalt uppnåeligt processvärde:\nPV_max = normalValue + K × U max\n\nDefault: 100"
   },
   "mode": {
     "title": "Regulatorläge",
-    "body": "OnOff: Ut är antingen u_min eller u_max.\nIngen mellannivå. Svänger runt SP.\n\nP: u = Kp × e\nSnabbt men ger alltid kvarstående fel.\n\nPI: u = Kp(e + ∫e/Ti)\nEliminerar kvarstående fel.\n\nPID: Lägger till dämpning via D-del.\nBäst prestanda men känslig för brus.\n\nManuell: Du sätter u direkt.\nAnvändbart för testning och nödsituationer."
+    "body": "OnOff: Ut är antingen u_min eller u_max.\nIngen mellannivå. Svänger runt SP.\n\nP: u = Kp × e\nSnabbt men ger alltid kvarstående fel.\n\nPI: u = Kp(e + ∫e/Ti)\nEliminerar kvarstående fel.\n\nPID: u = Kp × e + (Kp/Ti) × ∫e dt − Kp × Td × (dPV/dt)\nD-delen beräknas på PV, inte på felet — det undviker kraftiga utslag vid SP-ändringar och kan dämpa svängningar. Kan ge snabbare och mer dämpad reglering än PI när parametrarna är rätt valda, men D-delen är känslig för mätbrus.\n\nManuell: Du sätter u direkt.\nAnvändbart för testning och nödsituationer."
   },
   "bumpless": {
     "title": "Bumpless övergång",
@@ -73,19 +73,19 @@
   },
   "normalValue": {
     "title": "Normalvärde — processvärde vid u=0",
-    "body": "Det värde som processen naturligt återgår till när utsignalen u=0.\n\nMaximalt uppnåeligt PV:\ny_max = normalValue + K × u_max\n\nExempel: normalValue=20, K=0.5, u_max=100 → y_max=70.\n\nOm SP > y_max kan regulatorn aldrig nå börvärdet.\n\nGäller bara självreglerande processer — integrerande processer saknar naturlig vilopunkt."
+    "body": "Det värde som processen naturligt återgår till när utsignalen u=0.\n\nMaximalt uppnåeligt PV:\nPV_max = normalValue + K × u_max\n\nExempel: normalValue=20, K=0.5, u_max=100 → PV_max=70.\n\nOm SP > PV_max kan regulatorn aldrig nå börvärdet.\n\nGäller bara självreglerande processer — integrerande processer saknar naturlig vilopunkt."
   },
   "processType": {
     "title": "Processtyp",
-    "body": "Självreglerande: Processen har en naturlig vilopunkt — vid u=0 återgår y till normalValue. Exempel: rumstemperatur, flöde i ett rör.\n\nIntegrerande: Processen integrerar nettoflödet — ingen naturlig vilopunkt. Exempel: tanknivå, position.\n\nJämvikt kräver att inflöde = utflöde: u_jämvikt = utflöde / Kv\n\nTips: Byt typ och ladda om för att se skillnaden i beteende."
+    "body": "Självreglerande: Processen har en naturlig vilopunkt — vid u=0 återgår PV till normalValue. Exempel: rumstemperatur, flöde i ett rör.\n\nIntegrerande: Processen integrerar nettoflödet — ingen naturlig vilopunkt. Exempel: tanknivå, position.\n\nJämvikt kräver att inflöde = utflöde: u_jämvikt = utflöde / Kv\n\nTips: Byt typ och ladda om för att se skillnaden i beteende."
   },
   "kv": {
     "title": "Kv — Hastighetsförstärkning (integrerande process)",
-    "body": "Bestämmer hur snabbt processen integrerar utsignalen.\n\ndy/dt = Kv × u − utflöde\n\nJämviktspunkt: u_jämvikt = utflöde / Kv\n\nKv=0.01 och utflöde=0.5 → u_jämvikt = 50%\n\nTill skillnad från K (självreglerande) bestämmer Kv integrationshastigheten — högre Kv ger snabbare nivåändring per procent utsignal.\n\nPI-regulatorn hittar automatiskt u_jämvikt via sin integratordel."
+    "body": "Bestämmer hur snabbt processen integrerar utsignalen.\n\ndPV/dt = Kv × u − utflöde\n\nJämviktspunkt: u_jämvikt = utflöde / Kv\n\nKv=0.01 och utflöde=0.5 → u_jämvikt = 50%\n\nTill skillnad från K (självreglerande) bestämmer Kv integrationshastigheten — högre Kv ger snabbare nivåändring per procent utsignal.\n\nPI-regulatorn hittar automatiskt u_jämvikt via sin integratordel."
   },
   "outflow": {
     "title": "Utflöde (integrerande process)",
-    "body": "Konstant avrinning eller förbrukning i den integrerande processen.\n\ndy/dt = Kv × u − utflöde\n\nUtflöde = 0: Ren integrator — nivån stiger alltid om u > 0.\nUtflöde > 0: Jämviktspunkt vid u = utflöde / Kv.\n\nExempel:\n• Naturlig dränering ur tank\n• Konstant förbrukning i ett system\n\nObs: Utflöde påverkar inte självreglerande processer."
+    "body": "Konstant avrinning eller förbrukning i den integrerande processen.\n\ndPV/dt = Kv × u − utflöde\n\nUtflöde = 0: Ren integrator — nivån stiger alltid om u > 0.\nUtflöde > 0: Jämviktspunkt vid u = utflöde / Kv.\n\nExempel:\n• Naturlig dränering ur tank\n• Konstant förbrukning i ett system\n\nObs: Utflöde påverkar inte självreglerande processer."
   },
   "antiWindup": {
     "title": "Anti-windup",

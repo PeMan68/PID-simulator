@@ -1,0 +1,44 @@
+{
+  "id": "integrerande-process-niva.v1",
+  "version": "v1.0.0",
+  "title": "Integrerande process och nivåreglering",
+  "description": "Tanknivå som exempel på en integrerande process — varför den skiljer sig från en självreglerande process och kräver PI-reglering.",
+  "difficulty": "intermediate",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "integrating-process.v1.json",
+      "title": "Integrerande processer",
+      "objective": "Förstå skillnaden mellan självreglerande och integrerande processer.",
+      "checkpoint": {
+        "question": "Varför räcker inte P-reglering för en integrerande process?",
+        "options": [
+          "P-reglering är för snabb och ger oscillation",
+          "P-reglering kräver ett kvarstående fel för att hålla u — vid SP ger P-regulatorn u=0 och nivån sjunker",
+          "P-reglering fungerar bara för on/off-system",
+          "P-reglering har ingen effekt på integrerande processer"
+        ],
+        "correct": 1,
+        "explanation": "u_P = Kp × e. För att hålla nivån på SP=60 krävs ett konstant u = utflöde/K. Men P-regulatorn ger u=0 när e=0 (PV=SP). Integratorn i PI-regulatorn hittar och håller rätt u_jämvikt automatiskt."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "integrating-pi.json",
+      "title": "Styr en tanknivå med PI",
+      "objective": "Observera hur PI-regulatorn hittar jämviktspunkten för en integrerande process.",
+      "instruction": "Kör 200 steg. Notera:\n• Nivån (PV) startar vid 20% och ska nå SP=60%\n• u stabiliseras inte vid 0 — regulatorn håller ett konstant u_jämvikt ≈ 50% (utflöde/K = 0.5/0.01)\n• Trigga puls för att simulera störning i utflödet — regulatorn korrigerar\n\nJämför med en självreglerande process: vad är den fundamentala skillnaden i hur steady-state uppnås?",
+      "checkpoint": {
+        "question": "Vad är jämviktspunkten (u_jämvikt) för denna integrerande process med K=0.01 och utflöde=0.5?",
+        "options": [
+          "u_jämvikt = 0% (processen håller sig utan inflöde)",
+          "u_jämvikt = 100% (full effekt krävs alltid)",
+          "u_jämvikt = 50% (utflöde / K = 0.5 / 0.01 = 50%)",
+          "u_jämvikt = SP/100 = 60%"
+        ],
+        "correct": 2,
+        "explanation": "Jämvikt: dPV/dt = 0 → K × u = utflöde → u = utflöde / K = 0.5 / 0.01 = 50%. PI-regulatorn hittar denna punkt automatiskt via integralen. Du kan verifiera: I-termen i statusraden bygger upp tills u ≈ 50% håller PV = SP = 60."
+      }
+    }
+  ]
+}

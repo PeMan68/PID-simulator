@@ -59,7 +59,7 @@ docs/
   exercises/        ← Övningsmaterial och pedagogiska PDF:er
 ```
 
-Python/tkinter-appen (`main.py`) är nedlagd, se BESLUT-002 i `todo.md`. Slutversionen
+Python/tkinter-appen (`main.py`) är nedlagd, se BESLUT-002 i `docs/tracking/todo.md`. Slutversionen
 finns kvar i git-taggen `archive/python-app-v1.7.0`.
 
 ## Gitflow

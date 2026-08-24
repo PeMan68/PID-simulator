@@ -1,0 +1,92 @@
+{
+  "id": "oppen-slinga-onoff-p.v1",
+  "version": "v1.0.0",
+  "title": "Öppen slinga, On/Off och P-reglering",
+  "description": "Del 1 av 2: från ingen reglering alls till proportionell reglering — se vad en regulator faktiskt tillför.",
+  "difficulty": "intro",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "pid-intro.v1.json",
+      "title": "Vad är reglering?",
+      "objective": "Förstå begreppen PV, SP, u och felet e.",
+      "checkpoint": {
+        "question": "Vad kallas skillnaden mellan börvärde (SP) och processvärde (PV)?",
+        "options": ["Utsignalen (u)", "Felet (e)", "Tidskonstanten (T)", "Dötiden (L)"],
+        "correct": 1,
+        "explanation": "Felet e = SP − PV är grunden i all reglering. Regulatorn försöker alltid driva e mot noll."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "manual-open-loop.json",
+      "title": "Öppen slinga (utan reglering)",
+      "objective": "Förstå skillnaden mellan en manuell utsignal och återkopplad reglering.",
+      "instruction": "Kör 100 steg och observera var PV stabiliserar sig. Regulatorn är inte aktiv. Utsignalen u är fast och påverkas inte av SP.\n\nI det här scenariot är processförstärkningen K = 1. Därför stabiliseras PV på ungefär samma värde som u. Om SP råkar ha samma värde betyder det inte att processen regleras mot SP.\n\nÄndra sedan SP och kör vidare utan att ändra u. Observera om PV påverkas.",
+      "checkpoint": {
+        "question": "Vad visar försöket om sambandet mellan SP och u när regulatorn är i manuellt läge?",
+        "options": [
+          "SP styr u direkt, fast med viss fördröjning",
+          "SP påverkar inte u alls — u är fast tills du ändrar den manuellt",
+          "SP och u är alltid lika stora i manuellt läge",
+          "SP påverkar u men bara om K är litet"
+        ],
+        "correct": 1,
+        "explanation": "I manuellt läge finns ingen koppling mellan SP och u — det är precis poängen med öppen slinga. Att PV råkade stämma med SP tidigare berodde bara på att K=1 gjorde att PV stabiliserades vid samma numeriska värde som u, inte på att SP styrde något."
+      }
+    },
+    {
+      "type": "theory",
+      "ref": "onoff-theory.v1.json",
+      "title": "On/Off-reglering — teori",
+      "objective": "Förstå hysteresens roll i den enklaste formen av reglering.",
+      "checkpoint": {
+        "question": "Vad används hysteres till i en on/off-regulator?",
+        "options": [
+          "Öka processförstärkningen K",
+          "Undvika för täta växlingar av utsignalen nära SP",
+          "Eliminera stationärt reglerfel",
+          "Öka regulatorns hastighet"
+        ],
+        "correct": 1,
+        "explanation": "Utan hysteres skulle regulatorn växla mellan på och av varje gång PV passerar SP i endera riktningen — extremt tätt och sliter på utrustningen. Hysteresen skapar ett band runt SP inom vilket ingen växling sker."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "onoff-basic.json",
+      "title": "On/Off-reglering",
+      "objective": "Observera oscillationen kring SP — on/off kan inte stanna exakt.",
+      "instruction": "Kör 40 steg. Notera att PV (blå) oscillerar runt SP (röd streckad). u (grön) växlar bara mellan 0 och 100.",
+      "checkpoint": {
+        "question": "Varför oscillerar PV ständigt runt SP med on/off-reglering?",
+        "options": [
+          "Kp är felaktigt inställt",
+          "On/off har ingen mellannivå — den kan bara välja fullt på eller helt av",
+          "Processen är för snabb",
+          "SP är satt för högt"
+        ],
+        "correct": 1,
+        "explanation": "On/off kan bara ge u_max eller u_min, aldrig ett mellanvärde. Processen overshoots alltid och regulatorn slår om igen — resultatet är kontinuerlig oscillation."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "p-step-self-regulating.json",
+      "title": "P-reglering",
+      "objective": "Se att P-reglering stabiliserar processen men lämnar ett kvarstående reglerfel.",
+      "instruction": "Kör 50 steg och observera var PV stabiliserar sig. Jämför PV med SP och notera reglerfelet e = SP - PV.\n\nTeoriledtråd: För en P-regulator gäller u = Kp × e. Regulatorn behöver alltså ett reglerfel för att skapa en bestående utsignal. Om felet blir noll blir även P-regulatorns bidrag noll.",
+      "checkpoint": {
+        "question": "Varför måste ett kvarstående reglerfel finnas för att P-regulatorn ska kunna hålla den utsignal som processen behöver?",
+        "options": [
+          "Kp är för litet — öka det",
+          "P-regulatorn behöver ett fel (e≠0) för att hålla utsignalen — vid e=0 faller u till noll",
+          "Processen är för trög",
+          "On/off hade fungerat bättre"
+        ],
+        "correct": 1,
+        "explanation": "u = Kp × e. Om e = 0 ger P-regulatorn u = 0, vilket inte räcker för att hålla processen på SP. Därför kvarstår alltid ett litet fel — det kallas stationärt fel."
+      }
+    }
+  ]
+}

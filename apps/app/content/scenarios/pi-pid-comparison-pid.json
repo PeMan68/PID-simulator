@@ -1,0 +1,25 @@
+{
+  "id": "pi-pid-comparison-pid",
+  "version": "v1.0.0",
+  "title": "PI/PID-jämförelse — PID-reglering",
+  "description": "Parameterstudieverifierad (PED-003B): samma process och Kp/Ti som pi-pid-comparison-pi, med Td=2 tillagt — tydligt mindre översläng (~2%) och snabbare insvängning.",
+  "tags": ["pid", "comparison", "self"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.5,
+    "T": 15.0,
+    "L": 5.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "pid",
+    "kp": 1.5,
+    "ti": 10.0,
+    "td": 2.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 300, "setpoint": 60.0, "autopause": false }
+}
