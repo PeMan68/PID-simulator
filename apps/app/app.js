@@ -16,6 +16,28 @@ const ENV_CONFIG = window.ENV_CONFIG || (function () {
   return { environment: "development", showTestMode: true, showScore: true, showExperimentalContent: true, catalogFile: "catalog.json" };
 })();
 
+/* GAM-002 — Aktivitetsprototyp (DEV-only, teknisk analys, ingen synlig XP).
+   Skripten injiceras dynamiskt ENDAST i DEV, så att PROD aldrig ens begär
+   filerna över nätverket (statiska <script>-taggar i index.html hade laddats
+   i båda profilerna). tests/lib/build-prod.mjs kopierar heller aldrig dessa
+   två filer till dist/prod — dubbelt skydd. Se docs/development/GAMIFICATION-PROTOTYPE.md. */
+if (ENV_CONFIG.environment === "development") {
+  ["./activity-prototype-core.js", "./activity-prototype.js"].forEach(src => {
+    const s = document.createElement("script");
+    s.src = src;
+    document.head.appendChild(s);
+  });
+}
+/* Guardat, valfritt anrop — aktivitetsmodulen kan saknas (PROD, eller om den
+   av något skäl inte laddat än) utan att någon av appens kärnfunktioner
+   påverkas. Se DEL 3: "Om aktivitetsmodulen misslyckas ska simulatorn
+   fortfarande fungera." */
+function activityDispatch(type, meta) {
+  if (typeof window.__activityDispatch === "function") {
+    try { window.__activityDispatch(type, meta); } catch (err) { /* tyst — se ovan */ }
+  }
+}
+
 let SCENARIOS = {}, THEORY = {}, LEARNING_PATHS = {}, HELP_CONTENT = {};
 
 function getBasePath() {
@@ -69,6 +91,7 @@ const fields = {
 let currentScenario = null;
 let sim = null;
 let currentPath = null;
+let currentPathId = null; // GAM-002: katalog-id (skiljer sig från processbegransningar.v1:s interna id)
 let currentPathStep = -1;
 let testMode = false;
 let checkpointAnswered = false;
@@ -349,6 +372,12 @@ function hydrateFields(s) {
   fields.processType.value = s.process.type || "self_regulating";
   fields.outflow.value = s.process.outflow ?? 0;
 }
+// GAM-002: kontext för aktivitetsprototypens försöks-/konfigurationsspårning —
+// lärstigssteg om en lärstig är aktiv, annars scenariot självt.
+function activityContextKey() {
+  if (currentPath && currentPathStep >= 0) return currentPathId + "#" + currentPathStep;
+  return currentScenario ? currentScenario.id : null;
+}
 function loadScenarioByName(name) {
   if (measureMode) exitMeasureMode();
   zoomView = null; pvZoomView = null;
@@ -359,6 +388,7 @@ function loadScenarioByName(name) {
   updateControllerUIState();
   updateProcessUIState();
   updateStatus(); drawChart();
+  activityDispatch("scenario_loaded", { scenarioId: currentScenario.id, contextKey: activityContextKey() });
 }
 function syncParamsFromUI() {
   if (!currentScenario || !sim) return;
@@ -506,12 +536,14 @@ function updateNavButtons() {
 }
 function loadPath(name) {
   currentPath = LEARNING_PATHS[name];
+  currentPathId = name;
   currentPathStep = -1;
   pathScore = { correct: 0, total: 0 };
   checkpointAnswered = false;
   updateNavButtons();
   updateScoreDisplay();
   learnBody.innerHTML = "<em>" + currentPath.title + "</em><br><small>" + (currentPath.description || "") + "</small><br><br>Klicka <strong>Nästa »</strong> för att börja.";
+  activityDispatch("learning_path_loaded", { learningPathId: currentPathId });
 }
 function renderStep(step) {
   let bodyText = "";
@@ -577,6 +609,7 @@ function prevPathStep() {
   if (step.type === "scenario" || step.type === "observe") {
     if (SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
   }
+  activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey() });
   renderStep(step);
 }
 function nextPathStep() {
@@ -593,6 +626,7 @@ function nextPathStep() {
   if (step.type === "scenario" || step.type === "observe") {
     if (SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
   }
+  activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey() });
   renderStep(step);
 }
 
@@ -693,6 +727,7 @@ document.querySelectorAll(".help-btn").forEach(btn => {
     const sb = document.getElementById("sidebarRight");
     const toggle = document.getElementById("toggleRight");
     if (sb.classList.contains("collapsed")) { sb.classList.remove("collapsed"); toggle.textContent = "»"; }
+    activityDispatch("help_opened", { helpId: btn.dataset.help, scenarioId: currentScenario ? currentScenario.id : null, learningPathId: currentPathId, stepIndex: currentPathStep >= 0 ? currentPathStep : null });
   });
 });
 
@@ -736,6 +771,22 @@ fields.showPB.addEventListener("change", drawChart);
 [fields.kp, fields.sp, fields.hysteresLower, fields.hysteresUpper].forEach(f => {
   f.addEventListener("change", () => { syncParamsFromUI(); drawChart(); });
 });
+// GAM-002: tunt, tillagt lyssnarpar enbart för aktivitetsloggning — rör inte
+// appens egen parameterhantering ovan/i syncParamsFromUI().
+[["k", fields.k], ["t", fields.t], ["l", fields.l], ["kp", fields.kp], ["ti", fields.ti], ["td", fields.td],
+ ["sp", fields.sp], ["umin", fields.umin], ["umax", fields.umax], ["manualOutput", fields.manualOutput],
+ ["noise", fields.noise], ["pulseMag", fields.pulseMag], ["pulseDuration", fields.pulseDuration]]
+  .forEach(pair => {
+    const name = pair[0], el = pair[1];
+    el.addEventListener("change", () => {
+      activityDispatch("parameter_changed", {
+        field: name,
+        value: Number(el.value),
+        min: el.min !== "" ? Number(el.min) : null,
+        max: el.max !== "" ? Number(el.max) : null,
+      });
+    });
+  });
 document.getElementById("mode").addEventListener("change", () => {
   const newMode = fields.mode.value;
   const bumplessOn = document.getElementById("bumpless").checked;
@@ -751,13 +802,17 @@ document.getElementById("mode").addEventListener("change", () => {
     }
   }
   updateControllerUIState();
+  activityDispatch("regulator_mode_changed", { field: "mode", value: newMode });
 });
-document.getElementById("processType").addEventListener("change", updateProcessUIState);
-document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });
-document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); });
-document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); appendLog("Puls triggad."); });
-document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("Graf nollställd."); updateStatus(); drawChart(); });
-document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("System återställt."); updateStatus(); drawChart(); });
+document.getElementById("processType").addEventListener("change", () => {
+  updateProcessUIState();
+  activityDispatch("process_type_changed", { field: "processType", value: fields.processType.value });
+});
+document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); activityDispatch("simulation_step", { contextKey: activityContextKey() }); });
+document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); activityDispatch("simulation_run", { steps: fs.length, contextKey: activityContextKey() }); });
+document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); appendLog("Puls triggad."); activityDispatch("disturbance_triggered", { contextKey: activityContextKey() }); });
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("Graf nollställd."); updateStatus(); drawChart(); activityDispatch("chart_cleared", {}); });
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("System återställt."); updateStatus(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
@@ -829,6 +884,7 @@ function enterMeasureMode() {
   document.getElementById("btnMeasure").textContent = "✕ Stäng mätläge";
   chartCanvas.style.cursor = "crosshair";
   drawChart();
+  activityDispatch("measurement_started", { contextKey: activityContextKey() });
 }
 
 function exitMeasureMode() {
@@ -868,16 +924,17 @@ document.getElementById("btnFacit").addEventListener("click", () => {
     }
     fb.style.display = "";
     document.getElementById("btnFacit").textContent = "Dölj facit";
+    activityDispatch("measurement_facit_opened", { contextKey: activityContextKey() });
   } else {
     fb.style.display = "none";
     document.getElementById("btnFacit").textContent = "Visa facit";
   }
 });
 
-document.getElementById("mpPv0").addEventListener("input", () => { if (measureMode) drawChart(); });
-document.getElementById("mpPvInf").addEventListener("input", () => { if (measureMode) drawChart(); });
-document.getElementById("mp63Line").addEventListener("change", () => { if (measureMode) drawChart(); });
-document.getElementById("mpTangent").addEventListener("change", () => { if (measureMode) drawChart(); });
+document.getElementById("mpPv0").addEventListener("input", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mpPv0", contextKey: activityContextKey() }); } });
+document.getElementById("mpPvInf").addEventListener("input", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mpPvInf", contextKey: activityContextKey() }); } });
+document.getElementById("mp63Line").addEventListener("change", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mp63Line", contextKey: activityContextKey() }); } });
+document.getElementById("mpTangent").addEventListener("change", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mpTangent", contextKey: activityContextKey() }); } });
 
 chartCanvas.addEventListener("mousemove", e => {
   if (!measureMode) return;
