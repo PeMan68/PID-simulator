@@ -513,9 +513,53 @@ Rent analysuppdrag — ingen appkod, ingen händelseloggning, ingen XP-visning.
   backend, samma princip som redan gäller `pathScore` i det avstängda Test-läget.
 - Föreslog avgränsad nästa-steg-prototyp (DEV-only, konsolutskrift, ingen XP-visning)
   och de konkreta frågor den ska besvara innan synlig XP byggs.
-**Status:** Mergad till `develop`. Analysdokumentet är nu versionshanterat. Ingen
-prototyp påbörjad — väntar på separat PO/PM-beslut. Pedagogisk granskning av
-kvarvarande DEV-lärstigar är fortsatt högre prioriterat.
+**Status:** Mergad till `develop`. Analysdokumentet är nu versionshanterat. Uppföljt av
+**GAM-002** (teknisk prototyp). Pedagogisk granskning av kvarvarande DEV-lärstigar är
+fortsatt högre prioriterat än att gå vidare mot synlig XP.
+
+---
+
+### GAM-002 — Prototyp för sessionsbaserad aktivitetsmätning
+**Branch:** `feature/GAM-002-activity-prototype` (raderad efter merge)
+**Prioritet:** Låg — teknisk prototyp, ingen synlig funktion
+**Beskrivning:**
+PO-beslutad DEV-only prototyp som mäter och sammanställer sessionsaktivitet i
+webbläsarkonsolen — ingen XP visas, ingen data sparas mellan sessioner, PROD helt
+opåverkat. Syfte: kontrollera att appen kan skilja meningsfullt arbete från råa klick
+innan viktning, levels eller lagring beslutas. Underlag: `docs/planning/GAMIFICATION-XP-ANALYS.md`.
+**Genomförande:**
+- `apps/app/activity-prototype-core.js` — DOM-fri tillståndsmaskin, samma UMD-mönster
+  som `sim-core.js`, testbar i Node med injicerad tid (ingen väntan på verklig tid).
+  Händelsekällad tidsavräkning (`settle()`), inget `setInterval`.
+- `apps/app/activity-prototype.js` — tunn DOM-koppling (Page Visibility, focus/blur,
+  strypt pointermove utan koordinater, `window.__activityDispatch`,
+  `window.ActivityPrototype` för DEV-konsolen).
+- `app.js`: skripten injiceras dynamiskt ENDAST om `ENV_CONFIG.environment ===
+  "development"` — PROD begär dem aldrig (noll extra nätverkstrafik, verifierat: 0
+  träffar på `activity-prototype*` i nätverksfliken). Dubbelt skydd:
+  `tests/lib/build-prod.mjs` kopierar aldrig filerna till `dist/prod/`. Tunna, guardade
+  `activityDispatch()`-anrop tillagda vid befintliga knapp-/fälthändelser — ingen
+  befintlig logik ändrad, simulatorn opåverkad om modulen saknas eller felar.
+- 60 s inaktivitetsgräns (startvärde), pointermove strypt till 1/5s, `help_opened` med
+  k/kv som separata `helpId`, 5 %-regel för distinkt konfiguration (dokumenterad
+  relativ-ändring-fallback för de fält som saknar `max`-attribut: k, t, l, kp, ti, td,
+  noise, pulseMag, pulseDuration), 20-stegsregel för genomfört försök, jämförelsepar,
+  lärstigsprogression (bakåtnavigering ger inte falska framsteg).
+- `tests/activity-prototype.test.mjs` — 39 kontroller mot kärnmodulen (motsvarar
+  uppdragets 30 testpunkter), inkl. strukturella kontroller av att ingen persistens,
+  nätverkstrafik eller koppling till simuleringskärnan finns. 39/39 OK.
+- Verifierat i riktig webbläsarsession (Playwright, DEV): fullständig testsession
+  (lärstig, navigering, hjälptexter, en- och tiostegning, två parameterändringar under
+  respektive över 5 %-tröskeln, Mät K/T/L, facit, flik dold/återställd) gav en
+  sammanställning som exakt matchade den utförda sessionen, 0 konsolfel, 0 nätverksfel.
+- PROD-regression (Playwright): `window.ActivityPrototype`/`window.__activityDispatch`
+  existerar inte, 0 nätverksanrop mot aktivitetsfilerna, appen i övrigt oförändrad (6
+  lärstigar, Test/poäng/DEV-märkning dolda). DEV oförändrat i övrigt (9 lärstigar,
+  Test-läge fullt fungerande).
+- Ny `docs/development/GAMIFICATION-PROTOTYPE.md` — fullständig teknisk dokumentation,
+  kända begränsningar och de frågor som ska utvärderas manuellt innan synlig XP byggs.
+**Status:** Mergad till `develop`. Ingen release, `main` oförändrat. Väntar på att
+prototypen faktiskt används och att PO/PM beslutar om nästa steg.
 
 ---
 
