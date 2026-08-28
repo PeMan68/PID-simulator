@@ -483,6 +483,42 @@ fortsatt utveckling med samma kodbas och samma filträd som `main`.
 
 ---
 
+### GAM-001 — Komplettera gamification-analysen med aktiv interaktionstid och hjälpaktivitet
+**Branch:** `feature/GAM-001-gamification-analysis` (raderad efter merge)
+**Prioritet:** Låg — analys/dokumentation, ingen implementation
+**Beskrivning:**
+Uppföljningsuppdrag till den ännu overkommittade XP-viktningsanalysen
+(`docs/planning/GAMIFICATION-XP-ANALYS.md`). Kompletterar med PO/PM:s fyra nya
+principer: aktiv interaktionstid (inte bara öppettid), musrörelse som svag
+aktivitetssignal (aldrig XP), hjälptextsanvändning (XP första gången per unik
+hjälptext/session) och en tre-nivåmodell råhändelser → pedagogiska aktiviteter → XP.
+Rent analysuppdrag — ingen appkod, ingen händelseloggning, ingen XP-visning.
+**Genomförande:**
+- Inventerade samtliga 23 fysiska `.help-btn`-knappar / 24 distinkta hjälptexts-ID:n i
+  `apps/app/index.html`/`help.json` (inkl. att `#kHelpBtn` dynamiskt växlar mellan
+  `k`/`kv`) — grundat i faktisk kod, inte äldre rapporter.
+- Ny modell för aktiv tid: Page Visibility API + window focus/blur + egna
+  interaktionshändelser, med 60 s som rekommenderat (ej beslutat) startvärde för
+  inaktivitetsgränsen. Idle Detection API avfärdat (HTTPS-krav, permission-prompt,
+  begränsat stöd) till förmån för den enklare lokala modellen.
+- `pointermove`: rekommenderad strypning till högst var 5:e sekund, ingen
+  koordinatlagring, ger aldrig XP — bara en aktivitetssignal som håller
+  inaktivitetstimern igång.
+- Föreslog en tre-nivåmodell (råhändelser → pedagogiska aktiviteter → XP) och
+  analyserade vilka råhändelser som ändå kan ge direkt XP utan spamrisk
+  (`help_opened` och "nytt högsta lärstegsindex" — båda har ett naturligt tak).
+- Analyserade tre alternativ för aktiv tid som XP-källa (ren statistik / låg XP med tak
+  / XP kräver samtidig pedagogisk aktivitet) — rekommenderar att börja med ren statistik.
+- Integritetsavsnitt: inga koordinater, inget tangentinnehåll, ingen persistens, ingen
+  backend, samma princip som redan gäller `pathScore` i det avstängda Test-läget.
+- Föreslog avgränsad nästa-steg-prototyp (DEV-only, konsolutskrift, ingen XP-visning)
+  och de konkreta frågor den ska besvara innan synlig XP byggs.
+**Status:** Mergad till `develop`. Analysdokumentet är nu versionshanterat. Ingen
+prototyp påbörjad — väntar på separat PO/PM-beslut. Pedagogisk granskning av
+kvarvarande DEV-lärstigar är fortsatt högre prioriterat.
+
+---
+
 ### FEAT-022 — Direktverkande / Omvänt verkande (verkningsriktning)
 **Branch:** `feature/verkningsriktning`
 **Prioritet:** Medel
