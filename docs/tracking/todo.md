@@ -563,6 +563,23 @@ prototypen faktiskt används och att PO/PM beslutar om nästa steg.
 
 ---
 
+### FEAT-030 — Lärstig "Störningar och robusthet"
+**Branch:** `feature/storningar-robusthet`
+**Prioritet:** Medel
+**Beskrivning:**
+Ny lärstig baserad på källmaterialet i `docs/exercises/ovningar-signalstorningar.md`
+(ursprungligen skrivet för Python-appen), omstrukturerad och anpassad till nuvarande
+webbapps termer och funktioner. Bygger på de två redan existerande men oanvända
+scenarierna `pid-disturbance-noise` och `pid-pulse-rejection` — inga nya scenariofiler
+behövs. Identifierad som "quick win" i `docs/reports/PED-001_NULAGE.md` och rankad som
+topprioriterad kandidat i `docs/planning/PED-002_PROGRESSIONSKARTLAGGNING.md` (avsnitt 5,
+kandidat 1, "Medel" arbetsinsats, inga beroenden). Täcker brus vs. P/PI/PID, D-delens
+bruskänslighet, pulsstörning och återhämtningstid, samt avvägningen aggressiv/konservativ
+inställning. En ny teorimodul om störningar/robusthet skapas som inledande steg.
+**Status:** Öppen
+
+---
+
 ### FEAT-022 — Direktverkande / Omvänt verkande (verkningsriktning)
 **Branch:** `feature/verkningsriktning`
 **Prioritet:** Medel
