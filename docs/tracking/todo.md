@@ -576,7 +576,20 @@ topprioriterad kandidat i `docs/planning/PED-002_PROGRESSIONSKARTLAGGNING.md` (a
 kandidat 1, "Medel" arbetsinsats, inga beroenden). Täcker brus vs. P/PI/PID, D-delens
 bruskänslighet, pulsstörning och återhämtningstid, samt avvägningen aggressiv/konservativ
 inställning. En ny teorimodul om störningar/robusthet skapas som inledande steg.
-**Status:** Öppen
+**Genomförande:**
+Ny lärstig `storningar-robusthet.v1` (7 steg: 1 teori + 6 scenario, samtliga med
+checkpoints), placerad efter `windup-antiwindup.v1` i katalogordningen (matchar
+"felkällor"-temat i kursens vecka 39 enligt PED-002). Ny teorimodul
+`disturbance-robustness.v1.json`. Återanvänder befintliga `pid-disturbance-noise.json` och
+`pid-pulse-rejection.json` genom att instruera manuella fältändringar (Läge P/PI/PID,
+Brus std, Trigga puls) på samma sätt som `kom-igång.v1` redan gör — inga nya scenariofiler.
+Endast `catalog.json` (DEV) uppdaterad; `catalog.prod.json` explicit oförändrat (PROD-
+aktivering är ett separat PO-beslut, se `docs/development/ENVIRONMENTS.md`).
+`node tests/validate-content.mjs`, `node tests/build-preview.mjs prod`,
+`node tests/validate-prod.mjs`, `node tests/build-preview.test.mjs` och
+`node tests/simulation/analyze.test.mjs` körda rent.
+**Status:** Tekniskt klar i `feature/storningar-robusthet`, väntar på testning/merge till
+`develop` enligt `docs/WORKFLOW.md`.
 
 ---
 

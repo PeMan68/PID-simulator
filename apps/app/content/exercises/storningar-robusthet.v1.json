@@ -1,0 +1,129 @@
+{
+  "id": "storningar-robusthet.v1",
+  "version": "v1.0.0",
+  "title": "Störningar och robusthet",
+  "description": "Hur P-, I- och D-delen hanterar mätbrus och pulsstörningar olika — och avvägningen mellan snabb respons och okänslighet för störningar.",
+  "difficulty": "intermediate",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "disturbance-robustness.v1.json",
+      "title": "Brus, puls och robusthet",
+      "objective": "Förstå de två störningstyperna i simulatorn och varför de påverkar P-, I- och D-delen olika.",
+      "checkpoint": {
+        "question": "Vilken del av PID-regulatorn förstärker mätbrus mest i utsignalen?",
+        "options": [
+          "P-delen, eftersom den har högst Kp",
+          "I-delen, eftersom den ackumulerar alla historiska värden",
+          "D-delen, eftersom den deriverar PV och förstärker snabba förändringar",
+          "SP-inställningen, eftersom den styr felet direkt"
+        ],
+        "correct": 2,
+        "explanation": "D-delen beräknar u_D = −Kp·Td·(dPV/dt). Mätbrus består av snabba, slumpmässiga hopp i PV — och en derivata förstärker just snabba förändringar. I-delen (som summerar) dämpar tvärtom enskilda brustoppars inverkan."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pid-disturbance-noise.json",
+      "title": "P möter kontinuerligt brus",
+      "objective": "Se hur P-reglering överför mätbrus rakt igenom till utsignalen.",
+      "instruction": "Scenariot laddar PID-läge med Brus std=3. Byt Läge till P (Ti och Td stängs av automatiskt).\n\nSätt tillfälligt Brus std till 0 och kör 60 steg — det här är din brusfria baslinje.\n\nHöj sedan Brus std till 3 igen, klicka Rensa graf och kör 60 steg till.\n\nJämför de två körningarna: hur mycket brusigare blir u (grön) jämfört med PV (blå) när bruset är på?",
+      "checkpoint": {
+        "question": "Varför blir utsignalen u nästan lika brusig som mätbruset i PV när regulatorn bara har en P-del?",
+        "options": [
+          "u = Kp × e, och e innehåller bruset direkt — varje brustopp i PV ger omedelbart en proportionell topp i u",
+          "P-delen filtrerar bort brus automatiskt vid höga Kp-värden",
+          "Bruset påverkar bara SP, inte PV, så u borde vara helt opåverkat",
+          "Brus std styr bara grafens upplösning, inte den faktiska simuleringen"
+        ],
+        "correct": 0,
+        "explanation": "P-regulatorn har inget minne och ingen utjämning — den reagerar direkt och proportionellt på det aktuella felet e = SP−PV. Om PV innehåller brus gör e det också, och u = Kp×e förstärker det bruset direkt."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pid-disturbance-noise.json",
+      "title": "PI dämpar bruset i utsignalen",
+      "objective": "Se hur I-delen gör u lugnare trots samma brusnivå i PV.",
+      "instruction": "Byt Läge till PI (Ti återgår till scenariots 12s). Klicka Rensa graf och kör 60 steg med Brus std fortfarande på 3.\n\nJämför u:s variation med P-försöket i förra steget — PV ser ungefär lika brusig ut, men hur ser u ut nu?",
+      "checkpoint": {
+        "question": "Varför blir utsignalen u lugnare med PI än med enbart P, trots att PV är lika brusig i båda fallen?",
+        "options": [
+          "I-delen summerar felet över många steg, så enstaka brustoppar väger lätt i den ackumulerade summan — bara P-delens direkta bidrag följer bruset lika snabbt",
+          "PI-regulatorn mäter PV mer sällan än P-regulatorn",
+          "Ti-parametern filtrerar bort brus innan det når regulatorn",
+          "Anti-windup tar bort bruset automatiskt"
+        ],
+        "correct": 0,
+        "explanation": "I-termen är en löpande summa av felet — ett enstaka högt eller lågt brusvärde påverkar summan marginellt. P-termen däremot följer varje enskilt PV-värde direkt. Därför blir den sammanlagda utsignalen jämnare även om mätbruset i sig är oförändrat."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pid-disturbance-noise.json",
+      "title": "D-delen förstärker bruset igen",
+      "objective": "Se hur D-delen gör utsignalen mer hackig, trots att den ger snabbare respons på riktiga förändringar.",
+      "instruction": "Byt Läge till PID (Td återgår till scenariots 2s). Rensa graf och kör 60 steg med Brus std=3.\n\nJämför u mot PI-försöket i förra steget — blev utsignalen lugnare eller mer ryckig?",
+      "checkpoint": {
+        "question": "Vad händer med utsignalens bruskänslighet när D-delen läggs till?",
+        "options": [
+          "Den minskar, eftersom D-delen förutser och kompenserar för brus i förväg",
+          "Den ökar igen, eftersom D-delen deriverar PV och små, snabba brushopp ger stora derivator",
+          "Den är opåverkad — D-delen påverkar bara översläng, inte bruskänslighet",
+          "Den försvinner helt eftersom anti-windup är aktiverat"
+        ],
+        "correct": 1,
+        "explanation": "Derivatan (dPV/dt) förstärker just snabba förändringar — och slumpmässigt mätbrus består av snabba, oregelbundna hopp. D-delen 'ser' varje sådant hopp som en stor förändringshastighet och reagerar kraftigt, vilket gör u mer ryckig även om den underliggande processen inte förändras lika snabbt."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pid-pulse-rejection.json",
+      "title": "Pulsstörning och återhämtning",
+      "objective": "Se hur regulatorn driver PV tillbaka mot SP efter en kortvarig, kraftig störning.",
+      "instruction": "Ladda scenariot 'PID pulsstörningsavstötning' (PID, Kp=1.0, Ti=10, Td=2, inget brus). Kör 30 steg tills PV stabiliserat sig nära SP=50.\n\nKlicka 'Trigga puls' (Puls mag=10, Puls steg=5) och fortsätt köra minst 60 steg till.\n\nNotera: hur långt rubbas PV av pulsen, och ungefär hur många steg tar det innan PV är tillbaka nära SP?",
+      "checkpoint": {
+        "question": "Vad kallas tiden det tar för processen att återgå nära börvärdet efter att en störning klingat av?",
+        "options": ["Stigtid", "Återhämtningstid", "Dötid", "Proportionalband"],
+        "correct": 1,
+        "explanation": "Återhämtningstid mäter hur snabbt systemet svarar på och kompenserar för en störning — skilt från stigtiden, som beskriver responsen på en börvärdesändring. En robust regulator har kort återhämtningstid utan att bli för känslig för brus."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pid-pulse-rejection.json",
+      "title": "Jämför P, PI och PID mot samma puls",
+      "objective": "Se vilken regulatortyp som klarar en pulsstörning bäst — och vilken som lämnar kvarstående fel.",
+      "instruction": "Återställ systemet. Byt Läge till P (Ti/Td stängs av automatiskt). Kör tills PV är stabil, klicka 'Trigga puls', kör 60 steg till och notera slutläget.\n\nÅterställ systemet igen. Byt Läge till PI (Ti=10s). Upprepa samma test.\n\nÅterställ en sista gång. Byt Läge till PID (Td=2s). Upprepa samma test igen.\n\nJämför de tre förloppen: vilken regulatortyp återgår snabbast till SP, och lämnar någon ett kvarstående fel efter pulsen?",
+      "checkpoint": {
+        "question": "Vilken av de tre regulatortyperna lämnar ett kvarstående (statiskt) fel efter att pulsstörningen har klingat av?",
+        "options": [
+          "P-reglering, eftersom den saknar I-del som kan eliminera felet helt",
+          "PI-reglering, eftersom I-delen 'glömmer' gamla fel",
+          "PID-reglering, eftersom D-delen stör I-delens arbete",
+          "Ingen — alla tre återgår alltid exakt till SP"
+        ],
+        "correct": 0,
+        "explanation": "Precis som vid ett börvärdessteg krävs en I-del för att helt eliminera ett kvarstående fel. P-reglering kräver ett fel för att hålla en icke-nollutsignal, så efter en störning stannar PV nära men inte exakt på SP. PI och PID eliminerar båda felet helt, givet tillräckligt med tid."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "pid-disturbance-noise.json",
+      "title": "Kompromiss: aggressiv eller konservativ?",
+      "objective": "Se att det inte finns en enda 'bästa' inställning när både snabbhet och bruskänslighet räknas.",
+      "instruction": "Med scenariot 'PID med brus' laddat (Brus std=3): prova en aggressiv inställning, t.ex. Kp=2.5, Ti=6, Td=3 — Rensa graf, kör 90 steg. Notera hur snabbt PV når SP och hur brusig u blir.\n\nÅterställ systemet, ställ in en konservativ inställning, t.ex. Kp=0.6, Ti=20, Td=1 — kör 90 steg igen. Notera samma sak.\n\nDet finns ingen 'rätt' inställning här — bara olika avvägningar mellan snabbhet och lugn.",
+      "checkpoint": {
+        "question": "Vad är den huvudsakliga avvägningen mellan en aggressiv och en konservativ PID-inställning under störningar?",
+        "options": [
+          "Aggressiv reglering är alltid bättre eftersom den svarar snabbare på allt",
+          "Aggressiv reglering ger snabbare respons på riktiga förändringar men förstärker brus mer; konservativ reglering är lugnare men långsammare att reagera",
+          "Konservativ reglering är alltid bättre eftersom den aldrig oscillerar",
+          "Det finns ingen skillnad — brusnivån påverkas bara av processens K-värde"
+        ],
+        "correct": 1,
+        "explanation": "Högre Kp och kortare Ti/Td-marginaler gör regulatorn snabbare på att driva bort verkliga fel — men samma känslighet gör den också snabbare att reagera på brus. Vilken avvägning som är rätt beror på processen: kritiska processer med mycket brus kräver ofta en mer konservativ inställning, medan en process med rent mätvärde tål en aggressivare."
+      }
+    }
+  ]
+}

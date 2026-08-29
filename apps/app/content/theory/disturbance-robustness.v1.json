@@ -1,0 +1,14 @@
+{
+  "id": "disturbance-robustness-v1",
+  "version": "v1.0.0",
+  "title": "Störningar och robusthet",
+  "summary": "Hur mätbrus och pulsstörningar påverkar P-, I- och D-delen på olika sätt — och varför robusthet alltid är en avvägning.",
+  "bullets": [
+    "Simulatorn har två typer av störningar: kontinuerligt mätbrus (Brus std) och korta pulsstörningar (Puls mag/Puls steg) — de testar olika egenskaper hos regulatorn",
+    "P-delen överför brus direkt till utsignalen: u = Kp × e, så ett brusigt fel ger ett lika brusigt u",
+    "I-delen summerar felet över tid, vilket dämpar enskilda brustoppars inverkan på u — men gör inget åt att bruset finns kvar i PV",
+    "D-delen är känsligast för brus: den deriverar PV, och en snabb, slumpmässig förändring i mätbrus ger en stor, kortvarig spik i u",
+    "En pulsstörning testar återhämtningsförmågan — hur snabbt regulatorn driver PV tillbaka mot SP efter en kortvarig, kraftig störning",
+    "Robusthet är en avvägning: en aggressiv inställning (högt Kp, lågt Ti) reagerar snabbt på verkliga fel men förstärker brus mer; en konservativ inställning är lugnare men långsammare att återhämta sig"
+  ]
+}
