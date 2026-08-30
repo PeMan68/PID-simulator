@@ -599,8 +599,18 @@ dokumenten redan fungerar (fristående lärarmaterial, inte appinnehåll).
 visas i appens gränssnitt (bara `title` i scenariolistan) — ett scenario ensamt kan alltså
 inte förmedla mål/kontext till studenten. Ett övningsdokument (samma mönster som appens tre
 ursprungliga `docs/exercises/*.md`) är därför rätt leveransform, inte en lärstig.
-**Status:** Öppen — dokumentet skrivet, scenariofiler för progressionen är ett möjligt
-uppföljningssteg (se dokumentets "Om scenarier"-notering) men inte del av detta uppdrag.
+**Verifiering:** Samtliga sex övningars start- och målvärden körda genom
+`tests/simulation/lib/analyze.mjs` (samma simuleringskärna som appen) innan publicering.
+Fångade och rättade två processer där börvärdet var fysikaliskt onåbart oavsett trimning
+(K×U_max < SP i både reaktor- och mästarövningen — K höjt i båda). Övning 1:s ursprungliga
+"undvik svängning"-mål visade sig alltid vara sant vid L=0 med ren P-reglering (svängning är
+inte fysikaliskt möjlig i det fallet) — målet omformulerat till kvarstående fel vs.
+utsignalsmättning. Övning 3:s "svänger"-påstående höll inte vid simulering (enstaka kraftig
+översläng, ingen sustained oscillation) — omformulerat. Övning 4:s startinställning bytt mot
+ett värde som verifierat ger sustained oscillation (83+ lokala extrempunkter).
+**Status:** Öppen — dokumentet skrivet och simuleringsverifierat, ren studenttext utan
+Python-app-referenser. Scenariofiler för progressionen är ett möjligt uppföljningssteg, inte
+del av detta uppdrag.
 
 ---
 
