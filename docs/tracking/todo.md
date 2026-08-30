@@ -580,6 +580,30 @@ inställning. En ny teorimodul om störningar/robusthet skapas som inledande ste
 
 ---
 
+### FEAT-031 — Övningsdokument "Regulatortrimning i praktiken"
+**Branch:** `feature/regulatortrimning`
+**Prioritet:** Medel
+**Beskrivning:**
+Nytt fristående övningsdokument (`docs/exercises/ovningar-regulatortrimning.md`), adresserar
+samma PO-önskemål som föranledde FEAT-030: relevanta övningsuppgifter för studenter att
+experimentera på, byggda på källmaterialet i `docs/exercises/ovningar-systemoptimering.md`
+(ursprungligen Python-appen) — men uttryckligen **inte** som en ny guidad lärstig med
+checkpoints. Sex realistiska processer i stigande svårighetsgrad (P → PI → PID med dötid →
+integrerande process → utsignalsbegränsning → mästarövning som kombinerar allt), var och en
+med en medvetet feltrimmad startinställning som studenten själv ska förbättra mot ett
+angivet mål. Bygger inte på scenariofiler ännu — processen ställs in manuellt enligt
+dokumentets tabeller (se dokumentets egen notering om varför). Dokumentet är inte länkat
+någonstans i appen eller README, i linje med hur de tre ursprungliga `docs/exercises/`-
+dokumenten redan fungerar (fristående lärarmaterial, inte appinnehåll).
+**Bakgrund/vägval:** Undersökning visade att en standalone-scenarios `description` aldrig
+visas i appens gränssnitt (bara `title` i scenariolistan) — ett scenario ensamt kan alltså
+inte förmedla mål/kontext till studenten. Ett övningsdokument (samma mönster som appens tre
+ursprungliga `docs/exercises/*.md`) är därför rätt leveransform, inte en lärstig.
+**Status:** Öppen — dokumentet skrivet, scenariofiler för progressionen är ett möjligt
+uppföljningssteg (se dokumentets "Om scenarier"-notering) men inte del av detta uppdrag.
+
+---
+
 ### FEAT-022 — Direktverkande / Omvänt verkande (verkningsriktning)
 **Branch:** `feature/verkningsriktning`
 **Prioritet:** Medel
