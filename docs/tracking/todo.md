@@ -604,6 +604,63 @@ uppföljningssteg (se dokumentets "Om scenarier"-notering) men inte del av detta
 
 ---
 
+### FEAT-032 — Kurvöverlagring för regulatorjämförelse
+**Branch:** `feature/kurvoverlagring`
+**Prioritet:** Ej bedömd — utvärdering av om/när den ska göras tas separat
+**Beskrivning:**
+Möjlighet att spara en körd kurva och sedan köra en ny med andra regulatorinställningar
+ovanpå, för att visuellt jämföra t.ex. olika Kp/Ti/Td på samma process — motsvarande
+"Spara"-funktionen (max 5 sparade kurvor, stigande transparens äldst→nyast, permanent
+färg-ID per kurva) som fanns i den nedlagda Python-appen (`git tag
+archive/python-app-v1.7.0`, se `export_plots`/`save_simulation_to_history` i `main.py`).
+Ingen kod från Python-appen kan återanvändas (annan renderingsmotor), men beteendet är
+en bra utgångspunkt: historiken rensades automatiskt vid ändrad *process* (K/T/L/typ/
+mätområde) men inte vid ändrad regulator, för att undvika missvisande jämförelser mellan
+olika processer.
+**Nuläge i webbappen:** `sim.history` ([apps/app/app.js](../../apps/app/app.js)) håller
+bara en körning åt gången; "Rensa graf" nollställer helt. `drawChart()` ritar redan
+godtyckliga färger per serie, så kärnändringen är ett `savedRuns`-state plus en
+loop med nedtonad opacitet — men zoom, mätläge (tangentlinje/63 %) och PB-bandet är alla
+skrivna mot den enda aktiva historiken och behöver ett uttryckligt beslut om de ska
+gälla alla kurvor eller bara den aktiva.
+**Bakgrund:** Motsvarar `FEAT-006` ("Utökad historik — jämförelse och export") från
+Python-appen, stängd utan implementation via `BESLUT-002` när Python-appen lades ner —
+inte en tidigare avvisad idé, bara aldrig byggd för webben. Även
+[docs/exercises/ovningar-systemoptimering.md](../exercises/ovningar-systemoptimering.md)
+förutsätter redan denna funktion ("Spara"-knapp, max 5 kurvor) i sina instruktioner,
+trots att den inte finns i webbappen — relevant om det källmaterialet någonsin blir en
+guidad lärstig (se `FEAT-031`, som uttryckligen undvek det beroendet).
+**Status:** Öppen
+
+---
+
+### FEAT-033 — Exportera diagram i hög upplösning och simuleringsdata
+**Branch:** `feature/export-diagram-data`
+**Prioritet:** Ej bedömd — utvärdering av om/när den ska göras tas separat
+**Beskrivning:**
+Två separata exportbehov: (1) diagrammet som bild i högre upplösning än skärmvisningen,
+för användning i rapporter/experimentdokumentation, och (2) simuleringsdata (tidsserier
+och/eller regulator-/processparametrar) exporterbart för vidare analys. Motsvarande
+Python-appens `export_plots` (matplotlib `fig.savefig(dpi=300, bbox_inches='tight')`,
+PNG/PDF/SVG) och `export_data` (CSV med tidsserie, svenskt `;`-format och decimalkomma).
+**Nuläge i webbappen:** Ingen exportfunktion finns alls. `chartCanvas` skalas idag bara
+mot `clientWidth` utan hänsyn till `devicePixelRatio` ([apps/app/app.js:107](../../apps/app/app.js)),
+så ett direkt `canvas.toDataURL()` skulle ge lika låg upplösning som skärmen — en
+högupplöst export kräver att diagrammet ritas om mot en större offscreen-canvas vid
+exporttillfället, inte en ren skärmdump. `sim.history` innehåller redan all data som
+behövs för en CSV-export. Webbappen har inga externa beroenden (inget byggsteg, inga
+CDN-script i `index.html`) — export bör lösas handrullat (canvas + Blob/`<a download>`)
+om den arkitekturen ska bevaras, inte via ett nytt bibliotek.
+**Beroende:** Om `FEAT-032` (kurvöverlagring) byggs, bör bildexporten rimligen inkludera
+alla synliga kurvor, inte bara den aktiva — men denna feature kan byggas fristående och
+oberoende av `FEAT-032` (exporterar då bara det som visas för tillfället).
+**Bakgrund:** Motsvarar `FEAT-013` ("Förbättrad export-funktionalitet") från
+Python-appen, stängd utan implementation via `BESLUT-002` av samma skäl som `FEAT-032`
+ovan.
+**Status:** Öppen
+
+---
+
 ### FEAT-022 — Direktverkande / Omvänt verkande (verkningsriktning)
 **Branch:** `feature/verkningsriktning`
 **Prioritet:** Medel
