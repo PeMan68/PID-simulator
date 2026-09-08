@@ -14,6 +14,7 @@
     showTestMode: false,
     showScore: false,
     showExperimentalContent: false,
+    showMeasurementFacit: false,
     catalogFile: "catalog.prod.json"
   };
   global.ENV_CONFIG = ENV_CONFIG;

@@ -2,6 +2,26 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.4.1] — 2026-09-08
+
+### Rättat (HOTFIX-v1.4.1)
+
+- Tangentlinjens facit har tillfälligt tagits bort från PROD eftersom funktionen behöver
+  fortsatt utredning. Gäller både "Visa tangentlinje"-kryssrutan (den geometriska
+  konstruktionen som beräknar och visar L/T) och "Visa facit"-knappen (tabellen med
+  scenariots faktiska K/T/L-värden) i mätpanelen.
+- Grafens marköravläsning, Mät K/T/L, 63%-linjen och zoomning finns kvar och fungerar
+  oförändrat i PROD.
+- DEV behåller tangentfacitet oförändrat för fortsatt teknisk och pedagogisk utredning.
+- Ny miljöflagga `ENV_CONFIG.showMeasurementFacit` styr detta (`true` i DEV, `false` i
+  PROD) — se `docs/development/ENVIRONMENTS.md`. Ingen URL-parameter, hash eller
+  tangentkommando kan aktivera facitet i PROD.
+
+### Version
+
+`APP_VERSION` = 1.4.1. Ingen content-versionsändring (endast `apps/app/app.js`,
+`apps/app/env.js`, `apps/app/env.prod.js` och `apps/app/index.html` ändrade).
+
 ## [v1.4.0] — 2026-08-24
 
 ### Nytt i denna release
