@@ -556,3 +556,36 @@ framtida GAM-uppdrag. Dokumenteras här utan att någon kod ändrats för detta.
 dwell-baserad grafavläsning som pedagogisk aktivitet utan att belöna zoomning eller
 vanlig musrörelse — se punkt 2 i "Rekommenderat nästa steg" (avsnitt 14), där detta
 naturligt hör hemma som en del av händelseloggnings-prototypen.
+
+## 16. GAM-003A — XP-modellen provräknad och kalibrerad
+
+PM:s preliminära XP-modell (avsnitt 2–3 i detta dokument var förstadiet) har nu
+provräknats fullständigt mot samtliga tio aktiva DEV-lärstigar, tre användarprofiler,
+16 manipulationsscenarier och alternativa regler för hjälp-/enstegnings-XP och
+nivåkurvor. Fullständig analys, metod och siffror:
+`docs/reports/GAM-003A_XP-KALIBRERING.md` (+ maskinläsbar
+`GAM-003A_XP-KALIBRERING.json`). Återanvändbart beräkningsverktyg:
+`tests/gamification/` (kör oförändrad GAM-002-kod, ändrar den aldrig).
+
+**Sammanfattning av resultatet:**
+- PM:s huvudkandidat är en solid utgångspunkt, men två regler (hjälp-XP utan tak,
+  enstegnings-XP staplat över många försök) gör att en aktiv fördjupare kan nå
+  maxnivån (Reglerlegend) redan efter sju av tio lärstigar — mot kalibreringsmålet.
+- Rekommenderad justering: hjälptak 5 unika hjälptexter/session, enstegningstak
+  3/försök (ner från 5), och en långsammare nivåkurva
+  (0/50/130/250/410/620/890/1220). Med dessa tre ändringar når varken en normal
+  användare eller en aktiv fördjupare taket genom en enda genomgång av alla
+  lärstigar — se rapportens avsnitt 13/15 för fullständig motivering.
+- Checkpoint-XP rekommenderas ligga i ett SEPARAT prestationssystem, inte i
+  nivå-XP:t, för att undvika att nivån blir ett kunskapsmått.
+- Ett strukturellt fynd: GAM-002 kan bara upptäcka jämförelsepar inom samma
+  kontext (scenario/lärstigssteg) — flera lärstigar (inklusive
+  `storningar-robusthet.v1`s `continueFromPreviousStep`-funktion, FEAT-030) bygger
+  pedagogiskt på jämförelser som korsar kontextgränser och som därför aldrig syns
+  för GAM-002. Öppet produktbeslut för en framtida lösning, se rapportens avsnitt 16.
+
+**Status:** XP-modellen är provräknad och tekniskt kalibrerad. Synlig XP är
+fortfarande INTE implementerad. Nivå-UX (åtta nivåer, badge, grafisk mätare) är
+beslutad (se `docs/development/GAMIFICATION-PROTOTYPE.md`). Produktionsaktivering är
+inte beslutad. Nästa planerade steg: **GAM-003B** — synlig DEV-prototyp med
+nivåbadge, nivånamn och grafisk nivåmätare. GAM-003B är inte påbörjat.
