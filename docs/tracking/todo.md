@@ -588,7 +588,40 @@ aktivering är ett separat PO-beslut, se `docs/development/ENVIRONMENTS.md`).
 `node tests/validate-content.mjs`, `node tests/build-preview.mjs prod`,
 `node tests/validate-prod.mjs`, `node tests/build-preview.test.mjs` och
 `node tests/simulation/analyze.test.mjs` körda rent.
-**Status:** Tekniskt klar i `feature/storningar-robusthet`, väntar på testning/merge till
+
+**Uppföljning efter PO:s test:** ursprungliga instruktionerna i steg 2 ("P möter
+kontinuerligt brus"), 6 ("Jämför P, PI och PID mot samma puls") och 7 ("Kompromiss:
+aggressiv eller konservativ?") bad användaren klicka Rensa graf/Återställ MITT I ett
+stegs egen jämförelse — vilket gör jämförelsen omöjlig eftersom kurvan försvinner. PO
+testade och identifierade att manuell parameterändring med fortsatt körning på SAMMA
+graf ger en bättre jämförelse.
+
+- **Ny appfunktion:** grå markeringslinje ritas i grafen (`apps/app/app.js`,
+  `drawChart()`) varje gång en betydelsefull parameter ändras (regulatorläge, Kp/Ti/Td,
+  brus, SP, process) eller en puls triggas — så flera faser syns tydligt i en och samma
+  kontinuerliga graf. Markeringarna nollställs av Rensa graf/Återställ (ny mätserie) och
+  vid scenariobyte, men INTE av vanliga parameterändringar. Verifierat med Playwright
+  (14 automatiska kontroller): korrekt etikett/tidpunkt, nollställs korrekt, inga
+  spökmarkeringar, inga konsolfel.
+- **Viktigt strukturellt fynd:** varje lärstigssteg av typen `scenario` laddar om sitt
+  scenario helt automatiskt när steget öppnas ([app.js:673](../../apps/app/app.js#L673))
+  — även om det refererar samma scenariofil som föregående steg. Det innebär att en
+  förenklad, MIT-i-instruktionen "Rensa graf"/"Återställ" alltid var överflödig i
+  början av ett steg (redan gjort av navigeringen), men också att steg 2, 3 och 4 (alla
+  tre refererar `pid-disturbance-noise.json`) INTE kan visa en sammanhängande
+  P→P+brus→PI→PID-jämförelse i en enda graf utan att slås ihop till ETT lärstigssteg —
+  vilket i sin tur kräver att slå ihop tre separata checkpoints till en. Inte gjort här;
+  kräver ett PO-beslut (se konversationen för avvägningen).
+- Steg 2, 6, 7 omskrivna: tar bort de MITT-i-steget-instruerade Rensa graf/Återställ-
+  klicken, instruerar istället "kör vidare på samma graf" och hänvisar till
+  markeringslinjen. `maxSteps` kontrollerat och räcker utan ändring (900/600, nya
+  instruktionerna kräver som mest ~210 respektive ~180 steg).
+- `node tests/validate-content.mjs` kört rent igen efter ändringarna.
+
+**Status:** Tekniskt klar i `feature/storningar-robusthet`, uppföljning efter PO:s första
+testomgång genomförd (markeringsfunktion + steg 2/6/7 omskrivna). Steg 3/4:s
+strukturella begränsning (se ovan) väntar på PO-beslut om den ska åtgärdas i detta
+uppdrag eller lämnas till en separat uppföljning. Väntar därefter på testning/merge till
 `develop` enligt `docs/WORKFLOW.md`.
 
 ---

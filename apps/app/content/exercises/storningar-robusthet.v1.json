@@ -27,7 +27,7 @@
       "ref": "pid-disturbance-noise.json",
       "title": "P möter kontinuerligt brus",
       "objective": "Se hur P-reglering överför mätbrus rakt igenom till utsignalen.",
-      "instruction": "Scenariot laddar PID-läge med Brus std=3. Byt Läge till P (Ti och Td stängs av automatiskt).\n\nSätt tillfälligt Brus std till 0 och kör 60 steg — det här är din brusfria baslinje.\n\nHöj sedan Brus std till 3 igen, klicka Rensa graf och kör 60 steg till.\n\nJämför de två körningarna: hur mycket brusigare blir u (grön) jämfört med PV (blå) när bruset är på?",
+      "instruction": "Scenariot laddar PID-läge med Brus std=3. Byt Läge till P (Ti och Td stängs av automatiskt).\n\nSätt tillfälligt Brus std till 0 och kör 60 steg — det här är din brusfria baslinje.\n\nHöj sedan Brus std till 3 igen och kör 60 steg till, på SAMMA graf (klicka inte Rensa graf) — en grå markeringslinje visar var du höjde bruset.\n\nJämför de två faserna i samma graf: hur mycket brusigare blir u (grön) jämfört med PV (blå) när bruset är på?",
       "checkpoint": {
         "question": "Varför blir utsignalen u nästan lika brusig som mätbruset i PV när regulatorn bara har en P-del?",
         "options": [
@@ -94,7 +94,7 @@
       "ref": "pid-pulse-rejection.json",
       "title": "Jämför P, PI och PID mot samma puls",
       "objective": "Se vilken regulatortyp som klarar en pulsstörning bäst — och vilken som lämnar kvarstående fel.",
-      "instruction": "Återställ systemet. Byt Läge till P (Ti/Td stängs av automatiskt). Kör tills PV är stabil, klicka 'Trigga puls', kör 60 steg till och notera slutläget.\n\nÅterställ systemet igen. Byt Läge till PI (Ti=10s). Upprepa samma test.\n\nÅterställ en sista gång. Byt Läge till PID (Td=2s). Upprepa samma test igen.\n\nJämför de tre förloppen: vilken regulatortyp återgår snabbast till SP, och lämnar någon ett kvarstående fel efter pulsen?",
+      "instruction": "Byt Läge till P (Ti/Td stängs av automatiskt). Kör tills PV är stabil (ca 30 steg), klicka 'Trigga puls', kör 60 steg till och notera slutläget.\n\nByt Läge till PI (Ti=10s) och fortsätt köra på SAMMA graf (ingen återställning) — kör 60 steg, klicka 'Trigga puls' igen, kör 60 steg till.\n\nByt Läge till PID (Td=2s) och upprepa samma sak igen, fortfarande på samma graf.\n\nDe grå markeringslinjerna visar var du bytte regulatorläge och var du triggade varje puls. Jämför de tre förloppen i samma graf: vilken regulatortyp återgår snabbast till SP, och lämnar någon ett kvarstående fel efter pulsen?",
       "checkpoint": {
         "question": "Vilken av de tre regulatortyperna lämnar ett kvarstående (statiskt) fel efter att pulsstörningen har klingat av?",
         "options": [
@@ -112,7 +112,7 @@
       "ref": "pid-disturbance-noise.json",
       "title": "Kompromiss: aggressiv eller konservativ?",
       "objective": "Se att det inte finns en enda 'bästa' inställning när både snabbhet och bruskänslighet räknas.",
-      "instruction": "Med scenariot 'PID med brus' laddat (Brus std=3): prova en aggressiv inställning, t.ex. Kp=2.5, Ti=6, Td=3 — Rensa graf, kör 90 steg. Notera hur snabbt PV når SP och hur brusig u blir.\n\nÅterställ systemet, ställ in en konservativ inställning, t.ex. Kp=0.6, Ti=20, Td=1 — kör 90 steg igen. Notera samma sak.\n\nDet finns ingen 'rätt' inställning här — bara olika avvägningar mellan snabbhet och lugn.",
+      "instruction": "Med scenariot 'PID med brus' laddat (Brus std=3): prova en aggressiv inställning, t.ex. Kp=2.5, Ti=6, Td=3 — kör 90 steg. Notera hur snabbt PV når SP och hur brusig u blir.\n\nStäll sedan in en konservativ inställning, t.ex. Kp=0.6, Ti=20, Td=1 — och kör 90 steg till, på SAMMA graf (ingen återställning). Markeringslinjen visar var du bytte inställning. Notera samma sak för den konservativa fasen.\n\nDet finns ingen 'rätt' inställning här — bara olika avvägningar mellan snabbhet och lugn.",
       "checkpoint": {
         "question": "Vad är den huvudsakliga avvägningen mellan en aggressiv och en konservativ PID-inställning under störningar?",
         "options": [
