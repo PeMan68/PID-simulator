@@ -43,9 +43,10 @@
     {
       "type": "scenario",
       "ref": "pid-disturbance-noise.json",
+      "continueFromPreviousStep": true,
       "title": "PI dämpar bruset i utsignalen",
       "objective": "Se hur I-delen gör u lugnare trots samma brusnivå i PV.",
-      "instruction": "Byt Läge till PI (Ti återgår till scenariots 12s). Klicka Rensa graf och kör 60 steg med Brus std fortfarande på 3.\n\nJämför u:s variation med P-försöket i förra steget — PV ser ungefär lika brusig ut, men hur ser u ut nu?",
+      "instruction": "Fortsätter på samma graf som föregående steg. Byt Läge till PI (Ti=12s, hämtas automatiskt) och kör 60 steg till med Brus std fortfarande på 3 — markeringslinjen visar var du bytte läge.\n\nJämför u:s variation mot P-fasen tidigare i samma graf — PV ser ungefär lika brusig ut, men hur ser u ut nu?",
       "checkpoint": {
         "question": "Varför blir utsignalen u lugnare med PI än med enbart P, trots att PV är lika brusig i båda fallen?",
         "options": [
@@ -61,9 +62,10 @@
     {
       "type": "scenario",
       "ref": "pid-disturbance-noise.json",
+      "continueFromPreviousStep": true,
       "title": "D-delen förstärker bruset igen",
       "objective": "Se hur D-delen gör utsignalen mer hackig, trots att den ger snabbare respons på riktiga förändringar.",
-      "instruction": "Byt Läge till PID (Td återgår till scenariots 2s). Rensa graf och kör 60 steg med Brus std=3.\n\nJämför u mot PI-försöket i förra steget — blev utsignalen lugnare eller mer ryckig?",
+      "instruction": "Fortsätter på samma graf som föregående steg. Byt Läge till PID (Td=2s, hämtas automatiskt) och kör 60 steg till — markeringslinjen visar var du bytte läge.\n\nJämför u mot PI-fasen tidigare i samma graf — blev utsignalen lugnare eller mer ryckig?",
       "checkpoint": {
         "question": "Vad händer med utsignalens bruskänslighet när D-delen läggs till?",
         "options": [

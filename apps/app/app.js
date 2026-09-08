@@ -103,6 +103,7 @@ let hoverPos = null;
 let zoomView   = null; // null = visa allt, { start, end } = zoomed t-range
 let pvZoomView = null; // null = visa allt, { min, max } = zoomed PV-range
 let lastMarkerSnapshot = null; // baseline för att upptäcka parameterändringar under en pågående körning (se markera-i-grafen-funktionen)
+let currentScenarioRef = null; // senast laddade scenariots FIL-referens (t.ex. "pid-disturbance-noise.json") — currentScenario.id saknar .json, så den räcker inte för att jämföra mot lärstigsstegs step.ref
 
 function appendLog(line) { logEl.textContent += line + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 function fitCanvas() { const w = Math.max(680, chartCanvas.clientWidth); if (chartCanvas.width !== w) chartCanvas.width = w; }
@@ -401,6 +402,7 @@ function loadScenarioByName(name) {
   if (measureMode) exitMeasureMode();
   zoomView = null; pvZoomView = null;
   currentScenario = deepClone(SCENARIOS[name]);
+  currentScenarioRef = name;
   sim = new Simulation(currentScenario, 42);
   sim.history.markers = [];
   hydrateFields(currentScenario);
@@ -687,7 +689,14 @@ function nextPathStep() {
   }
   const step = currentPath.steps[currentPathStep];
   if (step.type === "scenario" || step.type === "observe") {
-    if (SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
+    // continueFromPreviousStep: explicit opt-in (default: ladda om, som tidigare) för
+    // steg som medvetet fortsätter samma körning på samma graf över flera lärstigssteg
+    // (t.ex. en P→PI→PID-jämförelse) istället för att börja om. Kräver samma
+    // scenarioreferens som redan är laddad — annars körs alltid en vanlig omladdning,
+    // så en felskriven flagga aldrig kan köra fel scenario. Gäller bara framåtnavigering
+    // (prevPathStep laddar alltid om — "fortsätta bakåt" har ingen rimlig innebörd).
+    const continueSameRun = step.continueFromPreviousStep && currentScenarioRef === step.ref;
+    if (!continueSameRun && SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
   }
   activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey() });
   renderStep(step);

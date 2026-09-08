@@ -603,26 +603,35 @@ graf ger en bättre jämförelse.
   vid scenariobyte, men INTE av vanliga parameterändringar. Verifierat med Playwright
   (14 automatiska kontroller): korrekt etikett/tidpunkt, nollställs korrekt, inga
   spökmarkeringar, inga konsolfel.
-- **Viktigt strukturellt fynd:** varje lärstigssteg av typen `scenario` laddar om sitt
-  scenario helt automatiskt när steget öppnas ([app.js:673](../../apps/app/app.js#L673))
-  — även om det refererar samma scenariofil som föregående steg. Det innebär att en
-  förenklad, MIT-i-instruktionen "Rensa graf"/"Återställ" alltid var överflödig i
-  början av ett steg (redan gjort av navigeringen), men också att steg 2, 3 och 4 (alla
-  tre refererar `pid-disturbance-noise.json`) INTE kan visa en sammanhängande
-  P→P+brus→PI→PID-jämförelse i en enda graf utan att slås ihop till ETT lärstigssteg —
-  vilket i sin tur kräver att slå ihop tre separata checkpoints till en. Inte gjort här;
-  kräver ett PO-beslut (se konversationen för avvägningen).
-- Steg 2, 6, 7 omskrivna: tar bort de MITT-i-steget-instruerade Rensa graf/Återställ-
-  klicken, instruerar istället "kör vidare på samma graf" och hänvisar till
-  markeringslinjen. `maxSteps` kontrollerat och räcker utan ändring (900/600, nya
-  instruktionerna kräver som mest ~210 respektive ~180 steg).
-- `node tests/validate-content.mjs` kört rent igen efter ändringarna.
+- **Strukturellt fynd + lösning:** varje lärstigssteg av typen `scenario` laddar om sitt
+  scenario helt automatiskt när steget öppnas ([app.js:689](../../apps/app/app.js#L689))
+  — även om det refererar samma scenariofil som föregående steg. Det gjorde en
+  sammanhängande P→P+brus→PI→PID-jämförelse omöjlig över steg 2/3/4 (alla tre refererar
+  `pid-disturbance-noise.json`), eftersom varje stegbyte tömde grafen och nollställde
+  simuleringen — oavsett instruktionstext. Löst med ett nytt, explicit
+  steg-fält `"continueFromPreviousStep": true` (samma mönster som `standalone`/
+  `ENV_CONFIG.*` — explicit opt-in, aldrig implicit gissning): när satt och stegets
+  `ref` matchar det redan laddade scenariot hoppas omladdningen över och körningen
+  fortsätter på samma graf. Kräver exakt matchande referens — annars laddas alltid om
+  som vanligt, så en felskriven flagga aldrig kan köra fel scenario. Gäller bara
+  framåtnavigering; bakåt (`prevPathStep`) laddar alltid om rent (verifierat).
+  Satt på steg 3 och 4 i `storningar-robusthet.v1.json`; steg 2 gör den första,
+  normala laddningen och steg 5 (annat scenario) laddar om som vanligt.
+- Steg 2, 3, 4, 6, 7 omskrivna: tar bort alla MITT-i-steget-instruerade Rensa graf/
+  Återställ-klick, instruerar istället "kör vidare på samma graf" och hänvisar till
+  markeringslinjen. `maxSteps` kontrollerat och räcker utan ändring (900/600, längsta
+  sammanhängande körningen — steg 2+3+4 — blir 240 steg).
+- Verifierat end-to-end med Playwright genom hela lärstigsnavigeringen (9 kontroller):
+  steg 2→3→4 bildar nu EN sammanhängande 240-stegskörning med 4 markeringar och tre
+  fristående checkpoints intakta; steg 4→5 laddar korrekt om (annat scenario); bakåt-
+  navigering laddar alltid om rent. 0 konsolfel genom hela sekvensen.
+- `node tests/validate-content.mjs` kört rent igen efter samtliga ändringar.
 
-**Status:** Tekniskt klar i `feature/storningar-robusthet`, uppföljning efter PO:s första
-testomgång genomförd (markeringsfunktion + steg 2/6/7 omskrivna). Steg 3/4:s
-strukturella begränsning (se ovan) väntar på PO-beslut om den ska åtgärdas i detta
-uppdrag eller lämnas till en separat uppföljning. Väntar därefter på testning/merge till
-`develop` enligt `docs/WORKFLOW.md`.
+**Status:** Tekniskt klar i `feature/storningar-robusthet`, uppföljning efter PO:s test
+genomförd (markeringsfunktion, `continueFromPreviousStep` och steg 2/3/4/6/7 omskrivna).
+Steg 2–4 visar nu en sammanhängande jämförelse i en och samma graf, med alla tre
+checkpoints bevarade. Väntar på ytterligare PO-test av den slutgiltiga lärstigen, därefter
+testning/merge till `develop` enligt `docs/WORKFLOW.md`.
 
 ---
 
