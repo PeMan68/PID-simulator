@@ -20,6 +20,7 @@
     showTestMode: true,
     showScore: true,
     showExperimentalContent: true,
+    showMeasurementFacit: true,
     catalogFile: "catalog.json"
   };
   global.ENV_CONFIG = ENV_CONFIG;

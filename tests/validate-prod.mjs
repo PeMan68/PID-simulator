@@ -117,6 +117,7 @@ if (!envProd) {
   if (envProd.showTestMode !== false) errors.push("env.prod.js: showTestMode är inte false — Test-läge är inte avstängt.");
   if (envProd.showScore !== false) errors.push("env.prod.js: showScore är inte false — poängvisning är inte avstängd.");
   if (envProd.showExperimentalContent !== false) errors.push("env.prod.js: showExperimentalContent är inte false.");
+  if (envProd.showMeasurementFacit !== false) errors.push("env.prod.js: showMeasurementFacit är inte false — tangentlinjens facit/K-T-L-facit är inte avstängt (HOTFIX-v1.4.1).");
   if (envProd.catalogFile !== "catalog.prod.json") errors.push(`env.prod.js: catalogFile är "${envProd.catalogFile}", förväntat "catalog.prod.json".`);
 }
 
@@ -160,6 +161,15 @@ if (!existsSync(DIST_PROD_DIR)) {
   // DEV-katalogen får aldrig finnas i PROD-artifakten.
   if (existsSync(path.join(distContentDir, "catalog.json"))) {
     errors.push("dist/prod/content/catalog.json finns — DEV-katalogen läcker in i PROD-artifakten.");
+  }
+  // GAM-002 (DEV-only aktivitetsprototyp, se docs/development/GAMIFICATION-PROTOTYPE.md)
+  // ska aldrig nå PROD — build-prod.mjs kopierar den inte idag (allowlist saknar filerna),
+  // men denna kontroll skyddar mot regression om det ändras av misstag efter en framtida
+  // återmerge till develop (HOTFIX-v1.4.1, DEL 7).
+  for (const gamFile of ["activity-prototype-core.js", "activity-prototype.js"]) {
+    if (existsSync(path.join(DIST_PROD_DIR, gamFile))) {
+      errors.push(`dist/prod/${gamFile} finns — GAM-002 (DEV-prototyp) ska aldrig nå PROD-artifakten.`);
+    }
   }
   if (existsSync(path.join(DIST_PROD_DIR, "env.prod.js"))) {
     errors.push("dist/prod/env.prod.js finns — mallfilen ska inte finnas i den byggda artifakten.");
@@ -233,6 +243,7 @@ if (!existsSync(DIST_PROD_DIR)) {
       if (envBuilt.environment !== "production") errors.push(`dist/prod/env.js: environment är "${envBuilt.environment}", förväntat "production".`);
       if (envBuilt.showTestMode !== false) errors.push("dist/prod/env.js: Test-läge är inte avstängt i den byggda artifakten.");
       if (envBuilt.showScore !== false) errors.push("dist/prod/env.js: poäng är inte avstängt i den byggda artifakten.");
+      if (envBuilt.showMeasurementFacit !== false) errors.push("dist/prod/env.js: showMeasurementFacit är inte false i den byggda artifakten — tangentfacit inte avstängt (HOTFIX-v1.4.1).");
     }
   }
 

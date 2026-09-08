@@ -4,7 +4,7 @@
    Simulation kommer från sim-core.js (laddas som separat <script> före
    denna fil) — se apps/app/sim-core.js. Delad med tests/simulation/. */
 
-const APP_VERSION = "1.4.0";
+const APP_VERSION = "1.4.1";
 
 /* ENV_CONFIG sätts av env.js (laddas som separat <script> FÖRE denna fil,
    se index.html och docs/development/ENVIRONMENTS.md). Fallback här är en
@@ -13,7 +13,7 @@ const APP_VERSION = "1.4.0";
    URL-parameter, tangentbord eller dold knapp — enda källan är env.js. */
 const ENV_CONFIG = window.ENV_CONFIG || (function () {
   console.warn("env.js saknas — faller tillbaka till development-profil.");
-  return { environment: "development", showTestMode: true, showScore: true, showExperimentalContent: true, catalogFile: "catalog.json" };
+  return { environment: "development", showTestMode: true, showScore: true, showExperimentalContent: true, showMeasurementFacit: true, catalogFile: "catalog.json" };
 })();
 
 let SCENARIOS = {}, THEORY = {}, LEARNING_PATHS = {}, HELP_CONTENT = {};
@@ -190,8 +190,9 @@ function drawChart() {
       ctx.restore();
     }
 
-    // Tangentlinje (Ziegler-Nichols)
-    if (document.getElementById("mpTangent").checked && y.length > 5) {
+    // Tangentlinje (Ziegler-Nichols) — HOTFIX-v1.4.1: facit, avstängt i PROD oavsett
+    // kryssrutans tillstånd (den kan i sin tur vara dold, se applyEnvironmentUI()).
+    if (ENV_CONFIG.showMeasurementFacit && document.getElementById("mpTangent").checked && y.length > 5) {
       // Hitta senaste signifikanta u-steg och sök bara i data därifrån
       let stepIdx = 0;
       for (let i = 1; i < u.length; i++) {
@@ -629,6 +630,17 @@ function applyEnvironmentUI() {
   if (modeToggle) modeToggle.style.display = ENV_CONFIG.showTestMode ? "" : "none";
   const badge = document.getElementById("envBadge");
   if (badge) badge.style.display = ENV_CONFIG.environment === "development" ? "" : "none";
+  // HOTFIX-v1.4.1: tangentlinjens facit ("Visa tangentlinje" + "Visa facit") döljs i
+  // PROD — fungerar inte tillräckligt bra pedagogiskt än, kvar i DEV för fortsatt
+  // utredning. Ingen tom lucka lämnas: hela kontrollen och dess separator döljs, inte
+  // bara knappen. Se docs/development/ENVIRONMENTS.md.
+  const facitVisible = ENV_CONFIG.showMeasurementFacit ? "" : "none";
+  const tangentField = document.getElementById("mpTangentField");
+  if (tangentField) tangentField.style.display = facitVisible;
+  const facitSep = document.getElementById("measureSepFacit");
+  if (facitSep) facitSep.style.display = facitVisible;
+  const facitGroup = document.getElementById("measureGroupFacit");
+  if (facitGroup) facitGroup.style.display = facitVisible;
   updateScoreDisplay();
 }
 
@@ -858,6 +870,7 @@ document.getElementById("btnMeasure").addEventListener("click", () => {
 });
 
 document.getElementById("btnFacit").addEventListener("click", () => {
+  if (!ENV_CONFIG.showMeasurementFacit) return; // PROD: facitet kan aldrig aktiveras, oavsett anropsväg
   const fb = document.getElementById("facitBody");
   const showing = fb.style.display !== "none" && fb.style.display !== "";
   if (!showing) {

@@ -16,7 +16,8 @@ manuella kodskillnader mellan branches.
 | Poängvisning | Synlig i Test-läge | Alltid dold |
 | Guidat läge | Fungerar | Fungerar (enda läget) |
 | Presentationsläge | Fungerar | Fungerar |
-| Mät K/T/L | Fungerar | Fungerar |
+| Mät K/T/L (marköravläsning, 63%-linje, zoom) | Fungerar | Fungerar |
+| Tangentlinjens facit ("Visa tangentlinje" + "Visa facit"-knappen) | Fungerar (ej produktionsgodkänt, se HOTFIX-v1.4.1) | Dolt, kan inte aktiveras |
 | DEV-etikett | Visas (röd badge bredvid appversionen) | Visas inte |
 | Katalogfil | `content/catalog.json` | `content/catalog.prod.json` |
 
@@ -33,9 +34,13 @@ som `sim-core.js` redan använde innan PROD-001B. Filen sätter ett globalt obje
   showTestMode: boolean,
   showScore: boolean,
   showExperimentalContent: boolean,
+  showMeasurementFacit: boolean,
   catalogFile: "catalog.json" | "catalog.prod.json"
 }
 ```
+
+`showMeasurementFacit` (HOTFIX-v1.4.1, `true` i DEV / `false` i PROD) styr tangentlinjens
+facit i mätpanelen — se avsnittet nedan.
 
 - `apps/app/env.js` — **aktiv fil**, innehåller idag DEV-profilen. Det är denna fil
   `index.html` faktiskt läser.
@@ -47,6 +52,25 @@ som `sim-core.js` redan använde innan PROD-001B. Filen sätter ett globalt obje
 Test-läge (`setTestMode()`) vägrar aktivera Test-läge om `showTestMode` är `false` — även om
 någon skulle anropa funktionen direkt (verifierat i webbläsarkonsolen under PROD-001B:s
 tester, se leveransrapporten).
+
+## Tangentlinjens facit — endast DEV (HOTFIX-v1.4.1)
+
+Mätpanelens "Visa tangentlinje"-kryssruta (den geometriska Ziegler-Nichols-konstruktionen
+som beräknar och ritar L/T direkt i grafen) och "Visa facit"-knappen (tabellen som visar
+scenariots faktiska K/T/L-värden rakt av) döljs i PROD sedan HOTFIX-v1.4.1. PO har testat
+mätfunktionen och beslutat att marköravläsningen och Mät K/T/L i övrigt fungerar bra och
+ska finnas kvar, men att tangentfacitet inte fungerar tillräckligt bra pedagogiskt än.
+
+Status:
+- **Endast DEV.** Inte produktionsgodkänt.
+- Behöver fortsatt teknisk och pedagogisk utredning innan ett eventuellt beslut om
+  produktionsgodkännande (se STEG 3 i livscykeln nedan).
+- Styrs av `ENV_CONFIG.showMeasurementFacit` (se ovan). Gated på två nivåer, inte bara
+  UI-synlighet: `applyEnvironmentUI()` döljer kontrollerna i PROD, och `drawChart()`/
+  `btnFacit`-hanteraren i `apps/app/app.js` vägrar rendera/aktivera facitet även om någon
+  tvingar fram kryssrutan eller knappen via webbläsarkonsolen — samma idiom som `setTestMode()`
+  redan använder för Test-läge. Ingen URL-parameter, hash eller tangentkommando kan aktivera
+  det i PROD (verifierat, se `docs/tracking/todo.md`s HOTFIX-v1.4.1-post).
 
 ## Katalogurval — PROD är en allowlist
 
@@ -133,6 +157,7 @@ node tests/build-preview.mjs prod                   # Bygg PROD-artifakten FÖRS
 node tests/validate-prod.mjs                        # PROD: allowlist på källnivå OCH på den byggda artifakten (inga dolda filer, ingen DEV-katalog)
 node tests/simulation/analyze.test.mjs              # Simuleringskärnans egna tester
 node tests/build-preview.test.mjs                   # Automatiska tester för artifaktfiltreringen (syntetiska fixturer, rör aldrig apps/app/content/)
+node tests/hotfix-v1.4.1-facit-env.test.mjs         # Tangentfacitets miljöstyrning (källfiler + byggda dist/dev och dist/prod)
 ```
 
 `validate-prod.mjs` kräver att `dist/prod/` redan är byggd (ordningen ovan) — annars
