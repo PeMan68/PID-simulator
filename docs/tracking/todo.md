@@ -424,6 +424,47 @@ uppdaterad byggdokumentation.
 
 ---
 
+### HOTFIX-v1.4.1 — Dölj tangentlinjens facit i PROD, behåll i DEV
+**Branch:** `hotfix/v1.4.1-hide-tangent-facit-in-prod`
+**Prioritet:** Hög
+**Beskrivning:**
+PM-beslutat, avgränsat hotfix-uppdrag. PO har testat mätverktyget och beslutat:
+marköravläsningen vid grafmarkören fungerar bra och behålls, Mät K/T/L behålls, men
+tangentlinjens facit (den geometriska Ziegler-Nichols-konstruktion som beräknar och visar
+L/T direkt i grafen) fungerar inte tillräckligt bra pedagogiskt och ska döljas i PROD.
+Under uppdragets förkontroll identifierades en andra, separat facit-mekanism i samma
+mätpanel — "Visa facit"-knappen, som visar en tabell med scenariots faktiska K/T/L-värden
+rakt av. Uppdragstexten nämnde bara "tangentlinjens facit" uttryckligen; PO/PM tillfrågades
+och beslutade att **båda** ska döljas i PROD.
+**Genomförande:**
+- Ny miljöflagga `ENV_CONFIG.showMeasurementFacit` (`true` i `apps/app/env.js`/DEV,
+  `false` i `apps/app/env.prod.js`/PROD-mall).
+- `applyEnvironmentUI()` i `apps/app/app.js` döljer båda kontrollerna i PROD: kryssrutans
+  wrapper (`#mpTangentField`), knappens grupp (`#measureGroupFacit`) och separatorn mellan
+  dem (`#measureSepFacit`) — ingen tom lucka eller trasig kontrollgrupp lämnas kvar.
+- Defense-in-depth (samma idiom som `setTestMode()` redan använder för Test-läge):
+  `drawChart()`s tangentlinje-block gated på `ENV_CONFIG.showMeasurementFacit` (inte bara
+  kryssrutans `.checked`), och `btnFacit`-klickhanteraren har ett tidigt `return` om
+  flaggan är false. Verifierat med Playwright att facitet varken ritas eller aktiveras i
+  PROD ens när kryssrutan/knappen tvingas fram programmatiskt via konsolen, och att ingen
+  URL-parameter eller hash har någon effekt.
+- `tests/validate-prod.mjs` utökad: kontrollerar `showMeasurementFacit === false` i både
+  källfilen `env.prod.js` och den byggda `dist/prod/env.js`, samt att
+  `activity-prototype-core.js`/`activity-prototype.js` (GAM-002) aldrig kan hamna i
+  `dist/prod` (regressionsskydd inför en framtida återmerge till `develop`).
+- Ny `tests/hotfix-v1.4.1-facit-env.test.mjs`: 12 statiska regressionstester (källfiler,
+  defense-in-depth-koden i `app.js`, döljbara krokar i `index.html`, byggda
+  dist/dev-/dist/prod-artifakter).
+- `APP_VERSION` → `1.4.1`. Ingen content-versionsändring.
+- Inget annat i mätverktyget, simuleringskärnan eller GAM-002 rört. GAM-002 finns inte i
+  denna branch (grenad från `main`, som aldrig haft GAM-002) — dess isolering (aldrig
+  kopierad till `dist/prod`, injiceras bara i DEV) verifierades oförändrad.
+**Status:** Tekniskt klart och testat i branchen, se leveransrapport i konversationen för
+fullständiga test-/verifieringsresultat. Väntar på PO/PM-godkännande innan merge till
+`main` (DEL 10 i uppdraget).
+
+---
+
 ### FEAT-022 — Direktverkande / Omvänt verkande (verkningsriktning)
 **Branch:** `feature/verkningsriktning`
 **Prioritet:** Medel
