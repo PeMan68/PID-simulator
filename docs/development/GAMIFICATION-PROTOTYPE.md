@@ -4,6 +4,11 @@
 Inte produktionsgodkänd. Se `docs/planning/GAMIFICATION-XP-ANALYS.md` för det
 pedagogiska underlaget denna prototyp bygger på och ska ge svar på.
 
+**GAM-003A (2026-09-08):** Denna moduls händelsemodell har provräknats fullständigt
+mot en konkret XP-modell utan att själva registreringsmodellen nedan ändrats —
+se `docs/reports/GAM-003A_XP-KALIBRERING.md` och det återanvändbara verktyget i
+`tests/gamification/` (importerar `activity-prototype-core.js` oförändrat).
+
 ## Syfte
 
 Innan viktning, levels eller lagring för spelifiering bestäms behöver appen kunna mäta

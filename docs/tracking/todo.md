@@ -563,6 +563,56 @@ prototypen faktiskt används och att PO/PM beslutar om nästa steg.
 
 ---
 
+### GAM-003A — Kalibrera XP-modellen mot samtliga DEV-lärstigar
+**Branch:** `feature/GAM-003A-xp-calibration`
+**Prioritet:** Låg — analys/kalibrering, ingen synlig funktion
+**Beskrivning:**
+PM-beslutat analys-, test- och kalibreringsuppdrag. Provräknar PM:s preliminära
+XP-modell (10 kategorier, 8 nivåer) mot samtliga tio aktiva DEV-lärstigar innan
+GAM-003B:s synliga nivåfunktion byggs. Ingen synlig XP, badge eller nivåmätare
+implementerad; ingen appkod ändrad; GAM-002:s registreringsmodell orörd.
+**Genomförande:**
+- Nytt återanvändbart XP-beräkningsverktyg `tests/gamification/` (`xp-model.mjs`,
+  `lp-inventory.mjs`, `profiles.mjs`, `calibrate.mjs`, `manipulation.mjs`,
+  `sensitivity.mjs`) — kör händelsesekvenser genom `activity-prototype-core.js`
+  OFÖRÄNDRAD och beräknar XP via differens på dess sessionstillstånd (försök,
+  distinkta konfigurationer, jämförelsepar, hjälp, lärstigsprogression) före/efter
+  varje händelse. Analytisk enstegning och checkpoints (finns inte som GAM-002-
+  händelse) hanteras i ett tunt eget lager ovanpå.
+- Innehållsinventering av alla tio aktiva lärstigar, extraherad ur de faktiska
+  instruktionstexterna (`lp-inventory.mjs`), med tre användarprofiler (minimal,
+  normal, aktiv fördjupare) provräknade mot varje lärstig.
+- Referensen "Test 1" (Proportionalband, normal-profil) gav 84 XP mot PM:s
+  uppskattade 75–79 XP (+5, 7 % — rimlig marginal).
+- 16 manipulationstester: 13 av 16 beter sig som avsett. Tre fynd: hjälp-XP utan
+  tak kan ensamt ge 48 XP (mer än nivå 2:s tröskel på 35), identisk konfiguration
+  upprepad efter Reset ger full "genomfört försök"-XP varje gång, och
+  parameterändringar strax över 5 %-tröskeln kan farma jämförelsepar.
+- Med PM:s oförändrade regler/nivåkurva når en aktiv fördjupare maxnivån
+  (Reglerlegend) redan efter 7 av 10 lärstigar — mot kalibreringsmålet.
+  Rekommenderad justering (hjälptak 5 unika/session, enstegningstak 3/försök,
+  långsammare nivåkurva) gör att varken normal- eller fördjupare-profilen når
+  taket genom en enda genomgång. Se rapporten för fullständig motivering.
+- Strukturellt fynd: GAM-002 upptäcker bara jämförelsepar inom samma kontext —
+  `storningar-robusthet.v1`s `continueFromPreviousStep`-jämförelser (FEAT-030)
+  och flera andra lärstigars mellan-steg-jämförelser är osynliga för GAM-002.
+  Öppet produktbeslut, ingen ändring av lärstigsformatet gjord i GAM-003A.
+- Checkpoint-XP rekommenderas som ett separat prestationssystem, inte del av
+  nivå-XP:t — inte implementerat, som instruerat.
+- `tests/gamification/xp-model.test.mjs` — 33 automatiska tester, alla gröna.
+- Full rapport: `docs/reports/GAM-003A_XP-KALIBRERING.md` +
+  maskinläsbar `GAM-003A_XP-KALIBRERING.json`.
+- DEV-/PROD-regression körd oförändrad efter uppdraget: `validate-content.mjs`
+  (DEV+PROD), `validate-prod.mjs`, `build-preview.test.mjs`,
+  `simulation/analyze.test.mjs`, `activity-prototype.test.mjs` — samtliga gröna.
+  Ingen ändring i `apps/app/app.js`/`index.html`, bekräftat.
+**Status:** Mergad till `develop`. Ingen release, `main` oförändrat. XP-modellen är
+provräknad och tekniskt kalibrerad; synlig XP är fortfarande inte implementerad.
+Väntar på PO/PM:s granskning och beslut om GAM-003B (synlig DEV-prototyp med
+nivåbadge, nivånamn och grafisk nivåmätare).
+
+---
+
 ### FEAT-031 — Övningsdokument "Regulatortrimning i praktiken"
 **Branch:** `feature/regulatortrimning`
 **Prioritet:** Medel
