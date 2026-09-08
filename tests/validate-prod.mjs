@@ -46,7 +46,8 @@ const EXPECTED_LEARNING_PATHS = [
 const HIDDEN_LEARNING_PATHS = [
   "integrerande-process-niva.v1",
   "stegsvar-identifiering.v1",
-  "lambda-metoden.v1"
+  "lambda-metoden.v1",
+  "storningar-robusthet.v1" // FEAT-030 — tekniskt klar i DEV, PO-testad, flaggad som kandidat för nästa PROD-release (se todo-done.md)
 ];
 const KNOWN_EXPERIMENTAL_SCENARIOS = [
   "integrating-experimental",
