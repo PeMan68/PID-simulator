@@ -35,7 +35,8 @@
     { "id": "integrating-process",   "file": "theory/integrating-process.v1.json" },
     { "id": "lambda-metoden",          "file": "theory/lambda-metoden.v1.json" },
     { "id": "tangentmetoden",          "file": "theory/tangentmetoden.v1.json" },
-    { "id": "proportionalband",        "file": "theory/proportionalband.v1.json" }
+    { "id": "proportionalband",        "file": "theory/proportionalband.v1.json" },
+    { "id": "disturbance-robustness",  "file": "theory/disturbance-robustness.v1.json" }
   ],
   "learning_paths": [
     { "id": "kom-igång.v1",                    "file": "exercises/kom-igång.v1.json" },
@@ -44,6 +45,7 @@
     { "id": "pi-pid.v1",                       "file": "exercises/pi-pid.v1.json" },
     { "id": "processbegransningar.v1",         "file": "exercises/processbegransningar.v1.json" },
     { "id": "windup-antiwindup.v1",            "file": "exercises/windup-antiwindup.v1.json" },
+    { "id": "storningar-robusthet.v1",         "file": "exercises/storningar-robusthet.v1.json" },
     { "id": "integrerande-process-niva.v1",    "file": "exercises/integrerande-process-niva.v1.json" },
     { "id": "stegsvar-identifiering.v1",       "file": "exercises/stegsvar-identifiering.v1.json" },
     { "id": "lambda-metoden.v1",               "file": "exercises/lambda-metoden.v1.json" }

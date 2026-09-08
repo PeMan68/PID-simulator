@@ -102,6 +102,8 @@ let measureCollapsedGroups = [];
 let hoverPos = null;
 let zoomView   = null; // null = visa allt, { start, end } = zoomed t-range
 let pvZoomView = null; // null = visa allt, { min, max } = zoomed PV-range
+let lastMarkerSnapshot = null; // baseline för att upptäcka parameterändringar under en pågående körning (se markera-i-grafen-funktionen)
+let currentScenarioRef = null; // senast laddade scenariots FIL-referens (t.ex. "pid-disturbance-noise.json") — currentScenario.id saknar .json, så den räcker inte för att jämföra mot lärstigsstegs step.ref
 
 function appendLog(line) { logEl.textContent += line + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 function fitCanvas() { const w = Math.max(680, chartCanvas.clientWidth); if (chartCanvas.width !== w) chartCanvas.width = w; }
@@ -193,6 +195,24 @@ function drawChart() {
   ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(Math.max(0, Math.min(100, u[i]))) })), "#2f9e44", false);
   ctx.restore();
+
+  // ── Markeringar vid parameterändring (fortsatt körning på samma graf) ──
+  const changeMarkers = sim.history.markers || [];
+  if (changeMarkers.length) {
+    ctx.save();
+    ctx.font = "10px Segoe UI";
+    ctx.textAlign = "left";
+    changeMarkers.forEach(m => {
+      if (m.t < tStart || m.t > tMax) return;
+      const mx = xScale(m.t);
+      ctx.strokeStyle = "rgba(90,90,90,0.55)"; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(mx, pad.top); ctx.lineTo(mx, h - pad.bottom); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#555";
+      ctx.fillText(m.label, mx + 3, pad.top + 10);
+    });
+    ctx.restore();
+  }
 
   // ── Mätläge: hjälplinjer och crosshair ──
   if (measureMode) {
@@ -383,13 +403,48 @@ function loadScenarioByName(name) {
   if (measureMode) exitMeasureMode();
   zoomView = null; pvZoomView = null;
   currentScenario = deepClone(SCENARIOS[name]);
+  currentScenarioRef = name;
   sim = new Simulation(currentScenario, 42);
+  sim.history.markers = [];
   hydrateFields(currentScenario);
+  captureMarkerBaseline();
   appendLog("Laddat scenario: " + currentScenario.id);
   updateControllerUIState();
   updateProcessUIState();
   updateStatus(); drawChart();
   activityDispatch("scenario_loaded", { scenarioId: currentScenario.id, contextKey: activityContextKey() });
+}
+
+// ── Markeringar i grafen vid parameterändring ──
+// Låter en mätserie fortsätta på SAMMA graf över flera regulator-/processinställningar
+// (t.ex. P → PI → PID) utan att jämförelsen kräver Rensa graf/Återställ mellan varje
+// steg — bara start av en NY mätserie (se resetMarkers()) nollställer markeringarna.
+function markerSnapshot(scenario) {
+  return {
+    mode: scenario.controller.mode,
+    kp: scenario.controller.kp, ti: scenario.controller.ti, td: scenario.controller.td,
+    sp: scenario.runtime.setpoint, noise: scenario.disturbance.noiseStd,
+    k: scenario.process.K, t: scenario.process.T, l: scenario.process.L, processType: scenario.process.type
+  };
+}
+function modeLabel(modeValue) {
+  const opt = Array.from(fields.mode.options).find(o => o.value === modeValue);
+  return opt ? opt.textContent : modeValue;
+}
+function describeMarkerChange(a, b) {
+  if (a.mode !== b.mode) return "→ " + modeLabel(b.mode);
+  if (a.noise !== b.noise) return "Brus " + a.noise + "→" + b.noise;
+  if (a.sp !== b.sp) return "SP " + a.sp + "→" + b.sp;
+  if (a.kp !== b.kp || a.ti !== b.ti || a.td !== b.td) return "Kp/Ti/Td ändrat";
+  if (a.k !== b.k || a.t !== b.t || a.l !== b.l || a.processType !== b.processType) return "Process ändrad";
+  return null;
+}
+function captureMarkerBaseline() {
+  lastMarkerSnapshot = currentScenario ? markerSnapshot(currentScenario) : null;
+}
+function resetMarkers() {
+  if (sim) sim.history.markers = [];
+  captureMarkerBaseline();
 }
 function syncParamsFromUI() {
   if (!currentScenario || !sim) return;
@@ -470,6 +525,16 @@ function syncParamsFromUI() {
   sim.pid.mode = nextMode;
   sim.onoff.low = currentScenario.controller.hysteresis?.lower ?? sim.onoff.low;
   sim.onoff.high = currentScenario.controller.hysteresis?.upper ?? sim.onoff.high;
+
+  const nextSnap = markerSnapshot(currentScenario);
+  if (lastMarkerSnapshot) {
+    const label = describeMarkerChange(lastMarkerSnapshot, nextSnap);
+    if (label) {
+      if (!sim.history.markers) sim.history.markers = [];
+      sim.history.markers.push({ t: sim.history.t[sim.history.t.length - 1] ?? 0, label });
+    }
+  }
+  lastMarkerSnapshot = nextSnap;
 }
 
 function updateControllerUIState() {
@@ -625,7 +690,14 @@ function nextPathStep() {
   }
   const step = currentPath.steps[currentPathStep];
   if (step.type === "scenario" || step.type === "observe") {
-    if (SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
+    // continueFromPreviousStep: explicit opt-in (default: ladda om, som tidigare) för
+    // steg som medvetet fortsätter samma körning på samma graf över flera lärstigssteg
+    // (t.ex. en P→PI→PID-jämförelse) istället för att börja om. Kräver samma
+    // scenarioreferens som redan är laddad — annars körs alltid en vanlig omladdning,
+    // så en felskriven flagga aldrig kan köra fel scenario. Gäller bara framåtnavigering
+    // (prevPathStep laddar alltid om — "fortsätta bakåt" har ingen rimlig innebörd).
+    const continueSameRun = step.continueFromPreviousStep && currentScenarioRef === step.ref;
+    if (!continueSameRun && SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
   }
   activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey() });
   renderStep(step);
@@ -822,9 +894,9 @@ document.getElementById("processType").addEventListener("change", () => {
 });
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); activityDispatch("simulation_step", { contextKey: activityContextKey() }); });
 document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); activityDispatch("simulation_run", { steps: fs.length, contextKey: activityContextKey() }); });
-document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); appendLog("Puls triggad."); activityDispatch("disturbance_triggered", { contextKey: activityContextKey() }); });
-document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("Graf nollställd."); updateStatus(); drawChart(); activityDispatch("chart_cleared", {}); });
-document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("System återställt."); updateStatus(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
+document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); if (!sim.history.markers) sim.history.markers = []; sim.history.markers.push({ t: sim.history.t[sim.history.t.length - 1] ?? 0, label: "Puls" }); appendLog("Puls triggad."); activityDispatch("disturbance_triggered", { contextKey: activityContextKey() }); });
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); drawChart(); activityDispatch("chart_cleared", {}); });
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
