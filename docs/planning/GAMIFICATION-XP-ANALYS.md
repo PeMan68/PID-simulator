@@ -523,3 +523,36 @@ fortfarande stegvis, inte att bygga hela systemet på en gång:
 Ingen av dessa punkter är påbörjade eller beslutade — detta dokument är underlag för det
 beslutet. Se även `docs/tracking/todo.md` för aktuell status på pedagogisk granskning av
 kvarvarande DEV-lärstigar, som PO/PM prioriterat högre än gamification-prototypen just nu.
+
+## 15. Underlag från HOTFIX-v1.4.1: grafavläsning som möjlig ny aktivitet
+
+PO/PM:s uppdrag att dölja tangentlinjens facit i PROD (se `docs/tracking/todo.md`,
+HOTFIX-v1.4.1) innehöll produktfeedback om grafmarköravläsningen som ligger utanför
+hotfixens eget avgränsade mandat att implementera, men som är relevant underlag för ett
+framtida GAM-uppdrag. Dokumenteras här utan att någon kod ändrats för detta.
+
+**Feedback:**
+
+1. Marköravläsningen (crosshair-tooltipen som visar t/PV/u vid hovring över grafen,
+   `hoverPos`/mätläget i `apps/app/app.js`) fungerar bra för att läsa av värden i grafen —
+   PO:s bedömning efter test, till skillnad från tangentlinjens facit (se HOTFIX-v1.4.1).
+2. En framtida pedagogisk aktivitet kan registreras när användaren håller markören
+   tillräckligt stilla över grafen under en kort sammanhängande tid ("dwell").
+3. Vanlig rörelse över grafen ska **inte** ge XP.
+4. Zoomning ska **inte** ge XP.
+5. `pointermove` ska fortsatt endast vara en signal för aktiv interaktionstid (samma
+   princip som redan gäller för `help_opened`, se avsnitt 7 och
+   `docs/development/GAMIFICATION-PROTOTYPE.md`s "Kända begränsningar") — inte en
+   direkt räknad händelse.
+6. En framtida händelse för genomförd grafavläsning ska baseras på ett tydligt
+   dwell-villkor (hur länge markören står still, inom vilken pixel-/tidstolerans), inte
+   på antalet `pointermove`-händelser — samma "råhändelse med filter, inte råräkning"-
+   princip som resten av denna analys använder för att undvika att belöna spam.
+7. Ingen XP eller ny grafhändelse implementerades inom ramen för HOTFIX-v1.4.1 — det låg
+   uttryckligen utanför det uppdragets mandat (rent hotfix-uppdrag, inga GAM-002-ändringar
+   tillåtna).
+
+**Status:** Underlag för nästa GAM-uppdrag, inte påbörjat. Nästa GAM-uppdrag: undersöka
+dwell-baserad grafavläsning som pedagogisk aktivitet utan att belöna zoomning eller
+vanlig musrörelse — se punkt 2 i "Rekommenderat nästa steg" (avsnitt 14), där detta
+naturligt hör hemma som en del av händelseloggnings-prototypen.

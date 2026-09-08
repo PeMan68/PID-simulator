@@ -185,6 +185,10 @@ XP-värde ingår.
   alla möjliga par i en kontext.
 - **`hysteresLower`/`hysteresUpper` ingår inte** i de spårade parametrarna (följer
   GAM-001:s ursprungliga lista över "minst" dessa fält).
+- **Grafmarköravläsning (`pointermove`/crosshair) ger ingen egen händelse ännu** — bara
+  aktiv-tid-signal, samma princip som `help_opened`. PO:s feedback (via HOTFIX-v1.4.1)
+  är att en framtida dwell-baserad läsaktivitet är önskvärd utan att belöna zoomning
+  eller vanlig rörelse — se `GAMIFICATION-XP-ANALYS.md` avsnitt 15.
 
 ## Frågor som ska utvärderas manuellt (inte besvarade av koden själv)
 
