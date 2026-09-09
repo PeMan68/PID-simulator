@@ -13,7 +13,7 @@ const APP_VERSION = "1.4.1";
    URL-parameter, tangentbord eller dold knapp — enda källan är env.js. */
 const ENV_CONFIG = window.ENV_CONFIG || (function () {
   console.warn("env.js saknas — faller tillbaka till development-profil.");
-  return { environment: "development", showTestMode: true, showScore: true, showExperimentalContent: true, showMeasurementFacit: true, catalogFile: "catalog.json" };
+  return { environment: "development", showTestMode: true, showScore: true, showExperimentalContent: true, showMeasurementFacit: true, showGamification: true, catalogFile: "catalog.json" };
 })();
 
 /* GAM-002 — Aktivitetsprototyp (DEV-only, teknisk analys, ingen synlig XP).
@@ -25,6 +25,21 @@ if (ENV_CONFIG.environment === "development") {
   ["./activity-prototype-core.js", "./activity-prototype.js"].forEach(src => {
     const s = document.createElement("script");
     s.src = src;
+    document.head.appendChild(s);
+  });
+}
+/* GAM-003B — Synlig DEV-prototyp för XP och nivåprogression. Styrs av BÅDA
+   ENV_CONFIG.environment OCH den egna, byggprofil-låsta flaggan
+   showGamification (kan aldrig sättas via URL/hash/dold knapp — enda källan
+   är env.js/env.prod.js, se docs/development/ENVIRONMENTS.md). Skripten
+   injiceras dynamiskt ENDAST i DEV, av samma skäl som GAM-002 ovan.
+   tests/lib/build-prod.mjs:s fasta fillista kopierar heller aldrig dessa
+   filer till dist/prod. Se docs/development/GAMIFICATION-XP-PROTOTYPE.md. */
+if (ENV_CONFIG.environment === "development" && ENV_CONFIG.showGamification) {
+  ["./gamification-xp-engine.js", "./gamification-store.js", "./gamification-ui.js", "./gamification.js"].forEach(src => {
+    const s = document.createElement("script");
+    s.src = src;
+    s.async = false; // körordning MÅSTE bevaras — gamification.js beror på de tre andra
     document.head.appendChild(s);
   });
 }

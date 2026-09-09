@@ -754,6 +754,61 @@ ställning till beslutsunderlaget** (se rapportens avsnitt 14).
 
 ---
 
+### GAM-003B — Synlig DEV-prototyp för XP och nivåprogression
+**Branch:** `feature/GAM-003B-visible-level-prototype`
+**Prioritet:** Låg — DEV-prototyp, ingen produktionsaktivering
+**Beskrivning:**
+Bygger den synliga nivåfunktionen som GAM-003A/A.1/A.2 och PED-005 förberett
+underlaget för: en kompakt nivåyta i vänstra sidopanelen (badge, nivånummer,
+nivånamn, grafisk nivåmätare — inga XP-tal) som delar ut XP för verkliga
+GAM-002-aktiviteter och sparar bestående progression mellan sessioner via en
+egen `localStorage`-nyckel. **Status:** DEV-prototyp — ingen produktions-
+aktivering beslutad. Nivån mäter aktivitet/progression, inte kompetens.
+**Genomförande:**
+- Fyra nya, avgränsade DOM-fria/tunt-DOM-moduler (samma UMD-mönster som
+  `sim-core.js`): `gamification-xp-engine.js` (XP-/nivåregler, testbar i
+  Node), `gamification-store.js` (`localStorage`-adapter + migrering, testbar
+  med en mock), `gamification-ui.js` (ren rendering), `gamification.js`
+  (bootstrap/glue). Ingen XP- eller persistenslogik i `app.js`.
+- Enda integrationspunkten mot GAM-002: en ny `window.ActivityPrototype
+  .onEvent(fn)`-registrering i `activity-prototype.js`, anropad EFTER
+  `Core.recordEvent` med samma sessionsobjekt — omöjliggör dubbelregistrering
+  per konstruktion. `activity-prototype-core.js` (GAM-002:s kärna) helt
+  orörd.
+- XP-reglerna och nivåkurvan (`LEVELS_V1`/`XP_RULES_V1` i
+  `gamification-xp-engine.js`) matchar exakt PO/PM:s beslutade värden — se
+  `docs/development/GAMIFICATION-XP-PROTOTYPE.md`.
+- Bestående XP (nytt högsta lärsteg, distinkt-konfigurationsbonus) skild
+  från repeterbar XP (försök, jämförelsepar, hjälp, mätarbete, enstegning,
+  slutförd lärstig) — jämförelsepar kan alltså ge XP igen i en ny session
+  trots att den underliggande "första gången"-bonusen är bestående.
+- `ENV_CONFIG.showGamification` (DEV: `true`, PROD: `false`) styr, tillsammans
+  med `environment`, om de fyra skripten injiceras alls — PROD begär dem
+  aldrig över nätverket, och `tests/lib/build-prod.mjs`s fasta fillista
+  kopierar dem heller aldrig. En verklig CSS-bugg hittades och fixades under
+  utvecklingen: `.gam-level-panel`s egen `display: flex` slog igenom
+  `[hidden]`-attributet i vissa fall — löst med en explicit
+  `.gam-level-panel[hidden] { display: none; }`-regel, verifierad med en
+  riktig PROD-förhandsvisning i webbläsaren.
+- Nivåbytesanimation (badge-puls + kort "Ny nivå"-text, inte konfetti) med
+  fullt stöd för `prefers-reduced-motion`.
+- "Återställ progression" (DEV-only, kräver bekräftelse) raderar endast
+  `pidSimGamificationV1`-nyckeln — appens övriga inställningar opåverkade.
+- DEV-konsolstöd `window.GamificationDev` (state/grantTestXP/
+  simulateLevelUp/reset), tydligt dokumenterat vad som speglar verklig
+  aktivitet kontra rena testhjälpmedel.
+- Nya tester: `gamification-engine.test.mjs` (34), `gamification-store.test.mjs`
+  (20), `gamification-dev-prod-isolation.test.mjs` (13) — samtliga gröna,
+  tillsammans med samtliga befintliga GAM-/innehålls-/simulerings-/PROD-
+  tester. Manuell DEV- och PROD-regression genomförd i riktig webbläsare
+  (Playwright, engångsskript).
+**Status:** Mergad till `develop`. Ingen release, `main` oförändrat. Väntar
+på PO:s användartest (visuell UX, nivåtempo, repetition, persistens,
+återställning, nivåanimation) innan ett separat beslut om
+produktionsaktivering kan övervägas.
+
+---
+
 ### FEAT-031 — Övningsdokument "Regulatortrimning i praktiken"
 **Branch:** `feature/regulatortrimning`
 **Prioritet:** Medel
