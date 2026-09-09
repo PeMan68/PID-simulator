@@ -589,3 +589,33 @@ fortfarande INTE implementerad. Nivå-UX (åtta nivåer, badge, grafisk mätare)
 beslutad (se `docs/development/GAMIFICATION-PROTOTYPE.md`). Produktionsaktivering är
 inte beslutad. Nästa planerade steg: **GAM-003B** — synlig DEV-prototyp med
 nivåbadge, nivånamn och grafisk nivåmätare. GAM-003B är inte påbörjat.
+
+## 17. GAM-003A.1 — Reviderad princip: repetition ska ge XP
+
+PO/PM granskade GAM-003A och beslutade en korrigerad grundprincip: XP ska
+premiera lärandeaktivitet ÄVEN när den upprepas — upprepade försök, lärstigar
+och egna parameterexperiment är avsedd användning, inte manipulation.
+GAM-003A:s rekommenderade tak (hjälptak, sänkt enstegningstak) drogs tillbaka;
+PM:s ursprungliga, okapade regler gäller. En ny, betydligt längre nivåkurva
+(0/50/140/300/550/900/1400/2100) infördes istället för att hantera tempot.
+
+Under omkalibreringen hittades och rättades två verkliga fel i
+beräkningsverktyget (inte i XP-reglerna): ett sista, ofinaliserat försök i en
+händelsesekvens gick tidigare förlorat, och "slutförd lärstig"-XP var av
+misstag bestående istället för repeterbar. Båda rättade — se
+`docs/reports/GAM-003A.1_XP-KALIBRERING-REPETITION.md`.
+
+**Resultat:** en genomgång av alla tio lärstigar tar ingen profil till
+maxnivån. Vid FLERA fullständiga genomgångar (kedjat med ett nytt
+`priorState`/`endState`-lager i `xp-model.mjs` som modellerar bestående
+progression utan att röra GAM-002:s kod) nås nivå 8 efter 2 genomgångar för
+en aktiv fördjupare, 4 för en normal användare, 6 för en minimal användare —
+öppen fråga till PO/PM om det tempot är rätt avvägt.
+
+**Tekniskt krav framåt:** en synlig prototyp (GAM-003B) behöver spara
+bestående progression (total XP, högsta nått lärsteg per lärstig, redan sedda
+konfigurationssignaturer per kontext) mellan sessioner, plus en
+"Återställ progression"-funktion. Inte implementerat i GAM-003A.1.
+
+**Status:** Reviderad kalibrering klar. Nästa steg fortsatt GAM-003B, nu med
+persistenskravet dokumenterat som förutsättning.

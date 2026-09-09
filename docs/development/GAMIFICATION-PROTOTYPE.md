@@ -9,6 +9,15 @@ mot en konkret XP-modell utan att själva registreringsmodellen nedan ändrats �
 se `docs/reports/GAM-003A_XP-KALIBRERING.md` och det återanvändbara verktyget i
 `tests/gamification/` (importerar `activity-prototype-core.js` oförändrat).
 
+**GAM-003A.1 (2026-09-09):** PO/PM beslutade att repetition (upprepade försök,
+lärstigar, egna parameterexperiment) ska ge full XP — inga tak infördes. En
+framtida synlig prototyp behöver därför spara bestående progression mellan
+sessioner (total XP, högsta nått lärsteg per lärstig, redan sedda
+konfigurationssignaturer). Se
+`docs/reports/GAM-003A.1_XP-KALIBRERING-REPETITION.md`. Denna moduls egen
+registreringsmodell (nedan) är fortfarande oförändrad — persistensbehovet
+gäller ett framtida XP-/nivålager ovanpå, inte GAM-002 självt.
+
 ## Syfte
 
 Innan viktning, levels eller lagring för spelifiering bestäms behöver appen kunna mäta

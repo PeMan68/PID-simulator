@@ -6,6 +6,19 @@
 **Status:** Analys-, test- och kalibreringsuppdrag. **Ingen synlig XP, badge eller
 nivåmätare implementerad. Ingen appkod ändrad.**
 
+> **OBS (2026-09-09): Delvis ersatt av GAM-003A.1.** PO/PM granskade denna
+> rapport och beslutade en korrigerad grundprincip — repetition (upprepade
+> försök, lärstigar och egna parameterexperiment) ska ge full XP, inte
+> begränsas. De rekommendationer i avsnitt 9/10/15 nedan som infört tak
+> (hjälptak, sänkt enstegningstak) är därför **tillbakadragna**. Under
+> omkalibreringen hittades dessutom två verkliga fel i beräkningsmotorn
+> (ett ofinaliserat sista försök gick förlorat, och "slutförd lärstig"-XP var
+> felaktigt bestående istället för repeterbar) — siffrorna nedan är därför
+> något för låga. Se `docs/reports/GAM-003A.1_XP-KALIBRERING-REPETITION.md`
+> för den rättade, reviderade kalibreringen. Metoden, verktyget och de
+> strukturella fynden (jämförelser mellan lärsteg, avsnitt 6/16) nedan är
+> fortsatt giltiga.
+
 ---
 
 ## 1. Sammanfattning

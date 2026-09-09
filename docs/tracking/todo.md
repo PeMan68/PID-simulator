@@ -608,8 +608,62 @@ implementerad; ingen appkod ändrad; GAM-002:s registreringsmodell orörd.
   Ingen ändring i `apps/app/app.js`/`index.html`, bekräftat.
 **Status:** Mergad till `develop`. Ingen release, `main` oförändrat. XP-modellen är
 provräknad och tekniskt kalibrerad; synlig XP är fortfarande inte implementerad.
-Väntar på PO/PM:s granskning och beslut om GAM-003B (synlig DEV-prototyp med
-nivåbadge, nivånamn och grafisk nivåmätare).
+PO/PM granskade rapporten och beslutade en korrigerad grundprincip (repetition
+ska ge full XP) — se **GAM-003A.1** nedan, som delvis ersätter
+rekommendationerna här (hjälptak och sänkt enstegningstak tillbakadragna).
+
+---
+
+### GAM-003A.1 — Reviderad XP-kalibrering: repetition ska ge XP
+**Branch:** `feature/GAM-003A.1-repetition-calibration`
+**Prioritet:** Låg — analys/kalibrering, ingen synlig funktion
+**Beskrivning:**
+PO/PM-uppföljning på GAM-003A. Korrigerad grundprincip: XP ska premiera
+lärandeaktivitet ÄVEN vid repetition (upprepade försök, lärstigar, egna
+parameterexperiment) — det är avsedd användning, inte manipulation.
+GAM-003A:s rekommenderade tak (hjälptak, sänkt enstegningstak) dras tillbaka;
+PM:s ursprungliga, okapade XP-regler gäller. En ny, betydligt längre
+nivåkurva (0/50/140/300/550/900/1400/2100) infördes istället.
+**Genomförande:**
+- **Två verkliga fel hittade och rättade i `tests/gamification/xp-model.mjs`**
+  (inte i XP-reglerna): (1) ett pågående försök vid en händelsesekvens slut
+  finaliserades aldrig — dess XP gick förlorad, motorn finaliserar nu
+  automatiskt vid sessionens slut; (2) "slutförd lärstig"-XP var felaktigt
+  hopkopplad med GAM-002:s bestående `completed`-flagga, vilket gjorde den
+  ickerepeterbar — nu en egen, per-session repeterbar räkning. Referensen
+  "Test 1" blev därför 90 XP (tidigare rapporterat 84).
+- Nytt `priorState`/`endState`-lager i `computeXP()`: för-fyller GAM-002:s
+  egna `session.learningPaths`/`session.contexts`-strukturer med tidigare
+  sessioners bestående tillstånd (utan att röra GAM-002:s kod) — modellerar
+  exakt vad en framtida `localStorage`-baserad persistens skulle behöva
+  spara. Ny `mergeState()`-hjälpfunktion.
+- Ny `tests/gamification/career.mjs`: kör N genomgångar av en lärstig eller
+  hela katalogen, kedjat, och räknar ut vid vilken genomgång en profil når
+  en given nivå.
+- Resultat: en genomgång av alla tio lärstigar tar ingen profil till
+  maxnivån (minimal→Loopvävare, normal→Loopvävare 60%, fördjupare→precis
+  över Processmästare-tröskeln). Vid FLERA fulla genomgångar nås nivå 8
+  efter 2 (fördjupare), 4 (normal) respektive 6 (minimal) genomgångar —
+  öppen fråga till PO/PM om tempot är rätt avvägt.
+- GAM-003A:s manipulationstester 4/6/8/16 omtolkade som avsedd, belönad
+  repetition/experimenterande — inte längre beskrivna som fel.
+- Tekniskt krav dokumenterat för GAM-003B: bestående progression (total XP,
+  högsta nått lärsteg per lärstig, sedda konfigurationssignaturer) måste
+  sparas mellan sessioner, plus en "Återställ progression"-funktion. Inte
+  implementerat i GAM-003A.1.
+- `comparisonGroup`-fält i lärstigsformatet (PO/PM:s förslag för jämförelser
+  mellan lärsteg, ersätter GAM-003A:s `comparesWithStep`-idé) dokumenterat
+  som öppet beslut — ingen ändring av lärstigsformatet gjord.
+- `tests/gamification/xp-model.test.mjs` utökad till 43 tester (13 nya,
+  bl.a. för bestående-vs-repeterbar-principen), alla gröna.
+- Full rapport: `docs/reports/GAM-003A.1_XP-KALIBRERING-REPETITION.md` +
+  maskinläsbar `.json`. Kort "OBS, delvis ersatt"-notis tillagd överst i
+  `GAM-003A_XP-KALIBRERING.md` (historiken där är i övrigt oförändrad).
+- DEV-/PROD-regression körd oförändrad: samma svit som GAM-003A, samtliga
+  gröna. Ingen ändring i `apps/app/`, bekräftat.
+**Status:** Mergad till `develop`. Ingen release, `main` oförändrat. Väntar på
+PO/PM:s beslut om nivåkurvans toppnivåer (avsnitt 9 i rapporten) och om
+`comparisonGroup`-fältet, därefter GAM-003B.
 
 ---
 

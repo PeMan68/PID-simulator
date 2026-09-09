@@ -85,6 +85,20 @@ export const LEVELS_SLOW = Object.freeze([
   { name: "Reglerlegend", threshold: 1220 },
 ]);
 
+// PO/PM:s reviderade huvudkandidat (GAM-003A.1, 2026-09-09) — ersätter
+// LEVELS_V1 som förstahandsval efter beslutet att INTE begränsa repetition/
+// hjälp/enstegning. Se docs/reports/GAM-003A.1_XP-KALIBRERING-REPETITION.md.
+export const LEVELS_V2 = Object.freeze([
+  { name: "Reglernovis", threshold: 0 },
+  { name: "Looplärling", threshold: 50 },
+  { name: "Signalspanare", threshold: 140 },
+  { name: "Processutforskare", threshold: 300 },
+  { name: "Loopvävare", threshold: 550 },
+  { name: "Regleradept", threshold: 900 },
+  { name: "Processmästare", threshold: 1400 },
+  { name: "Reglerlegend", threshold: 2100 },
+]);
+
 /**
  * Beräknar nivå + relativ progression för en given ackumulerad XP-summa.
  * Nivåmätaren exponerar aldrig XP-talen själva utanför detta verktyg — se
@@ -110,6 +124,21 @@ export function levelFor(totalXP, levels = LEVELS_V1) {
   };
 }
 
+/**
+ * Slår ihop två endState/priorState-objekt (GAM-003A.1) — t.ex. resultatet
+ * av en lärstig med det som ackumulerats från tidigare lärstigar i samma
+ * "karriär". learningPaths/contexts är redan nyckelavgränsade per
+ * lärstig/kontext, så en enkel union räcker.
+ */
+export function mergeState(a, b) {
+  if (!a) return b;
+  if (!b) return a;
+  return {
+    learningPaths: Object.assign({}, a.learningPaths, b.learningPaths),
+    contexts: Object.assign({}, a.contexts, b.contexts),
+  };
+}
+
 function sumDistinctConfigs(session) {
   let n = 0;
   session.contexts.forEach(ctx => { n += ctx.distinctConfigs.length; });
@@ -122,13 +151,48 @@ function sumDistinctConfigs(session) {
  * händelse (ms); utelämnas dtMs antas 1000ms mellan varje händelse (irrelevant
  * för XP så länge inaktivitetsgränsen på 60s inte överskrids av misstag).
  *
+ * `priorState` (GAM-003A.1): valfritt, för att kedja BESTÅENDE progression
+ * över flera "sessioner" (flera computeXP()-anrop, t.ex. samma lärstig
+ * repeterad, eller en hel karriär av lärstigar) — motsvarar den lokala
+ * lagring en framtida synlig prototyp (GAM-003B) skulle behöva. Formen:
+ *   {
+ *     learningPaths: { [learningPathId]: { highestStepIndex, completed } },
+ *     contexts: { [contextKey]: string[] }  // tidigare sedda konfigurations-
+ *                                            // signaturer i den kontexten
+ *   }
+ * Detta lager rör ALDRIG GAM-002:s egen kod — det bara FÖR-fyller samma
+ * Map-strukturer `session.learningPaths`/`session.contexts` redan använder,
+ * så att Core:s egen "redan nått"/"redan distinkt"-logik (oförändrad)
+ * naturligt slår till för det som carry:as över. Sessionsbundna kategorier
+ * (hjälp, jämförelsepar, mätarbete, enstegning, genomfört försök) nollställs
+ * som vanligt varje anrop — precis som PO/PM beslutat att de ska kunna ge
+ * XP på nytt vid varje genomgång/session.
+ *
  * Returnerar ett fullständigt spårbart resultat: varje beviljad eller
- * blockerad XP-post, kategori-summor, och sluttillståndet för vidare analys
- * (t.ex. attempts/help/comparisonPairs för rapportering).
+ * blockerad XP-post, kategori-summor, sluttillståndet för rapportering, och
+ * `endState` i samma form som `priorState` för att kedjas in i nästa anrop.
  */
-export function computeXP(events, rules = XP_RULES_V1) {
+export function computeXP(events, rules = XP_RULES_V1, priorState = null) {
   const session = Core.createSession(0);
   let now = 0;
+
+  if (priorState) {
+    if (priorState.learningPaths) {
+      Object.entries(priorState.learningPaths).forEach(([id, lp]) => {
+        session.learningPaths.set(id, { highestStepIndex: lp.highestStepIndex, completed: !!lp.completed });
+      });
+    }
+    if (priorState.contexts) {
+      Object.entries(priorState.contexts).forEach(([contextKey, signatures]) => {
+        session.contexts.set(contextKey, {
+          currentConfig: {},
+          currentAttempt: null,
+          distinctConfigs: signatures.map(sig => ({ signature: sig, fields: {} })),
+          observedConfigCount: signatures.length,
+        });
+      });
+    }
+  }
 
   const log = []; // { index, type, xp, category, reason }
   const blocked = []; // { index, type, reason }
@@ -143,6 +207,14 @@ export function computeXP(events, rules = XP_RULES_V1) {
   let helpAwardedCount = 0; // för helpCapPerSession
   let measurement = { active: false, adjusted: false, awarded: false };
   const checkpointState = new Map(); // checkpointId -> { answeredCorrectly, everWrong }
+  // GAM-003A.1: "Slutförd lärstig" ska ge XP VARJE genomgång (PO/PM:s
+  // reviderade beslut), men Core:s egen `lp.completed`-flagga är bestående
+  // (sätts bara vid EN NY högsta-steg-händelse, se activity-prototype-core.js).
+  // Den kopplingen används därför INTE här — istället avgörs "en genomgång"
+  // per session (per computeXP()-anrop) med en egen spärr, så att
+  // fram/bakåt-klick till samma sista steg inom EN session inte farmar XP,
+  // men en ny session (repeterad lärstig) korrekt ger XP på nytt.
+  const completedLearningPathThisSession = new Set();
 
   function award(category, amount, index, type, reason) {
     if (amount <= 0) return;
@@ -226,17 +298,19 @@ export function computeXP(events, rules = XP_RULES_V1) {
       }
     }
 
-    // ── Diff EFTER: nytt högsta lärsteg / slutförd lärstig ──
+    // ── Diff EFTER: nytt högsta lärsteg (bestående, kedjebart via priorState) ──
     if (type === "learning_step_reached" && meta.learningPathId != null) {
       const afterLp = session.learningPaths.get(meta.learningPathId);
       const beforeHighest = before.lp ? before.lp.highestStepIndex : -1;
       if (afterLp && afterLp.highestStepIndex > beforeHighest) {
         award("newHighestStep", rules.newHighestStep, index, type, `Nytt högsta lärsteg (index ${afterLp.highestStepIndex}).`);
-        if (afterLp.completed && !(before.lp && before.lp.completed)) {
-          award("completedLearningPath", rules.completedLearningPath, index, type, "Lärstigen slutförd (sista steget nått).");
-        }
       } else {
         block(index, type, "Redan nått lärsteg (återbesök) — 0 XP.");
+      }
+      // ── Slutförd lärstig: repeterbar per session (se completedLearningPathThisSession ovan) ──
+      if (meta.isFinalStep && !completedLearningPathThisSession.has(meta.learningPathId)) {
+        completedLearningPathThisSession.add(meta.learningPathId);
+        award("completedLearningPath", rules.completedLearningPath, index, type, "Lärstigen slutförd (sista steget nått denna genomgång).");
       }
     }
 
@@ -279,10 +353,43 @@ export function computeXP(events, rules = XP_RULES_V1) {
     }
   });
 
+  // ── Sessionsslut: finalisera ev. pågående försök ──
+  // Utan en avslutande händelse (Reset/scenariobyte/betydande parameter-
+  // ändring) sist i sekvensen skulle det SISTA försökets XP annars aldrig
+  // räknas, trots att stegkravet uppfyllts — det vore en artefakt av var
+  // testsekvensen råkar sluta, inte ett äkta avbrutet försök.
+  {
+    const beforeFinal = {
+      attemptsCompleted: session.attempts.completed,
+      distinctConfigs: sumDistinctConfigs(session),
+      comparisonPairs: session.comparisonPairs.length,
+    };
+    Core.finalizeAllAttempts(session, now);
+    if (session.attempts.completed > beforeFinal.attemptsCompleted) {
+      award("completedAttempt", rules.completedAttempt * (session.attempts.completed - beforeFinal.attemptsCompleted), events.length, "session_end", "Genomfört försök (finaliserat vid sessionens slut).");
+    }
+    const afterFinalDistinct = sumDistinctConfigs(session);
+    if (afterFinalDistinct > beforeFinal.distinctConfigs) {
+      award("distinctConfig", rules.distinctConfig * (afterFinalDistinct - beforeFinal.distinctConfigs), events.length, "session_end", "Ny distinkt parameterkonfiguration (finaliserad vid sessionens slut).");
+    }
+    if (session.comparisonPairs.length > beforeFinal.comparisonPairs) {
+      award("comparisonPair", rules.comparisonPair * (session.comparisonPairs.length - beforeFinal.comparisonPairs), events.length, "session_end", "Nytt jämförelsepar (finaliserat vid sessionens slut).");
+    }
+  }
+
   const totalNoCheckpoints = Object.keys(byCategory)
     .filter(k => k !== "checkpointFirst" && k !== "checkpointAfterWrong")
     .reduce((s, k) => s + byCategory[k], 0);
   const totalWithCheckpoints = totalNoCheckpoints + byCategory.checkpointFirst + byCategory.checkpointAfterWrong;
+
+  const endState = {
+    learningPaths: Object.fromEntries(
+      Array.from(session.learningPaths.entries()).map(([id, lp]) => [id, { highestStepIndex: lp.highestStepIndex, completed: lp.completed }])
+    ),
+    contexts: Object.fromEntries(
+      Array.from(session.contexts.entries()).map(([key, ctx]) => [key, ctx.distinctConfigs.map(c => c.signature)])
+    ),
+  };
 
   return {
     byCategory,
@@ -291,6 +398,7 @@ export function computeXP(events, rules = XP_RULES_V1) {
     log,
     blocked,
     session, // exponerat för rapportering (attempts, help, comparisonPairs, learningPaths)
+    endState, // kedjebart priorState för nästa computeXP()-anrop (GAM-003A.1)
   };
 }
 
