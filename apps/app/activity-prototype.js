@@ -40,9 +40,24 @@
     }
   }
 
+  // GAM-003B — valfria "post-record"-lyssnare (t.ex. gamification.js).
+  // Anropas EFTER att Core.recordEvent redan har uppdaterat sessionen, med
+  // SAMMA session-objekt — det finns bara EN väg in (dispatch nedan) och EN
+  // Core.recordEvent-anrop per händelse, så ingen lyssnare kan dubbelregistrera
+  // samma aktivitet. En lyssnare som kastar fel stör aldrig GAM-002 självt
+  // eller övriga lyssnare (samma safeCall-princip som resten av filen).
+  const postRecordListeners = [];
+  function onEvent(fn) {
+    if (typeof fn === "function") postRecordListeners.push(fn);
+  }
+
   function dispatch(type, meta) {
     if (!session) return;
     safeCall(() => Core.recordEvent(session, type, meta, now()));
+    if (postRecordListeners.length) {
+      const t = now();
+      postRecordListeners.forEach(fn => safeCall(() => fn(type, meta, session, t)));
+    }
   }
 
   // ── Publikt, guardat integrationsanrop för app.js ──
@@ -86,6 +101,8 @@
       if (overrides && typeof overrides === "object") Object.assign(s.config, overrides);
       return Object.assign({}, s.config);
     },
+    session() { return requireSession(); }, // GAM-003B — läsaccess för gamification-motorn, se onEvent()
+    onEvent, // GAM-003B — registrera en post-record-lyssnare (t.ex. gamification.js)
   };
 
   init();

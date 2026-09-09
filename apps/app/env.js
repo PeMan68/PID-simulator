@@ -21,6 +21,7 @@
     showScore: true,
     showExperimentalContent: true,
     showMeasurementFacit: true,
+    showGamification: true,
     catalogFile: "catalog.json"
   };
   global.ENV_CONFIG = ENV_CONFIG;

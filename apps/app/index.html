@@ -138,6 +138,69 @@
     .sidebar-section input[type="number"] { width: 100%; }
     .sidebar-divider { height: 1px; background: var(--line); margin: 2px 0; }
 
+    /* ── GAM-003B — Synlig DEV-prototyp för XP och nivåprogression ──
+       DEV-only (styrt av ENV_CONFIG.showGamification, se app.js/gamification.js).
+       Nivåfärgen (--gam-accent) sätts per nivå av JS och rör ALDRIG grafens
+       signalfärger, simulatorns huvudfärger, varningsfärger eller
+       knapp-/regulatorfärgkodningen — se docs/development/GAMIFICATION-XP-PROTOTYPE.md. */
+    .gam-level-panel[hidden] { display: none; }
+    .gam-level-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 8px;
+      background: var(--panel-strong);
+      border: 1px solid var(--gam-accent, var(--line));
+      transition: border-color 260ms ease;
+    }
+    .gam-level-summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: left;
+      color: inherit;
+      width: 100%;
+    }
+    .gam-badge { position: relative; flex-shrink: 0; width: 42px; height: 46px; display: flex; align-items: center; justify-content: center; }
+    .gam-badge svg { width: 100%; height: 100%; overflow: visible; }
+    .gam-badge-hex { fill: var(--panel); stroke: var(--gam-accent, var(--muted)); stroke-width: 3; }
+    .gam-badge-icon { stroke: var(--gam-accent, var(--muted)); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .gam-badge-number { position: absolute; bottom: 3px; left: 0; right: 0; text-align: center; font-size: 13px; font-weight: 800; color: var(--ink); }
+    .gam-badge.gam-levelup-pulse { animation: gamBadgePulse 900ms ease; }
+    @keyframes gamBadgePulse {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.2); filter: drop-shadow(0 0 6px var(--gam-accent, var(--accent))); }
+      100% { transform: scale(1); }
+    }
+    .gam-level-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+    .gam-level-eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .gam-level-name { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gam-level-bar-track { position: relative; height: 8px; border-radius: 5px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
+    .gam-level-bar-fill { height: 100%; width: 0%; background: var(--gam-accent, var(--accent-2)); transition: width 420ms ease; }
+    .gam-level-max-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #fff; text-shadow: 0 0 2px rgba(0,0,0,0.6); }
+    .gam-level-info { font-size: 11.5px; line-height: 1.4; color: var(--muted); padding-top: 4px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 6px; }
+    .gam-reset-btn { align-self: flex-start; font-size: 11px; padding: 4px 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; color: var(--ink); font-family: inherit; }
+    .gam-reset-btn:hover { border-color: #c23b22; color: #c23b22; }
+    .gam-level-toast { font-size: 11px; font-weight: 700; color: #fff; background: var(--gam-accent, var(--accent)); border-radius: 4px; padding: 3px 6px; text-align: center; }
+    .gam-level-toast.gam-toast-animated { animation: gamToastFade 2600ms ease forwards; }
+    @keyframes gamToastFade {
+      0% { opacity: 0; transform: translateY(-4px); }
+      10% { opacity: 1; transform: translateY(0); }
+      85% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .gam-badge.gam-levelup-pulse { animation: none; }
+      .gam-level-toast.gam-toast-animated { animation: none; }
+      .gam-level-bar-fill { transition: none; }
+    }
+
     #learnBody {
       white-space: pre-wrap;
       background: #fff;
@@ -485,6 +548,29 @@
   <aside class="sidebar sidebar-left" id="sidebarLeft">
     <div class="sidebar-inner">
       <div class="sidebar-title">PID Simulator <span id="appVersion" style="font-size:10px;font-weight:400;opacity:0.55;margin-left:4px;"></span> <span id="envBadge" class="env-badge" style="display:none;">DEV</span></div>
+
+      <!-- GAM-003B — Synlig DEV-prototyp för XP och nivåprogression.
+           Statisk, tom skal-markup: förblir "hidden" och opåverkad av CSS/JS
+           om gamification.js av någon anledning inte laddar eller startar
+           (t.ex. i PROD, där skripten aldrig ens begärs) — se app.js. -->
+      <div class="gam-level-panel" id="gamLevelPanel" hidden>
+        <button type="button" class="gam-level-summary" id="gamLevelSummary" aria-expanded="false" aria-controls="gamLevelInfo">
+          <span class="gam-badge" id="gamBadge"></span>
+          <span class="gam-level-text">
+            <span class="gam-level-eyebrow">Nivå <span id="gamLevelNumber">1</span></span>
+            <span class="gam-level-name" id="gamLevelName">Reglernovis</span>
+          </span>
+        </button>
+        <div class="gam-level-bar-track" id="gamLevelBarTrack" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progression mot nästa nivå">
+          <div class="gam-level-bar-fill" id="gamLevelBarFill"></div>
+          <span class="gam-level-max-label" id="gamLevelMaxLabel" hidden>Högsta nivå</span>
+        </div>
+        <div class="gam-level-toast" id="gamLevelToast" hidden></div>
+        <div class="gam-level-info" id="gamLevelInfo" hidden>
+          <span>Nivån visar din aktivitet och progression i PID Simulator. Den är inte ett betyg eller ett mått på yrkeskompetens.</span>
+          <button type="button" class="gam-reset-btn" id="gamResetProgress">Återställ progression</button>
+        </div>
+      </div>
 
       <div class="sidebar-section">
         <div class="sidebar-section-label">Scenario</div>
