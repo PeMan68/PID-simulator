@@ -275,5 +275,114 @@ function loadAndRun(s, contextKey, now, initialConfig) {
     !simCoreSrc.includes("activity") && !simCoreSrc.includes("Activity"));
 }
 
+// ══ GAM-003A.2 — comparisonGroup: jämförelser över kontextgränser ══
+
+// ── 31. Två genomförda försök i samma comparisonGroup, olika kontext, bildar ett gruppar ──
+{
+  let s = Core.createSession(0);
+  let now = 0;
+  now += 1000; Core.recordEvent(s, "learning_step_reached", { learningPathId: "lp", stepIndex: 0, isFinalStep: false, contextKey: "lp#0", comparisonGroup: "g1" }, now);
+  now += 1000; Core.recordEvent(s, "parameter_changed", { field: "kp", value: 1, contextKey: "lp#0" }, now);
+  for (let i = 0; i < 20; i++) { now += 1000; Core.recordEvent(s, "simulation_run", { steps: 1, contextKey: "lp#0" }, now); }
+  now += 1000; Core.recordEvent(s, "learning_step_reached", { learningPathId: "lp", stepIndex: 1, isFinalStep: false, contextKey: "lp#1", comparisonGroup: "g1" }, now);
+  now += 1000; Core.recordEvent(s, "parameter_changed", { field: "kp", value: 5, contextKey: "lp#1" }, now);
+  for (let i = 0; i < 20; i++) { now += 1000; Core.recordEvent(s, "simulation_run", { steps: 1, contextKey: "lp#1" }, now); }
+  Core.finalizeAllAttempts(s, now + 1000);
+  check("31. Två genomförda försök i samma comparisonGroup (olika kontext) bildar ett gruppar",
+    s.groupComparisonPairs.length === 1 && s.groupComparisonPairs[0].group === "g1", JSON.stringify(s.groupComparisonPairs));
+}
+
+// ── 32. Fyra försök i samma grupp ger TRE par (kedjat), inte sex (alla kombinationer) ──
+{
+  let s = Core.createSession(0);
+  let now = 0;
+  const steps = [
+    { idx: 0, val: 1 }, { idx: 1, val: 2 }, { idx: 2, val: 3 }, { idx: 3, val: 4 },
+  ];
+  steps.forEach(({ idx, val }) => {
+    now += 1000; Core.recordEvent(s, "learning_step_reached", { learningPathId: "lp2", stepIndex: idx, isFinalStep: idx === 3, contextKey: "lp2#" + idx, comparisonGroup: "g2" }, now);
+    now += 1000; Core.recordEvent(s, "parameter_changed", { field: "kp", value: val, contextKey: "lp2#" + idx }, now);
+    for (let i = 0; i < 20; i++) { now += 1000; Core.recordEvent(s, "simulation_run", { steps: 1, contextKey: "lp2#" + idx }, now); }
+  });
+  Core.finalizeAllAttempts(s, now + 1000);
+  check("32. Fyra försök i en grupp ger tre kedjade par, inte sex (C(4,2))",
+    s.groupComparisonPairs.length === 3, "fick " + s.groupComparisonPairs.length);
+}
+
+// ── 33. Befintlig inom-kontext-jämförelse dubbelräknas INTE som gruppar ──
+{
+  let s = Core.createSession(0);
+  let now = 0;
+  // Två distinkta konfigurationer INOM SAMMA kontext, med comparisonGroup satt.
+  now += 1000; Core.recordEvent(s, "learning_step_reached", { learningPathId: "lp3", stepIndex: 0, isFinalStep: false, contextKey: "lp3#0", comparisonGroup: "g3" }, now);
+  now += 1000; Core.recordEvent(s, "parameter_changed", { field: "kp", value: 1, contextKey: "lp3#0" }, now);
+  for (let i = 0; i < 20; i++) { now += 1000; Core.recordEvent(s, "simulation_run", { steps: 1, contextKey: "lp3#0" }, now); }
+  now += 1000; Core.recordEvent(s, "parameter_changed", { field: "kp", value: 9, contextKey: "lp3#0" }, now); // finaliserar första, startar andra, samma kontext
+  for (let i = 0; i < 20; i++) { now += 1000; Core.recordEvent(s, "simulation_run", { steps: 1, contextKey: "lp3#0" }, now); }
+  Core.finalizeAllAttempts(s, now + 1000);
+  check("33a. Inom-kontext-paret registreras en gång i comparisonPairs", s.comparisonPairs.length === 1);
+  check("33b. Samma par registreras INTE också som ett gruppar (inget dubbelt)", s.groupComparisonPairs.length === 0, "fick " + s.groupComparisonPairs.length);
+}
+
+// ── 34. Ingen comparisonGroup deklarerad => inget gruppar, oförändrat beteende ──
+{
+  let s = Core.createSession(0);
+  let now = 0;
+  now += 1000; Core.recordEvent(s, "learning_step_reached", { learningPathId: "lp4", stepIndex: 0, isFinalStep: false, contextKey: "lp4#0" }, now); // ingen comparisonGroup
+  now += 1000; Core.recordEvent(s, "parameter_changed", { field: "kp", value: 1, contextKey: "lp4#0" }, now);
+  for (let i = 0; i < 20; i++) { now += 1000; Core.recordEvent(s, "simulation_run", { steps: 1, contextKey: "lp4#0" }, now); }
+  now += 1000; Core.recordEvent(s, "learning_step_reached", { learningPathId: "lp4", stepIndex: 1, isFinalStep: false, contextKey: "lp4#1" }, now);
+  now += 1000; Core.recordEvent(s, "parameter_changed", { field: "kp", value: 5, contextKey: "lp4#1" }, now);
+  for (let i = 0; i < 20; i++) { now += 1000; Core.recordEvent(s, "simulation_run", { steps: 1, contextKey: "lp4#1" }, now); }
+  Core.finalizeAllAttempts(s, now + 1000);
+  check("34. Utan deklarerat comparisonGroup bildas inget gruppar (oförändrat befintligt beteende)",
+    s.groupComparisonPairs.length === 0 && s.comparisonPairs.length === 0);
+}
+
+// ── 35. Kort (ej genomfört) försök i gruppen bildar aldrig ett gruppar ──
+{
+  let s = Core.createSession(0);
+  let now = 0;
+  now += 1000; Core.recordEvent(s, "learning_step_reached", { learningPathId: "lp5", stepIndex: 0, isFinalStep: false, contextKey: "lp5#0", comparisonGroup: "g5" }, now);
+  now += 1000; Core.recordEvent(s, "parameter_changed", { field: "kp", value: 1, contextKey: "lp5#0" }, now);
+  for (let i = 0; i < 20; i++) { now += 1000; Core.recordEvent(s, "simulation_run", { steps: 1, contextKey: "lp5#0" }, now); } // genomfört
+  now += 1000; Core.recordEvent(s, "learning_step_reached", { learningPathId: "lp5", stepIndex: 1, isFinalStep: false, contextKey: "lp5#1", comparisonGroup: "g5" }, now);
+  now += 1000; Core.recordEvent(s, "parameter_changed", { field: "kp", value: 5, contextKey: "lp5#1" }, now);
+  for (let i = 0; i < 5; i++) { now += 1000; Core.recordEvent(s, "simulation_run", { steps: 1, contextKey: "lp5#1" }, now); } // EJ genomfört (<20 steg)
+  Core.finalizeAllAttempts(s, now + 1000);
+  check("35. Ett kort, ej genomfört försök i gruppen ger inget gruppar",
+    s.groupComparisonPairs.length === 0, "fick " + s.groupComparisonPairs.length);
+}
+
+// ── 36. Samma distinkta konfiguration upprepad i en NY kontext inom gruppen bildar ändå ett par (ingen A-B/B-A-dubblett, bara kedjat framåt) ──
+{
+  let s = Core.createSession(0);
+  let now = 0;
+  now += 1000; Core.recordEvent(s, "learning_step_reached", { learningPathId: "lp6", stepIndex: 0, isFinalStep: false, contextKey: "lp6#0", comparisonGroup: "g6" }, now);
+  now += 1000; Core.recordEvent(s, "parameter_changed", { field: "kp", value: 1, contextKey: "lp6#0" }, now);
+  for (let i = 0; i < 20; i++) { now += 1000; Core.recordEvent(s, "simulation_run", { steps: 1, contextKey: "lp6#0" }, now); }
+  now += 1000; Core.recordEvent(s, "learning_step_reached", { learningPathId: "lp6", stepIndex: 1, isFinalStep: false, contextKey: "lp6#1", comparisonGroup: "g6" }, now);
+  now += 1000; Core.recordEvent(s, "parameter_changed", { field: "kp", value: 1, contextKey: "lp6#1" }, now); // samma VÄRDE, men NY kontext => ny signatur i den kontexten
+  for (let i = 0; i < 20; i++) { now += 1000; Core.recordEvent(s, "simulation_run", { steps: 1, contextKey: "lp6#1" }, now); }
+  Core.finalizeAllAttempts(s, now + 1000);
+  check("36. Endast EN riktning (senaste->ny) prövas — inget A-B/B-A-dubbelpar",
+    s.groupComparisonPairs.length === 1, "fick " + s.groupComparisonPairs.length);
+}
+
+// ── 37. app.js skickar comparisonGroup vidare till learning_step_reached ──
+{
+  const appJs = fs.readFileSync(APP_JS_PATH, "utf8");
+  check("37. app.js läser steg.comparisonGroup och skickar det med learning_step_reached",
+    /comparisonGroup/.test(appJs) && /learning_step_reached["'],?\s*\{[^}]*comparisonGroup/.test(appJs));
+}
+
+// ── 38. summary() exponerar gruppjämförelser för felsökning ──
+{
+  let s = Core.createSession(0);
+  const sum = Core.summary(s, 1000);
+  check("38. summary() innehåller groupComparisonPairCount/groupComparisonPairs",
+    typeof sum.groupComparisonPairCount === "number" && Array.isArray(sum.groupComparisonPairs));
+}
+
 console.log(`\n${passed} OK, ${failed} FAIL`);
 if (failed > 0) process.exit(1);

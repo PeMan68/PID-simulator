@@ -65,7 +65,9 @@
       contexts: new Map(), // contextKey -> { currentConfig, currentAttempt, distinctConfigs: [{sig,fields}], observedConfigCount }
       totalSimulatedSteps: 0,
       attempts: { started: 0, completed: 0, aborted: 0 },
-      comparisonPairs: [], // { contextKey, changedFields }
+      comparisonPairs: [], // { contextKey, changedFields } — jämförelser INOM samma kontext (oförändrat)
+      comparisonGroups: new Map(), // groupId -> { lastEntry: { contextKey, signature, fields } | null } — GAM-003A.2
+      groupComparisonPairs: [], // { group, fromContext, toContext, changedFields } — jämförelser ÖVER kontextgränser, GAM-003A.2
       currentContextKey: null,
     };
   }
@@ -172,9 +174,48 @@
         currentAttempt: null,
         distinctConfigs: [],
         observedConfigCount: 0,
+        comparisonGroup: null, // GAM-003A.2 — satt via learning_step_reached, se recordEvent
       });
     }
     return session.contexts.get(contextKey);
+  }
+
+  // GAM-003A.2 — jämförelser DEKLARERADE i lärstigsdata (comparisonGroup),
+  // för avsedda jämförelser som korsar kontextgränser (olika lärstigssteg
+  // och/eller scenario-ID). Anropas EFTER den befintliga inom-kontext-
+  // jämförelselogiken ovan, och ENDAST när kontexten har ett deklarerat
+  // comparisonGroup. Bygger på GAM-002:s befintliga signatur-baserade
+  // distinkthetskontroll (isDistinct) — en redan sedd konfiguration i DENNA
+  // kontext utlöser aldrig en ny gruppjämförelse, precis som den aldrig
+  // utlöser en ny inom-kontext-jämförelse.
+  //
+  // "Fler än två försök i en grupp": jämförs ENDAST mot det SENAST
+  // registrerade försöket i gruppen (samma "jämför mot föregående"-princip
+  // som redan gäller inom en kontext) — INTE alla möjliga kombinationer.
+  // Fyra försök i en grupp ger alltså tre par (kedjat), inte sex. Se
+  // docs/reports/GAM-003A.2_COMPARISON-GROUPS.md för motiveringen.
+  //
+  // Dubblettskydd: om den senast registrerade posten i gruppen är från
+  // SAMMA kontext som den nya (dvs. paret redan räknats av den befintliga
+  // inom-kontext-logiken ovan), bildas INGET nytt gruppar — bara
+  // "senaste post"-pekaren uppdateras. A→B och B→A kan aldrig båda
+  // registreras, eftersom bara riktningen "senaste → ny" någonsin prövas.
+  function recordGroupComparison(session, groupId, contextKey, signature, fields) {
+    let group = session.comparisonGroups.get(groupId);
+    if (!group) {
+      group = { lastEntry: null };
+      session.comparisonGroups.set(groupId, group);
+    }
+    if (group.lastEntry && group.lastEntry.contextKey !== contextKey) {
+      const changed = diffConfigs(group.lastEntry.fields, fields);
+      session.groupComparisonPairs.push({
+        group: groupId,
+        fromContext: group.lastEntry.contextKey,
+        toContext: contextKey,
+        changedFields: changed,
+      });
+    }
+    group.lastEntry = { contextKey: contextKey, signature: signature, fields: fields };
   }
 
   function finalizeAttempt(session, contextKey, ctx, now) {
@@ -192,6 +233,9 @@
         if (prev) {
           const changed = diffConfigs(prev.fields, attempt.configSnapshot);
           session.comparisonPairs.push({ contextKey: contextKey, changedFields: changed });
+        }
+        if (ctx.comparisonGroup) {
+          recordGroupComparison(session, ctx.comparisonGroup, contextKey, sig, attempt.configSnapshot);
         }
       }
     } else {
@@ -243,6 +287,13 @@
           if (lp.isNewProgress) lp.highestStepIndex = meta.stepIndex;
           if (meta.isFinalStep && lp.isNewProgress) lp.completed = true;
           session.learningPaths.set(meta.learningPathId, lp);
+        }
+        // GAM-003A.2 — deklarerat jämförelse-ID från lärstigsdata (valfritt).
+        // Satt oavsett om kontexten just skapades eller redan fanns (t.ex.
+        // scenario_loaded och learning_step_reached för samma steg, i
+        // valfri ordning) — alltid samma, idempotenta tilldelning.
+        if (contextKey && meta.comparisonGroup) {
+          getOrCreateContext(session, contextKey).comparisonGroup = meta.comparisonGroup;
         }
         break;
       }
@@ -347,6 +398,8 @@
       distinctConfigCount: distinctConfigCount,
       comparisonPairCount: session.comparisonPairs.length,
       comparisonPairs: session.comparisonPairs.slice(),
+      groupComparisonPairCount: session.groupComparisonPairs.length, // GAM-003A.2
+      groupComparisonPairs: session.groupComparisonPairs.slice(), // GAM-003A.2
       help: {
         totalOpened: Array.from(session.help.opened.values()).reduce((s, v) => s + v.openCount, 0),
         uniqueHelpIds: session.help.opened.size,

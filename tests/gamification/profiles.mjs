@@ -58,7 +58,10 @@ export function buildSequenceForLearningPath(lp, profileName) {
     const isFinalStep = stepIndex === lp.steps.length - 1;
     events.push({
       type: "learning_step_reached",
-      meta: { learningPathId: lp.id, stepIndex, isFinalStep, contextKey },
+      // comparisonGroup (GAM-003A.2): samma fält som appen skickar från det
+      // verkliga lärstigsinnehållet — se apps/app/content/exercises/*.json
+      // och apps/app/app.js:s learning_step_reached-dispatch.
+      meta: { learningPathId: lp.id, stepIndex, isFinalStep, contextKey, comparisonGroup: step.comparisonGroup || null },
     });
 
     if (step.type === "theory") {

@@ -20,6 +20,7 @@
     {
       "type": "scenario",
       "ref": "pi-step-self-regulating.json",
+      "comparisonGroup": "procbeg-k-comparison",
       "title": "Svag process — försök 1: referens",
       "objective": "Skapa ett referensförlopp med den ursprungliga processförstärkningen, för att jämföra med en svagare process i nästa steg.",
       "instruction": "Ladda scenariot. Ändra SP till 80. Kör minst 80 steg.\n\nAnvänd gärna knappen 'Mät K/T/L' och håll musen över grafen för att läsa av PV vid olika tidpunkter i crosshair-tooltipen.\n\nNotera:\n• SP (80)\n• Slutligt PV\n• Högsta u\n• Om PV når SP\n• Ungefär vid vilket steg PV planar ut"
@@ -27,6 +28,7 @@
     {
       "type": "scenario",
       "ref": "pi-step-self-regulating.json",
+      "comparisonGroup": "procbeg-k-comparison",
       "title": "Svag process — försök 2: svagare process",
       "objective": "Se hur processförstärkningen K begränsar vilket PV processen kan nå, även när regulatorn ger maximal utsignal.",
       "instruction": "Ladda om scenariot (samma startläge som försök 1). Ändra K till 0.5. Ändra SP till 80 igen. Kör samma antal steg som i försök 1, minst 80.\n\nNotera samma sak som i försök 1: slutligt PV, högsta u, om PV når SP, ungefär vid vilket steg PV planar ut.\n\nPV_max = K × u_max = 0.5 × 100 = 50\nEftersom SP = 80 är större än PV_max = 50 kan ingen regulator få processen att nå SP — regulatorn kan inte kompensera för en process som saknar tillräcklig kapacitet.",
@@ -45,6 +47,7 @@
     {
       "type": "scenario",
       "ref": "pi-deadtime-comparison.json",
+      "comparisonGroup": "procbeg-deadtime-comparison",
       "title": "Dötid och reglering — försök 1: utan dötid",
       "objective": "Skapa ett referensförlopp utan dötid, för att jämföra med samma regulator vid dötid i nästa steg.",
       "instruction": "Ladda scenariot 'Dötidsjämförelse — PI-reglering'. Kontrollera att K=1.5, Kp=1.5, L=0 och SP=60 (scenariots standardvärden). Kör minst 80 steg.\n\nAnvänd gärna 'Mät K/T/L' för att läsa av kurvans form.\n\nNotera:\n• Högsta PV\n• Eventuell översläng\n• Ungefär vid vilket steg PV planar ut"
@@ -52,6 +55,7 @@
     {
       "type": "scenario",
       "ref": "pi-deadtime-comparison.json",
+      "comparisonGroup": "procbeg-deadtime-comparison",
       "title": "Dötid och reglering — försök 2: med dötid",
       "objective": "Jämför samma PI-regulator med och utan dötid.",
       "instruction": "Ladda om scenariot till samma startläge. Ändra endast L från 0 till 5. Behåll K=1.5, Kp=1.5, samma Ti och SP=60.\n\nKör samma antal steg som i försök 1, minst 80.\n\nAnvänd 'Mät K/T/L' för att läsa av och jämföra kurvorna.\n\nNotera:\n• Högsta PV\n• Översläng\n• Ungefär vid vilket steg PV planar ut\n\nJämför:\n• Ger försöket med L=5 större översläng?\n• Tar processen längre tid att stabilisera?\n• Syns oscillationer som inte fanns vid L=0?",

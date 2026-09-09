@@ -25,6 +25,7 @@
     {
       "type": "scenario",
       "ref": "pid-disturbance-noise.json",
+      "comparisonGroup": "storningar-noise-comparison",
       "title": "P möter kontinuerligt brus",
       "objective": "Se hur P-reglering överför mätbrus rakt igenom till utsignalen.",
       "instruction": "Scenariot laddar PID-läge med Brus std=3. Byt Läge till P (Ti och Td stängs av automatiskt).\n\nSätt tillfälligt Brus std till 0 och kör 60 steg — det här är din brusfria baslinje.\n\nHöj sedan Brus std till 3 igen och kör 60 steg till, på SAMMA graf (klicka inte Rensa graf) — en grå markeringslinje visar var du höjde bruset.\n\nJämför de två faserna i samma graf: hur mycket brusigare blir u (grön) jämfört med PV (blå) när bruset är på?",
@@ -44,6 +45,7 @@
       "type": "scenario",
       "ref": "pid-disturbance-noise.json",
       "continueFromPreviousStep": true,
+      "comparisonGroup": "storningar-noise-comparison",
       "title": "PI dämpar bruset i utsignalen",
       "objective": "Se hur I-delen gör u lugnare trots samma brusnivå i PV.",
       "instruction": "Fortsätter på samma graf som föregående steg. Byt Läge till PI (Ti=12s, hämtas automatiskt) och kör 60 steg till med Brus std fortfarande på 3 — markeringslinjen visar var du bytte läge.\n\nJämför u:s variation mot P-fasen tidigare i samma graf — PV ser ungefär lika brusig ut, men hur ser u ut nu?",
@@ -63,6 +65,7 @@
       "type": "scenario",
       "ref": "pid-disturbance-noise.json",
       "continueFromPreviousStep": true,
+      "comparisonGroup": "storningar-noise-comparison",
       "title": "D-delen förstärker bruset igen",
       "objective": "Se hur D-delen gör utsignalen mer hackig, trots att den ger snabbare respons på riktiga förändringar.",
       "instruction": "Fortsätter på samma graf som föregående steg. Byt Läge till PID (Td=2s, hämtas automatiskt) och kör 60 steg till — markeringslinjen visar var du bytte läge.\n\nJämför u mot PI-fasen tidigare i samma graf — blev utsignalen lugnare eller mer ryckig?",
