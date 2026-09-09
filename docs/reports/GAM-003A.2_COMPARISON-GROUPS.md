@@ -21,7 +21,7 @@ i kalibreringsverktyget.
 **Genomfört:**
 - Nytt valfritt fält `comparisonGroup` i lärstigsformatet, validerat av
   `tests/validate-content.mjs`.
-- Fältet satt på **19 steg i 6 lärstigar, fördelat på 7 grupper** — bara där
+- Fältet satt på **19 steg i 6 lärstigar, fördelat på 8 grupper** — bara där
   instruktionstexten uttryckligen ber användaren jämföra försöken.
 - `apps/app/app.js` skickar `comparisonGroup` med `learning_step_reached`.
 - `apps/app/activity-prototype-core.js` (GAM-002) utökad med en ny,
@@ -227,14 +227,14 @@ efterföljande, villkorat anrop till den nya gruppfunktionen. Verifierat:
 38. `summary()` exponerar de nya fälten.
 
 **`tests/gamification/comparison-groups-content.test.mjs`** (nytt, 23 tester):
-pinnar de faktiska 7 grupperna och deras exakta stegindex i de 6 berörda
+pinnar de faktiska 8 grupperna och deras exakta stegindex i de 6 berörda
 lärstigsfilerna, plus att `oppen-slinga-onoff-p.v1` uttryckligen saknar
 grupper. Fångar en oavsiktlig framtida borttagning/ändring som ett testfel.
 
 **`tests/validate-content.mjs`** (utökad, körs mot riktigt innehåll):
 typvalidering av `comparisonGroup` + varning för grupper med <2 medlemmar
 och för `comparisonGroup` på teoristeg. 0 fel, 0 nya varningar mot dagens
-innehåll (alla 7 grupper har ≥2 medlemmar).
+innehåll (alla 8 grupper har ≥2 medlemmar).
 
 **`tests/gamification/xp-model.mjs`/`xp-model.test.mjs`** (43 tester,
 oförändrat antal — logiken återanvänder samma diff-mönster som redan testas,
