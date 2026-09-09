@@ -28,7 +28,7 @@
       "comparisonGroup": "windup-antiwindup-comparison",
       "title": "Observera windup utan anti-windup",
       "objective": "Se hur integratorn vider upp under lång mättning och ger kraftig överskjutning.",
-      "instruction": "Anti-windup-rutan är AVCHECKAT (inläst från scenario). Kör 150 steg. Notera:\n• u (grön) mättas omedelbart vid 100%\n• PV (blå) stiger sakta mot SP=80\n• När PV passerar SP=80 är u fortfarande hög → kraftig överskjutning\n\nTitta på statusraden: I-bidraget (I=...) är enormt trots att PV redan passerat SP.",
+      "instruction": "Anti-windup-rutan är AVCHECKAT (inläst från scenario). Kör 150 steg. Notera:\n• u (grön) mättas omedelbart vid 100%\n• PV (blå) stiger sakta mot SP=80\n• När PV passerar SP=80 är u fortfarande hög → kraftig överskjutning\n• Ungefär hur högt PV når som mest (maximal PV, dvs. överskjutningen) — du kommer jämföra med nästa steg\n\nTitta på statusraden: I-bidraget (I=...) är enormt trots att PV redan passerat SP.",
       "checkpoint": {
         "question": "Vad händer med I-bidraget (I-termen) när u är mättad vid 100% utan anti-windup?",
         "options": [

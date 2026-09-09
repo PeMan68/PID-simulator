@@ -49,7 +49,7 @@
       "comparisonGroup": "pi-vs-pid",
       "title": "Jämför PI och PID",
       "objective": "Sammanfatta skillnaden mellan PI och PID utifrån dina egna observationer — inte som en generell regel.",
-      "instruction": "Jämför dina två försök (bläddra tillbaka i grafloggen eller kör om PI-scenariot om du vill se det igen):\n• Översläng — hur mycket mindre var den med PID?\n• Insvängningstid — hur mycket snabbare stabiliserades PID-förloppet?\n• Oscillation eller dämpning — vilket förlopp var mjukast?\n• Kvarstående fel — eliminerades det i båda fallen?\n\nResultatet du sett gäller för just den här processen och de här regulatorinställningarna — inte som ett bevis för att PID alltid är bättre än PI. En dåligt inställd D-del kan lika gärna göra en regulator känsligare för mätbrus och svårare att ställa in.",
+      "instruction": "Jämför dina två försök utifrån det du noterade i PI- och PID-försöken ovan (kör om PI-scenariot om du vill se förloppet igen):\n• Översläng — hur mycket mindre var den med PID?\n• Insvängningstid — hur mycket snabbare stabiliserades PID-förloppet?\n• Oscillation eller dämpning — vilket förlopp var mjukast?\n• Kvarstående fel — eliminerades det i båda fallen?\n\nResultatet du sett gäller för just den här processen och de här regulatorinställningarna — inte som ett bevis för att PID alltid är bättre än PI. En dåligt inställd D-del kan lika gärna göra en regulator känsligare för mätbrus och svårare att ställa in.",
       "checkpoint": {
         "question": "Stämmer det att PID-reglering alltid ger bättre resultat än PI-reglering?",
         "options": [
