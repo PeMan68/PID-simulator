@@ -721,6 +721,39 @@ synlig XP, ingen persistens. GAM-003B kan nu påbörjas.
 
 ---
 
+### PED-005 — Granskning av jämförelser i lärstigarna
+**Branch:** `feature/PED-005-learning-path-comparison-review`
+**Prioritet:** Låg — analysuppdrag, blockerar GAM-003B tills PO/PM beslutat
+**Beskrivning:**
+Ren granskning (inga ändringar i lärstigsdata, comparisonGroup, appkod,
+aktivitetsmodell eller XP-modell) av samtliga 14 identifierade jämförelser i
+de 10 aktiva DEV-lärstigarna, inför GAM-003B:s synliga XP.
+**Resultat i korthet:**
+- Bekräftat 8 (inte 7) unika comparisonGroup-ID:n i kodbasen — skrivfel i
+  GAM-003A.2-rapportens sammanfattningsmening, inte i koden eller testerna.
+- 6 av 8 grupper redan pedagogiskt sunda (Metod D — separata försök med
+  explicit noterade mätvärden); Störningar och robusthet oförändrad
+  (redan PO-godkänd).
+- Ett konkret sakfel hittat i publicerad lärstig: `pi-pid.v1` steg 3
+  hänvisar till en icke-existerande "bläddra tillbaka i grafloggen"-funktion.
+- Ett mindre instruktionsfel i `windup-antiwindup.v1` steg 2 (saknar
+  notering av överskjutningsvärde som steg 3 sedan frågar efter).
+- Öppet PO/PM-beslut: `lambda-comparison` — sekventiell kedja kontra
+  gemensam referens (samma XP-summa oavsett val).
+- Allvarligt, tidigare oupptäckt funktionsfel i DEV-only-lärstigen
+  `stegsvar-identifiering.v1` (ej en comparisonGroup-fråga): steg 2-7
+  saknar `continueFromPreviousStep`, så stegsvarskurvan raderas innan
+  steg 4-7 hinner mäta den. Bör åtgärdas innan lärstigen övervägs för PROD.
+- Ingen förändring av totalt antal jämförelsepar eller jämförelse-XP
+  (72 XP oförändrat) — inga föreslagna ändringar rör XP-regeln.
+- Ny återanvändbar kontroll: `tests/gamification/ped-005-audit.mjs`.
+- Full rapport: `docs/reports/PED-005_JAMFORELSEGRANSKNING.md` + `.json`.
+**Status:** Mergad till `develop`. Ingen release, `main` oförändrat. Inga
+lärstigsfiler eller appkod ändrade. **GAM-003B pausad tills PO/PM har tagit
+ställning till beslutsunderlaget** (se rapportens avsnitt 14).
+
+---
+
 ### FEAT-031 — Övningsdokument "Regulatortrimning i praktiken"
 **Branch:** `feature/regulatortrimning`
 **Prioritet:** Medel
