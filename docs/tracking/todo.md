@@ -661,9 +661,63 @@ nivåkurva (0/50/140/300/550/900/1400/2100) infördes istället.
   `GAM-003A_XP-KALIBRERING.md` (historiken där är i övrigt oförändrad).
 - DEV-/PROD-regression körd oförändrad: samma svit som GAM-003A, samtliga
   gröna. Ingen ändring i `apps/app/`, bekräftat.
-**Status:** Mergad till `develop`. Ingen release, `main` oförändrat. Väntar på
-PO/PM:s beslut om nivåkurvans toppnivåer (avsnitt 9 i rapporten) och om
-`comparisonGroup`-fältet, därefter GAM-003B.
+**Status:** Mergad till `develop`. PO/PM godkände nivåtempot (2/4/6 genomgångar
+till nivå 8), nivåkurvan, XP-modellen, repetitionsprincipen, localStorage-
+persistens och beslutade att `comparisonGroup` ska införas fullt ut (inte bara
+i kalibreringsverktyget) innan GAM-003B — se **GAM-003A.2** nedan.
+
+---
+
+### GAM-003A.2 — Deklarativa jämförelsegrupper (comparisonGroup)
+**Branch:** `feature/GAM-003A.2-comparison-groups`
+**Prioritet:** Låg — teknisk grund för GAM-003B, ingen synlig funktion
+**Beskrivning:**
+PO/PM-beslutad full implementation (inte bara kalibreringsverktyget) av ett
+deklarativt fält för jämförelser som korsar lärstigssteg/scenario-ID-gränser,
+vilket GAM-002 tidigare aldrig kunde se. Appen ska inte gissa jämförelser
+från grafmarkeringar — de ska deklareras i lärstigsdata.
+**Genomförande:**
+- Nytt valfritt fält `comparisonGroup` i lärstigsformatet, validerat av
+  `tests/validate-content.mjs` (typkontroll + varning för grupper med <2
+  medlemmar eller satta på teoristeg).
+- Satt på **19 steg i 6 lärstigar, 7 grupper**, efter att ha läst den
+  fullständiga instruktionstexten i samtliga sju namngivna lärstigar —
+  bara där en jämförelse uttryckligen instrueras. `oppen-slinga-onoff-p.v1`
+  fick medvetet ingen grupp (ingen uttrycklig cross-step-jämförelseinstruktion).
+  Korrigerar samtidigt ett fel i GAM-003A:s ursprungliga inventering av
+  `windup-antiwindup.v1` (av/på-jämförelsen är två separata lärstigssteg,
+  inte ett steg med två interna konfigurationer).
+- `apps/app/app.js`: `comparisonGroup` skickas med i `learning_step_reached`
+  (`nextPathStep`/`prevPathStep`), samma befintliga dispatch-anrop.
+- `apps/app/activity-prototype-core.js` (GAM-002) utökad med
+  `session.comparisonGroups`/`groupComparisonPairs` och en ny
+  `recordGroupComparison()`, anropad EFTER den befintliga, oförändrade
+  inom-kontext-jämförelselogiken. En grupp med fler än två försök
+  (`storningar-noise-comparison`, fyra försök) jämförs bara mot det SENAST
+  registrerade försöket — samma princip som redan gäller inom en kontext —
+  vilket ger tre kedjade par, inte sex (C(4,2)). Ingen ny komplettering
+  (roller/ordning) behövdes utöver `comparisonGroup` självt.
+- Dubblettskydd verifierat: inom-kontext-par dubbelräknas aldrig som
+  gruppar; bara riktningen "senaste→ny" prövas (inget A-B/B-A-dubbelpar);
+  `comparisonGroups` ingår medvetet INTE i GAM-003A.1:s
+  `priorState`/`endState`-persistensmodell, så en ny session kan generera
+  samma gruppjämförelse igen (repetitionsprincipen).
+- `tests/gamification/` uppdaterat (lp-inventory.mjs, profiles.mjs,
+  xp-model.mjs) att använda samma comparisonGroup-information som appen.
+  Ny `tests/gamification/comparison-groups-content.test.mjs` (23 tester)
+  pinnar de faktiska grupperna mot riktigt innehåll.
+- Referensen "Test 1" jämförelse-XP: 6 → 18 XP (två tidigare missade
+  gruppjämförelser). Godkänt nivåtempo (2/4/6 genomgångar till nivå 8)
+  förblev i praktiken oförändrat — de nya jämförelserna är bestående
+  "första gången"-händelser, inte repeterbara vid identisk repetition.
+- 8 nya tester i `tests/activity-prototype.test.mjs` (nu 48 totalt),
+  23 nya i `comparison-groups-content.test.mjs`, `xp-model.test.mjs`
+  oförändrat 43. Samtliga gröna.
+- Full rapport: `docs/reports/GAM-003A.2_COMPARISON-GROUPS.md` + `.json`.
+- DEV-/PROD-regression grön. PROD-artifakten fysiskt oförändrad i struktur
+  (fältet är inert JSON-data i PROD — GAM-002 laddas aldrig där).
+**Status:** Mergad till `develop`. Ingen release, `main` oförändrat. Ingen
+synlig XP, ingen persistens. GAM-003B kan nu påbörjas.
 
 ---
 

@@ -20,6 +20,7 @@
     {
       "type": "scenario",
       "ref": "p-pi-comparison-p.json",
+      "comparisonGroup": "pb-kp-escalation",
       "title": "Stort PB — försiktig regulator",
       "objective": "Se hur ett stort proportionalband ger en försiktig, långsam regulator med stort kvarstående fel.",
       "instruction": "Ändra Kp till 0.5 (PB blir då 200%). Aktivera kryssrutan 'Visa PB' i Regulator-gruppen — ett lila skuggat område och en streckad linje visas i grafen.\n\nKör minst 30 steg. PV planar ut väl innan dess.\n\nNotera var PV stabiliserar sig och var PB-linjen (u=100%-nivån) ligger i förhållande till SP.",
@@ -38,6 +39,7 @@
     {
       "type": "scenario",
       "ref": "p-pi-comparison-p.json",
+      "comparisonGroup": "pb-kp-escalation",
       "title": "Minska PB — kraftigare regulator",
       "objective": "Observera hur regulatorns reaktion blir kraftigare när PB minskar (Kp ökar).",
       "instruction": "Fortsätt med samma scenario. Minska PB stegvis genom att öka Kp: prova Kp=2, klicka 'Återställ system' och kör minst 30 steg, notera resultatet. Gör om med Kp=5.\n\nJämför de tre försöken (Kp=0.5, 2 och 5):\n• Hur mycket krymper PB-bandet i grafen?\n• Hur mycket minskar det kvarstående felet?\n• Vid Kp=5 börjar en liten översläng synas — PV skjuter förbi SP och rör sig tillbaka. Ser du den?",
@@ -74,6 +76,7 @@
     {
       "type": "scenario",
       "ref": "p-pi-comparison-p.json",
+      "comparisonGroup": "pb-p-vs-pi",
       "title": "P-reglering — kvarstående fel (referens)",
       "objective": "Etablera ett jämförelseresultat med P-reglering innan samma process regleras med PI.",
       "instruction": "Ladda om scenariot så Kp återgår till 1.0 (klicka 'Ladda scenario' igen om du ändrade Kp i tidigare steg). Kör minst 30 steg — PV har då stabiliserat sig.\n\nNotera slutvärdet på PV och det kvarstående felet e = SP − PV. Du kommer jämföra med nästa steg.",
@@ -92,6 +95,7 @@
     {
       "type": "scenario",
       "ref": "p-pi-comparison-pi.json",
+      "comparisonGroup": "pb-p-vs-pi",
       "title": "PI-reglering — felet elimineras",
       "objective": "Jämföra med föregående steg: samma Kp, men med en I-del tillagd.",
       "instruction": "Ladda scenariot 'P/PI-jämförelse — PI-reglering' (samma Kp=1.0 som i föregående steg, men nu med Ti=12 tillagt). Kör samma antal steg som i föregående steg, minst 30.\n\nJämför med ditt resultat från förra steget:\n• Vad hände med det kvarstående felet?\n• Är insvängningen fortfarande snabb, eller tar den något längre tid?",

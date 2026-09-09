@@ -33,6 +33,7 @@
     {
       "type": "scenario",
       "ref": "lambda-pi-moderate.json",
+      "comparisonGroup": "lambda-comparison",
       "title": "Applicera Lambda-inställning (λ = T = 20)",
       "objective": "Observera hur Lambda-tunad PI ger mjuk inreglering utan överskjutning.",
       "instruction": "Scenariot har Lambda-beräknade parametrar: Kp=0.53, Ti=20 (λ=T=20).\n\nKör 200 steg. Observera:\n• PV når SP utan överskjutning\n• Inregleringstiden är ungefär λ + L = 25 steg\n• Utsignalen u startar högt och sjunker mjukt\n\nDetta är Lambda-metodens karakteristik: förutsägbar, mjuk inreglering.",
@@ -51,6 +52,7 @@
     {
       "type": "scenario",
       "ref": "lambda-pi-aggressive.json",
+      "comparisonGroup": "lambda-comparison",
       "title": "Aggressivt λ (λ = L = 5)",
       "objective": "Se effekten av att välja λ lika med dödtiden — snabbast möjliga Lambda-inställning.",
       "instruction": "Nu är λ = L = 5 (minsta rekommenderade värdet). Kp=1.33, Ti=20.\n\nKör 200 steg och jämför med föregående:\n• Inregleringen är snabbare\n• Men notera överskjutning och eventuell oscillation\n• Regulatorn är mer känslig för störningar och modellfel\n\nLambda-metoden kräver att λ ≥ L — detta är gränsen.",
@@ -69,6 +71,7 @@
     {
       "type": "scenario",
       "ref": "lambda-pi-conservative.json",
+      "comparisonGroup": "lambda-comparison",
       "title": "Konservativt λ (λ = 3T = 60)",
       "objective": "Uppleva det robusta men långsamma beteendet vid stort λ.",
       "instruction": "Nu är λ = 3T = 60. Kp=0.21, Ti=20.\n\nKör 200 steg:\n• Inregleringen är markant långsammare\n• Ingen överskjutning alls\n• Utsignalen u ändras väldigt mjukt\n\nDetta val passar processer med stor modellosäkerhet, variabel last eller säkerhetskritiska tillämpningar där stabilitet är viktigare än hastighet.",

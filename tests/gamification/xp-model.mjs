@@ -258,6 +258,7 @@ export function computeXP(events, rules = XP_RULES_V1, priorState = null) {
       attemptsCompleted: session.attempts.completed,
       distinctConfigs: sumDistinctConfigs(session),
       comparisonPairs: session.comparisonPairs.length,
+      groupComparisonPairs: session.groupComparisonPairs.length, // GAM-003A.2
       helpUnique: session.help.opened.size,
       lp: meta.learningPathId != null
         ? Object.assign({}, session.learningPaths.get(meta.learningPathId) || { highestStepIndex: -1, completed: false })
@@ -279,9 +280,12 @@ export function computeXP(events, rules = XP_RULES_V1, priorState = null) {
       award("distinctConfig", rules.distinctConfig * (afterDistinct - before.distinctConfigs), index, type, "Ny distinkt parameterkonfiguration (efter genomfört försök).");
     }
 
-    // ── Diff EFTER: jämförelsepar ──
+    // ── Diff EFTER: jämförelsepar (inom kontext OCH deklarerade grupper, GAM-003A.2) ──
     if (session.comparisonPairs.length > before.comparisonPairs) {
       award("comparisonPair", rules.comparisonPair * (session.comparisonPairs.length - before.comparisonPairs), index, type, "Nytt jämförelsepar inom samma kontext.");
+    }
+    if (session.groupComparisonPairs.length > before.groupComparisonPairs) {
+      award("comparisonPair", rules.comparisonPair * (session.groupComparisonPairs.length - before.groupComparisonPairs), index, type, "Nytt jämförelsepar i ett deklarerat comparisonGroup (över kontextgränser).");
     }
 
     // ── Diff EFTER: unik hjälptext ──
@@ -363,6 +367,7 @@ export function computeXP(events, rules = XP_RULES_V1, priorState = null) {
       attemptsCompleted: session.attempts.completed,
       distinctConfigs: sumDistinctConfigs(session),
       comparisonPairs: session.comparisonPairs.length,
+      groupComparisonPairs: session.groupComparisonPairs.length, // GAM-003A.2
     };
     Core.finalizeAllAttempts(session, now);
     if (session.attempts.completed > beforeFinal.attemptsCompleted) {
@@ -374,6 +379,9 @@ export function computeXP(events, rules = XP_RULES_V1, priorState = null) {
     }
     if (session.comparisonPairs.length > beforeFinal.comparisonPairs) {
       award("comparisonPair", rules.comparisonPair * (session.comparisonPairs.length - beforeFinal.comparisonPairs), events.length, "session_end", "Nytt jämförelsepar (finaliserat vid sessionens slut).");
+    }
+    if (session.groupComparisonPairs.length > beforeFinal.groupComparisonPairs) {
+      award("comparisonPair", rules.comparisonPair * (session.groupComparisonPairs.length - beforeFinal.groupComparisonPairs), events.length, "session_end", "Nytt gruppjämförelsepar (finaliserat vid sessionens slut).");
     }
   }
 

@@ -619,3 +619,28 @@ konfigurationssignaturer per kontext) mellan sessioner, plus en
 
 **Status:** Reviderad kalibrering klar. Nästa steg fortsatt GAM-003B, nu med
 persistenskravet dokumenterat som förutsättning.
+
+## 18. GAM-003A.2 — comparisonGroup implementerat fullt ut
+
+PO/PM beslutade att lösa GAM-003A/A.1:s identifierade lucka (GAM-002 ser bara
+jämförelser inom samma kontext) med full implementation, inte bara analys:
+ett nytt, valfritt fält `comparisonGroup` i lärstigsdata, satt på 19 steg i
+6 lärstigar (7 grupper), en ny gruppjämförelsemekanism i
+`apps/app/activity-prototype-core.js`, dispatch från `apps/app/app.js`, och
+motsvarande stöd i kalibreringsverktyget. Fullständig rapport:
+`docs/reports/GAM-003A.2_COMPARISON-GROUPS.md`.
+
+En grupp med FLER ÄN TVÅ försök (`storningar-noise-comparison`, fyra försök:
+P-nobrus/P-brus/PI/PID) hanterades genom att bara jämföra mot det SENAST
+registrerade försöket i gruppen — samma princip GAM-002 redan använder inom
+en kontext, tillämpad på gruppnivå. Fyra försök ger tre kedjade par, inte
+sex — ingen ny komplettering utöver `comparisonGroup` själv behövdes.
+
+Referensen "Test 1" jämförelse-XP ökade från 6 till 18 XP (två tidigare
+missade gruppjämförelser). Det PO/PM-godkända nivåtempot (nivå 8 efter 2/4/6
+fulla genomgångar) förblev i praktiken oförändrat, eftersom de nya
+jämförelserna är bestående "första gången"-händelser som inte ger extra XP
+vid en identisk repetition.
+
+**Status:** Klart, mergad till `develop`. Ingen synlig XP, ingen ändring av
+XP-värden eller nivåkurva. GAM-003B kan nu påbörjas.

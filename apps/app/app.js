@@ -675,7 +675,7 @@ function prevPathStep() {
   if (step.type === "scenario" || step.type === "observe") {
     if (SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
   }
-  activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey() });
+  activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey(), comparisonGroup: step.comparisonGroup || null });
   renderStep(step);
 }
 function nextPathStep() {
@@ -699,7 +699,7 @@ function nextPathStep() {
     const continueSameRun = step.continueFromPreviousStep && currentScenarioRef === step.ref;
     if (!continueSameRun && SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
   }
-  activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey() });
+  activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey(), comparisonGroup: step.comparisonGroup || null });
   renderStep(step);
 }
 

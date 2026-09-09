@@ -18,6 +18,15 @@ konfigurationssignaturer). Se
 registreringsmodell (nedan) är fortfarande oförändrad — persistensbehovet
 gäller ett framtida XP-/nivålager ovanpå, inte GAM-002 självt.
 
+**GAM-003A.2 (2026-09-09):** Denna moduls registreringsmodell ÄR nu ändrad
+(första gången sedan GAM-002 skapades) — ett nytt, valfritt `comparisonGroup`-
+fält på lärstigssteg (satt av `app.js` i `learning_step_reached`-dispatchen)
+låter genomförda försök i olika kontexter (olika lärstigssteg/scenario-ID)
+bilda jämförelsepar, utan att den befintliga inom-kontext-jämförelsen nedan
+ändrats. Se "Jämförelsepar"-avsnittet nedan (uppdaterat) och
+`docs/reports/GAM-003A.2_COMPARISON-GROUPS.md` för den fullständiga
+motiveringen och testtäckningen.
+
 ## Syfte
 
 Innan viktning, levels eller lagring för spelifiering bestäms behöver appen kunna mäta
@@ -137,6 +146,20 @@ När en kontext får sin **andra** (eller senare) distinkta, genomförda konfigu
 jämförs den mot den senast bekräftade distinkta konfigurationen i samma kontext, och
 vilka fält som skiljde loggas. Inga fullständiga rådataserier sparas — bara vilka
 fältnamn som ändrades.
+
+**Grupp-jämförelser över kontextgränser (GAM-003A.2):** ett lärstigssteg kan
+deklarera `comparisonGroup: "<id>"` (satt i lärstigens JSON, skickat av `app.js`
+i `learning_step_reached`). När ett steg med ett sådant fält får en NY distinkt
+konfiguration jämförs den mot den senast registrerade distinkta konfigurationen
+i HELA gruppen (`session.comparisonGroups`) — oavsett vilken kontext den kom
+från. Är den senaste från en ANNAN kontext registreras ett gruppjämförelsepar
+(`session.groupComparisonPairs`); är den från SAMMA kontext görs ingenting (paret
+är redan räknat ovan) — bara "senaste"-pekaren uppdateras. En grupp med fler än
+två försök jämförs alltid bara mot det senaste, aldrig alla kombinationer (fyra
+försök ger tre kedjade par, inte sex). `comparisonGroups`/`groupComparisonPairs`
+återställs varje ny session (ingår inte i någon persistens) — en ny session kan
+alltså generera samma gruppjämförelse igen, i linje med GAM-003A.1:s
+repetitionsprincip. Se `docs/reports/GAM-003A.2_COMPARISON-GROUPS.md`.
 
 ## Mät K/T/L
 
