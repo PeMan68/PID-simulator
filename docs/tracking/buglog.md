@@ -9,32 +9,6 @@ Stängda buggar finns i [buglog-done.md](buglog-done.md).
 
 ## Webbapp (`apps/app/`)
 
-### 2026-013 — Återställ progression: nästa händelse ger massiv felaktig XP-återhämtning
-**Prio:** Hög
-**Datum:** 2026-09-10
-**Branch:** `bugfix/2026-013`
-**Beskrivning:**
-PO testade "Återställ progression" (GAM-003B/DEV-prototyp för XP/nivå).
-Nollställningen visar korrekt 0 XP/Reglernovis direkt efter klick. Men ETT
-enda efterföljande klick på "Stega" ger omedelbart nivå 2 med 83 XP bokfört
-— reproducerbart, samma resultat varje gång.
-**Förväntat beteende:** Efter "Återställ progression" ska XP/nivå öka
-normalt, i takt med faktisk ny aktivitet — inte hoppa till ett stort tal på
-en enda enstegning.
-**Faktiskt beteende:** Ett enda "Stega"-klick efter återställning ger en
-stor engångsmängd XP och hoppar direkt till nivå 2.
-**Status:** Öppen — undersöks
-**Grundorsak (identifierad):** `gamification.js`s `onReset()` skapar ett
-NYTT, tomt `engine`-objekt men återanvänder samma, redan belastade GAM-002-
-aktivitetssession (`window.ActivityPrototype.session()`). Motorns
-diff-baserade bokföring (`processEvent`) jämför sessionens RÅA räknare
-(`session.attempts.completed`, `sumDistinctConfigs`, `comparisonPairs.length`
-m.fl.) mot motorns egen, nollställda ögonblicksbild — så nästa händelse
-(oavsett typ) tolkar HELA den tidigare sessionens redan-existerande
-aktivitet som "ny" och krediterar den i klump.
-
----
-
 ### 2026-011 — Sidopaneler kollapsas inte, tömmer bara innehållet
 **Prio:** Medel
 **Datum:** 2026-06-26
