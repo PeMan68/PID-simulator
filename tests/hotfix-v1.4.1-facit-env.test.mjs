@@ -92,10 +92,12 @@ if (!existsSync(DIST_DEV_DIR) || !existsSync(DIST_PROD_DIR)) {
   const prodEnv = loadEnvConfig(path.join(DIST_PROD_DIR, "env.js"));
   check("4b. dist/prod/env.js: showMeasurementFacit === false", !!prodEnv && prodEnv.showMeasurementFacit === false);
 
-  // GAM-002 finns bara i develop idag (inte i denna branch), men skyddet ska ändå
-  // gälla oavsett källträd — se samma kontroll i tests/validate-prod.mjs.
+  // v1.5.0: GAM-002/aktivitetsspårning SKA finnas i PROD-artifakten (PO:s
+  // beslut, se docs/development/GAMIFICATION-XP-PROTOTYPE.md) — omvänt av
+  // vad denna kontroll ursprungligen antog innan det beslutet. Se samma,
+  // redan uppdaterade kontroll i tests/validate-prod.mjs.
   for (const gamFile of ["activity-prototype-core.js", "activity-prototype.js"]) {
-    check(`4c. dist/prod/${gamFile} finns inte`, !existsSync(path.join(DIST_PROD_DIR, gamFile)));
+    check(`4c. dist/prod/${gamFile} finns (v1.5.0-beslutet)`, existsSync(path.join(DIST_PROD_DIR, gamFile)));
   }
   // I DEV ska GAM-002-filerna finnas OM de finns i källträdet (apps/app/) — annars
   // är kontrollen inte tillämplig (t.ex. på en branch grenad från main).

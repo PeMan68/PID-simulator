@@ -889,6 +889,40 @@ Node-skript och i en riktig webbläsare) och är nu åtgärdad.
 
 ---
 
+### RELEASE-v1.5.0 — Nivåprogression i produktion + Störningar och robusthet
+**Branch:** `release/v1.5.0` (från `develop`) → `main` (taggad `v1.5.0`) → tillbaka till `develop`
+**Prioritet:** Hög — produktionsrelease
+**Beslutsfattare:** PO (PM otillgänglig vid tillfället — PO tog besluten direkt, 2026-09-10)
+**Beskrivning:**
+Efter PO:s godkända användartest av GAM-003B/C/D beslutade PO att:
+1. Aktivera nivåprogressionen (GAM-002/GAM-003) i PROD i sitt nuvarande,
+   testade DEV-skick, **inklusive** DEV-konsolstödet
+   (`window.ActivityPrototype`/`window.GamificationDev`) för felsökning på
+   plats i produktion.
+2. Publicera FEAT-030 (lärstigen "Störningar och robusthet") som sjunde
+   PROD-lärstig.
+3. Bekräftade explicit: progression sparas per webbläsare/enhet (inte per
+   konto) — ett känt, accepterat förhållande, inte ett krav på ändring.
+4. Bekräftade explicit: allt annat i PROD-profilen (Test-läge, poäng,
+   mätfacit, experimentellt innehåll) förblir avstängt, oförändrat.
+
+**Genomförande:** se `feature/PROD-v1.5.0-activate-gamification`-posten
+ovan för den tekniska arkitekturändringen (frikoppling av
+`showGamification` från `ENV_CONFIG.environment`). Releasen i sig tog med
+hela `develop` (ingen cherry-pick, enligt projektets vanliga
+releaseprincip) — `CHANGELOG.md` och `README.md` uppdaterade på
+release-branchen.
+**Testresultat:** 269 automatiska tester gröna (samtliga GAM-/innehålls-/
+simulerings-/PROD-tester). Manuell verifiering i riktig webbläsare mot en
+byggd PROD-artifakt: nivåprogression fungerar och bokförs korrekt,
+DEV-konsolstödet tillgängligt, Störningar och robusthet laddas som sjunde
+lärstig, Test-läge/poäng/facit/experimentellt förblir avstängda, ingen
+DEV-badge, appversion v1.5.0, inga konsolfel.
+**Status:** Publicerad. `main` taggad `v1.5.0`, GitHub Pages byggd och
+publicerad därifrån. `develop` innehåller samma underlag.
+
+---
+
 ### FEAT-031 — Övningsdokument "Regulatortrimning i praktiken"
 **Branch:** `feature/regulatortrimning`
 **Prioritet:** Medel
@@ -967,6 +1001,105 @@ oberoende av `FEAT-032` (exporterar då bara det som visas för tillfället).
 Python-appen, stängd utan implementation via `BESLUT-002` av samma skäl som `FEAT-032`
 ovan.
 **Status:** Öppen
+
+---
+
+### FEAT-034 — Enkel besöks- och nivåstatistik (GoatCounter)
+**Branch:** `feature/goatcounter-analytics`
+**Prioritet:** Medel — PO vill kunna se hur mycket appen faktiskt används
+**Beskrivning:**
+PO vill kunna se hur många studenter som använder appen (unika besökare per datum) samt
+vilken gamification-nivå de når, som ett grovt mått på användningsomfattning. Vald lösning:
+[GoatCounter](https://www.goatcounter.com) — gratis, cookiefri, kräver inget
+samtyckesbanner, visar unika besökare per dag i sin dashboard. Sitekod: `pid-simulator`
+(`https://pid-simulator.goatcounter.com`).
+
+Två delar:
+1. Vanlig sidvisningsräkning: GoatCounters standardskript i `apps/app/index.html`.
+2. Anonym nivå-händelse: när `flushed.leveledUp` inträffar i `gamification.js` (samma
+   punkt som redan triggar `UI.showLevelUp`) skickas en `window.goatcounter.count()`-
+   händelse med nivåindex/-namn som `path`/`title`. Ingen koppling till individ utöver
+   GoatCounters egna, dagsroterande anonyma besökshash.
+
+**Avsteg från tidigare princip:** `FEAT-033` (se ovan) noterar att webbappen medvetet
+saknar externa beroenden/CDN-script i `index.html`. GoatCounter är ett uttryckligt,
+avsiktligt avsteg från den principen — PO har vägt nyttan (användningsstatistik) mot
+avsteget och godkänt det. Blockerar inte lokal DEV-testning: GoatCounters skript
+exkluderar `localhost`/lokala nätverk från räkningen som standard, så
+`python -m http.server` mot `apps/app/` skickar inga händelser.
+
+**Stängd utan implementation (2026-09-10):** Byggd och lokalt testad på
+`feature/goatcounter-analytics`, men PO:s test visade att begäran till `gc.zgo.at`
+blockeras av webbläsarens säkerhetsinställningar (bekräftat i DevTools Network-fliken —
+"Provisional headers are shown", ingen statuskod, alltså stoppad innan nätverksanropet
+ens skickades). PO bedömer att skoldatorerna som studenterna faktiskt använder har
+samma typ av restriktiva säkerhets-/nätverksinställningar, vilket gör GoatCounter
+opålitligt för målgruppen — inte ett adblock-i-en-enskild-webbläsare-problem utan ett
+strukturellt problem med klientside-JS-analys i den här miljön. Featuren och branchen
+skrotas. Om besöksstatistik önskas igen senare krävs antingen en server-/proxy-baserad
+lösning (inte blockerbar av klientens nätverksfilter) eller ett annat spårningssätt än
+ett tredjeparts-JS-skript.
+**Status:** Stängd — se motivering ovan
+
+---
+
+### FEAT-035 — Nivåmärke, medaljongdesign
+**Branch:** `feature/nivamarke-medaljong`
+**Prioritet:** Låg — kosmetisk förbättring
+**Beskrivning:**
+Dagens sexkantsmärke i nivåpanelen (`gamification-ui.js:badgeSvg()`) har ett känt
+buggmönster: nivåsiffran renderas som ett separat HTML-`<span>`, absolutpositionerat
+`bottom: 3px` i märkrutan — inte som en del av SVG-grafiken tillsammans med sexkanten
+och återkopplingsloop-ikonen. Resultatet är att siffran ser felcentrerad/"off" ut,
+eftersom den och ikonen konkurrerar om samma lilla yta (42×46px) i stället för att vara
+en sammanhållen bild.
+
+PO fick tre visuella förslag presenterade (mockup, se
+[docs/reports/ — badge-revision-mockup, ej sparad i repo]) och valde **"Medaljong"**:
+- Siffran flyttas in i SVG:n som `<text>`, ankrad i sexkantens geometriska mittpunkt
+  (12, 13 i `viewBox="0 0 24 26"`) — löser buggen direkt.
+- Sexkanten fylls med en linjär gradient (ljus→mörk nyans av nivåns egen
+  `TIER_ACCENTS`-färg, beräknad i JS, inte en ny parallell färglista).
+- En tunn innerfälg (halvtransparent vit) ger en "medaljong"-känsla.
+- Siffran "graveras" med skugga/highlight (`text-shadow`).
+- Nivå 8 (Reglerlegend, index 7) får en mjuk `feGaussianBlur`-glöd — enda nivån med
+  den extra effekten, som en tydlig topp-belöning.
+- Den befintliga återkopplingsloop-ikonen (`LOOP_ICON_SVG`) tas bort ur badgen som en
+  del av denna omdesign (medaljongstilen ersätter den, inte kompletterar den).
+
+**Release:** Ingick i `RELEASE-v1.5.1` (se nedan) på PO:s uttryckliga begäran, direkt
+efter att medaljongförslaget godkänts.
+**Status:** Publicerad. Mergad till `develop` och `main` (taggad `v1.5.1`).
+
+---
+
+### RELEASE-v1.5.1 — Nivåmärke, medaljongdesign
+**Branch:** `develop` → `main` (taggad `v1.5.1`) → tillbaka till `develop`
+**Prioritet:** Låg — kosmetisk patch-release
+**Beslutsfattare:** PO ("kan färdigställas till release och mergas till main", 2026-09-10)
+**Beskrivning:**
+Ensam post: `FEAT-035` (nivåmärkets medaljongdesign, se ovan). Ingen cherry-pick — releasen
+tar med hela `develop` vid releasetillfället, enligt projektets vanliga releaseprincip.
+`CHANGELOG.md`, `README.md` och `APP_VERSION` uppdaterade direkt på `develop` inför
+mergen till `main` (samma mönster som `RELEASE-v1.5.0`).
+**Testresultat:** Hela startkontrollsviten från `docs/handoffs/HANDOFF_2026-09-10.md`
+avsnitt 13 kördes grönt (innehåll, simulering, aktivitet, samtliga gamification-svit,
+build-preview, validate-prod). `badgeSvg`/`shade` är ren DOM-fri stränggenerering och
+testades isolerat med en fristående kopia av logiken. Manuell visuell granskning gjordes
+via en HTML-mockup (Artifact) som PO godkände innan implementation; ingen live-
+webbläsartest i denna miljö (ingen webbläsare tillgänglig i sandboxen) — PO bör göra en
+snabb visuell kontroll av badgen i produktion efter deploy.
+
+**Sidofynd under testkörningen:** `tests/hotfix-v1.4.1-facit-env.test.mjs` kontroll 4c
+var föråldrad — den påstod att `activity-prototype*.js` INTE skulle finnas i
+`dist/prod`, vilket var sant före v1.5.0 men fel sedan PO:s beslut att aktivera
+gamification i PROD (redan korrekt skyddat åt rätt håll i `tests/validate-prod.mjs:172`).
+Testet uppdaterades aldrig när arkitekturen ändrades. Rättat i samma release eftersom det
+annars permanent skulle visa falsk röd status vid varje framtida testkörning — inte en
+del av `FEAT-035`, men för litet och uppenbart fel för att motivera en egen
+bugfix-branch/buglog-post.
+**Status:** Publicerad. `main` taggad `v1.5.1`, GitHub Pages byggd och publicerad
+därifrån. `develop` innehåller samma underlag.
 
 ---
 
