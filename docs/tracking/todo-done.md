@@ -35,6 +35,33 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande features 
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-030 — Lärstig "Störningar och robusthet"
+**Branch:** `feature/storningar-robusthet` (mergad till `develop`)
+**Beskrivning:**
+Ny 7-stegs lärstig (`storningar-robusthet.v1`, 1 teori + 6 scenario) om mätbrus,
+pulsstörning och P/PI/PID-robusthet, baserad på källmaterialet i
+`docs/exercises/ovningar-signalstorningar.md`. Återanvänder befintliga
+`pid-disturbance-noise.json`/`pid-pulse-rejection.json` — inga nya scenariofiler. Ny
+teorimodul `disturbance-robustness.v1.json`.
+
+Två nya, generella appfunktioner tillkom under PO:s testomgång:
+- **Markeringslinje i grafen** vid varje betydelsefull parameterändring (regulatorläge,
+  Kp/Ti/Td, brus, SP, process) eller pulstriggning — gör flera faser urskiljbara i en
+  kontinuerlig graf istället för att kräva Rensa graf/Återställ mitt i en jämförelse.
+- **`continueFromPreviousStep`** (explicit steg-fält, samma mönster som `standalone`/
+  `ENV_CONFIG.*`): låter en lärstig fortsätta samma körning/graf över flera steg istället
+  för att automatiskt ladda om scenariot vid varje stegbyte. Använt i steg 3–4 för att ge
+  en sammanhängande P→P+brus→PI→PID-jämförelse med tre fristående checkpoints bevarade.
+
+Verifierat med Playwright genom hela lärstigsnavigeringen och den fullständiga
+Node-testsviten (`validate-content.mjs`, `validate-prod.mjs`, `build-preview.test.mjs`,
+`simulation/analyze.test.mjs`) — samtliga gröna. PO har testat och godkänt branchen.
+**Status:** Klar, mergad till `develop`. **Produktionsaktiverad i v1.5.0**
+(2026-09-10, PO:s beslut) — sjunde lärstigen i `catalog.prod.json`, se
+RELEASE-v1.5.0-posten.
+
+---
+
 ### FEAT-029 — Crosshair horisontell linje
 **Branch:** `feature/crosshair-hline`
 **Status:** Klar

@@ -1,0 +1,2738 @@
+{
+  "meta": {
+    "mission": "GAM-003A",
+    "generatedBy": "tests/gamification/generate-report-json.mjs",
+    "date": "2026-09-08",
+    "note": "Maskinläsbart underlag till docs/reports/GAM-003A_XP-KALIBRERING.md. Laddas aldrig av appen."
+  },
+  "xpRules": {
+    "original": {
+      "newHighestStep": 2,
+      "completedLearningPath": 12,
+      "completedAttempt": 4,
+      "distinctConfig": 2,
+      "comparisonPair": 6,
+      "uniqueHelp": 2,
+      "helpCapPerSession": null,
+      "measurementWork": 4,
+      "singleStepXP": 1,
+      "singleStepCapPerAttempt": 5,
+      "checkpointFirstTryCorrect": 4,
+      "checkpointCorrectAfterWrong": 2
+    },
+    "recommended": {
+      "newHighestStep": 2,
+      "completedLearningPath": 12,
+      "completedAttempt": 4,
+      "distinctConfig": 2,
+      "comparisonPair": 6,
+      "uniqueHelp": 2,
+      "helpCapPerSession": 5,
+      "measurementWork": 4,
+      "singleStepXP": 1,
+      "singleStepCapPerAttempt": 3,
+      "checkpointFirstTryCorrect": 4,
+      "checkpointCorrectAfterWrong": 2
+    }
+  },
+  "levelThresholds": {
+    "huvudkandidat": [
+      {
+        "name": "Reglernovis",
+        "threshold": 0
+      },
+      {
+        "name": "Looplärling",
+        "threshold": 35
+      },
+      {
+        "name": "Signalspanare",
+        "threshold": 90
+      },
+      {
+        "name": "Processutforskare",
+        "threshold": 170
+      },
+      {
+        "name": "Loopvävare",
+        "threshold": 280
+      },
+      {
+        "name": "Regleradept",
+        "threshold": 425
+      },
+      {
+        "name": "Processmästare",
+        "threshold": 610
+      },
+      {
+        "name": "Reglerlegend",
+        "threshold": 840
+      }
+    ],
+    "snabbare": [
+      {
+        "name": "Reglernovis",
+        "threshold": 0
+      },
+      {
+        "name": "Looplärling",
+        "threshold": 22
+      },
+      {
+        "name": "Signalspanare",
+        "threshold": 55
+      },
+      {
+        "name": "Processutforskare",
+        "threshold": 100
+      },
+      {
+        "name": "Loopvävare",
+        "threshold": 165
+      },
+      {
+        "name": "Regleradept",
+        "threshold": 250
+      },
+      {
+        "name": "Processmästare",
+        "threshold": 360
+      },
+      {
+        "name": "Reglerlegend",
+        "threshold": 500
+      }
+    ],
+    "langsammare": [
+      {
+        "name": "Reglernovis",
+        "threshold": 0
+      },
+      {
+        "name": "Looplärling",
+        "threshold": 50
+      },
+      {
+        "name": "Signalspanare",
+        "threshold": 130
+      },
+      {
+        "name": "Processutforskare",
+        "threshold": 250
+      },
+      {
+        "name": "Loopvävare",
+        "threshold": 410
+      },
+      {
+        "name": "Regleradept",
+        "threshold": 620
+      },
+      {
+        "name": "Processmästare",
+        "threshold": 890
+      },
+      {
+        "name": "Reglerlegend",
+        "threshold": 1220
+      }
+    ]
+  },
+  "lpInventory": [
+    {
+      "id": "kom-igång.v1",
+      "title": "Kom igång med PID Simulator",
+      "note": "Onboarding utan checkpoints (FEAT-025) — introducerar UI-funktioner, inte regulatortuning.",
+      "steps": [
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 5,
+          "configsInStep": 0
+        },
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 5,
+          "configsInStep": 0
+        },
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 10,
+          "configsInStep": 0
+        },
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 20,
+          "configsInStep": 0
+        },
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 5,
+          "configsInStep": 0
+        }
+      ]
+    },
+    {
+      "id": "oppen-slinga-onoff-p.v1",
+      "title": "Öppen slinga, On/Off och P-reglering",
+      "steps": [
+        {
+          "type": "theory",
+          "checkpoint": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 100,
+          "configsInStep": 1
+        },
+        {
+          "type": "theory",
+          "checkpoint": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 40,
+          "configsInStep": 1
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 50,
+          "configsInStep": 1,
+          "note": "Jämförs mot steg 4 (On/Off) — annan kontext, GAM-002 ser inte paret."
+        }
+      ]
+    },
+    {
+      "id": "proportionalband-forstarkning.v1",
+      "title": "Proportionalband och regulatorförstärkning",
+      "steps": [
+        {
+          "type": "theory",
+          "checkpoint": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 30,
+          "configsInStep": 1
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 60,
+          "configsInStep": 2,
+          "note": "Kp=2 och Kp=5 i samma steg (1 internt par); jämförelsen mot steg 2:s Kp=0.5 korsar kontext och missas av GAM-002."
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 50,
+          "configsInStep": 1
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 30,
+          "configsInStep": 1
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 30,
+          "configsInStep": 1,
+          "note": "Jämförs mot steg 5 (P) — annan kontext, missas av GAM-002."
+        }
+      ]
+    },
+    {
+      "id": "pi-pid.v1",
+      "title": "PI- och PID-reglering",
+      "steps": [
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 90,
+          "configsInStep": 1,
+          "usesMeasurement": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 90,
+          "configsInStep": 1,
+          "usesMeasurement": true,
+          "note": "Jämförs mot steg 1 (PI) — annan kontext, missas av GAM-002."
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 10,
+          "configsInStep": 0,
+          "note": "Ren reflektions-/jämförelsesteg, ingen ny körning."
+        }
+      ]
+    },
+    {
+      "id": "processbegransningar.v1",
+      "title": "Processens begränsningar",
+      "steps": [
+        {
+          "type": "theory",
+          "checkpoint": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 80,
+          "configsInStep": 1,
+          "usesMeasurement": true,
+          "note": "Försök 1 i ett försök1/försök2-par (checkpoint på försök 2)."
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 80,
+          "configsInStep": 1,
+          "note": "Försök 2 — instruktionen anger inte exakt stegtal, uppskattat likt försök 1."
+        },
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 80,
+          "configsInStep": 1,
+          "usesMeasurement": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 80,
+          "configsInStep": 1,
+          "usesMeasurement": true,
+          "note": "Försök 2, stegtal uppskattat likt föregående par."
+        }
+      ]
+    },
+    {
+      "id": "windup-antiwindup.v1",
+      "title": "Windup och anti-windup",
+      "steps": [
+        {
+          "type": "theory",
+          "checkpoint": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 150,
+          "configsInStep": 1
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 150,
+          "configsInStep": 2,
+          "note": "Anti-windup av/på jämförs inom samma steg — 1 internt par."
+        }
+      ]
+    },
+    {
+      "id": "storningar-robusthet.v1",
+      "title": "Störningar och robusthet",
+      "note": "Steg 2-4 fortsätter samma körning (continueFromPreviousStep, FEAT-030) men är TRE separata GAM-002-kontexter (contextKey inkluderar stegindex) — jämförelsen P→PI→PID över dessa tre steg är därför osynlig för GAM-002 trots att grafen är sammanhängande. Se DEL 7.",
+      "steps": [
+        {
+          "type": "theory",
+          "checkpoint": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 120,
+          "configsInStep": 2,
+          "note": "P utan/med brus — 1 internt par."
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 60,
+          "configsInStep": 1,
+          "note": "PI, fortsätter samma graf men NY GAM-002-kontext — paret mot steg 2 missas."
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 60,
+          "configsInStep": 1,
+          "note": "PID, samma sak — paret mot steg 3 missas."
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 90,
+          "configsInStep": 1,
+          "usesPulse": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 210,
+          "configsInStep": 3,
+          "usesPulse": true,
+          "note": "P/PI/PID mot samma puls HELT inom ett steg (ingen stegväxling) — 2 interna par KORREKT detekterade av GAM-002."
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 180,
+          "configsInStep": 2,
+          "note": "Aggressiv/konservativ inom samma steg — 1 internt par korrekt detekterat."
+        }
+      ]
+    },
+    {
+      "id": "integrerande-process-niva.v1",
+      "title": "Integrerande process och nivåreglering",
+      "steps": [
+        {
+          "type": "theory",
+          "checkpoint": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 200,
+          "configsInStep": 1,
+          "usesPulse": true
+        }
+      ]
+    },
+    {
+      "id": "stegsvar-identifiering.v1",
+      "title": "Stegsvar och processidentifiering",
+      "steps": [
+        {
+          "type": "theory",
+          "checkpoint": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 60,
+          "configsInStep": 1
+        },
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 120,
+          "configsInStep": 1
+        },
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 5,
+          "configsInStep": 0,
+          "usesMeasurement": true,
+          "note": "Ren mätsteg mot redan körd data — inget nytt \"kör N steg\" i texten."
+        },
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 5,
+          "configsInStep": 0,
+          "usesMeasurement": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 5,
+          "configsInStep": 0,
+          "usesMeasurement": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": false,
+          "simSteps": 5,
+          "configsInStep": 0,
+          "usesMeasurement": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 210,
+          "configsInStep": 1,
+          "usesMeasurement": true
+        }
+      ]
+    },
+    {
+      "id": "lambda-metoden.v1",
+      "title": "Lambda-metoden för självreglerande system",
+      "steps": [
+        {
+          "type": "theory",
+          "checkpoint": true
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 100,
+          "configsInStep": 1
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 200,
+          "configsInStep": 1
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 200,
+          "configsInStep": 1,
+          "note": "Jämförs mot steg 3 — annan kontext, missas av GAM-002."
+        },
+        {
+          "type": "scenario",
+          "checkpoint": true,
+          "simSteps": 200,
+          "configsInStep": 1,
+          "note": "Jämförs mot steg 3-4 — annan kontext, missas av GAM-002."
+        }
+      ]
+    }
+  ],
+  "referenceTest1": {
+    "learningPath": "proportionalband-forstarkning.v1",
+    "profile": "normal",
+    "expectedRangeXP": [
+      75,
+      79
+    ],
+    "actualTotalXPNoCheckpoints": 84,
+    "byCategory": {
+      "newHighestStep": 12,
+      "completedLearningPath": 12,
+      "completedAttempt": 20,
+      "distinctConfig": 10,
+      "comparisonPair": 6,
+      "uniqueHelp": 12,
+      "measurementWork": 0,
+      "singleStep": 12,
+      "checkpointFirst": 24,
+      "checkpointAfterWrong": 0
+    }
+  },
+  "calibration": {
+    "original": {
+      "perLearningPath": {
+        "kom-igång.v1": {
+          "minimal": {
+            "eventCount": 26,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 16,
+              "distinctConfig": 8,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 0,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 46,
+            "totalXPWithCheckpoints": 46,
+            "cumulativeAfter": 46,
+            "levelBefore": "Reglernovis",
+            "levelAfter": "Looplärling",
+            "leveledUp": true
+          },
+          "normal": {
+            "eventCount": 41,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 16,
+              "distinctConfig": 8,
+              "comparisonPair": 0,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 10,
+              "checkpointFirst": 0,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 66,
+            "totalXPWithCheckpoints": 66,
+            "cumulativeAfter": 66,
+            "levelBefore": "Reglernovis",
+            "levelAfter": "Looplärling",
+            "leveledUp": true
+          },
+          "fordjupare": {
+            "eventCount": 56,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 16,
+              "distinctConfig": 8,
+              "comparisonPair": 0,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 25,
+              "checkpointFirst": 0,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 81,
+            "totalXPWithCheckpoints": 81,
+            "cumulativeAfter": 81,
+            "levelBefore": "Reglernovis",
+            "levelAfter": "Looplärling",
+            "leveledUp": true
+          }
+        },
+        "oppen-slinga-onoff-p.v1": {
+          "minimal": {
+            "eventCount": 36,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 8,
+              "distinctConfig": 4,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 20,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 34,
+            "totalXPWithCheckpoints": 54,
+            "cumulativeAfter": 80,
+            "levelBefore": "Looplärling",
+            "levelAfter": "Looplärling",
+            "leveledUp": false
+          },
+          "normal": {
+            "eventCount": 47,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 8,
+              "distinctConfig": 4,
+              "comparisonPair": 0,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 6,
+              "checkpointFirst": 20,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 50,
+            "totalXPWithCheckpoints": 70,
+            "cumulativeAfter": 116,
+            "levelBefore": "Looplärling",
+            "levelAfter": "Signalspanare",
+            "leveledUp": true
+          },
+          "fordjupare": {
+            "eventCount": 93,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 20,
+              "distinctConfig": 10,
+              "comparisonPair": 12,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 30,
+              "checkpointFirst": 20,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 104,
+            "totalXPWithCheckpoints": 124,
+            "cumulativeAfter": 185,
+            "levelBefore": "Looplärling",
+            "levelAfter": "Processutforskare",
+            "leveledUp": true
+          }
+        },
+        "proportionalband-forstarkning.v1": {
+          "minimal": {
+            "eventCount": 44,
+            "byCategory": {
+              "newHighestStep": 12,
+              "completedLearningPath": 12,
+              "completedAttempt": 20,
+              "distinctConfig": 10,
+              "comparisonPair": 6,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 24,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 60,
+            "totalXPWithCheckpoints": 84,
+            "cumulativeAfter": 140,
+            "levelBefore": "Looplärling",
+            "levelAfter": "Signalspanare",
+            "leveledUp": true
+          },
+          "normal": {
+            "eventCount": 62,
+            "byCategory": {
+              "newHighestStep": 12,
+              "completedLearningPath": 12,
+              "completedAttempt": 20,
+              "distinctConfig": 10,
+              "comparisonPair": 6,
+              "uniqueHelp": 12,
+              "measurementWork": 0,
+              "singleStep": 12,
+              "checkpointFirst": 24,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 84,
+            "totalXPWithCheckpoints": 108,
+            "cumulativeAfter": 200,
+            "levelBefore": "Signalspanare",
+            "levelAfter": "Processutforskare",
+            "leveledUp": true
+          },
+          "fordjupare": {
+            "eventCount": 127,
+            "byCategory": {
+              "newHighestStep": 12,
+              "completedLearningPath": 12,
+              "completedAttempt": 40,
+              "distinctConfig": 20,
+              "comparisonPair": 30,
+              "uniqueHelp": 12,
+              "measurementWork": 0,
+              "singleStep": 55,
+              "checkpointFirst": 24,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 181,
+            "totalXPWithCheckpoints": 205,
+            "cumulativeAfter": 366,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Loopvävare",
+            "leveledUp": true
+          }
+        },
+        "pi-pid.v1": {
+          "minimal": {
+            "eventCount": 37,
+            "byCategory": {
+              "newHighestStep": 6,
+              "completedLearningPath": 12,
+              "completedAttempt": 8,
+              "distinctConfig": 4,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 8,
+              "singleStep": 0,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 38,
+            "totalXPWithCheckpoints": 50,
+            "cumulativeAfter": 178,
+            "levelBefore": "Signalspanare",
+            "levelAfter": "Processutforskare",
+            "leveledUp": true
+          },
+          "normal": {
+            "eventCount": 48,
+            "byCategory": {
+              "newHighestStep": 6,
+              "completedLearningPath": 12,
+              "completedAttempt": 8,
+              "distinctConfig": 4,
+              "comparisonPair": 0,
+              "uniqueHelp": 6,
+              "measurementWork": 8,
+              "singleStep": 6,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 50,
+            "totalXPWithCheckpoints": 62,
+            "cumulativeAfter": 250,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Processutforskare",
+            "leveledUp": false
+          },
+          "fordjupare": {
+            "eventCount": 87,
+            "byCategory": {
+              "newHighestStep": 6,
+              "completedLearningPath": 12,
+              "completedAttempt": 16,
+              "distinctConfig": 8,
+              "comparisonPair": 12,
+              "uniqueHelp": 6,
+              "measurementWork": 8,
+              "singleStep": 25,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 93,
+            "totalXPWithCheckpoints": 105,
+            "cumulativeAfter": 459,
+            "levelBefore": "Loopvävare",
+            "levelAfter": "Regleradept",
+            "leveledUp": true
+          }
+        },
+        "processbegransningar.v1": {
+          "minimal": {
+            "eventCount": 55,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 12,
+              "distinctConfig": 6,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 12,
+              "singleStep": 0,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 52,
+            "totalXPWithCheckpoints": 64,
+            "cumulativeAfter": 230,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Processutforskare",
+            "leveledUp": false
+          },
+          "normal": {
+            "eventCount": 71,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 12,
+              "distinctConfig": 6,
+              "comparisonPair": 0,
+              "uniqueHelp": 10,
+              "measurementWork": 12,
+              "singleStep": 8,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 70,
+            "totalXPWithCheckpoints": 82,
+            "cumulativeAfter": 320,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Loopvävare",
+            "leveledUp": true
+          },
+          "fordjupare": {
+            "eventCount": 139,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 28,
+              "distinctConfig": 14,
+              "comparisonPair": 18,
+              "uniqueHelp": 10,
+              "measurementWork": 12,
+              "singleStep": 40,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 144,
+            "totalXPWithCheckpoints": 156,
+            "cumulativeAfter": 603,
+            "levelBefore": "Regleradept",
+            "levelAfter": "Regleradept",
+            "leveledUp": false
+          }
+        },
+        "windup-antiwindup.v1": {
+          "minimal": {
+            "eventCount": 43,
+            "byCategory": {
+              "newHighestStep": 6,
+              "completedLearningPath": 12,
+              "completedAttempt": 8,
+              "distinctConfig": 4,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 30,
+            "totalXPWithCheckpoints": 42,
+            "cumulativeAfter": 260,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Processutforskare",
+            "leveledUp": false
+          },
+          "normal": {
+            "eventCount": 52,
+            "byCategory": {
+              "newHighestStep": 6,
+              "completedLearningPath": 12,
+              "completedAttempt": 8,
+              "distinctConfig": 4,
+              "comparisonPair": 0,
+              "uniqueHelp": 6,
+              "measurementWork": 0,
+              "singleStep": 6,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 42,
+            "totalXPWithCheckpoints": 54,
+            "cumulativeAfter": 362,
+            "levelBefore": "Loopvävare",
+            "levelAfter": "Loopvävare",
+            "leveledUp": false
+          },
+          "fordjupare": {
+            "eventCount": 93,
+            "byCategory": {
+              "newHighestStep": 6,
+              "completedLearningPath": 12,
+              "completedAttempt": 16,
+              "distinctConfig": 8,
+              "comparisonPair": 12,
+              "uniqueHelp": 6,
+              "measurementWork": 0,
+              "singleStep": 25,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 85,
+            "totalXPWithCheckpoints": 97,
+            "cumulativeAfter": 688,
+            "levelBefore": "Regleradept",
+            "levelAfter": "Processmästare",
+            "leveledUp": true
+          }
+        },
+        "storningar-robusthet.v1": {
+          "minimal": {
+            "eventCount": 105,
+            "byCategory": {
+              "newHighestStep": 14,
+              "completedLearningPath": 12,
+              "completedAttempt": 36,
+              "distinctConfig": 18,
+              "comparisonPair": 18,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 28,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 98,
+            "totalXPWithCheckpoints": 126,
+            "cumulativeAfter": 358,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Loopvävare",
+            "leveledUp": true
+          },
+          "normal": {
+            "eventCount": 132,
+            "byCategory": {
+              "newHighestStep": 14,
+              "completedLearningPath": 12,
+              "completedAttempt": 36,
+              "distinctConfig": 18,
+              "comparisonPair": 18,
+              "uniqueHelp": 14,
+              "measurementWork": 0,
+              "singleStep": 20,
+              "checkpointFirst": 28,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 132,
+            "totalXPWithCheckpoints": 160,
+            "cumulativeAfter": 494,
+            "levelBefore": "Loopvävare",
+            "levelAfter": "Regleradept",
+            "leveledUp": true
+          },
+          "fordjupare": {
+            "eventCount": 241,
+            "byCategory": {
+              "newHighestStep": 14,
+              "completedLearningPath": 12,
+              "completedAttempt": 60,
+              "distinctConfig": 30,
+              "comparisonPair": 54,
+              "uniqueHelp": 14,
+              "measurementWork": 0,
+              "singleStep": 80,
+              "checkpointFirst": 28,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 264,
+            "totalXPWithCheckpoints": 292,
+            "cumulativeAfter": 952,
+            "levelBefore": "Processmästare",
+            "levelAfter": "Reglerlegend",
+            "leveledUp": true
+          }
+        },
+        "integrerande-process-niva.v1": {
+          "minimal": {
+            "eventCount": 28,
+            "byCategory": {
+              "newHighestStep": 4,
+              "completedLearningPath": 12,
+              "completedAttempt": 0,
+              "distinctConfig": 0,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 8,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 16,
+            "totalXPWithCheckpoints": 24,
+            "cumulativeAfter": 374,
+            "levelBefore": "Loopvävare",
+            "levelAfter": "Loopvävare",
+            "leveledUp": false
+          },
+          "normal": {
+            "eventCount": 32,
+            "byCategory": {
+              "newHighestStep": 4,
+              "completedLearningPath": 12,
+              "completedAttempt": 0,
+              "distinctConfig": 0,
+              "comparisonPair": 0,
+              "uniqueHelp": 4,
+              "measurementWork": 0,
+              "singleStep": 2,
+              "checkpointFirst": 8,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 22,
+            "totalXPWithCheckpoints": 30,
+            "cumulativeAfter": 516,
+            "levelBefore": "Regleradept",
+            "levelAfter": "Regleradept",
+            "leveledUp": false
+          },
+          "fordjupare": {
+            "eventCount": 61,
+            "byCategory": {
+              "newHighestStep": 4,
+              "completedLearningPath": 12,
+              "completedAttempt": 4,
+              "distinctConfig": 2,
+              "comparisonPair": 0,
+              "uniqueHelp": 4,
+              "measurementWork": 0,
+              "singleStep": 10,
+              "checkpointFirst": 8,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 36,
+            "totalXPWithCheckpoints": 44,
+            "cumulativeAfter": 988,
+            "levelBefore": "Reglerlegend",
+            "levelAfter": "Reglerlegend",
+            "leveledUp": false
+          }
+        },
+        "stegsvar-identifiering.v1": {
+          "minimal": {
+            "eventCount": 82,
+            "byCategory": {
+              "newHighestStep": 16,
+              "completedLearningPath": 12,
+              "completedAttempt": 24,
+              "distinctConfig": 12,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 20,
+              "singleStep": 0,
+              "checkpointFirst": 8,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 84,
+            "totalXPWithCheckpoints": 92,
+            "cumulativeAfter": 458,
+            "levelBefore": "Loopvävare",
+            "levelAfter": "Regleradept",
+            "leveledUp": true
+          },
+          "normal": {
+            "eventCount": 109,
+            "byCategory": {
+              "newHighestStep": 16,
+              "completedLearningPath": 12,
+              "completedAttempt": 24,
+              "distinctConfig": 12,
+              "comparisonPair": 0,
+              "uniqueHelp": 16,
+              "measurementWork": 20,
+              "singleStep": 14,
+              "checkpointFirst": 8,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 114,
+            "totalXPWithCheckpoints": 122,
+            "cumulativeAfter": 630,
+            "levelBefore": "Regleradept",
+            "levelAfter": "Processmästare",
+            "leveledUp": true
+          },
+          "fordjupare": {
+            "eventCount": 187,
+            "byCategory": {
+              "newHighestStep": 16,
+              "completedLearningPath": 12,
+              "completedAttempt": 36,
+              "distinctConfig": 18,
+              "comparisonPair": 12,
+              "uniqueHelp": 16,
+              "measurementWork": 20,
+              "singleStep": 50,
+              "checkpointFirst": 8,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 180,
+            "totalXPWithCheckpoints": 188,
+            "cumulativeAfter": 1168,
+            "levelBefore": "Reglerlegend",
+            "levelAfter": "Reglerlegend",
+            "leveledUp": false
+          }
+        },
+        "lambda-metoden.v1": {
+          "minimal": {
+            "eventCount": 89,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 12,
+              "distinctConfig": 6,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 20,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 40,
+            "totalXPWithCheckpoints": 60,
+            "cumulativeAfter": 498,
+            "levelBefore": "Regleradept",
+            "levelAfter": "Regleradept",
+            "leveledUp": false
+          },
+          "normal": {
+            "eventCount": 102,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 12,
+              "distinctConfig": 6,
+              "comparisonPair": 0,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 8,
+              "checkpointFirst": 20,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 58,
+            "totalXPWithCheckpoints": 78,
+            "cumulativeAfter": 688,
+            "levelBefore": "Processmästare",
+            "levelAfter": "Processmästare",
+            "leveledUp": false
+          },
+          "fordjupare": {
+            "eventCount": 208,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 28,
+              "distinctConfig": 14,
+              "comparisonPair": 18,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 40,
+              "checkpointFirst": 20,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 132,
+            "totalXPWithCheckpoints": 152,
+            "cumulativeAfter": 1300,
+            "levelBefore": "Reglerlegend",
+            "levelAfter": "Reglerlegend",
+            "leveledUp": false
+          }
+        }
+      },
+      "cumulative": {
+        "minimal": [
+          {
+            "learningPathId": "kom-igång.v1",
+            "xpGained": 46,
+            "cumulative": 46,
+            "level": "Looplärling"
+          },
+          {
+            "learningPathId": "oppen-slinga-onoff-p.v1",
+            "xpGained": 34,
+            "cumulative": 80,
+            "level": "Looplärling"
+          },
+          {
+            "learningPathId": "proportionalband-forstarkning.v1",
+            "xpGained": 60,
+            "cumulative": 140,
+            "level": "Signalspanare"
+          },
+          {
+            "learningPathId": "pi-pid.v1",
+            "xpGained": 38,
+            "cumulative": 178,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "processbegransningar.v1",
+            "xpGained": 52,
+            "cumulative": 230,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "windup-antiwindup.v1",
+            "xpGained": 30,
+            "cumulative": 260,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "storningar-robusthet.v1",
+            "xpGained": 98,
+            "cumulative": 358,
+            "level": "Loopvävare"
+          },
+          {
+            "learningPathId": "integrerande-process-niva.v1",
+            "xpGained": 16,
+            "cumulative": 374,
+            "level": "Loopvävare"
+          },
+          {
+            "learningPathId": "stegsvar-identifiering.v1",
+            "xpGained": 84,
+            "cumulative": 458,
+            "level": "Regleradept"
+          },
+          {
+            "learningPathId": "lambda-metoden.v1",
+            "xpGained": 40,
+            "cumulative": 498,
+            "level": "Regleradept"
+          }
+        ],
+        "normal": [
+          {
+            "learningPathId": "kom-igång.v1",
+            "xpGained": 66,
+            "cumulative": 66,
+            "level": "Looplärling"
+          },
+          {
+            "learningPathId": "oppen-slinga-onoff-p.v1",
+            "xpGained": 50,
+            "cumulative": 116,
+            "level": "Signalspanare"
+          },
+          {
+            "learningPathId": "proportionalband-forstarkning.v1",
+            "xpGained": 84,
+            "cumulative": 200,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "pi-pid.v1",
+            "xpGained": 50,
+            "cumulative": 250,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "processbegransningar.v1",
+            "xpGained": 70,
+            "cumulative": 320,
+            "level": "Loopvävare"
+          },
+          {
+            "learningPathId": "windup-antiwindup.v1",
+            "xpGained": 42,
+            "cumulative": 362,
+            "level": "Loopvävare"
+          },
+          {
+            "learningPathId": "storningar-robusthet.v1",
+            "xpGained": 132,
+            "cumulative": 494,
+            "level": "Regleradept"
+          },
+          {
+            "learningPathId": "integrerande-process-niva.v1",
+            "xpGained": 22,
+            "cumulative": 516,
+            "level": "Regleradept"
+          },
+          {
+            "learningPathId": "stegsvar-identifiering.v1",
+            "xpGained": 114,
+            "cumulative": 630,
+            "level": "Processmästare"
+          },
+          {
+            "learningPathId": "lambda-metoden.v1",
+            "xpGained": 58,
+            "cumulative": 688,
+            "level": "Processmästare"
+          }
+        ],
+        "fordjupare": [
+          {
+            "learningPathId": "kom-igång.v1",
+            "xpGained": 81,
+            "cumulative": 81,
+            "level": "Looplärling"
+          },
+          {
+            "learningPathId": "oppen-slinga-onoff-p.v1",
+            "xpGained": 104,
+            "cumulative": 185,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "proportionalband-forstarkning.v1",
+            "xpGained": 181,
+            "cumulative": 366,
+            "level": "Loopvävare"
+          },
+          {
+            "learningPathId": "pi-pid.v1",
+            "xpGained": 93,
+            "cumulative": 459,
+            "level": "Regleradept"
+          },
+          {
+            "learningPathId": "processbegransningar.v1",
+            "xpGained": 144,
+            "cumulative": 603,
+            "level": "Regleradept"
+          },
+          {
+            "learningPathId": "windup-antiwindup.v1",
+            "xpGained": 85,
+            "cumulative": 688,
+            "level": "Processmästare"
+          },
+          {
+            "learningPathId": "storningar-robusthet.v1",
+            "xpGained": 264,
+            "cumulative": 952,
+            "level": "Reglerlegend"
+          },
+          {
+            "learningPathId": "integrerande-process-niva.v1",
+            "xpGained": 36,
+            "cumulative": 988,
+            "level": "Reglerlegend"
+          },
+          {
+            "learningPathId": "stegsvar-identifiering.v1",
+            "xpGained": 180,
+            "cumulative": 1168,
+            "level": "Reglerlegend"
+          },
+          {
+            "learningPathId": "lambda-metoden.v1",
+            "xpGained": 132,
+            "cumulative": 1300,
+            "level": "Reglerlegend"
+          }
+        ]
+      },
+      "finalLevels": {
+        "minimal": {
+          "levelIndex": 5,
+          "levelName": "Regleradept",
+          "nextLevelName": "Processmästare",
+          "xpIntoLevel": 73,
+          "xpSpanForLevel": 185,
+          "ratio": 0.3945945945945946,
+          "isMaxLevel": false
+        },
+        "normal": {
+          "levelIndex": 6,
+          "levelName": "Processmästare",
+          "nextLevelName": "Reglerlegend",
+          "xpIntoLevel": 78,
+          "xpSpanForLevel": 230,
+          "ratio": 0.3391304347826087,
+          "isMaxLevel": false
+        },
+        "fordjupare": {
+          "levelIndex": 7,
+          "levelName": "Reglerlegend",
+          "nextLevelName": null,
+          "xpIntoLevel": 0,
+          "xpSpanForLevel": 0,
+          "ratio": 1,
+          "isMaxLevel": true
+        }
+      }
+    },
+    "recommended": {
+      "perLearningPath": {
+        "kom-igång.v1": {
+          "minimal": {
+            "eventCount": 26,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 16,
+              "distinctConfig": 8,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 0,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 46,
+            "totalXPWithCheckpoints": 46,
+            "cumulativeAfter": 46,
+            "levelBefore": "Reglernovis",
+            "levelAfter": "Reglernovis",
+            "leveledUp": false
+          },
+          "normal": {
+            "eventCount": 41,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 16,
+              "distinctConfig": 8,
+              "comparisonPair": 0,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 10,
+              "checkpointFirst": 0,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 66,
+            "totalXPWithCheckpoints": 66,
+            "cumulativeAfter": 66,
+            "levelBefore": "Reglernovis",
+            "levelAfter": "Looplärling",
+            "leveledUp": true
+          },
+          "fordjupare": {
+            "eventCount": 56,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 16,
+              "distinctConfig": 8,
+              "comparisonPair": 0,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 15,
+              "checkpointFirst": 0,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 71,
+            "totalXPWithCheckpoints": 71,
+            "cumulativeAfter": 71,
+            "levelBefore": "Reglernovis",
+            "levelAfter": "Looplärling",
+            "leveledUp": true
+          }
+        },
+        "oppen-slinga-onoff-p.v1": {
+          "minimal": {
+            "eventCount": 36,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 8,
+              "distinctConfig": 4,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 20,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 34,
+            "totalXPWithCheckpoints": 54,
+            "cumulativeAfter": 80,
+            "levelBefore": "Reglernovis",
+            "levelAfter": "Looplärling",
+            "leveledUp": true
+          },
+          "normal": {
+            "eventCount": 47,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 8,
+              "distinctConfig": 4,
+              "comparisonPair": 0,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 6,
+              "checkpointFirst": 20,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 50,
+            "totalXPWithCheckpoints": 70,
+            "cumulativeAfter": 116,
+            "levelBefore": "Looplärling",
+            "levelAfter": "Looplärling",
+            "leveledUp": false
+          },
+          "fordjupare": {
+            "eventCount": 93,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 20,
+              "distinctConfig": 10,
+              "comparisonPair": 12,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 18,
+              "checkpointFirst": 20,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 92,
+            "totalXPWithCheckpoints": 112,
+            "cumulativeAfter": 163,
+            "levelBefore": "Looplärling",
+            "levelAfter": "Signalspanare",
+            "leveledUp": true
+          }
+        },
+        "proportionalband-forstarkning.v1": {
+          "minimal": {
+            "eventCount": 44,
+            "byCategory": {
+              "newHighestStep": 12,
+              "completedLearningPath": 12,
+              "completedAttempt": 20,
+              "distinctConfig": 10,
+              "comparisonPair": 6,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 24,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 60,
+            "totalXPWithCheckpoints": 84,
+            "cumulativeAfter": 140,
+            "levelBefore": "Looplärling",
+            "levelAfter": "Signalspanare",
+            "leveledUp": true
+          },
+          "normal": {
+            "eventCount": 62,
+            "byCategory": {
+              "newHighestStep": 12,
+              "completedLearningPath": 12,
+              "completedAttempt": 20,
+              "distinctConfig": 10,
+              "comparisonPair": 6,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 12,
+              "checkpointFirst": 24,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 82,
+            "totalXPWithCheckpoints": 106,
+            "cumulativeAfter": 198,
+            "levelBefore": "Looplärling",
+            "levelAfter": "Signalspanare",
+            "leveledUp": true
+          },
+          "fordjupare": {
+            "eventCount": 127,
+            "byCategory": {
+              "newHighestStep": 12,
+              "completedLearningPath": 12,
+              "completedAttempt": 40,
+              "distinctConfig": 20,
+              "comparisonPair": 30,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 33,
+              "checkpointFirst": 24,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 157,
+            "totalXPWithCheckpoints": 181,
+            "cumulativeAfter": 320,
+            "levelBefore": "Signalspanare",
+            "levelAfter": "Processutforskare",
+            "leveledUp": true
+          }
+        },
+        "pi-pid.v1": {
+          "minimal": {
+            "eventCount": 37,
+            "byCategory": {
+              "newHighestStep": 6,
+              "completedLearningPath": 12,
+              "completedAttempt": 8,
+              "distinctConfig": 4,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 8,
+              "singleStep": 0,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 38,
+            "totalXPWithCheckpoints": 50,
+            "cumulativeAfter": 178,
+            "levelBefore": "Signalspanare",
+            "levelAfter": "Signalspanare",
+            "leveledUp": false
+          },
+          "normal": {
+            "eventCount": 48,
+            "byCategory": {
+              "newHighestStep": 6,
+              "completedLearningPath": 12,
+              "completedAttempt": 8,
+              "distinctConfig": 4,
+              "comparisonPair": 0,
+              "uniqueHelp": 6,
+              "measurementWork": 8,
+              "singleStep": 6,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 50,
+            "totalXPWithCheckpoints": 62,
+            "cumulativeAfter": 248,
+            "levelBefore": "Signalspanare",
+            "levelAfter": "Signalspanare",
+            "leveledUp": false
+          },
+          "fordjupare": {
+            "eventCount": 87,
+            "byCategory": {
+              "newHighestStep": 6,
+              "completedLearningPath": 12,
+              "completedAttempt": 16,
+              "distinctConfig": 8,
+              "comparisonPair": 12,
+              "uniqueHelp": 6,
+              "measurementWork": 8,
+              "singleStep": 15,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 83,
+            "totalXPWithCheckpoints": 95,
+            "cumulativeAfter": 403,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Processutforskare",
+            "leveledUp": false
+          }
+        },
+        "processbegransningar.v1": {
+          "minimal": {
+            "eventCount": 55,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 12,
+              "distinctConfig": 6,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 12,
+              "singleStep": 0,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 52,
+            "totalXPWithCheckpoints": 64,
+            "cumulativeAfter": 230,
+            "levelBefore": "Signalspanare",
+            "levelAfter": "Signalspanare",
+            "leveledUp": false
+          },
+          "normal": {
+            "eventCount": 71,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 12,
+              "distinctConfig": 6,
+              "comparisonPair": 0,
+              "uniqueHelp": 10,
+              "measurementWork": 12,
+              "singleStep": 8,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 70,
+            "totalXPWithCheckpoints": 82,
+            "cumulativeAfter": 318,
+            "levelBefore": "Signalspanare",
+            "levelAfter": "Processutforskare",
+            "leveledUp": true
+          },
+          "fordjupare": {
+            "eventCount": 139,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 28,
+              "distinctConfig": 14,
+              "comparisonPair": 18,
+              "uniqueHelp": 10,
+              "measurementWork": 12,
+              "singleStep": 24,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 128,
+            "totalXPWithCheckpoints": 140,
+            "cumulativeAfter": 531,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Loopvävare",
+            "leveledUp": true
+          }
+        },
+        "windup-antiwindup.v1": {
+          "minimal": {
+            "eventCount": 43,
+            "byCategory": {
+              "newHighestStep": 6,
+              "completedLearningPath": 12,
+              "completedAttempt": 8,
+              "distinctConfig": 4,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 30,
+            "totalXPWithCheckpoints": 42,
+            "cumulativeAfter": 260,
+            "levelBefore": "Signalspanare",
+            "levelAfter": "Processutforskare",
+            "leveledUp": true
+          },
+          "normal": {
+            "eventCount": 52,
+            "byCategory": {
+              "newHighestStep": 6,
+              "completedLearningPath": 12,
+              "completedAttempt": 8,
+              "distinctConfig": 4,
+              "comparisonPair": 0,
+              "uniqueHelp": 6,
+              "measurementWork": 0,
+              "singleStep": 6,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 42,
+            "totalXPWithCheckpoints": 54,
+            "cumulativeAfter": 360,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Processutforskare",
+            "leveledUp": false
+          },
+          "fordjupare": {
+            "eventCount": 93,
+            "byCategory": {
+              "newHighestStep": 6,
+              "completedLearningPath": 12,
+              "completedAttempt": 16,
+              "distinctConfig": 8,
+              "comparisonPair": 12,
+              "uniqueHelp": 6,
+              "measurementWork": 0,
+              "singleStep": 15,
+              "checkpointFirst": 12,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 75,
+            "totalXPWithCheckpoints": 87,
+            "cumulativeAfter": 606,
+            "levelBefore": "Loopvävare",
+            "levelAfter": "Loopvävare",
+            "leveledUp": false
+          }
+        },
+        "storningar-robusthet.v1": {
+          "minimal": {
+            "eventCount": 105,
+            "byCategory": {
+              "newHighestStep": 14,
+              "completedLearningPath": 12,
+              "completedAttempt": 36,
+              "distinctConfig": 18,
+              "comparisonPair": 18,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 28,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 98,
+            "totalXPWithCheckpoints": 126,
+            "cumulativeAfter": 358,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Processutforskare",
+            "leveledUp": false
+          },
+          "normal": {
+            "eventCount": 132,
+            "byCategory": {
+              "newHighestStep": 14,
+              "completedLearningPath": 12,
+              "completedAttempt": 36,
+              "distinctConfig": 18,
+              "comparisonPair": 18,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 20,
+              "checkpointFirst": 28,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 128,
+            "totalXPWithCheckpoints": 156,
+            "cumulativeAfter": 488,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Loopvävare",
+            "leveledUp": true
+          },
+          "fordjupare": {
+            "eventCount": 241,
+            "byCategory": {
+              "newHighestStep": 14,
+              "completedLearningPath": 12,
+              "completedAttempt": 60,
+              "distinctConfig": 30,
+              "comparisonPair": 54,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 48,
+              "checkpointFirst": 28,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 228,
+            "totalXPWithCheckpoints": 256,
+            "cumulativeAfter": 834,
+            "levelBefore": "Loopvävare",
+            "levelAfter": "Regleradept",
+            "leveledUp": true
+          }
+        },
+        "integrerande-process-niva.v1": {
+          "minimal": {
+            "eventCount": 28,
+            "byCategory": {
+              "newHighestStep": 4,
+              "completedLearningPath": 12,
+              "completedAttempt": 0,
+              "distinctConfig": 0,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 8,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 16,
+            "totalXPWithCheckpoints": 24,
+            "cumulativeAfter": 374,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Processutforskare",
+            "leveledUp": false
+          },
+          "normal": {
+            "eventCount": 32,
+            "byCategory": {
+              "newHighestStep": 4,
+              "completedLearningPath": 12,
+              "completedAttempt": 0,
+              "distinctConfig": 0,
+              "comparisonPair": 0,
+              "uniqueHelp": 4,
+              "measurementWork": 0,
+              "singleStep": 2,
+              "checkpointFirst": 8,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 22,
+            "totalXPWithCheckpoints": 30,
+            "cumulativeAfter": 510,
+            "levelBefore": "Loopvävare",
+            "levelAfter": "Loopvävare",
+            "leveledUp": false
+          },
+          "fordjupare": {
+            "eventCount": 61,
+            "byCategory": {
+              "newHighestStep": 4,
+              "completedLearningPath": 12,
+              "completedAttempt": 4,
+              "distinctConfig": 2,
+              "comparisonPair": 0,
+              "uniqueHelp": 4,
+              "measurementWork": 0,
+              "singleStep": 6,
+              "checkpointFirst": 8,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 32,
+            "totalXPWithCheckpoints": 40,
+            "cumulativeAfter": 866,
+            "levelBefore": "Regleradept",
+            "levelAfter": "Regleradept",
+            "leveledUp": false
+          }
+        },
+        "stegsvar-identifiering.v1": {
+          "minimal": {
+            "eventCount": 82,
+            "byCategory": {
+              "newHighestStep": 16,
+              "completedLearningPath": 12,
+              "completedAttempt": 24,
+              "distinctConfig": 12,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 20,
+              "singleStep": 0,
+              "checkpointFirst": 8,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 84,
+            "totalXPWithCheckpoints": 92,
+            "cumulativeAfter": 458,
+            "levelBefore": "Processutforskare",
+            "levelAfter": "Loopvävare",
+            "leveledUp": true
+          },
+          "normal": {
+            "eventCount": 109,
+            "byCategory": {
+              "newHighestStep": 16,
+              "completedLearningPath": 12,
+              "completedAttempt": 24,
+              "distinctConfig": 12,
+              "comparisonPair": 0,
+              "uniqueHelp": 10,
+              "measurementWork": 20,
+              "singleStep": 14,
+              "checkpointFirst": 8,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 108,
+            "totalXPWithCheckpoints": 116,
+            "cumulativeAfter": 618,
+            "levelBefore": "Loopvävare",
+            "levelAfter": "Loopvävare",
+            "leveledUp": false
+          },
+          "fordjupare": {
+            "eventCount": 187,
+            "byCategory": {
+              "newHighestStep": 16,
+              "completedLearningPath": 12,
+              "completedAttempt": 36,
+              "distinctConfig": 18,
+              "comparisonPair": 12,
+              "uniqueHelp": 10,
+              "measurementWork": 20,
+              "singleStep": 30,
+              "checkpointFirst": 8,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 154,
+            "totalXPWithCheckpoints": 162,
+            "cumulativeAfter": 1020,
+            "levelBefore": "Regleradept",
+            "levelAfter": "Processmästare",
+            "leveledUp": true
+          }
+        },
+        "lambda-metoden.v1": {
+          "minimal": {
+            "eventCount": 89,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 12,
+              "distinctConfig": 6,
+              "comparisonPair": 0,
+              "uniqueHelp": 0,
+              "measurementWork": 0,
+              "singleStep": 0,
+              "checkpointFirst": 20,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 40,
+            "totalXPWithCheckpoints": 60,
+            "cumulativeAfter": 498,
+            "levelBefore": "Loopvävare",
+            "levelAfter": "Loopvävare",
+            "leveledUp": false
+          },
+          "normal": {
+            "eventCount": 102,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 12,
+              "distinctConfig": 6,
+              "comparisonPair": 0,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 8,
+              "checkpointFirst": 20,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 58,
+            "totalXPWithCheckpoints": 78,
+            "cumulativeAfter": 676,
+            "levelBefore": "Loopvävare",
+            "levelAfter": "Regleradept",
+            "leveledUp": true
+          },
+          "fordjupare": {
+            "eventCount": 208,
+            "byCategory": {
+              "newHighestStep": 10,
+              "completedLearningPath": 12,
+              "completedAttempt": 28,
+              "distinctConfig": 14,
+              "comparisonPair": 18,
+              "uniqueHelp": 10,
+              "measurementWork": 0,
+              "singleStep": 24,
+              "checkpointFirst": 20,
+              "checkpointAfterWrong": 0
+            },
+            "totalXPNoCheckpoints": 116,
+            "totalXPWithCheckpoints": 136,
+            "cumulativeAfter": 1136,
+            "levelBefore": "Processmästare",
+            "levelAfter": "Processmästare",
+            "leveledUp": false
+          }
+        }
+      },
+      "cumulative": {
+        "minimal": [
+          {
+            "learningPathId": "kom-igång.v1",
+            "xpGained": 46,
+            "cumulative": 46,
+            "level": "Reglernovis"
+          },
+          {
+            "learningPathId": "oppen-slinga-onoff-p.v1",
+            "xpGained": 34,
+            "cumulative": 80,
+            "level": "Looplärling"
+          },
+          {
+            "learningPathId": "proportionalband-forstarkning.v1",
+            "xpGained": 60,
+            "cumulative": 140,
+            "level": "Signalspanare"
+          },
+          {
+            "learningPathId": "pi-pid.v1",
+            "xpGained": 38,
+            "cumulative": 178,
+            "level": "Signalspanare"
+          },
+          {
+            "learningPathId": "processbegransningar.v1",
+            "xpGained": 52,
+            "cumulative": 230,
+            "level": "Signalspanare"
+          },
+          {
+            "learningPathId": "windup-antiwindup.v1",
+            "xpGained": 30,
+            "cumulative": 260,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "storningar-robusthet.v1",
+            "xpGained": 98,
+            "cumulative": 358,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "integrerande-process-niva.v1",
+            "xpGained": 16,
+            "cumulative": 374,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "stegsvar-identifiering.v1",
+            "xpGained": 84,
+            "cumulative": 458,
+            "level": "Loopvävare"
+          },
+          {
+            "learningPathId": "lambda-metoden.v1",
+            "xpGained": 40,
+            "cumulative": 498,
+            "level": "Loopvävare"
+          }
+        ],
+        "normal": [
+          {
+            "learningPathId": "kom-igång.v1",
+            "xpGained": 66,
+            "cumulative": 66,
+            "level": "Looplärling"
+          },
+          {
+            "learningPathId": "oppen-slinga-onoff-p.v1",
+            "xpGained": 50,
+            "cumulative": 116,
+            "level": "Looplärling"
+          },
+          {
+            "learningPathId": "proportionalband-forstarkning.v1",
+            "xpGained": 82,
+            "cumulative": 198,
+            "level": "Signalspanare"
+          },
+          {
+            "learningPathId": "pi-pid.v1",
+            "xpGained": 50,
+            "cumulative": 248,
+            "level": "Signalspanare"
+          },
+          {
+            "learningPathId": "processbegransningar.v1",
+            "xpGained": 70,
+            "cumulative": 318,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "windup-antiwindup.v1",
+            "xpGained": 42,
+            "cumulative": 360,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "storningar-robusthet.v1",
+            "xpGained": 128,
+            "cumulative": 488,
+            "level": "Loopvävare"
+          },
+          {
+            "learningPathId": "integrerande-process-niva.v1",
+            "xpGained": 22,
+            "cumulative": 510,
+            "level": "Loopvävare"
+          },
+          {
+            "learningPathId": "stegsvar-identifiering.v1",
+            "xpGained": 108,
+            "cumulative": 618,
+            "level": "Loopvävare"
+          },
+          {
+            "learningPathId": "lambda-metoden.v1",
+            "xpGained": 58,
+            "cumulative": 676,
+            "level": "Regleradept"
+          }
+        ],
+        "fordjupare": [
+          {
+            "learningPathId": "kom-igång.v1",
+            "xpGained": 71,
+            "cumulative": 71,
+            "level": "Looplärling"
+          },
+          {
+            "learningPathId": "oppen-slinga-onoff-p.v1",
+            "xpGained": 92,
+            "cumulative": 163,
+            "level": "Signalspanare"
+          },
+          {
+            "learningPathId": "proportionalband-forstarkning.v1",
+            "xpGained": 157,
+            "cumulative": 320,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "pi-pid.v1",
+            "xpGained": 83,
+            "cumulative": 403,
+            "level": "Processutforskare"
+          },
+          {
+            "learningPathId": "processbegransningar.v1",
+            "xpGained": 128,
+            "cumulative": 531,
+            "level": "Loopvävare"
+          },
+          {
+            "learningPathId": "windup-antiwindup.v1",
+            "xpGained": 75,
+            "cumulative": 606,
+            "level": "Loopvävare"
+          },
+          {
+            "learningPathId": "storningar-robusthet.v1",
+            "xpGained": 228,
+            "cumulative": 834,
+            "level": "Regleradept"
+          },
+          {
+            "learningPathId": "integrerande-process-niva.v1",
+            "xpGained": 32,
+            "cumulative": 866,
+            "level": "Regleradept"
+          },
+          {
+            "learningPathId": "stegsvar-identifiering.v1",
+            "xpGained": 154,
+            "cumulative": 1020,
+            "level": "Processmästare"
+          },
+          {
+            "learningPathId": "lambda-metoden.v1",
+            "xpGained": 116,
+            "cumulative": 1136,
+            "level": "Processmästare"
+          }
+        ]
+      },
+      "finalLevels": {
+        "minimal": {
+          "levelIndex": 4,
+          "levelName": "Loopvävare",
+          "nextLevelName": "Regleradept",
+          "xpIntoLevel": 88,
+          "xpSpanForLevel": 210,
+          "ratio": 0.41904761904761906,
+          "isMaxLevel": false
+        },
+        "normal": {
+          "levelIndex": 5,
+          "levelName": "Regleradept",
+          "nextLevelName": "Processmästare",
+          "xpIntoLevel": 56,
+          "xpSpanForLevel": 270,
+          "ratio": 0.2074074074074074,
+          "isMaxLevel": false
+        },
+        "fordjupare": {
+          "levelIndex": 6,
+          "levelName": "Processmästare",
+          "nextLevelName": "Reglerlegend",
+          "xpIntoLevel": 246,
+          "xpSpanForLevel": 330,
+          "ratio": 0.7454545454545455,
+          "isMaxLevel": false
+        }
+      }
+    }
+  },
+  "manipulationTests": [
+    {
+      "name": "1. Upprepad Reset",
+      "note": "Reset ger 0 XP per modell — förväntat: 0 XP oavsett upprepning.",
+      "eventCount": 20,
+      "xpGained": 0,
+      "xpWithCheckpoints": 0,
+      "blockedCount": 20,
+      "byCategory": {
+        "newHighestStep": 0,
+        "completedLearningPath": 0,
+        "completedAttempt": 0,
+        "distinctConfig": 0,
+        "comparisonPair": 0,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "2. Rensa graf upprepat",
+      "note": "chart_cleared hanteras inte alls av GAM-002:s recordEvent-switch (fall igenom till default) — 0 XP korrekt, men OBS: reflekterar också att Rensa graf inte finaliserar ett försök (till skillnad från Reset/kontextbyte).",
+      "eventCount": 20,
+      "xpGained": 0,
+      "xpWithCheckpoints": 0,
+      "blockedCount": 20,
+      "byCategory": {
+        "newHighestStep": 0,
+        "completedLearningPath": 0,
+        "completedAttempt": 0,
+        "distinctConfig": 0,
+        "comparisonPair": 0,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "3. Samma hjälptext upprepat",
+      "note": "Endast första öppningen ger XP.",
+      "eventCount": 15,
+      "xpGained": 2,
+      "xpWithCheckpoints": 2,
+      "blockedCount": 14,
+      "byCategory": {
+        "newHighestStep": 0,
+        "completedLearningPath": 0,
+        "completedAttempt": 0,
+        "distinctConfig": 0,
+        "comparisonPair": 0,
+        "uniqueHelp": 2,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "4. Alla 24 hjälptexter, inget annat",
+      "note": "Maximal hjälp-XP utan någon pedagogisk aktivitet i övrigt — se DEL 9.",
+      "eventCount": 24,
+      "xpGained": 48,
+      "xpWithCheckpoints": 48,
+      "blockedCount": 0,
+      "byCategory": {
+        "newHighestStep": 0,
+        "completedLearningPath": 0,
+        "completedAttempt": 0,
+        "distinctConfig": 0,
+        "comparisonPair": 0,
+        "uniqueHelp": 48,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "5. Enstegning långt över taket (50 st)",
+      "note": "Taket (5/försök) håller — resten blockeras.",
+      "eventCount": 51,
+      "xpGained": 7,
+      "xpWithCheckpoints": 7,
+      "blockedCount": 45,
+      "byCategory": {
+        "newHighestStep": 2,
+        "completedLearningPath": 0,
+        "completedAttempt": 0,
+        "distinctConfig": 0,
+        "comparisonPair": 0,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 5,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "6. Identisk konfiguration upprepad 5x (med Reset mellan)",
+      "note": "Samma signatur => bara FÖRSTA blir en 'distinkt' konfiguration; completedAttempt-XP ges dock varje gång (varje körning är ett genuint genomfört försök, bara inte NYTT). Se DEL 6.",
+      "eventCount": 136,
+      "xpGained": 24,
+      "xpWithCheckpoints": 24,
+      "blockedCount": 125,
+      "byCategory": {
+        "newHighestStep": 2,
+        "completedLearningPath": 0,
+        "completedAttempt": 20,
+        "distinctConfig": 2,
+        "comparisonPair": 0,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "7. Parameter ändras fram/tillbaka, ingen simulering",
+      "note": "Ingen simulation_step/run => attempt.stepCount förblir 0 => finalizeAttempt returnerar tidigt (stepCount<=0) => ingen distinctConfig, ingen completedAttempt. 0 XP.",
+      "eventCount": 31,
+      "xpGained": 2,
+      "xpWithCheckpoints": 2,
+      "blockedCount": 0,
+      "byCategory": {
+        "newHighestStep": 2,
+        "completedLearningPath": 0,
+        "completedAttempt": 0,
+        "distinctConfig": 0,
+        "comparisonPair": 0,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "8. Parameter +6% upprepat (gränsfall)",
+      "note": "Varje steg är >5% relativ ändring => varje blir en NY distinkt konfiguration + jämförelsepar, trots att skillnaden pedagogiskt är marginell efter några iterationer. Potentiell exploatering — se DEL 6.",
+      "eventCount": 261,
+      "xpGained": 104,
+      "xpWithCheckpoints": 104,
+      "blockedCount": 250,
+      "byCategory": {
+        "newHighestStep": 2,
+        "completedLearningPath": 0,
+        "completedAttempt": 36,
+        "distinctConfig": 18,
+        "comparisonPair": 48,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "9. Kort försök (10 steg)",
+      "note": "Under 20-stegsgränsen => aborted, inte completed. 0 XP (utom ev. enstegnings-XP om Stega använts, ej fallet här).",
+      "eventCount": 3,
+      "xpGained": 2,
+      "xpWithCheckpoints": 2,
+      "blockedCount": 2,
+      "byCategory": {
+        "newHighestStep": 2,
+        "completedLearningPath": 0,
+        "completedAttempt": 0,
+        "distinctConfig": 0,
+        "comparisonPair": 0,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "10. 20x Kör 10 utan variation (200 steg, 1 config)",
+      "note": "Kör 10 ger 0 direkt XP. Endast EN completedAttempt + EN distinctConfig ges — långt körande utan variation belönas INTE proportionellt mot antal klick.",
+      "eventCount": 22,
+      "xpGained": 8,
+      "xpWithCheckpoints": 8,
+      "blockedCount": 20,
+      "byCategory": {
+        "newHighestStep": 2,
+        "completedLearningPath": 0,
+        "completedAttempt": 4,
+        "distinctConfig": 2,
+        "comparisonPair": 0,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "11. Mät K/T/L aktiverat, ingen justering",
+      "note": "Ingen measurement_adjusted => measurementWork ges aldrig. 0 XP för mätarbete (korrekt per modell).",
+      "eventCount": 3,
+      "xpGained": 2,
+      "xpWithCheckpoints": 2,
+      "blockedCount": 1,
+      "byCategory": {
+        "newHighestStep": 2,
+        "completedLearningPath": 0,
+        "completedAttempt": 0,
+        "distinctConfig": 0,
+        "comparisonPair": 0,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "12. Mätjustering, sedan inget mer",
+      "note": "Justering gjord men INGEN efterföljande simulering/stegväxling i sekvensen => measurementWork-villkoret (aktivering+justering+EFTERFÖLJANDE aktivitet) är inte uppfyllt. 0 XP tills en sådan efterföljande händelse inträffar.",
+      "eventCount": 3,
+      "xpGained": 2,
+      "xpWithCheckpoints": 2,
+      "blockedCount": 0,
+      "byCategory": {
+        "newHighestStep": 2,
+        "completedLearningPath": 0,
+        "completedAttempt": 0,
+        "distinctConfig": 0,
+        "comparisonPair": 0,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "13. Facit öppnas utan mätning",
+      "note": "Facit ger uttryckligen 0 XP och triggar inte measurementWork (kräver measurement_adjusted, inte facit).",
+      "eventCount": 4,
+      "xpGained": 2,
+      "xpWithCheckpoints": 2,
+      "blockedCount": 3,
+      "byCategory": {
+        "newHighestStep": 2,
+        "completedLearningPath": 0,
+        "completedAttempt": 0,
+        "distinctConfig": 0,
+        "comparisonPair": 0,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "14. Fram/bakåt-navigering (samma steg upprepat)",
+      "note": "Bara index 0 och 1 (första gången vardera) ger newHighestStep-XP — återbesök (inkl. efter bakåtnavigering) ger 0.",
+      "eventCount": 5,
+      "xpGained": 4,
+      "xpWithCheckpoints": 4,
+      "blockedCount": 3,
+      "byCategory": {
+        "newHighestStep": 4,
+        "completedLearningPath": 0,
+        "completedAttempt": 0,
+        "distinctConfig": 0,
+        "comparisonPair": 0,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "15. Endast pointermove (ingen pedagogisk händelse)",
+      "note": "pointermove går genom Core.recordPointermove(), inte recordEvent — når aldrig XP-lagret överhuvudtaget. Bekräftat: 0 XP, oavsett hur länge sidan hålls 'aktiv' på detta sätt ensamt.",
+      "eventCount": 0,
+      "xpGained": 0,
+      "xpWithCheckpoints": 0,
+      "blockedCount": 0,
+      "byCategory": {
+        "newHighestStep": 0,
+        "completedLearningPath": 0,
+        "completedAttempt": 0,
+        "distinctConfig": 0,
+        "comparisonPair": 0,
+        "uniqueHelp": 0,
+        "measurementWork": 0,
+        "singleStep": 0,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    },
+    {
+      "name": "16. Maximerad enda kort session (teoretiskt tak)",
+      "note": "Övre gräns för hur mycket XP en enda, mycket kort men maximalt 'utnyttjad' session kan ge — jämförs mot en normal hel lärstig i rapporten (DEL 6: 'högsta möjliga XP för ett fördjupat försök').",
+      "eventCount": 119,
+      "xpGained": 115,
+      "xpWithCheckpoints": 115,
+      "blockedCount": 80,
+      "byCategory": {
+        "newHighestStep": 4,
+        "completedLearningPath": 12,
+        "completedAttempt": 16,
+        "distinctConfig": 8,
+        "comparisonPair": 18,
+        "uniqueHelp": 48,
+        "measurementWork": 4,
+        "singleStep": 5,
+        "checkpointFirst": 0,
+        "checkpointAfterWrong": 0
+      }
+    }
+  ],
+  "sensitivity": {
+    "help": {
+      "A_2xp_inget_tak": {
+        "normal": 6,
+        "hög": 16,
+        "alla24": 48
+      },
+      "B_2xp_tak5unika": {
+        "normal": 6,
+        "hög": 10,
+        "alla24": 10
+      },
+      "C_1xp_tak12unika": {
+        "normal": 3,
+        "hög": 8,
+        "alla24": 12
+      }
+    },
+    "singleStep": {
+      "A_tak5": {
+        "3": 3,
+        "5": 5,
+        "8": 5,
+        "20": 5
+      },
+      "B_tak3": {
+        "3": 3,
+        "5": 3,
+        "8": 3,
+        "20": 3
+      }
+    },
+    "measurement": {
+      "0 justeringar": 0,
+      "1 justering": 4,
+      "2+ justeringar": 4
+    },
+    "levelCurves": {
+      "huvudkandidat": {
+        "minimal": {
+          "levelIndex": 5,
+          "levelName": "Regleradept",
+          "nextLevelName": "Processmästare",
+          "xpIntoLevel": 73,
+          "xpSpanForLevel": 185,
+          "ratio": 0.3945945945945946,
+          "isMaxLevel": false
+        },
+        "normal": {
+          "levelIndex": 6,
+          "levelName": "Processmästare",
+          "nextLevelName": "Reglerlegend",
+          "xpIntoLevel": 78,
+          "xpSpanForLevel": 230,
+          "ratio": 0.3391304347826087,
+          "isMaxLevel": false
+        },
+        "fordjupare": {
+          "levelIndex": 7,
+          "levelName": "Reglerlegend",
+          "nextLevelName": null,
+          "xpIntoLevel": 0,
+          "xpSpanForLevel": 0,
+          "ratio": 1,
+          "isMaxLevel": true
+        }
+      },
+      "snabbare": {
+        "minimal": {
+          "levelIndex": 6,
+          "levelName": "Processmästare",
+          "nextLevelName": "Reglerlegend",
+          "xpIntoLevel": 138,
+          "xpSpanForLevel": 140,
+          "ratio": 0.9857142857142858,
+          "isMaxLevel": false
+        },
+        "normal": {
+          "levelIndex": 7,
+          "levelName": "Reglerlegend",
+          "nextLevelName": null,
+          "xpIntoLevel": 0,
+          "xpSpanForLevel": 0,
+          "ratio": 1,
+          "isMaxLevel": true
+        },
+        "fordjupare": {
+          "levelIndex": 7,
+          "levelName": "Reglerlegend",
+          "nextLevelName": null,
+          "xpIntoLevel": 0,
+          "xpSpanForLevel": 0,
+          "ratio": 1,
+          "isMaxLevel": true
+        }
+      },
+      "langsammare": {
+        "minimal": {
+          "levelIndex": 4,
+          "levelName": "Loopvävare",
+          "nextLevelName": "Regleradept",
+          "xpIntoLevel": 88,
+          "xpSpanForLevel": 210,
+          "ratio": 0.41904761904761906,
+          "isMaxLevel": false
+        },
+        "normal": {
+          "levelIndex": 5,
+          "levelName": "Regleradept",
+          "nextLevelName": "Processmästare",
+          "xpIntoLevel": 68,
+          "xpSpanForLevel": 270,
+          "ratio": 0.2518518518518518,
+          "isMaxLevel": false
+        },
+        "fordjupare": {
+          "levelIndex": 7,
+          "levelName": "Reglerlegend",
+          "nextLevelName": null,
+          "xpIntoLevel": 0,
+          "xpSpanForLevel": 0,
+          "ratio": 1,
+          "isMaxLevel": true
+        }
+      }
+    }
+  },
+  "recommendation": {
+    "helpCapPerSession": 5,
+    "singleStepCapPerAttempt": 3,
+    "levelCurve": "langsammare",
+    "checkpointHandling": "separat_prestationssystem_ej_del_av_niva_xp",
+    "openDecisions": [
+      "jämförelser mellan lärsteg/scenario-ID kräver antingen grafmarkeringarna (FEAT-030) eller ett deklarativt fält i lärstigsformatet",
+      "nivåkurva och hjälp-/enstegningstak kräver PO/PM-godkännande",
+      "checkpoint-XP kräver ett produktbeslut om separat system, väntan, eller borttagning ur scope",
+      "5%-farmning (manipulationstest 8) kräver ev. ändring av GAM-002:s distinctConfigRelativeThreshold — utanför GAM-003A:s mandat"
+    ]
+  }
+}

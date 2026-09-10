@@ -35,12 +35,17 @@ som `sim-core.js` redan använde innan PROD-001B. Filen sätter ett globalt obje
   showScore: boolean,
   showExperimentalContent: boolean,
   showMeasurementFacit: boolean,
+  showGamification: boolean,
   catalogFile: "catalog.json" | "catalog.prod.json"
 }
 ```
 
 `showMeasurementFacit` (HOTFIX-v1.4.1, `true` i DEV / `false` i PROD) styr tangentlinjens
 facit i mätpanelen — se avsnittet nedan.
+
+`showGamification` (`true` i BÅDA profilerna sedan v1.5.0) styr nivåprogressionen
+(GAM-002/GAM-003) — se eget avsnitt nedan. Det är den enda flaggan som INTE följer
+`environment` — alla övriga flaggor ovan är fortsatt `false` i PROD, oförändrat.
 
 - `apps/app/env.js` — **aktiv fil**, innehåller idag DEV-profilen. Det är denna fil
   `index.html` faktiskt läser.
@@ -71,6 +76,31 @@ Status:
   tvingar fram kryssrutan eller knappen via webbläsarkonsolen — samma idiom som `setTestMode()`
   redan använder för Test-läge. Ingen URL-parameter, hash eller tangentkommando kan aktivera
   det i PROD (verifierat, se `docs/tracking/todo.md`s HOTFIX-v1.4.1-post).
+
+## Nivåprogression (gamification) — aktiverad i båda profilerna sedan v1.5.0
+
+GAM-002 (aktivitetsspårning) och GAM-003 (nivåbadge/-mätare, `window.GamificationDev`-
+konsolstöd) var fram till v1.5.0 uteslutande en DEV-only teknisk prototyp, gated på
+`ENV_CONFIG.environment`. PO beslutade 2026-09-10 (PM otillgänglig) att aktivera
+funktionen i PROD i sitt dåvarande, testade DEV-skick — inklusive konsolstödet för
+felsökning på plats. Se `docs/development/GAMIFICATION-XP-PROTOTYPE.md` för den
+fullständiga tekniska beskrivningen.
+
+Konsekvenser för hur flaggorna hänger ihop:
+- Till skillnad från `showTestMode`/`showScore`/`showExperimentalContent`/
+  `showMeasurementFacit` (som alla följer `environment` och förblir `false` i PROD) styrs
+  `activity-prototype-core.js`/`activity-prototype.js`/`gamification-*.js` ENDAST av
+  `showGamification` — helt oberoende av `environment`. Skulle `environment` någon gång
+  behöva vara `"development"` av annat skäl (eller tvärtom) påverkar det INTE
+  gamification, och vice versa.
+- `tests/lib/build-prod.mjs`s fasta fillista kopierar nu dessa sex filer till
+  `dist/prod` som standard (tidigare uteslöts de uttryckligen).
+- `tests/validate-prod.mjs` verifierar att `showGamification` är `true` i den byggda
+  artifaktens `env.js`, och att filerna faktiskt finns där — motsatt kontroll jämfört med
+  innan v1.5.0.
+- Progression sparas i `localStorage` **per webbläsare/enhet**, inte per konto — på en
+  delad/klassrumsdator ser nästa användare föregående persons nivå. Detta är ett känt,
+  medvetet accepterat förhållande (PO:s beslut), inte en bugg.
 
 ## Katalogurval — PROD är en allowlist
 

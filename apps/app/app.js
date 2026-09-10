@@ -4,7 +4,7 @@
    Simulation kommer från sim-core.js (laddas som separat <script> före
    denna fil) — se apps/app/sim-core.js. Delad med tests/simulation/. */
 
-const APP_VERSION = "1.4.1";
+const APP_VERSION = "1.5.0";
 
 /* ENV_CONFIG sätts av env.js (laddas som separat <script> FÖRE denna fil,
    se index.html och docs/development/ENVIRONMENTS.md). Fallback här är en
@@ -13,8 +13,42 @@ const APP_VERSION = "1.4.1";
    URL-parameter, tangentbord eller dold knapp — enda källan är env.js. */
 const ENV_CONFIG = window.ENV_CONFIG || (function () {
   console.warn("env.js saknas — faller tillbaka till development-profil.");
-  return { environment: "development", showTestMode: true, showScore: true, showExperimentalContent: true, showMeasurementFacit: true, catalogFile: "catalog.json" };
+  return { environment: "development", showTestMode: true, showScore: true, showExperimentalContent: true, showMeasurementFacit: true, showGamification: true, catalogFile: "catalog.json" };
 })();
+
+/* GAM-002/GAM-003 — Aktivitetsspårning och nivåprogression (badge, nivånamn,
+   grafisk mätare — inga XP-tal). Fram till v1.5.0 var detta enbart en
+   DEV-only teknisk prototyp, gated på ENV_CONFIG.environment. PO beslutade
+   (2026-09-10, PM otillgänglig) att aktivera funktionen i PROD i sitt
+   nuvarande skick, inklusive DEV-konsolstödet (window.ActivityPrototype/
+   window.GamificationDev) för felsökning på plats. Styrs därför numera
+   ENDAST av den egna flaggan showGamification — HELT OBEROENDE av
+   ENV_CONFIG.environment, som fortsatt styr Test-läge/poäng/mätfacit/
+   experimentellt innehåll (dessa förblir avstängda i PROD, oförändrat).
+   showGamification kan aldrig sättas via URL/hash/dold knapp — enda källan
+   är env.js/env.prod.js, se docs/development/ENVIRONMENTS.md. Skripten
+   injiceras bara alls om flaggan är satt — annars begärs de aldrig över
+   nätverket. Se docs/development/GAMIFICATION-XP-PROTOTYPE.md. */
+if (ENV_CONFIG.showGamification) {
+  [
+    "./activity-prototype-core.js", "./activity-prototype.js",
+    "./gamification-xp-engine.js", "./gamification-store.js", "./gamification-ui.js", "./gamification.js",
+  ].forEach(src => {
+    const s = document.createElement("script");
+    s.src = src;
+    s.async = false; // körordning MÅSTE bevaras — varje fil beror på de föregående
+    document.head.appendChild(s);
+  });
+}
+/* Guardat, valfritt anrop — aktivitetsmodulen kan saknas (PROD, eller om den
+   av något skäl inte laddat än) utan att någon av appens kärnfunktioner
+   påverkas. Se DEL 3: "Om aktivitetsmodulen misslyckas ska simulatorn
+   fortfarande fungera." */
+function activityDispatch(type, meta) {
+  if (typeof window.__activityDispatch === "function") {
+    try { window.__activityDispatch(type, meta); } catch (err) { /* tyst — se ovan */ }
+  }
+}
 
 let SCENARIOS = {}, THEORY = {}, LEARNING_PATHS = {}, HELP_CONTENT = {};
 
@@ -69,6 +103,7 @@ const fields = {
 let currentScenario = null;
 let sim = null;
 let currentPath = null;
+let currentPathId = null; // GAM-002: katalog-id (skiljer sig från processbegransningar.v1:s interna id)
 let currentPathStep = -1;
 let testMode = false;
 let checkpointAnswered = false;
@@ -79,6 +114,8 @@ let measureCollapsedGroups = [];
 let hoverPos = null;
 let zoomView   = null; // null = visa allt, { start, end } = zoomed t-range
 let pvZoomView = null; // null = visa allt, { min, max } = zoomed PV-range
+let lastMarkerSnapshot = null; // baseline för att upptäcka parameterändringar under en pågående körning (se markera-i-grafen-funktionen)
+let currentScenarioRef = null; // senast laddade scenariots FIL-referens (t.ex. "pid-disturbance-noise.json") — currentScenario.id saknar .json, så den räcker inte för att jämföra mot lärstigsstegs step.ref
 
 function appendLog(line) { logEl.textContent += line + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 function fitCanvas() { const w = Math.max(680, chartCanvas.clientWidth); if (chartCanvas.width !== w) chartCanvas.width = w; }
@@ -170,6 +207,24 @@ function drawChart() {
   ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(Math.max(0, Math.min(100, u[i]))) })), "#2f9e44", false);
   ctx.restore();
+
+  // ── Markeringar vid parameterändring (fortsatt körning på samma graf) ──
+  const changeMarkers = sim.history.markers || [];
+  if (changeMarkers.length) {
+    ctx.save();
+    ctx.font = "10px Segoe UI";
+    ctx.textAlign = "left";
+    changeMarkers.forEach(m => {
+      if (m.t < tStart || m.t > tMax) return;
+      const mx = xScale(m.t);
+      ctx.strokeStyle = "rgba(90,90,90,0.55)"; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(mx, pad.top); ctx.lineTo(mx, h - pad.bottom); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#555";
+      ctx.fillText(m.label, mx + 3, pad.top + 10);
+    });
+    ctx.restore();
+  }
 
   // ── Mätläge: hjälplinjer och crosshair ──
   if (measureMode) {
@@ -350,16 +405,58 @@ function hydrateFields(s) {
   fields.processType.value = s.process.type || "self_regulating";
   fields.outflow.value = s.process.outflow ?? 0;
 }
+// GAM-002: kontext för aktivitetsprototypens försöks-/konfigurationsspårning —
+// lärstigssteg om en lärstig är aktiv, annars scenariot självt.
+function activityContextKey() {
+  if (currentPath && currentPathStep >= 0) return currentPathId + "#" + currentPathStep;
+  return currentScenario ? currentScenario.id : null;
+}
 function loadScenarioByName(name) {
   if (measureMode) exitMeasureMode();
   zoomView = null; pvZoomView = null;
   currentScenario = deepClone(SCENARIOS[name]);
+  currentScenarioRef = name;
   sim = new Simulation(currentScenario, 42);
+  sim.history.markers = [];
   hydrateFields(currentScenario);
+  captureMarkerBaseline();
   appendLog("Laddat scenario: " + currentScenario.id);
   updateControllerUIState();
   updateProcessUIState();
   updateStatus(); drawChart();
+  activityDispatch("scenario_loaded", { scenarioId: currentScenario.id, contextKey: activityContextKey() });
+}
+
+// ── Markeringar i grafen vid parameterändring ──
+// Låter en mätserie fortsätta på SAMMA graf över flera regulator-/processinställningar
+// (t.ex. P → PI → PID) utan att jämförelsen kräver Rensa graf/Återställ mellan varje
+// steg — bara start av en NY mätserie (se resetMarkers()) nollställer markeringarna.
+function markerSnapshot(scenario) {
+  return {
+    mode: scenario.controller.mode,
+    kp: scenario.controller.kp, ti: scenario.controller.ti, td: scenario.controller.td,
+    sp: scenario.runtime.setpoint, noise: scenario.disturbance.noiseStd,
+    k: scenario.process.K, t: scenario.process.T, l: scenario.process.L, processType: scenario.process.type
+  };
+}
+function modeLabel(modeValue) {
+  const opt = Array.from(fields.mode.options).find(o => o.value === modeValue);
+  return opt ? opt.textContent : modeValue;
+}
+function describeMarkerChange(a, b) {
+  if (a.mode !== b.mode) return "→ " + modeLabel(b.mode);
+  if (a.noise !== b.noise) return "Brus " + a.noise + "→" + b.noise;
+  if (a.sp !== b.sp) return "SP " + a.sp + "→" + b.sp;
+  if (a.kp !== b.kp || a.ti !== b.ti || a.td !== b.td) return "Kp/Ti/Td ändrat";
+  if (a.k !== b.k || a.t !== b.t || a.l !== b.l || a.processType !== b.processType) return "Process ändrad";
+  return null;
+}
+function captureMarkerBaseline() {
+  lastMarkerSnapshot = currentScenario ? markerSnapshot(currentScenario) : null;
+}
+function resetMarkers() {
+  if (sim) sim.history.markers = [];
+  captureMarkerBaseline();
 }
 function syncParamsFromUI() {
   if (!currentScenario || !sim) return;
@@ -440,6 +537,16 @@ function syncParamsFromUI() {
   sim.pid.mode = nextMode;
   sim.onoff.low = currentScenario.controller.hysteresis?.lower ?? sim.onoff.low;
   sim.onoff.high = currentScenario.controller.hysteresis?.upper ?? sim.onoff.high;
+
+  const nextSnap = markerSnapshot(currentScenario);
+  if (lastMarkerSnapshot) {
+    const label = describeMarkerChange(lastMarkerSnapshot, nextSnap);
+    if (label) {
+      if (!sim.history.markers) sim.history.markers = [];
+      sim.history.markers.push({ t: sim.history.t[sim.history.t.length - 1] ?? 0, label });
+    }
+  }
+  lastMarkerSnapshot = nextSnap;
 }
 
 function updateControllerUIState() {
@@ -507,12 +614,33 @@ function updateNavButtons() {
 }
 function loadPath(name) {
   currentPath = LEARNING_PATHS[name];
+  currentPathId = name;
   currentPathStep = -1;
   pathScore = { correct: 0, total: 0 };
   checkpointAnswered = false;
   updateNavButtons();
   updateScoreDisplay();
   learnBody.innerHTML = "<em>" + currentPath.title + "</em><br><small>" + (currentPath.description || "") + "</small><br><br>Klicka <strong>Nästa »</strong> för att börja.";
+  activityDispatch("learning_path_loaded", { learningPathId: currentPathId });
+}
+/* GAM-003C — Antal ord i ett stegs lästext, skickas med learning_step_reached
+   så att gamification-motorn (DOM-fri, laddar aldrig innehålls-JSON själv)
+   kan beräkna lästidskrav utan att app.js behöver känna till XP-regler.
+   Samma textkälla som renderStep() använder för bodyText — ren
+   dubblering av VILKEN text som räknas, inte av XP-logiken. */
+function countWords(text) {
+  if (!text) return 0;
+  const plain = String(text).replace(/<[^>]*>/g, " ");
+  const matches = plain.trim().match(/\S+/g);
+  return matches ? matches.length : 0;
+}
+function stepReadingWordCount(step) {
+  if (step.type === "theory") {
+    const th = THEORY[step.ref];
+    if (!th) return 0;
+    return countWords((th.summary || "") + " " + (th.bullets || []).join(" "));
+  }
+  return countWords(step.instruction || "");
 }
 function renderStep(step) {
   let bodyText = "";
@@ -578,6 +706,7 @@ function prevPathStep() {
   if (step.type === "scenario" || step.type === "observe") {
     if (SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
   }
+  activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey(), comparisonGroup: step.comparisonGroup || null, stepType: step.type, wordCount: stepReadingWordCount(step), progressRequirement: step.progressRequirement || null });
   renderStep(step);
 }
 function nextPathStep() {
@@ -592,8 +721,16 @@ function nextPathStep() {
   }
   const step = currentPath.steps[currentPathStep];
   if (step.type === "scenario" || step.type === "observe") {
-    if (SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
+    // continueFromPreviousStep: explicit opt-in (default: ladda om, som tidigare) för
+    // steg som medvetet fortsätter samma körning på samma graf över flera lärstigssteg
+    // (t.ex. en P→PI→PID-jämförelse) istället för att börja om. Kräver samma
+    // scenarioreferens som redan är laddad — annars körs alltid en vanlig omladdning,
+    // så en felskriven flagga aldrig kan köra fel scenario. Gäller bara framåtnavigering
+    // (prevPathStep laddar alltid om — "fortsätta bakåt" har ingen rimlig innebörd).
+    const continueSameRun = step.continueFromPreviousStep && currentScenarioRef === step.ref;
+    if (!continueSameRun && SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
   }
+  activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey(), comparisonGroup: step.comparisonGroup || null, stepType: step.type, wordCount: stepReadingWordCount(step), progressRequirement: step.progressRequirement || null });
   renderStep(step);
 }
 
@@ -692,7 +829,14 @@ function toggleSidebar(sbId, btnId, handleId, collapsedText, expandedText) {
   }
 }
 document.getElementById("toggleLeft").addEventListener("click", () => toggleSidebar("sidebarLeft", "toggleLeft", "resizeLeft", "»", "«"));
-document.getElementById("toggleRight").addEventListener("click", () => toggleSidebar("sidebarRight", "toggleRight", "resizeRight", "«", "»"));
+document.getElementById("toggleRight").addEventListener("click", () => {
+  toggleSidebar("sidebarRight", "toggleRight", "resizeRight", "«", "»");
+  // GAM-003C — högersidopanelen visar bara hjälpinnehåll; att kollapsa den
+  // är "stängd panel" och avbryter en pågående hjälp-XP-kvalificering.
+  if (document.getElementById("sidebarRight").classList.contains("collapsed")) {
+    activityDispatch("help_closed", {});
+  }
+});
 
 // ── Help buttons ──
 document.querySelectorAll(".help-btn").forEach(btn => {
@@ -705,6 +849,7 @@ document.querySelectorAll(".help-btn").forEach(btn => {
     const sb = document.getElementById("sidebarRight");
     const toggle = document.getElementById("toggleRight");
     if (sb.classList.contains("collapsed")) { sb.classList.remove("collapsed"); toggle.textContent = "»"; }
+    activityDispatch("help_opened", { helpId: btn.dataset.help, scenarioId: currentScenario ? currentScenario.id : null, learningPathId: currentPathId, stepIndex: currentPathStep >= 0 ? currentPathStep : null });
   });
 });
 
@@ -748,6 +893,22 @@ fields.showPB.addEventListener("change", drawChart);
 [fields.kp, fields.sp, fields.hysteresLower, fields.hysteresUpper].forEach(f => {
   f.addEventListener("change", () => { syncParamsFromUI(); drawChart(); });
 });
+// GAM-002: tunt, tillagt lyssnarpar enbart för aktivitetsloggning — rör inte
+// appens egen parameterhantering ovan/i syncParamsFromUI().
+[["k", fields.k], ["t", fields.t], ["l", fields.l], ["kp", fields.kp], ["ti", fields.ti], ["td", fields.td],
+ ["sp", fields.sp], ["umin", fields.umin], ["umax", fields.umax], ["manualOutput", fields.manualOutput],
+ ["noise", fields.noise], ["pulseMag", fields.pulseMag], ["pulseDuration", fields.pulseDuration]]
+  .forEach(pair => {
+    const name = pair[0], el = pair[1];
+    el.addEventListener("change", () => {
+      activityDispatch("parameter_changed", {
+        field: name,
+        value: Number(el.value),
+        min: el.min !== "" ? Number(el.min) : null,
+        max: el.max !== "" ? Number(el.max) : null,
+      });
+    });
+  });
 document.getElementById("mode").addEventListener("change", () => {
   const newMode = fields.mode.value;
   const bumplessOn = document.getElementById("bumpless").checked;
@@ -763,13 +924,17 @@ document.getElementById("mode").addEventListener("change", () => {
     }
   }
   updateControllerUIState();
+  activityDispatch("regulator_mode_changed", { field: "mode", value: newMode });
 });
-document.getElementById("processType").addEventListener("change", updateProcessUIState);
-document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); });
-document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); });
-document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); appendLog("Puls triggad."); });
-document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("Graf nollställd."); updateStatus(); drawChart(); });
-document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [] }; sim.stepNo = 0; appendLog("System återställt."); updateStatus(); drawChart(); });
+document.getElementById("processType").addEventListener("change", () => {
+  updateProcessUIState();
+  activityDispatch("process_type_changed", { field: "processType", value: fields.processType.value });
+});
+document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); activityDispatch("simulation_step", { contextKey: activityContextKey() }); });
+document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); activityDispatch("simulation_run", { steps: fs.length, contextKey: activityContextKey() }); });
+document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); if (!sim.history.markers) sim.history.markers = []; sim.history.markers.push({ t: sim.history.t[sim.history.t.length - 1] ?? 0, label: "Puls" }); appendLog("Puls triggad."); activityDispatch("disturbance_triggered", { contextKey: activityContextKey() }); });
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); drawChart(); activityDispatch("chart_cleared", {}); });
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
@@ -841,6 +1006,7 @@ function enterMeasureMode() {
   document.getElementById("btnMeasure").textContent = "✕ Stäng mätläge";
   chartCanvas.style.cursor = "crosshair";
   drawChart();
+  activityDispatch("measurement_started", { contextKey: activityContextKey() });
 }
 
 function exitMeasureMode() {
@@ -881,16 +1047,17 @@ document.getElementById("btnFacit").addEventListener("click", () => {
     }
     fb.style.display = "";
     document.getElementById("btnFacit").textContent = "Dölj facit";
+    activityDispatch("measurement_facit_opened", { contextKey: activityContextKey() });
   } else {
     fb.style.display = "none";
     document.getElementById("btnFacit").textContent = "Visa facit";
   }
 });
 
-document.getElementById("mpPv0").addEventListener("input", () => { if (measureMode) drawChart(); });
-document.getElementById("mpPvInf").addEventListener("input", () => { if (measureMode) drawChart(); });
-document.getElementById("mp63Line").addEventListener("change", () => { if (measureMode) drawChart(); });
-document.getElementById("mpTangent").addEventListener("change", () => { if (measureMode) drawChart(); });
+document.getElementById("mpPv0").addEventListener("input", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mpPv0", contextKey: activityContextKey() }); } });
+document.getElementById("mpPvInf").addEventListener("input", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mpPvInf", contextKey: activityContextKey() }); } });
+document.getElementById("mp63Line").addEventListener("change", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mp63Line", contextKey: activityContextKey() }); } });
+document.getElementById("mpTangent").addEventListener("change", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mpTangent", contextKey: activityContextKey() }); } });
 
 chartCanvas.addEventListener("mousemove", e => {
   if (!measureMode) return;

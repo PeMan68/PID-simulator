@@ -20,6 +20,33 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande buggar st
 
 ## Webbapp (`apps/app/`)
 
+### 2026-013 — Återställ progression: nästa händelse ger massiv felaktig XP-återhämtning
+**Prio:** Hög
+**Datum:** 2026-09-10
+**Branch:** `bugfix/2026-013`
+**Beskrivning:**
+PO testade "Återställ progression" (GAM-003B/DEV-prototyp för XP/nivå).
+Nollställningen visade korrekt 0 XP/Reglernovis direkt efter klick. Men ETT
+enda efterföljande klick på "Stega" gav omedelbart nivå 2 med ett stort
+felaktigt XP-tal bokfört — reproducerbart, samma resultat varje gång.
+**Grundorsak:** `gamification.js`s `onReset()` skapade ett NYTT, tomt
+`engine`-objekt men återanvände samma, redan belastade GAM-002-
+aktivitetssession (`window.ActivityPrototype.session()`). Motorns
+diff-baserade bokföring (`processEvent`) jämför sessionens RÅA räknare
+(`session.attempts.completed`, `sumDistinctConfigs`, `comparisonPairs.length`
+m.fl.) mot motorns egen, nollställda ögonblicksbild — så nästa händelse
+(oavsett typ) tolkade HELA den tidigare sessionens redan-existerande
+aktivitet som "ny" och krediterade den i klump.
+**Fix:** `onReset()` startar nu även om själva aktivitetssessionen
+(`window.ActivityPrototype.reset()`, samma mekanism som en vanlig
+sidladdning), efter att motorn/lagringen redan återställts.
+**Status:** Stängd — verifierad 2026-09-10 (`tests/gamification/gamification-reset-isolation.test.mjs`,
+10 nya tester som reproducerar grundorsaken och verifierar fixen; samtliga
+261 automatiska tester i repot gröna; Playwright-verifiering mot exakt
+PO:s repro-steg i riktig webbläsare; PROD-regression opåverkad)
+
+---
+
 ### 2026-012 — PB-band, SP-linje och hysteresband uppdateras inte förrän ett steg körs
 **Prio:** Medel
 **Datum:** 2026-08-23

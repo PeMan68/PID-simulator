@@ -77,6 +77,13 @@ checkDupeIds(catalog.scenarios, "scenarios");
 checkDupeIds(catalog.theory, "theory");
 checkDupeIds(catalog.learning_paths, "learning_paths");
 
+// GAM-003A.2: comparisonGroup → antal steg som deklarerar varje grupp-ID
+// (globalt över alla lärstigar, eftersom PM:s spec tillåter att samma
+// grupp-ID delas mellan lärstigar). En grupp med bara ETT steg kan aldrig
+// bilda ett jämförelsepar — sannolikt en felstavning eller ett bortglömt
+// andra steg.
+const comparisonGroupStepCounts = new Map();
+
 // Kontrollera varje lärstigs steg
 for (const [pathId, pathData] of Object.entries(LEARNING_PATHS)) {
   if (!pathData.steps || !Array.isArray(pathData.steps) || pathData.steps.length === 0) {
@@ -104,7 +111,28 @@ for (const [pathId, pathData] of Object.entries(LEARNING_PATHS)) {
         errors.push(`${stepLabel}: checkpoint.correct pekar utanför options`);
       }
     }
+    // GAM-003A.2 — comparisonGroup: valfritt fält, men om det finns ska det
+    // vara en icke-tom sträng. Bara "scenario"-steg deltar i jämförelser
+    // (attempts/distinkta konfigurationer existerar inte för teoristeg).
+    if (step.comparisonGroup !== undefined) {
+      if (typeof step.comparisonGroup !== "string" || step.comparisonGroup.trim() === "") {
+        errors.push(`${stepLabel}: comparisonGroup måste vara en icke-tom sträng`);
+      } else {
+        if (step.type !== "scenario") {
+          warnings.push(`${stepLabel}: comparisonGroup satt på ett "${step.type}"-steg — bara scenario-steg kan bilda jämförelsepar`);
+        }
+        comparisonGroupStepCounts.set(step.comparisonGroup, (comparisonGroupStepCounts.get(step.comparisonGroup) || 0) + 1);
+      }
+    }
   });
+}
+
+// GAM-003A.2 — en comparisonGroup med bara ETT steg kan aldrig bilda ett
+// jämförelsepar (kräver minst två genomförda försök i gruppen).
+for (const [groupId, count] of comparisonGroupStepCounts.entries()) {
+  if (count < 2) {
+    warnings.push(`comparisonGroup "${groupId}" används av bara ${count} steg — kan aldrig bilda ett jämförelsepar. Felstavning eller bortglömt andra steg?`);
+  }
 }
 
 console.log(`Katalog: ${CATALOG_FILE}`);

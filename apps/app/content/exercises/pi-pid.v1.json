@@ -8,6 +8,7 @@
     {
       "type": "scenario",
       "ref": "pi-pid-comparison-pi.json",
+      "comparisonGroup": "pi-vs-pid",
       "title": "PI-försök",
       "objective": "Se PI-regulatorns förlopp med tydlig men kontrollerad översläng, som underlag för jämförelse med PID i nästa steg.",
       "instruction": "Ladda scenariot 'PI/PID-jämförelse — PI-reglering'. Processen startar vid 0 och SP är 60 — det är själva stegsvaret vi studerar.\n\nKör minst 90 steg. Använd gärna knappen 'Mät K/T/L' och håll musen över grafen för att läsa av exakta PV- och tidsvärden i crosshair-tooltipen.\n\nNotera:\n• Maximalt PV (översläng)\n• Ungefär hur många steg det tar innan PV planar ut\n• Om det syns någon oscillation (fler än en topp/dal)\n• Om det kvarstående felet elimineras",
@@ -26,6 +27,7 @@
     {
       "type": "scenario",
       "ref": "pi-pid-comparison-pid.json",
+      "comparisonGroup": "pi-vs-pid",
       "title": "PID-försök",
       "objective": "Se hur D-delen dämpar samma förlopp — samma process, samma Kp och Ti, bara Td tillagt.",
       "instruction": "Ladda scenariot 'PI/PID-jämförelse — PID-reglering' (samma Kp=1.5, Ti=10 som i PI-försöket, med Td=2 tillagt). Kör samma antal steg som i PI-försöket, minst 90. Använd 'Mät K/T/L' igen för att läsa av samma typ av värden som i förra steget.\n\nNotera samma sak som i förra steget: maximalt PV, ungefär hur många steg till PV planar ut, ev. oscillation, kvarstående fel.",
@@ -44,9 +46,10 @@
     {
       "type": "scenario",
       "ref": "pi-pid-comparison-pid.json",
+      "comparisonGroup": "pi-vs-pid",
       "title": "Jämför PI och PID",
       "objective": "Sammanfatta skillnaden mellan PI och PID utifrån dina egna observationer — inte som en generell regel.",
-      "instruction": "Jämför dina två försök (bläddra tillbaka i grafloggen eller kör om PI-scenariot om du vill se det igen):\n• Översläng — hur mycket mindre var den med PID?\n• Insvängningstid — hur mycket snabbare stabiliserades PID-förloppet?\n• Oscillation eller dämpning — vilket förlopp var mjukast?\n• Kvarstående fel — eliminerades det i båda fallen?\n\nResultatet du sett gäller för just den här processen och de här regulatorinställningarna — inte som ett bevis för att PID alltid är bättre än PI. En dåligt inställd D-del kan lika gärna göra en regulator känsligare för mätbrus och svårare att ställa in.",
+      "instruction": "Jämför dina två försök utifrån det du noterade i PI- och PID-försöken ovan (kör om PI-scenariot om du vill se förloppet igen):\n• Översläng — hur mycket mindre var den med PID?\n• Insvängningstid — hur mycket snabbare stabiliserades PID-förloppet?\n• Oscillation eller dämpning — vilket förlopp var mjukast?\n• Kvarstående fel — eliminerades det i båda fallen?\n\nResultatet du sett gäller för just den här processen och de här regulatorinställningarna — inte som ett bevis för att PID alltid är bättre än PI. En dåligt inställd D-del kan lika gärna göra en regulator känsligare för mätbrus och svårare att ställa in.",
       "checkpoint": {
         "question": "Stämmer det att PID-reglering alltid ger bättre resultat än PI-reglering?",
         "options": [
