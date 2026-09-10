@@ -1,4 +1,4 @@
-/* GAM-002 — Aktivitetsprototyp: DOM-koppling (DEV-only).
+/* GAM-002 — Aktivitetsprototyp: DOM-koppling.
  *
  * Tunn glue-kod ovanpå activity-prototype-core.js (som är helt DOM-fri och
  * testas separat, se tests/activity-prototype.test.mjs). Den här filen:
@@ -6,23 +6,24 @@
  *    keydown (bara som aktivitetssignaler — inget innehåll lagras),
  *  - exponerar window.__activityDispatch(type, meta) som app.js:s befintliga
  *    knapp-/fälthändelser anropar (ett guardat, valfritt anrop — se app.js),
- *  - exponerar window.ActivityPrototype för felsökning i DEV-konsolen.
+ *  - exponerar window.ActivityPrototype för felsökning i konsolen.
  *
- * Laddas ENDAST i DEV: app.js injicerar <script src="./activity-prototype.js">
- * dynamiskt, och bara om ENV_CONFIG.environment === "development" — se
- * kommentaren i app.js där ENV_CONFIG sätts upp. Filen ingår därför aldrig i
- * den byggda PROD-artifakten (tests/lib/build-prod.mjs kopierar bara en fast
- * lista kärnfiler, den här står inte på den listan) och begärs aldrig av
- * webbläsaren i PROD — noll extra nätverkstrafik, inga globala funktioner,
- * ingen körd kod.
+ * Fram till v1.5.0 laddades detta ENDAST i DEV. PO beslutade (2026-09-10)
+ * att aktivera gamification (som bygger på denna modul) i PROD i sitt
+ * nuvarande skick, inklusive konsolstödet. Styrs nu av
+ * ENV_CONFIG.showGamification — HELT OBEROENDE av ENV_CONFIG.environment —
+ * se kommentaren i app.js. Filen injiceras bara alls om den flaggan är satt
+ * (i båda profilerna sedan v1.5.0); tests/lib/build-prod.mjs:s fasta
+ * fillista kopierar den till dist/prod.
  *
  * Lagrar ALDRIG muskoordinater, tangentvärden eller textinnehåll. Ingen
- * persistens (localStorage/sessionStorage/cookies/IndexedDB), ingen
- * nätverkstrafik. Se docs/development/GAMIFICATION-PROTOTYPE.md.
+ * nätverkstrafik. Persistens (localStorage) sker uteslutande i
+ * gamification-store.js, under en egen nyckel — se
+ * docs/development/GAMIFICATION-XP-PROTOTYPE.md.
  */
 (function () {
   if (typeof window === "undefined") return;
-  if (!window.ENV_CONFIG || window.ENV_CONFIG.environment !== "development") return;
+  if (!window.ENV_CONFIG || !window.ENV_CONFIG.showGamification) return;
   if (typeof window.ActivityPrototypeCore === "undefined") {
     console.warn("activity-prototype.js: ActivityPrototypeCore saknas — prototypen startar inte.");
     return;

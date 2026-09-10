@@ -56,11 +56,9 @@ Två nya, generella appfunktioner tillkom under PO:s testomgång:
 Verifierat med Playwright genom hela lärstigsnavigeringen och den fullständiga
 Node-testsviten (`validate-content.mjs`, `validate-prod.mjs`, `build-preview.test.mjs`,
 `simulation/analyze.test.mjs`) — samtliga gröna. PO har testat och godkänt branchen.
-**Status:** Klar, mergad till `develop`. **Inte produktionsgodkänd** — flaggad som
-kandidat för nästa PROD-release (se `HIDDEN_LEARNING_PATHS` i
-`tests/validate-prod.mjs` och "Livscykel" i `docs/development/ENVIRONMENTS.md`,
-STEG 3: kräver ett eget, litet `feature/PROD-enable-storningar-robusthet`-uppdrag när
-PO beslutar).
+**Status:** Klar, mergad till `develop`. **Produktionsaktiverad i v1.5.0**
+(2026-09-10, PO:s beslut) — sjunde lärstigen i `catalog.prod.json`, se
+RELEASE-v1.5.0-posten.
 
 ---
 

@@ -28,17 +28,21 @@ function check(name, condition, detail) {
 
 const T = 60000; // inaktivitetsgränsens standardvärde i ms, för läsbara testtider
 
-// ── 1–3. DEV-only-isolering (statisk källkontroll, ingen browser krävs) ──
+// ── 1–3. Aktivering styrs av showGamification, oberoende av environment
+// (v1.5.0 — PO beslutade att aktivera aktivitetsspårning/nivåprogression i
+// PROD; se docs/development/GAMIFICATION-XP-PROTOTYPE.md. Testerna verifierar
+// nu att injektionen är GATED på flaggan, och att PROD-byggningen faktiskt
+// TAR MED filerna — motsatsen till innan v1.5.0.) ──
 {
   const appJs = fs.readFileSync(APP_JS_PATH, "utf8");
-  const gatePattern = /ENV_CONFIG\.environment === "development"\)\s*\{[\s\S]{0,300}activity-prototype/;
-  check("1-2. app.js injicerar aktivitetsskripten bara när ENV_CONFIG.environment === \"development\"", gatePattern.test(appJs));
+  const gatePattern = /ENV_CONFIG\.showGamification\)\s*\{[\s\S]{0,300}activity-prototype/;
+  check("1-2. app.js injicerar aktivitetsskripten styrt av ENV_CONFIG.showGamification (oberoende av environment)", gatePattern.test(appJs));
 
   const buildProd = fs.readFileSync(BUILD_PROD_PATH, "utf8");
   const coreFilesMatch = buildProd.match(/for \(const f of \[([^\]]+)\]\)/);
   const coreFilesList = coreFilesMatch ? coreFilesMatch[1] : "";
-  check("3. PROD-byggningens fasta fillista innehåller INTE activity-prototype-filerna",
-    !coreFilesList.includes("activity-prototype"), coreFilesList);
+  check("3. PROD-byggningens fasta fillista INKLUDERAR activity-prototype-filerna (v1.5.0-beslutet)",
+    coreFilesList.includes("activity-prototype"), coreFilesList);
 }
 
 // ── 4. Synlig + fokuserad sida kan samla aktiv tid ──
