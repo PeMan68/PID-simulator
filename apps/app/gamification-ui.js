@@ -43,17 +43,57 @@
     "#c9a227", // 8 Reglerlegend — guld
   ];
 
-  // Enkel reglertekniks-glyf: en återkopplingsloop (pil som sluter en cirkel)
-  // — samma symbol oavsett nivå, bara färgen (stroke) ändras per nivå.
-  const LOOP_ICON_SVG =
-    '<path class="gam-badge-icon" d="M 15 8 A 8 8 0 1 1 8.2 12.4 M 8.2 12.4 L 6.5 9.2 M 8.2 12.4 L 11.6 11.4" />';
+  // FEAT-035 — ljusare/mörkare nyans av en TIER_ACCENTS-färg, för
+  // medaljongens gradient. Enda källan till badgens färger förblir
+  // TIER_ACCENTS ovan — ingen parallell färglista att hålla i synk.
+  function shade(hex, amount) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16) & 0xff;
+    const g = (n >> 8) & 0xff;
+    const b = n & 0xff;
+    const target = amount < 0 ? 0 : 255;
+    const p = Math.abs(amount);
+    const mix = (c) => Math.round((target - c) * p + c);
+    return (
+      "#" +
+      [mix(r), mix(g), mix(b)].map((v) => v.toString(16).padStart(2, "0")).join("")
+    );
+  }
 
-  function badgeSvg() {
-    // Sexkantig (hexagon) märkbricka — teknisk/fantasyinspirerad "shield"-känsla.
+  // FEAT-035 — Sexkantig (hexagon) medaljong: gradientfylld i nivåns egen
+  // TIER_ACCENTS-färg, tunn innerfälg, och siffran som riktig SVG-text
+  // ankrad i sexkantens geometriska mittpunkt (12, 13) — INTE ett separat
+  // HTML-element ovanpå (det var buggen: ett `position: absolute`-element
+  // som flöt oberoende av grafiken och sällan hamnade centrerat). Nivå 8
+  // (index 7, "Reglerlegend") får en mjuk glöd — ensam högsta-nivå-effekt.
+  function badgeSvg(levelIndex) {
+    const base = TIER_ACCENTS[levelIndex] || TIER_ACCENTS[0];
+    const light = shade(base, 0.4);
+    const dark = shade(base, -0.35);
+    const isMaxTier = levelIndex === TIER_ACCENTS.length - 1;
     return (
       '<svg viewBox="0 0 24 26" aria-hidden="true">' +
-      '<polygon class="gam-badge-hex" points="12,1 22,7 22,19 12,25 2,19 2,7" />' +
-      LOOP_ICON_SVG +
+      "<defs>" +
+      '<linearGradient id="gamBadgeGrad" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="' + light + '" />' +
+      '<stop offset="1" stop-color="' + dark + '" />' +
+      "</linearGradient>" +
+      (isMaxTier
+        ? '<filter id="gamBadgeGlow" x="-60%" y="-60%" width="220%" height="220%">' +
+          '<feGaussianBlur stdDeviation="1.3" result="blur" />' +
+          "<feMerge><feMergeNode in=\"blur\" /><feMergeNode in=\"SourceGraphic\" /></feMerge>" +
+          "</filter>"
+        : "") +
+      "</defs>" +
+      '<polygon points="12,1 22,7 22,19 12,25 2,19 2,7" fill="url(#gamBadgeGrad)" stroke="' +
+      dark +
+      '" stroke-width="1.3"' +
+      (isMaxTier ? ' filter="url(#gamBadgeGlow)"' : "") +
+      " />" +
+      '<polygon class="gam-badge-rim" points="12,3.4 19.4,7.7 19.4,18.3 12,22.6 4.6,18.3 4.6,7.7" fill="none" />' +
+      '<text x="12" y="13.4" text-anchor="middle" dominant-baseline="central" class="gam-badge-number">' +
+      (levelIndex + 1) +
+      "</text>" +
       "</svg>"
     );
   }
@@ -95,7 +135,7 @@
     if (!els) return;
     els.panel.hidden = false;
     els.panel.style.setProperty("--gam-accent", TIER_ACCENTS[levelInfo.levelIndex] || TIER_ACCENTS[0]);
-    els.badge.innerHTML = badgeSvg() + '<span class="gam-badge-number">' + (levelInfo.levelIndex + 1) + "</span>";
+    els.badge.innerHTML = badgeSvg(levelInfo.levelIndex);
     els.levelNumber.textContent = String(levelInfo.levelIndex + 1);
     els.levelName.textContent = levelInfo.levelName;
     const pct = Math.round(levelInfo.ratio * 100);
