@@ -1043,6 +1043,37 @@ ett tredjeparts-JS-skript.
 
 ---
 
+### FEAT-035 — Nivåmärke, medaljongdesign
+**Branch:** `feature/nivamarke-medaljong`
+**Prioritet:** Låg — kosmetisk förbättring
+**Beskrivning:**
+Dagens sexkantsmärke i nivåpanelen (`gamification-ui.js:badgeSvg()`) har ett känt
+buggmönster: nivåsiffran renderas som ett separat HTML-`<span>`, absolutpositionerat
+`bottom: 3px` i märkrutan — inte som en del av SVG-grafiken tillsammans med sexkanten
+och återkopplingsloop-ikonen. Resultatet är att siffran ser felcentrerad/"off" ut,
+eftersom den och ikonen konkurrerar om samma lilla yta (42×46px) i stället för att vara
+en sammanhållen bild.
+
+PO fick tre visuella förslag presenterade (mockup, se
+[docs/reports/ — badge-revision-mockup, ej sparad i repo]) och valde **"Medaljong"**:
+- Siffran flyttas in i SVG:n som `<text>`, ankrad i sexkantens geometriska mittpunkt
+  (12, 13 i `viewBox="0 0 24 26"`) — löser buggen direkt.
+- Sexkanten fylls med en linjär gradient (ljus→mörk nyans av nivåns egen
+  `TIER_ACCENTS`-färg, beräknad i JS, inte en ny parallell färglista).
+- En tunn innerfälg (halvtransparent vit) ger en "medaljong"-känsla.
+- Siffran "graveras" med skugga/highlight (`text-shadow`).
+- Nivå 8 (Reglerlegend, index 7) får en mjuk `feGaussianBlur`-glöd — enda nivån med
+  den extra effekten, som en tydlig topp-belöning.
+- Den befintliga återkopplingsloop-ikonen (`LOOP_ICON_SVG`) tas bort ur badgen som en
+  del av denna omdesign (medaljongstilen ersätter den, inte kompletterar den).
+
+**Release:** PO vill ha detta med i nästa release till `main` (patch, v1.5.1 — ren
+visuell fix/förbättring av redan produktionsaktiv funktion, se `RELEASE-v1.5.0`-mönstret
+i `docs/handoffs/HANDOFF_2026-09-10.md` avsnitt 9).
+**Status:** Öppen — under implementation
+
+---
+
 ### HOTFIX-v1.4.1 — Dölj tangentlinjens facit i PROD, behåll i DEV
 **Branch:** `hotfix/v1.4.1-hide-tangent-facit-in-prod`
 **Prioritet:** Hög
