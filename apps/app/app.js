@@ -626,6 +626,25 @@ function loadPath(name) {
   learnBody.innerHTML = "<em>" + currentPath.title + "</em><br><small>" + (currentPath.description || "") + "</small><br><br>Klicka <strong>Nästa »</strong> för att börja.";
   activityDispatch("learning_path_loaded", { learningPathId: currentPathId });
 }
+/* GAM-003C — Antal ord i ett stegs lästext, skickas med learning_step_reached
+   så att gamification-motorn (DOM-fri, laddar aldrig innehålls-JSON själv)
+   kan beräkna lästidskrav utan att app.js behöver känna till XP-regler.
+   Samma textkälla som renderStep() använder för bodyText — ren
+   dubblering av VILKEN text som räknas, inte av XP-logiken. */
+function countWords(text) {
+  if (!text) return 0;
+  const plain = String(text).replace(/<[^>]*>/g, " ");
+  const matches = plain.trim().match(/\S+/g);
+  return matches ? matches.length : 0;
+}
+function stepReadingWordCount(step) {
+  if (step.type === "theory") {
+    const th = THEORY[step.ref];
+    if (!th) return 0;
+    return countWords((th.summary || "") + " " + (th.bullets || []).join(" "));
+  }
+  return countWords(step.instruction || "");
+}
 function renderStep(step) {
   let bodyText = "";
   if (step.type === "theory") {
@@ -690,7 +709,7 @@ function prevPathStep() {
   if (step.type === "scenario" || step.type === "observe") {
     if (SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
   }
-  activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey(), comparisonGroup: step.comparisonGroup || null });
+  activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey(), comparisonGroup: step.comparisonGroup || null, stepType: step.type, wordCount: stepReadingWordCount(step), progressRequirement: step.progressRequirement || null });
   renderStep(step);
 }
 function nextPathStep() {
@@ -714,7 +733,7 @@ function nextPathStep() {
     const continueSameRun = step.continueFromPreviousStep && currentScenarioRef === step.ref;
     if (!continueSameRun && SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
   }
-  activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey(), comparisonGroup: step.comparisonGroup || null });
+  activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey(), comparisonGroup: step.comparisonGroup || null, stepType: step.type, wordCount: stepReadingWordCount(step), progressRequirement: step.progressRequirement || null });
   renderStep(step);
 }
 
@@ -813,7 +832,14 @@ function toggleSidebar(sbId, btnId, handleId, collapsedText, expandedText) {
   }
 }
 document.getElementById("toggleLeft").addEventListener("click", () => toggleSidebar("sidebarLeft", "toggleLeft", "resizeLeft", "»", "«"));
-document.getElementById("toggleRight").addEventListener("click", () => toggleSidebar("sidebarRight", "toggleRight", "resizeRight", "«", "»"));
+document.getElementById("toggleRight").addEventListener("click", () => {
+  toggleSidebar("sidebarRight", "toggleRight", "resizeRight", "«", "»");
+  // GAM-003C — högersidopanelen visar bara hjälpinnehåll; att kollapsa den
+  // är "stängd panel" och avbryter en pågående hjälp-XP-kvalificering.
+  if (document.getElementById("sidebarRight").classList.contains("collapsed")) {
+    activityDispatch("help_closed", {});
+  }
+});
 
 // ── Help buttons ──
 document.querySelectorAll(".help-btn").forEach(btn => {

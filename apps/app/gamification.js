@@ -1,4 +1,4 @@
-/* GAM-003B — Synlig DEV-prototyp för XP och nivåprogression: bootstrap/glue.
+/* GAM-003B/GAM-003C — Synlig DEV-prototyp för XP och nivåprogression: bootstrap/glue.
  *
  * Kopplar ihop (alla DEV-only, laddade av app.js — se dess
  * ENV_CONFIG.showGamification-styrda injektion):
@@ -13,6 +13,13 @@
  * ActivityPrototypeCore.recordEvent själv, så samma aktivitet kan aldrig
  * bokföras dubbelt (en gång av GAM-002, en gång av gamification-motorn) —
  * se STOPPVILLKOR i GAM-003B-uppdraget.
+ *
+ * GAM-003C — KVALIFICERAD OCH FÖRDRÖJD VISNING: XP bokförs fortfarande
+ * direkt (`Engine.processEvent` + `save()` sker för varje beviljad
+ * kategori), men nivåytan (`UI.render`) uppdateras bara vid "naturliga
+ * avstämningspunkter" — se `Engine.shouldFlush`. Det är den ENDA platsen i
+ * hela gamification-modulen som avgör NÄR något visas; bokföringen i
+ * gamification-xp-engine.js vet ingenting om rendering.
  *
  * Appens simulatorfunktioner rör sig ALDRIG genom denna fil (ingen import
  * härifrån till app.js) — om något här kastar ett ovärderat fel eller om en
@@ -52,6 +59,15 @@
     let engine = null;
     let persisting = false;
 
+    // GAM-003C — DEV-only ringbuffert: "varför gavs (eller gavs inte) XP".
+    // Rent minne, sparas ALDRIG till localStorage, existerar bara i DEV.
+    const LOG_MAX = 200;
+    let devLog = [];
+    function pushLog(entry) {
+      devLog.push(entry);
+      if (devLog.length > LOG_MAX) devLog.shift();
+    }
+
     function persistedFromEngine() {
       return Object.assign(Store.createEmptyState(), Engine.toPersistable(engine));
     }
@@ -63,8 +79,10 @@
       persisting = false;
     }
 
-    function renderCurrent() {
-      const info = Engine.levelForDisplay(engine.totalXP, engine.highestLevelIndex, engine.levels);
+    // Renderar den SENAST FLUSHADE nivån (engine.displayedXP) — ALDRIG
+    // engine.totalXP direkt. Se filhuvudet.
+    function renderDisplayed() {
+      const info = Engine.levelForDisplay(engine.displayedXP, engine.highestLevelIndex, engine.levels);
       safeCall(() => UI.render(info), "rendera nivå");
       return info;
     }
@@ -76,60 +94,162 @@
       safeCall(() => Engine.seedSession(session, engine), "seeda session");
     }
 
+    // GAM-003C — den ENDA punktvisa timern i hela modulen: schemalagd exakt
+    // till den tidpunkt då ett tidsbaserat, pågående kvalificeringsvillkor
+    // (teoristegets lästid, ett blandat stegs 50%-tid, eller hjälpens 3s)
+    // SKULLE bli uppfyllt — INTE en återkommande polling-loop. Fångar fallet
+    // där användaren blir overksam (läser klart, gör inget mer) innan nästa
+    // RIKTIGA händelse råkar inträffa; utan detta skulle kvalificeringen
+    // bara upptäckas retroaktivt vid nästa faktiska klick, om något sådant
+    // någonsin kommer. Ombokas (clearTimeout + nytt setTimeout) varje gång
+    // ett pågående villkors återstående tid kan ha ändrats. Rör aldrig XP
+    // eller Core självt — anropar bara Engine.checkPending, som är en ren
+    // omvärdering utan någon ActivityPrototypeCore.recordEvent-händelse.
+    let pendingCheckTimer = null;
+    function clearPendingCheckTimer() {
+      if (pendingCheckTimer) { window.clearTimeout(pendingCheckTimer); pendingCheckTimer = null; }
+    }
+    function scheduleNextPendingCheck(session) {
+      clearPendingCheckTimer();
+      const snap = safeCall(() => Engine.debugSnapshot(engine, session), "läsa väntande kvalificeringar");
+      if (!snap) return;
+      const remainders = [];
+      if (snap.pendingStep && snap.pendingStep.minActiveMs > 0) {
+        remainders.push(snap.pendingStep.minActiveMs - snap.pendingStep.elapsedActiveMs);
+      }
+      if (snap.pendingHelp) {
+        remainders.push(snap.pendingHelp.minActiveMs - snap.pendingHelp.elapsedActiveMs);
+      }
+      const positive = remainders.filter(r => r > 0);
+      if (positive.length === 0) return;
+      const waitMs = Math.min.apply(null, positive) + 50; // liten marginal mot avrundning
+      pendingCheckTimer = window.setTimeout(() => {
+        pendingCheckTimer = null;
+        safeCall(() => window.ActivityPrototype.summary(), "uppdatera aktiv tid"); // tvingar Core att räkna av tiden fram till nu (settle()), utan att logga någon händelse
+        const now = performance.now();
+        const result = safeCall(() => Engine.checkPending(engine, session, now), "kontrollera väntande kvalificering");
+        if (result) applyResult(null, result, session);
+        scheduleNextPendingCheck(session); // ev. kvarvarande väntande villkor
+      }, waitMs);
+    }
+
+    // Delad av handleEvent() OCH den schemalagda kontrollen ovan: bokför
+    // (logga+spara) beviljad XP direkt, och synka/rendera baren bara vid en
+    // naturlig avstämningspunkt (`Engine.shouldFlush`).
+    function applyResult(type, result, session) {
+      if (result.awarded.length > 0) {
+        pushLog({ t: performance.now(), type: type || "pending_check", awarded: result.awarded.slice(), totalXPAfter: result.totalXPAfter });
+        save(); // bokförs direkt, oavsett om baren uppdateras nu eller senare
+      }
+      const flushNow = safeCall(() => Engine.shouldFlush(engine, type, result.awarded), "avgör avstämningspunkt");
+      if (flushNow) {
+        const flushed = safeCall(() => Engine.flush(engine), "synka visad nivå");
+        if (flushed) {
+          safeCall(() => UI.render(flushed.level), "rendera nivå");
+          if (flushed.leveledUp) safeCall(() => UI.showLevelUp(flushed.level), "visa nivåbyte");
+        }
+      }
+    }
+
     function handleEvent(type, meta, session, now) {
       if (type === "session_started") {
         // GAM-002:s DEV-konsol kan starta om aktivitetssessionen
         // (ActivityPrototype.reset()) — en helt ny, tom Core-session kräver
-        // att motorns sessionsbundna räknare nollställs i takt, annars skulle
-        // framtida diffar bli felaktiga (jämfört mot en nu obefintlig gammal
-        // session). De BESTÅENDE delarna (totalXP, contextSignatures m.m.)
-        // rörs inte.
+        // att motorns sessionsbundna räknare (och GAM-003C:s väntande
+        // steg-/hjälpkvalificeringar) nollställs i takt, annars skulle
+        // framtida diffar bli felaktiga. De BESTÅENDE delarna (totalXP,
+        // contextSignatures m.m.) rörs inte.
+        clearPendingCheckTimer();
         safeCall(() => Engine.resetSessionScope(engine), "nollställ sessionsräknare");
         safeCall(() => Engine.seedSession(session, engine), "seeda ny session");
+        renderDisplayed();
         return;
       }
       const result = safeCall(() => Engine.processEvent(engine, session, type, meta, now), "bearbeta händelse");
       if (!result) return;
-      if (result.awarded.length === 0) return; // ingen XP -> ingen re-rendering/skrivning behövs
-      renderCurrent();
-      save();
-      if (result.leveledUp) safeCall(() => UI.showLevelUp(result.levelAfter), "visa nivåbyte");
+      applyResult(type, result, session);
+      scheduleNextPendingCheck(session);
     }
 
     function onReset() {
+      clearPendingCheckTimer();
       safeCall(() => Store.resetProgression(), "återställ progression");
       bootstrapEngine();
-      renderCurrent();
+      devLog = []; // GAM-003C — "återställa progression OCH debugdata"
+      renderDisplayed();
     }
 
     bootstrapEngine();
     const uiReady = safeCall(() => UI.init({ onReset }), "initiera nivå-UI");
     if (!uiReady) return;
-    renderCurrent();
+    renderDisplayed();
     window.ActivityPrototype.onEvent(handleEvent);
 
-    // ── DEV-konsolstöd (GAM-003B) ──
-    // `state()` och `summary()` SPEGLAR verklig, redan bokförd progression —
-    // säkra att köra när som helst, ändrar ingenting.
-    // `grantTestXP()` och `simulateLevelUp()` är TESTHJÄLPMEDEL: de simulerar
-    // effekten av XP/nivåbyte för att verifiera UI:t, men motsvarar INGEN
-    // verklig aktivitet i appen. `grantTestXP` skriver till samma
-    // localStorage-nyckel som riktig XP (för att kunna testa persistens och
-    // nivåbyten end-to-end) — använd `reset()` efteråt för att städa bort
-    // testdata. `simulateLevelUp()` rör inte alls totalXP/lagring, bara UI:t.
-    // `reset()` är samma verkliga radering som "Återställ progression"-
-    // knappen, utan bekräftelsedialog (ett konsolanrop är redan en
-    // medveten handling).
+    // ── DEV-konsolstöd (GAM-003B/GAM-003C) ──
+    // Kommandon som SPEGLAR verklig, redan bokförd progression (säkra att
+    // köra när som helst, ändrar ingenting): state(), pending(), log().
+    // Kommandon som är RENA TESTHJÄLPMEDEL (motsvarar INGEN verklig
+    // aktivitet i appen, men skriver till samma localStorage-nyckel som
+    // riktig XP för att kunna testa persistens/nivåbyten end-to-end —
+    // använd reset() efteråt för att städa bort testdata): setXP,
+    // grantTestXP, jumpToLevel, placeNearLevel, simulateLevelUp,
+    // simulateLevelUpSequence. forceFlush() är ett tekniskt testhjälpmedel
+    // som tvingar fram en bar-uppdatering utan att vänta på en naturlig
+    // avstämningspunkt (rör inte XP alls). reset() är en verklig, riktig
+    // radering (samma som "Återställ progression"-knappen), utan
+    // bekräftelsedialog eftersom ett konsolanrop redan är en medveten
+    // handling.
     window.GamificationDev = {
-      state() { return { totalXP: engine.totalXP, highestLevelIndex: engine.highestLevelIndex, level: Engine.levelForDisplay(engine.totalXP, engine.highestLevelIndex, engine.levels), persisted: persistedFromEngine() }; },
+      state() {
+        return {
+          totalXP: engine.totalXP,
+          displayedXP: engine.displayedXP,
+          pendingVisualXP: engine.totalXP - engine.displayedXP,
+          highestLevelIndex: engine.highestLevelIndex,
+          bookedLevel: Engine.levelForDisplay(engine.totalXP, engine.highestLevelIndex, engine.levels),
+          displayedLevel: Engine.levelForDisplay(engine.displayedXP, engine.highestLevelIndex, engine.levels),
+          persisted: persistedFromEngine(),
+        };
+      },
+      pending() {
+        return Engine.debugSnapshot(engine, window.ActivityPrototype.session());
+      },
+      log(limit) {
+        return typeof limit === "number" ? devLog.slice(-limit) : devLog.slice();
+      },
+      setXP(amount) {
+        amount = Number(amount);
+        if (!isFinite(amount) || amount < 0) return "Ange ett XP-belopp >= 0 (testhjälpmedel — sätter totalXP absolut, motsvarar ingen verklig aktivitet).";
+        engine.totalXP = amount;
+        save();
+        return "Testhjälpmedel: totalXP satt till " + amount + ". Kör forceFlush() för att visa det direkt, eller vänta på nästa avstämningspunkt.";
+      },
       grantTestXP(amount) {
         amount = Number(amount) || 0;
         if (amount <= 0) return "Ange ett positivt XP-belopp (testhjälpmedel — motsvarar ingen verklig aktivitet).";
         engine.totalXP += amount;
-        const info = renderCurrent();
-        if (info.levelIndex > engine.highestLevelIndex) engine.highestLevelIndex = info.levelIndex;
         save();
-        return "Testhjälpmedel: +" + amount + " XP tillagt (sparas). Nuvarande nivå: " + info.levelName + ".";
+        return "Testhjälpmedel: +" + amount + " XP tillagt (bokfört, sparat). Kör forceFlush() för att visa det direkt.";
+      },
+      jumpToLevel(levelIndex) {
+        const levels = engine.levels;
+        const idx = Math.max(0, Math.min(levels.length - 1, Number(levelIndex) || 0));
+        engine.totalXP = levels[idx].threshold;
+        save();
+        const flushed = Engine.flush(engine);
+        UI.render(flushed.level);
+        if (flushed.leveledUp) UI.showLevelUp(flushed.level);
+        return "Testhjälpmedel: hoppade till nivå " + (idx + 1) + " (" + levels[idx].name + "), visad direkt.";
+      },
+      placeNearLevel(levelIndex, offset) {
+        const levels = engine.levels;
+        const idx = Math.max(0, Math.min(levels.length - 1, Number(levelIndex) || 0));
+        const off = Number(offset) || 0;
+        engine.totalXP = Math.max(0, levels[idx].threshold + off);
+        save();
+        const flushed = Engine.flush(engine);
+        UI.render(flushed.level);
+        return "Testhjälpmedel: XP satt till " + engine.totalXP + " (" + (off < 0 ? off : "+" + off) + " XP mot nivå " + (idx + 1) + "s gräns), visad direkt.";
       },
       simulateLevelUp(toLevelIndex) {
         const levels = engine.levels;
@@ -138,9 +258,30 @@
         UI.showLevelUp(fake);
         return "Testhjälpmedel: visar nivåbytesanimationen för \"" + fake.levelName + "\" — ingen XP eller lagring påverkad.";
       },
+      simulateLevelUpSequence(fromLevelIndex, toLevelIndex, delayMs) {
+        const levels = engine.levels;
+        const from = Math.max(0, Math.min(levels.length - 1, Number(fromLevelIndex) || 0));
+        const to = Math.max(0, Math.min(levels.length - 1, Number(toLevelIndex) || 0));
+        const step = to >= from ? 1 : -1;
+        const wait = typeof delayMs === "number" ? delayMs : 1200;
+        let i = from;
+        function playNext() {
+          const fake = Engine.levelForDisplay(levels[i].threshold, i, levels);
+          UI.showLevelUp(fake);
+          if (i !== to) { i += step; window.setTimeout(playNext, wait); }
+        }
+        playNext();
+        return "Testhjälpmedel: spelar upp " + (Math.abs(to - from) + 1) + " nivåbytesanimationer i sekvens — ingen XP eller lagring påverkad.";
+      },
+      forceFlush() {
+        const flushed = Engine.flush(engine);
+        UI.render(flushed.level);
+        if (flushed.leveledUp) UI.showLevelUp(flushed.level);
+        return "Baren tvingad att synka mot bokförd XP (" + engine.totalXP + ").";
+      },
       reset() {
         onReset();
-        return "Gamification-progression återställd (Reglernovis, 0 XP).";
+        return "Gamification-progression och debugdata återställda (Reglernovis, 0 XP).";
       },
     };
 

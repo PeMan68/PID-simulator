@@ -809,6 +809,46 @@ produktionsaktivering kan övervägas.
 
 ---
 
+### GAM-003C — Kvalificerad och fördröjd XP-visning
+**Branch:** `feature/GAM-003C-qualified-delayed-progress`
+**Prioritet:** Låg — DEV-prototyp, ingen produktionsaktivering
+**Beskrivning:**
+PO:s test av GAM-003B visade att barens direkta respons gjorde det lätt att
+kartlägga vilket klick som gav XP. Ändrar INGA XP-värden eller nivågränser —
+bara när/under vilka villkor XP bokförs och visas. Se
+`docs/development/GAMIFICATION-XP-PROTOTYPE.md` (avsnitt "GAM-003C") för
+fullständig beskrivning.
+**Genomförande:**
+- Bokföring (`engine.totalXP`) och visning (`engine.displayedXP`) frikopplade
+  — baren synkas bara vid en naturlig avstämningspunkt (`Engine.shouldFlush`/
+  `flush()`): stegbyte, scenariobyte, avslutat försök, slutförd lärstig,
+  eller ett nivåbyte som redan bokförts.
+- "Nytt högsta lärsteg" kräver nu kvalificering: teoristeg (aktiv lästid
+  `4s+ord/4`, klämt 8–60s), scenariosteg (relevant aktivitet, inte bara
+  väntetid), blandade steg (50 % av lästiden OCH aktivitet). Navigationen
+  låses aldrig — ett okvalificerat steg ger bara ingen XP.
+- "Unik hjälptext" kräver minst 3s aktiv tid med samma hjälptext öppen; byte
+  av hjälptext eller stängd panel (ny `help_closed`-händelse) avbryter.
+- En enda punktvis timer (inte polling) fångar tidsbaserad kvalificering när
+  användaren blir overksam.
+- Nivåpanelen komprimerad: bara badge/nivånummer/nivånamn/bar syns permanent.
+  Hittade och fixade samtidigt en verklig CSS-bugg från GAM-003B — egna
+  `display`-deklarationer slog igenom `[hidden]`, så förklaringstexten och
+  Återställ-knappen syntes permanent istället för bara vid klick.
+- Utökat DEV-konsolstöd: `pending()`, `log()`, `setXP()`, `jumpToLevel()`,
+  `placeNearLevel()`, `simulateLevelUpSequence()`, `forceFlush()`.
+- `gamification-engine.test.mjs` utökad till 64 tester (nya
+  kvalificeringsregler); `gamification-store.test.mjs` (20) och
+  `gamification-dev-prod-isolation.test.mjs` (13) oförändrat gröna.
+  Samtliga befintliga GAM-/innehålls-/simulerings-/PROD-tester gröna.
+  Manuell DEV/PROD-regression i riktig webbläsare (Playwright).
+- Persistensformatet är OFÖRÄNDRAT — pendingStep/pendingHelp/displayedXP är
+  sessionsbundna, ingen migrering behövdes.
+**Status:** Mergad till `develop`. Ingen release, `main` oförändrat. Väntar
+på PO:s nya användartest.
+
+---
+
 ### FEAT-031 — Övningsdokument "Regulatortrimning i praktiken"
 **Branch:** `feature/regulatortrimning`
 **Prioritet:** Medel

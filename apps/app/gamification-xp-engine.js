@@ -1,4 +1,4 @@
-/* GAM-003B — XP- och nivåmotor (DOM-fri kärna).
+/* GAM-003B/GAM-003C — XP- och nivåmotor (DOM-fri kärna).
  *
  * Samma UMD-mönster som sim-core.js och activity-prototype-core.js: laddas
  * som <script> i webbläsaren (DEV-only, se gamification.js) och via
@@ -26,6 +26,25 @@
  *  - Repeterbar per session (session = en sidladdning, nollställs alltid):
  *    genomfört försök, jämförelsepar (inom kontext OCH comparisonGroup),
  *    unik hjälptext, mätarbete, enstegning, slutförd lärstig.
+ *
+ * GAM-003C — KVALIFICERAD OCH FÖRDRÖJD VISNING (tillägg, ändrar INGA
+ * XP-värden eller nivågränser):
+ *  - "Nytt högsta lärsteg" (2 XP) BOKFÖRS inte längre omedelbart vid
+ *    `learning_step_reached`. Steget klassificeras (`classifyStep`) och ett
+ *    `engine.pendingStep` skapas; XP ges först när stegets villkor
+ *    (aktiv lästid och/eller relevant aktivitet, se nedan) är uppfyllt.
+ *    Uppfylls villkoret aldrig innan användaren navigerar vidare uteblir
+ *    bara XP:n — navigationen är ALDRIG blockerad.
+ *  - "Unik hjälptext" (2 XP) bokförs inte längre omedelbart vid
+ *    `help_opened`. Ett `engine.pendingHelp` kräver minst 3 sekunders aktiv
+ *    tid med SAMMA hjälptext öppen — byte av hjälptext eller `help_closed`
+ *    avbryter kvalificeringen utan att ge XP.
+ *  - `engine.totalXP` (bokförd, bestående) uppdateras fortfarande OMEDELBART
+ *    när ett villkor väl uppfylls — "fördröjd" gäller bara den VISUELLA
+ *    nivåmätaren (`engine.displayedXP`, synkas separat via `flush()`), inte
+ *    bokföringen. Se gamification.js för när `flush()` anropas
+ *    ("naturliga avstämningspunkter": stegbyte, scenariobyte, avslutat
+ *    försök, slutförd lärstig, nivåbyte).
  */
 (function (global, factory) {
   const mod = factory();
@@ -36,7 +55,7 @@
   }
 })(typeof window !== "undefined" ? window : globalThis, function () {
 
-  // ── DEL: XP-regler (GAM-003B, PO/PM-beslutade värden — se uppdragstexten) ──
+  // ── DEL: XP-regler (GAM-003B, PO/PM-beslutade värden — OFÖRÄNDRADE i GAM-003C) ──
   const XP_RULES_V1 = Object.freeze({
     newHighestStep: 2,
     completedLearningPath: 12,
@@ -51,7 +70,7 @@
   });
   const XP_RULES_VERSION = "v1";
 
-  // ── DEL: Nivåkurva (GAM-003B, PO/PM-beslutad — LEVELS_V2 i xp-model.mjs) ──
+  // ── DEL: Nivåkurva (GAM-003B, PO/PM-beslutad — OFÖRÄNDRAD i GAM-003C) ──
   const LEVELS_V1 = Object.freeze([
     { name: "Reglernovis", threshold: 0 },
     { name: "Looplärling", threshold: 50 },
@@ -63,6 +82,78 @@
     { name: "Reglerlegend", threshold: 2100 },
   ]);
   const LEVELS_VERSION = "v1";
+
+  // ── DEL: GAM-003C — stegkvalificering ──
+  // Rena, dokumenterade tal — inga XP-värden eller nivågränser. Se
+  // uppdragstextens formel: "4 sekunder + antal ord / 4", 8–60s, 50% för
+  // blandade steg, 3s för hjälp.
+  const STEP_QUALIFICATION = Object.freeze({
+    theoryBaseSeconds: 4,
+    theoryWordsDivisor: 4,
+    theoryMinSeconds: 8,
+    theoryMaxSeconds: 60,
+    mixedFraction: 0.5,
+    // Heuristik (INTE en uppdragsspecificerad konstant): ett scenariosteg
+    // med minst så många ord i instruktionen klassas som "blandat" (kräver
+    // både delvis lästid och aktivitet) istället för rent aktivitetskrav.
+    // Kan ersättas per steg av ett framtida `progressRequirement`-fält utan
+    // att denna fil ändras — se `classifyStep`.
+    mixedWordThreshold: 40,
+  });
+  const HELP_MIN_ACTIVE_MS = 3000;
+
+  // Händelsetyper som räknas som "relevant aktivitet" för scenario-/blandade
+  // steg — INTE väntetid, inte navigation, inte facit (som redan är 0 XP i
+  // hela modellen och inte heller bör räknas som engagemang här).
+  const STEP_ACTIVITY_TYPES = Object.freeze([
+    "simulation_step", "simulation_run", "parameter_changed",
+    "regulator_mode_changed", "process_type_changed", "disturbance_triggered",
+    "measurement_started", "measurement_adjusted", "help_opened",
+    "system_reset", "chart_cleared",
+  ]);
+  function isStepActivityType(type) { return STEP_ACTIVITY_TYPES.indexOf(type) !== -1; }
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+  // Lästid i SEKUNDER för ett teoristeg (eller lästidsdelen av ett blandat
+  // steg, se `classifyStep`) — "4 sekunder + antal ord / 4", begränsat 8–60s.
+  function computeReadSeconds(wordCount) {
+    const words = typeof wordCount === "number" && wordCount >= 0 ? wordCount : 0;
+    const raw = STEP_QUALIFICATION.theoryBaseSeconds + words / STEP_QUALIFICATION.theoryWordsDivisor;
+    return clamp(raw, STEP_QUALIFICATION.theoryMinSeconds, STEP_QUALIFICATION.theoryMaxSeconds);
+  }
+
+  /**
+   * Klassificerar ETT lärstigssteg (från `learning_step_reached`s meta) till
+   * { kind, minActiveMs, requiresActivity } — den enda formen
+   * kvalificeringslogiken (`evaluatePendingStep`) behöver bry sig om.
+   *
+   * `meta.progressRequirement` (valfritt fält i FRAMTIDA lärstigsdata — INGET
+   * innehåll sätter det idag) OVERRIDAR alltid heuristiken, så ett nytt,
+   * per-steg-uttryckt krav kan införas utan att denna funktion (eller resten
+   * av motorn) behöver göras om:
+   *   "theory-only"   -> samma regel som ett teoristeg
+   *   "activity-only" -> samma regel som ett scenariosteg
+   *   "mixed"         -> samma regel som ett blandat steg
+   *
+   * Utan ett uttryckligt `progressRequirement` klassas `stepType==="theory"`
+   * som teoristeg, och övriga (`"scenario"`/`"observe"`) som scenariosteg
+   * — om instruktionstexten är tillräckligt lång (se `mixedWordThreshold`)
+   * som blandat steg istället.
+   */
+  function classifyStep(meta) {
+    const wordCount = typeof meta.wordCount === "number" ? meta.wordCount : 0;
+    const readSeconds = computeReadSeconds(wordCount);
+    const req = meta.progressRequirement || null;
+
+    if (req === "theory-only" || (!req && meta.stepType === "theory")) {
+      return { kind: "theory", minActiveMs: readSeconds * 1000, requiresActivity: false };
+    }
+    if (req === "mixed" || (!req && meta.stepType !== "theory" && wordCount >= STEP_QUALIFICATION.mixedWordThreshold)) {
+      return { kind: "mixed", minActiveMs: readSeconds * 1000 * STEP_QUALIFICATION.mixedFraction, requiresActivity: true };
+    }
+    return { kind: "scenario", minActiveMs: 0, requiresActivity: true };
+  }
 
   function levelInfo(totalXP, levels) {
     levels = levels || LEVELS_V1;
@@ -85,12 +176,12 @@
     };
   }
 
-  // STABILITET ÖVER RELEASER: visad nivå = högsta av (nivå från aktuell XP,
-  // högsta nivå som någonsin nåtts). Om nivågränser höjs i en framtida
-  // uppdatering ska en användare som redan nått en nivå aldrig flyttas ned.
-  // Baren visas då full för den innehavda nivån (se motivering i
-  // dokumentationen) — det finns inget meningsfullt "andel kvar"-tal när
-  // aktuell XP inte längre räcker för den innehavda nivåns egna trösklar.
+  // STABILITET ÖVER RELEASER: visad nivå = högsta av (nivå från VISAD XP,
+  // högsta nivå som någonsin VISATS). Om nivågränser höjs i en framtida
+  // uppdatering ska en användare som redan sett en nivå aldrig flyttas ned.
+  // Baren visas då full för den innehavda nivån — det finns inget
+  // meningsfullt "andel kvar"-tal när visad XP inte längre räcker för den
+  // innehavda nivåns egna trösklar.
   function levelForDisplay(totalXP, highestLevelIndexEverReached, levels) {
     levels = levels || LEVELS_V1;
     const fromXP = levelInfo(totalXP, levels);
@@ -151,7 +242,8 @@
 
   // Nollställer ENDAST de sessionsbundna delarna av motorn (attemptsCompleted,
   // jämförelsepar, unik hjälp, enstegning, mätarbetstillstånd, "slutförd
-  // lärstig denna session") — rör ALDRIG de bestående delarna (totalXP,
+  // lärstig denna session", GAM-003C:s väntande steg-/hjälpkvalificeringar
+  // och den visade XP:n) — rör ALDRIG de bestående delarna (totalXP,
   // highestLevelIndex, contextSignatures, learningPathMeta). Anropas dels av
   // `createEngine` (ny sidladdning), dels av gamification.js när GAM-002:s
   // egen DEV-konsol startar om aktivitetssessionen (window.ActivityPrototype
@@ -169,6 +261,9 @@
     engine.singleStepsThisAttempt = 0;
     engine.measurement = { active: false, adjusted: false, awarded: false };
     engine.completedLearningPathThisSession = new Set();
+    engine.pendingStep = null; // GAM-003C
+    engine.pendingHelp = null; // GAM-003C
+    engine.displayedXP = engine.totalXP; // GAM-003C — ingen väntande visuell skuld kvarstår över en (åter)start
     return engine;
   }
 
@@ -192,6 +287,62 @@
     result.awarded.push({ category, amount, reason });
   }
 
+  // GAM-003C — utvärderar engine.pendingStep/pendingHelp mot DENNA händelse.
+  // Anropas FÖRST i processEvent, INNAN händelsetypens egna hantering (som
+  // kan skapa NYA pending-poster) — se processEvent nedan för ordningen.
+  // Bokför XP direkt när ett villkor uppfylls (samma `award()` som allt
+  // annat), men lämnar ALLTID pendingStep/pendingHelp kvar (o-avbrutet) om
+  // villkoret ännu inte är uppfyllt — navigationen är aldrig blockerad, och
+  // ett steg/en hjälptext som lämnas okvalificerad ger bara ingen XP (se
+  // den explicita bortstädningen i learning_step_reached-hanteringen och
+  // help_closed/hjälptextbyte nedan).
+  function evaluatePending(engine, result, session, type, meta, now) {
+    const ps = engine.pendingStep;
+    if (ps) {
+      const isNavOrSession = type === "learning_step_reached" || type === "scenario_loaded" || type === "session_started";
+      if (!isNavOrSession && isStepActivityType(type)) ps.hadActivity = true;
+      const elapsed = session.activeMs - ps.activeMsAtStart;
+      const timeOk = elapsed >= ps.minActiveMs;
+      const activityOk = !ps.requiresActivity || ps.hadActivity;
+      if (timeOk && activityOk) {
+        award(result, engine, "newHighestStep", engine.rules.newHighestStep,
+          `Nytt högsta lärsteg (index ${ps.stepIndex}) i "${ps.learningPathId}" — stegvillkor uppfyllt (${ps.kind}, ${Math.round(elapsed)}ms aktiv tid).`);
+        engine.pendingStep = null;
+      }
+    }
+
+    const ph = engine.pendingHelp;
+    if (ph) {
+      if (type === "help_closed") {
+        engine.pendingHelp = null; // stängd panel avbryter — ingen XP
+      } else if (type === "help_opened" && meta.helpId !== ph.helpId) {
+        engine.pendingHelp = null; // byte av hjälptext avbryter — ingen XP (den nya hanteras separat nedan)
+      } else {
+        const elapsed = session.activeMs - ph.activeMsAtStart;
+        if (elapsed >= HELP_MIN_ACTIVE_MS) {
+          award(result, engine, "uniqueHelp", engine.rules.uniqueHelp,
+            `Unik hjälptext ("${ph.helpId}") aktiv i minst 3 sekunder (${Math.round(elapsed)}ms).`);
+          engine.pendingHelp = null;
+        }
+      }
+    }
+  }
+
+  // GAM-003C — utvärderar pendingStep/pendingHelp UTAN någon verklig
+  // händelse (type=null, meta={}) — dvs. bara "har tillräckligt lång aktiv
+  // tid nu passerat?". Används av gamification.js:s enda, punktvisa timer
+  // (schemalagd exakt till den tidpunkt ett tidsbaserat villkor SKULLE
+  // uppfyllas, inte en återkommande polling-loop) för att fånga fallet där
+  // användaren blir overksam efter att ha öppnat en teoritext/hjälptext men
+  // innan nästa RIKTIGA händelse råkar inträffa. `session.activeMs` måste
+  // vara uppdaterat (t.ex. via ett föregående Core.summary()-anrop) INNAN
+  // detta anropas — se gamification.js.
+  function checkPending(engine, session, now) {
+    const result = { awarded: [] };
+    evaluatePending(engine, result, session, null, {}, now);
+    return { awarded: result.awarded, totalXPAfter: engine.totalXP };
+  }
+
   /**
    * Bearbetar EN händelse som redan har passerat
    * ActivityPrototypeCore.recordEvent(session, type, meta, now) — dvs.
@@ -200,16 +351,18 @@
    * session, precis som computeXP() jämför "before"/"after" i sin
    * batch-variant — bara utspritt över flera anrop istället för en loop.
    *
-   * Returnerar `{ awarded, totalXPBefore, totalXPAfter, levelBefore,
-   * levelAfter, leveledUp }`. Anropar ALDRIG Core.recordEvent själv — det
-   * har redan skett innan detta anrop.
+   * Returnerar `{ awarded, totalXPBefore, totalXPAfter }`. Säger INGET om
+   * nivå/visning — se `flush()` för det (GAM-003C: bokföring och visning är
+   * medvetet frikopplade). Anropar ALDRIG Core.recordEvent själv — det har
+   * redan skett innan detta anrop.
    */
   function processEvent(engine, session, type, meta, now) {
     meta = meta || {};
     const rules = engine.rules;
     const result = { awarded: [] };
     const totalXPBefore = engine.totalXP;
-    const levelBefore = levelForDisplay(engine.totalXP, engine.highestLevelIndex, engine.levels);
+
+    evaluatePending(engine, result, session, type, meta, now); // GAM-003C
 
     // ── Genomfört försök (repeterbart varje session, ingen bestående spärr) ──
     if (session.attempts.completed > engine.snapshot.attemptsCompleted) {
@@ -251,30 +404,55 @@
       engine.snapshot.groupComparisonPairCount = session.groupComparisonPairs.length;
     }
 
-    // ── Unik hjälptext: en gång per helpId och session (repeterbar i en ny session) ──
+    // ── Unik hjälptext (GAM-003C: startar en 3s-kvalificering, ger ALDRIG
+    // XP direkt här — se evaluatePending ovan) ──
     if (type === "help_opened") {
       if (session.help.opened.size > engine.snapshot.helpUniqueCount) {
         engine.snapshot.helpUniqueCount = session.help.opened.size;
-        award(result, engine, "uniqueHelp", rules.uniqueHelp, `Ny unik hjälptext ("${meta.helpId}") denna session.`);
+        engine.pendingHelp = { helpId: meta.helpId, activeMsAtStart: session.activeMs };
       }
+      // Redan öppnad denna session: ingen XP, ingen ny kvalificering — oförändrat.
     }
 
-    // ── Nytt högsta lärsteg: BESTÅENDE, kräver att session.learningPaths
-    // seedats via seedSession() vid sessionsstart. ──
+    // ── Nytt högsta lärsteg (GAM-003C: startar en kvalificering, ger ALDRIG
+    // XP direkt här — se evaluatePending ovan). BESTÅENDE, kräver att
+    // session.learningPaths seedats via seedSession() vid sessionsstart. ──
     if (type === "learning_step_reached" && meta.learningPathId != null) {
       const id = meta.learningPathId;
+      const contextKey = meta.contextKey;
       const lp = session.learningPaths.get(id);
       const prevHighest = engine.snapshot.learningPathHighest.has(id)
         ? engine.snapshot.learningPathHighest.get(id)
         : -1;
-      if (lp && lp.highestStepIndex > prevHighest) {
+      const isNewHighest = !!(lp && lp.highestStepIndex > prevHighest);
+
+      // Ett steg som lämnas okvalificerat ger bara ingen XP — det låses aldrig
+      // fast; ett stegbyte (annan contextKey) städar alltid bort det.
+      if (engine.pendingStep && engine.pendingStep.contextKey !== contextKey) {
+        engine.pendingStep = null;
+      }
+
+      if (isNewHighest) {
         engine.snapshot.learningPathHighest.set(id, lp.highestStepIndex);
         const meta2 = engine.learningPathMeta.get(id) || { highestStepIndex: -1, completed: false, completedCount: 0 };
         meta2.highestStepIndex = lp.highestStepIndex;
         engine.learningPathMeta.set(id, meta2);
-        award(result, engine, "newHighestStep", rules.newHighestStep, `Nytt högsta lärsteg (index ${lp.highestStepIndex}) i "${id}".`);
+
+        const cls = classifyStep(meta);
+        engine.pendingStep = {
+          learningPathId: id,
+          stepIndex: lp.highestStepIndex,
+          contextKey,
+          kind: cls.kind,
+          minActiveMs: cls.minActiveMs,
+          requiresActivity: cls.requiresActivity,
+          activeMsAtStart: session.activeMs,
+          hadActivity: false,
+        };
       }
-      // ── Slutförd lärstig: repeterbar per session, men antal genomgångar BESTÅENDE ──
+      // ── Slutförd lärstig: repeterbar per session, men antal genomgångar
+      // BESTÅENDE. Oförändrat av GAM-003C — kvalificeringen ovan gäller bara
+      // "nytt högsta lärsteg", inte milstolpen för att slutföra lärstigen. ──
       if (meta.isFinalStep && !engine.completedLearningPathThisSession.has(id)) {
         engine.completedLearningPathThisSession.add(id);
         const meta3 = engine.learningPathMeta.get(id) || { highestStepIndex: lp ? lp.highestStepIndex : -1, completed: false, completedCount: 0 };
@@ -315,16 +493,63 @@
     // stepCount mot 20-stegsgränsen för completedAttempt (redan hanterat av
     // Core, se diffen för session.attempts.completed ovan).
 
-    const levelAfter = levelForDisplay(engine.totalXP, engine.highestLevelIndex, engine.levels);
-    if (levelAfter.levelIndex > engine.highestLevelIndex) engine.highestLevelIndex = levelAfter.levelIndex;
-
     return {
       awarded: result.awarded,
       totalXPBefore,
       totalXPAfter: engine.totalXP,
-      levelBefore,
-      levelAfter: levelForDisplay(engine.totalXP, engine.highestLevelIndex, engine.levels),
-      leveledUp: levelAfter.levelIndex > levelBefore.levelIndex,
+    };
+  }
+
+  // GAM-003C — avgör om detta är en "naturlig avstämningspunkt" där baren
+  // ska synkas mot bokförd XP: stegbyte, scenariobyte, avslutat försök,
+  // slutförd lärstig, eller (om bokförd XP redan skulle ge en högre nivå än
+  // den senast VISADE) ett nivåbyte — det senare fångas proaktivt så att
+  // nivåbytesanimationen aldrig dröjer godtyckligt länge efter att den
+  // faktiskt "hänt" i bokföringen.
+  function shouldFlush(engine, type, awarded) {
+    if (type === "learning_step_reached" || type === "scenario_loaded") return true;
+    if (awarded.some(a => a.category === "completedAttempt" || a.category === "completedLearningPath")) return true;
+    if (levelInfo(engine.totalXP, engine.levels).levelIndex > engine.highestLevelIndex) return true;
+    return false;
+  }
+
+  // GAM-003C — synkar den VISADE XP:n mot den bokförda och uppdaterar den
+  // bestående "högsta VISADE nivå"-spärren i takt (aldrig baserat på
+  // bokförd XP i bakgrunden — se filhuvudet). Returnerar nivåinformationen
+  // att rendera samt om detta var ett nivåbyte (för animationen).
+  function flush(engine) {
+    const prevHighestLevelIndex = engine.highestLevelIndex;
+    engine.displayedXP = engine.totalXP;
+    const raw = levelInfo(engine.displayedXP, engine.levels);
+    if (raw.levelIndex > engine.highestLevelIndex) engine.highestLevelIndex = raw.levelIndex;
+    const display = levelForDisplay(engine.displayedXP, engine.highestLevelIndex, engine.levels);
+    return { level: display, leveledUp: engine.highestLevelIndex > prevHighestLevelIndex };
+  }
+
+  // GAM-003C — DEV-/felsökningsvy: exakt vad som är bokfört, vad som väntar
+  // på att visas, och varför ett pågående steg/hjälptext ännu inte kvalat in.
+  // Läser bara, ändrar ingenting.
+  function debugSnapshot(engine, session) {
+    const activeMs = session ? session.activeMs : null;
+    return {
+      totalXP: engine.totalXP,
+      displayedXP: engine.displayedXP,
+      pendingVisualXP: engine.totalXP - engine.displayedXP,
+      highestLevelIndex: engine.highestLevelIndex,
+      pendingStep: engine.pendingStep ? {
+        learningPathId: engine.pendingStep.learningPathId,
+        stepIndex: engine.pendingStep.stepIndex,
+        kind: engine.pendingStep.kind,
+        minActiveMs: Math.round(engine.pendingStep.minActiveMs),
+        elapsedActiveMs: activeMs != null ? Math.round(activeMs - engine.pendingStep.activeMsAtStart) : null,
+        requiresActivity: engine.pendingStep.requiresActivity,
+        hadActivity: engine.pendingStep.hadActivity,
+      } : null,
+      pendingHelp: engine.pendingHelp ? {
+        helpId: engine.pendingHelp.helpId,
+        minActiveMs: HELP_MIN_ACTIVE_MS,
+        elapsedActiveMs: activeMs != null ? Math.round(activeMs - engine.pendingHelp.activeMsAtStart) : null,
+      } : null,
     };
   }
 
@@ -350,6 +575,10 @@
     XP_RULES_VERSION,
     LEVELS_V1,
     LEVELS_VERSION,
+    STEP_QUALIFICATION,
+    HELP_MIN_ACTIVE_MS,
+    computeReadSeconds,
+    classifyStep,
     levelInfo,
     levelForDisplay,
     sumDistinctConfigs,
@@ -357,6 +586,10 @@
     resetSessionScope,
     seedSession,
     processEvent,
+    checkPending,
+    shouldFlush,
+    flush,
+    debugSnapshot,
     toPersistable,
   };
 });

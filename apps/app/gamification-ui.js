@@ -1,4 +1,4 @@
-/* GAM-003B — Nivå-UI (DOM-rendering, DEV-only).
+/* GAM-003B/GAM-003C — Nivå-UI (DOM-rendering, DEV-only).
  *
  * Tunn presentationslogik ovanpå gamification-xp-engine.js/gamification-store.js
  * (båda DOM-fria och testade separat i Node). Den här filen känner INGET till
@@ -9,6 +9,17 @@
  *
  * Visar ALDRIG ett XP-tal eller en "X av Y XP"-text — bara nivånummer,
  * nivånamn och en grafisk andel (0..1). Se docs/development/GAMIFICATION-XP-PROTOTYPE.md.
+ *
+ * GAM-003C — komprimerad panel: bara badge/nivånummer/nivånamn/bar syns
+ * permanent. Förklaringstexten och "Återställ progression" ligger i
+ * `#gamLevelInfo`, som `render()` ALDRIG rör — bara `toggleInfo()` (kopplad
+ * till klick på panelen) visar/döljer den. index.html:s CSS har fått en
+ * `[hidden]`-täckande regel för `#gamLevelInfo`/`#gamLevelToast` — utan den
+ * slog elementens egna `display`-deklarationer igenom `hidden`-attributet
+ * (samma buggmönster som redan fanns för `.gam-level-panel`), vilket gjorde
+ * att förklaringen och återställningsknappen syntes permanent innan
+ * GAM-003C. Ingen "HÖGSTA NIVÅ"-text längre — nivå 8 visas bara som en helt
+ * fylld bar.
  *
  * Laddas ENDAST i DEV (se app.js) — rör aldrig appens huvudfärger, grafens
  * signalfärger eller knapp-/regulatorfärgkodningen. Den enda visuella
@@ -65,7 +76,6 @@
       badge: document.getElementById("gamBadge"),
       barTrack: document.getElementById("gamLevelBarTrack"),
       barFill: document.getElementById("gamLevelBarFill"),
-      maxLabel: document.getElementById("gamLevelMaxLabel"),
       levelNumber: document.getElementById("gamLevelNumber"),
       levelName: document.getElementById("gamLevelName"),
       info: document.getElementById("gamLevelInfo"),
@@ -91,7 +101,9 @@
     const pct = Math.round(levelInfo.ratio * 100);
     els.barFill.style.width = pct + "%";
     els.barTrack.setAttribute("aria-valuenow", String(pct));
-    els.maxLabel.hidden = !levelInfo.isMaxLevel;
+    // GAM-003C: ingen "HÖGSTA NIVÅ"-text längre — nivå 8 indikeras enbart
+    // genom att baren är helt fylld (ratio === 1 hanteras redan av
+    // levelForDisplay/levelInfo, pct blir 100 utan särskild kod här).
   }
 
   function showLevelUp(levelInfo) {

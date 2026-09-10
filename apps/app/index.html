@@ -183,7 +183,12 @@
     .gam-level-name { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .gam-level-bar-track { position: relative; height: 8px; border-radius: 5px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
     .gam-level-bar-fill { height: 100%; width: 0%; background: var(--gam-accent, var(--accent-2)); transition: width 420ms ease; }
-    .gam-level-max-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #fff; text-shadow: 0 0 2px rgba(0,0,0,0.6); }
+    /* GAM-003C: [hidden] MÅSTE vinna över dessa elements egna display-
+       deklarationer, annars visas de permanent oavsett hidden-attributet
+       (samma klass av bugg som redan fixades för .gam-level-panel ovan —
+       detta var orsaken till att förklaringstexten och Återställ-knappen
+       syntes permanent innan GAM-003C). */
+    .gam-level-info[hidden], .gam-level-toast[hidden] { display: none; }
     .gam-level-info { font-size: 11.5px; line-height: 1.4; color: var(--muted); padding-top: 4px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 6px; }
     .gam-reset-btn { align-self: flex-start; font-size: 11px; padding: 4px 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; color: var(--ink); font-family: inherit; }
     .gam-reset-btn:hover { border-color: #c23b22; color: #c23b22; }
@@ -549,10 +554,15 @@
     <div class="sidebar-inner">
       <div class="sidebar-title">PID Simulator <span id="appVersion" style="font-size:10px;font-weight:400;opacity:0.55;margin-left:4px;"></span> <span id="envBadge" class="env-badge" style="display:none;">DEV</span></div>
 
-      <!-- GAM-003B — Synlig DEV-prototyp för XP och nivåprogression.
+      <!-- GAM-003B/GAM-003C — Synlig DEV-prototyp för XP och nivåprogression.
            Statisk, tom skal-markup: förblir "hidden" och opåverkad av CSS/JS
            om gamification.js av någon anledning inte laddar eller startar
-           (t.ex. i PROD, där skripten aldrig ens begärs) — se app.js. -->
+           (t.ex. i PROD, där skripten aldrig ens begärs) — se app.js.
+           GAM-003C: komprimerad — bara badge/nivånummer/nivånamn/bar är
+           permanent synliga. Förklaringstexten och "Återställ progression"
+           visas ENDAST i #gamLevelInfo, som är dold tills panelen klickas
+           (se gamification-ui.js). Ingen "HÖGSTA NIVÅ"-text — nivå 8
+           indikeras enbart genom att baren visas helt fylld. -->
       <div class="gam-level-panel" id="gamLevelPanel" hidden>
         <button type="button" class="gam-level-summary" id="gamLevelSummary" aria-expanded="false" aria-controls="gamLevelInfo">
           <span class="gam-badge" id="gamBadge"></span>
@@ -563,7 +573,6 @@
         </button>
         <div class="gam-level-bar-track" id="gamLevelBarTrack" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progression mot nästa nivå">
           <div class="gam-level-bar-fill" id="gamLevelBarFill"></div>
-          <span class="gam-level-max-label" id="gamLevelMaxLabel" hidden>Högsta nivå</span>
         </div>
         <div class="gam-level-toast" id="gamLevelToast" hidden></div>
         <div class="gam-level-info" id="gamLevelInfo" hidden>
