@@ -384,5 +384,45 @@ function loadAndRun(s, contextKey, now, initialConfig) {
     typeof sum.groupComparisonPairCount === "number" && Array.isArray(sum.groupComparisonPairs));
 }
 
+// ══ GAM-003D — "session_ending": finalisera ett kvalificerande försök vid
+// sidomladdning/navigering/stängning, utan att röra ett ofärdigt försök ══
+// (Se tests/gamification/gamification-session-finalization.test.mjs för
+// motsvarande verifiering på XP-lagrets nivå — de här testerna gäller bara
+// Core:s egen, isolerade session_ending-hantering.)
+
+// ── 39. session_ending finaliserar ett redan kvalificerande försök ──
+{
+  let s = Core.createSession(0);
+  loadAndRun(s, "ctx", 0, { kp: 1 });
+  Core.recordEvent(s, "simulation_run", { steps: 20, contextKey: "ctx" }, 1000);
+  let sumBefore = Core.summary(s, 1500);
+  check("39a. Före session_ending: försöket är fortfarande pågående, inte genomfört", sumBefore.attempts.completed === 0 && sumBefore.attempts.ongoing === 1, JSON.stringify(sumBefore.attempts));
+  Core.recordEvent(s, "session_ending", {}, 2000);
+  let sumAfter = Core.summary(s, 2000);
+  check("39b. session_ending finaliserar det kvalificerande försöket (>=20 steg)", sumAfter.attempts.completed === 1 && sumAfter.attempts.ongoing === 0, JSON.stringify(sumAfter.attempts));
+}
+
+// ── 40. session_ending rör INTE ett kortare, ofärdigt försök ──
+{
+  let s = Core.createSession(0);
+  loadAndRun(s, "ctx", 0, { kp: 1 });
+  Core.recordEvent(s, "simulation_run", { steps: 10, contextKey: "ctx" }, 1000); // under 20-strecksgränsen
+  Core.recordEvent(s, "session_ending", {}, 2000);
+  let sum = Core.summary(s, 2000);
+  check("40. session_ending lämnar ett kortare försök orört (varken completed eller aborted)",
+    sum.attempts.completed === 0 && sum.attempts.aborted === 0 && sum.attempts.ongoing === 1, JSON.stringify(sum.attempts));
+}
+
+// ── 41. session_ending är idempotent — kan inte finalisera samma försök två gånger ──
+{
+  let s = Core.createSession(0);
+  loadAndRun(s, "ctx", 0, { kp: 1 });
+  Core.recordEvent(s, "simulation_run", { steps: 20, contextKey: "ctx" }, 1000);
+  Core.recordEvent(s, "session_ending", {}, 2000);
+  Core.recordEvent(s, "session_ending", {}, 3000); // upprepad — t.ex. bfcache-återställning som döljs igen
+  let sum = Core.summary(s, 3000);
+  check("41. En upprepad session_ending finaliserar inte samma försök en gång till", sum.attempts.completed === 1, JSON.stringify(sum.attempts));
+}
+
 console.log(`\n${passed} OK, ${failed} FAIL`);
 if (failed > 0) process.exit(1);
