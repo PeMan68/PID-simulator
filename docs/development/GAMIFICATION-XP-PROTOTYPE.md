@@ -1,17 +1,42 @@
-# Synlig XP- och nivåprototyp (GAM-003B/GAM-003C/GAM-003D) — DEV-only
+# Synlig XP- och nivåprogression (GAM-003B/GAM-003C/GAM-003D)
 
-**Status:** DEV-prototyp. Inte produktionsgodkänd — ingen produktionsaktivering
-är beslutad. Nivån mäter **aktivitet och progression** i PID Simulator. Den är
-**inte ett betyg** och **inte ett mått på yrkeskompetens**. Se
-`docs/planning/GAMIFICATION-XP-ANALYS.md`, `docs/reports/GAM-003A_XP-KALIBRERING.md`,
+**Status:** Aktiverad i PROD sedan v1.5.0 (2026-09-10). Nivån mäter
+**aktivitet och progression** i PID Simulator. Den är **inte ett betyg**
+och **inte ett mått på yrkeskompetens** — se informationstexten i
+nivåpanelen. Se `docs/planning/GAMIFICATION-XP-ANALYS.md`,
+`docs/reports/GAM-003A_XP-KALIBRERING.md`,
 `docs/reports/GAM-003A.1_XP-KALIBRERING-REPETITION.md`,
 `docs/reports/GAM-003A.2_COMPARISON-GROUPS.md` och
 `docs/reports/PED-005_JAMFORELSEGRANSKNING.md` för det pedagogiska och
-tekniska underlag denna prototyp bygger på.
+tekniska underlag funktionen bygger på.
 
-Efter leverans ska PO användartesta visuell UX, nivåtempo, repetition,
-persistens, återställning och nivåanimation innan något beslut om
-produktionsaktivering tas — se GAM-003B:s uppdragstext (RELEASEINSTRUKTION).
+## v1.5.0 (2026-09-10) — Produktionsaktivering
+
+Efter godkänt PO-användartest av GAM-003B/C/D beslutade PO (PM otillgänglig
+vid tillfället) att aktivera nivåprogressionen i PROD i sitt dåvarande,
+testade DEV-skick — se `docs/development/ENVIRONMENTS.md` för hur
+`ENV_CONFIG.showGamification` fungerar. Konkret innebar det:
+
+- `activity-prototype-core.js`/`activity-prototype.js`/`gamification-*.js`
+  frikopplades från `ENV_CONFIG.environment` och styrs nu ENDAST av
+  `showGamification` — satt till `true` i båda profilerna. Test-läge,
+  poäng, mätfacit och experimentellt innehåll är OFÖRÄNDRADE och förblir
+  avstängda i PROD.
+- DEV-konsolstödet (`window.ActivityPrototype`, `window.GamificationDev`)
+  följer med och är alltså nu tillgängligt i PROD också, för felsökning på
+  plats — ett medvetet PO-beslut, inte ett förbiseende.
+- `tests/lib/build-prod.mjs` kopierar nu dessa sex filer som standard;
+  `tests/validate-prod.mjs` verifierar motsatsen mot tidigare (att de
+  FINNS och att `showGamification` är `true`).
+- Progression sparas i `localStorage` per webbläsare/enhet, inte per
+  konto/elev — på en delad dator ser nästa användare föregående persons
+  nivå. Känt, av PO uttryckligen accepterat förhållande.
+- Samtidigt aktiverades FEAT-030 (lärstigen "Störningar och robusthet") i
+  PROD-katalogen — sjunde lärstigen.
+
+Ingen kodändring gjordes i själva XP-/nivålogiken för detta — se
+GAM-003B/C/D-avsnitten nedan för den tekniska funktionen i sig, som är
+oförändrad.
 
 ## GAM-003C (2026-09-10) — Kvalificerad och fördröjd XP-visning
 
@@ -80,32 +105,32 @@ Ingen av dessa filer lägger XP- eller persistenslogik i `app.js` — `app.js`
 injicerar bara skripten (samma mönster som GAM-002) och känner i övrigt
 ingenting till gamification.
 
-## Endast i DEV
+## Aktivering — `showGamification` (båda profilerna sedan v1.5.0)
 
-Styrs av **två** villkor tillsammans: `ENV_CONFIG.environment === "development"`
-OCH den egna flaggan `ENV_CONFIG.showGamification === true`. Båda sätts
-ENDAST i `apps/app/env.js` (DEV: `true`) respektive `apps/app/env.prod.js`
-(PROD: `false`) — aldrig via URL, hash eller dold knapp. `app.js` injicerar de
-fyra skripten dynamiskt (`document.createElement("script")`, `s.async = false`
-för att garantera körordning) bara när båda villkoren är sanna. I PROD skapas
-skripttaggen aldrig — noll extra nätverkstrafik.
+Styrs av EN flagga: `ENV_CONFIG.showGamification === true` — HELT OBEROENDE
+av `ENV_CONFIG.environment`. Satt till `true` i BÅDA `apps/app/env.js` (DEV)
+och `apps/app/env.prod.js` (PROD) sedan v1.5.0 — aldrig via URL, hash eller
+dold knapp. `app.js` injicerar de sex skripten (GAM-002:s
+`activity-prototype-core.js`/`activity-prototype.js` samt GAM-003:s fyra
+gamification-filer) dynamiskt (`document.createElement("script")`,
+`s.async = false` för att garantera körordning) bara när flaggan är satt.
+Är den `false` begärs skripttaggarna aldrig — noll extra nätverkstrafik.
 
-`tests/lib/build-prod.mjs`s fasta fillista (`index.html`, `app.js`,
-`sim-core.js`, `README.md`) kopierar heller aldrig de fyra gamification-
-filerna eller `activity-prototype*.js` till `dist/prod/` — dubbelt skydd,
-precis som för GAM-002.
+`tests/lib/build-prod.mjs`s fasta fillista innehåller sedan v1.5.0 samtliga
+sex filer — de kopieras till `dist/prod/` som standard, precis som
+`index.html`/`app.js`/`sim-core.js`.
 
 **index.html:s statiska skal** (`#gamLevelPanel` m.fl.) finns i BÅDA
-profilerna (samma `index.html`-fil), men har `hidden` som standard och en
-`.gam-level-panel[hidden] { display: none; }`-regel som garanterar att ingen
-egen `display`-deklaration kan slå igenom den — utan `gamification.js` (som
-aldrig laddas i PROD) tar ingenting bort `hidden`-attributet. Verifierat med
-en riktig PROD-förhandsvisning i webbläsaren (Playwright): `#gamLevelPanel`
-förblir osynlig, `window.ActivityPrototype`/`window.GamificationDev`/
-`window.GamificationXPEngine`/`window.GamificationStore`/`window.GamificationUI`
-existerar inte, ingen `gamification*.js`- eller `activity-prototype*.js`-fil
-hämtas över nätverket, och ingen `pidSimGamificationV1`-nyckel skapas i
-`localStorage`.
+profilerna (samma `index.html`-fil) och har `hidden` som statisk standard
+tills `gamification.js` renderar den — en
+`.gam-level-panel[hidden] { display: none; }`-regel garanterar att ingen
+egen `display`-deklaration kan slå igenom den attributet i väntan på det.
+Verifierat med en riktig PROD-förhandsvisning i webbläsaren (Playwright):
+`#gamLevelPanel` visas korrekt, `window.ActivityPrototype`/
+`window.GamificationDev`/`window.GamificationXPEngine`/
+`window.GamificationStore`/`window.GamificationUI` finns tillgängliga, och
+`Test-läge`/`poäng`/`mätfacit`/`experimentellt innehåll` förblir avstängda
+precis som innan v1.5.0.
 
 ## XP-regler (PO/PM-beslutade, GAM-003B)
 
@@ -415,5 +440,14 @@ testtäckningen.
    `pb-p-vs-pi`, `pi-vs-pid`) förlitar sig fortsatt på användarens egna
    anteckningar snarare än en visuell sida-vid-sida-jämförelse, i linje med
    PED-005s slutsatser.
-5. **Ingen produktionsaktivering är beslutad.** GAM-003B är och förblir en
-   DEV-prototyp tills PO/PM fattar ett separat beslut.
+5. **Progression är per webbläsare/enhet, inte per konto.** På en delad
+   dator (t.ex. i ett klassrum) ser nästa användare föregående persons
+   nivå. PO:s uttryckliga, medvetna beslut vid produktionsaktivering
+   (v1.5.0) — inte en bugg, men värt att känna till vid support/felsökning.
+6. **DEV-konsolstödet är tillgängligt i PROD.** `window.ActivityPrototype`/
+   `window.GamificationDev` går att nå från webbläsarkonsolen i produktion
+   också (PO:s uttryckliga beslut, för felsökning på plats). Kommandona
+   som är testhjälpmedel (`grantTestXP`, `setXP`, `jumpToLevel`,
+   `placeNearLevel`, `simulateLevelUp(Sequence)`) manipulerar bara den egna,
+   lokala progressionen — de rör aldrig andra användares data eller
+   skickar något över nätverket.

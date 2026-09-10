@@ -33,21 +33,21 @@ function readJson(dir, relPath) {
 }
 
 // PO/PM:s beslutade produktionsurval (PROD-001B, DEL 1; utökat i
-// feature/PROD-enable-windup-antiwindup) — facit denna validering
-// kontrollerar mot. Ändras ENDAST efter ett nytt PO/PM-beslut.
+// feature/PROD-enable-windup-antiwindup och v1.5.0) — facit denna
+// validering kontrollerar mot. Ändras ENDAST efter ett nytt PO/PM-beslut.
 const EXPECTED_LEARNING_PATHS = [
   "kom-igång.v1",
   "oppen-slinga-onoff-p.v1",
   "proportionalband-forstarkning.v1",
   "pi-pid.v1",
   "processbegransningar.v1",
-  "windup-antiwindup.v1"
+  "windup-antiwindup.v1",
+  "storningar-robusthet.v1" // v1.5.0 — FEAT-030, PO-testad och godkänd för PROD
 ];
 const HIDDEN_LEARNING_PATHS = [
   "integrerande-process-niva.v1",
   "stegsvar-identifiering.v1",
-  "lambda-metoden.v1",
-  "storningar-robusthet.v1" // FEAT-030 — tekniskt klar i DEV, PO-testad, flaggad som kandidat för nästa PROD-release (se todo-done.md)
+  "lambda-metoden.v1"
 ];
 const KNOWN_EXPERIMENTAL_SCENARIOS = [
   "integrating-experimental",
@@ -119,6 +119,7 @@ if (!envProd) {
   if (envProd.showScore !== false) errors.push("env.prod.js: showScore är inte false — poängvisning är inte avstängd.");
   if (envProd.showExperimentalContent !== false) errors.push("env.prod.js: showExperimentalContent är inte false.");
   if (envProd.showMeasurementFacit !== false) errors.push("env.prod.js: showMeasurementFacit är inte false — tangentlinjens facit/K-T-L-facit är inte avstängt (HOTFIX-v1.4.1).");
+  if (envProd.showGamification !== true) errors.push("env.prod.js: showGamification är inte true — nivåprogressionen (v1.5.0-beslutet) är inte aktiverad i PROD.");
   if (envProd.catalogFile !== "catalog.prod.json") errors.push(`env.prod.js: catalogFile är "${envProd.catalogFile}", förväntat "catalog.prod.json".`);
 }
 
@@ -163,13 +164,16 @@ if (!existsSync(DIST_PROD_DIR)) {
   if (existsSync(path.join(distContentDir, "catalog.json"))) {
     errors.push("dist/prod/content/catalog.json finns — DEV-katalogen läcker in i PROD-artifakten.");
   }
-  // GAM-002 (DEV-only aktivitetsprototyp, se docs/development/GAMIFICATION-PROTOTYPE.md)
-  // ska aldrig nå PROD — build-prod.mjs kopierar den inte idag (allowlist saknar filerna),
-  // men denna kontroll skyddar mot regression om det ändras av misstag efter en framtida
-  // återmerge till develop (HOTFIX-v1.4.1, DEL 7).
-  for (const gamFile of ["activity-prototype-core.js", "activity-prototype.js"]) {
-    if (existsSync(path.join(DIST_PROD_DIR, gamFile))) {
-      errors.push(`dist/prod/${gamFile} finns — GAM-002 (DEV-prototyp) ska aldrig nå PROD-artifakten.`);
+  // v1.5.0: GAM-002/GAM-003 (aktivitetsspårning + nivåprogression) SKA nu
+  // finnas i PROD-artifakten — PO:s beslut 2026-09-10 (se
+  // docs/development/GAMIFICATION-XP-PROTOTYPE.md). Denna kontroll skyddar
+  // mot regression åt ANDRA hållet: att filerna av misstag saknas.
+  for (const gamFile of [
+    "activity-prototype-core.js", "activity-prototype.js",
+    "gamification-xp-engine.js", "gamification-store.js", "gamification-ui.js", "gamification.js",
+  ]) {
+    if (!existsSync(path.join(DIST_PROD_DIR, gamFile))) {
+      errors.push(`dist/prod/${gamFile} saknas — nivåprogressionen (v1.5.0-beslutet) ska finnas i PROD-artifakten.`);
     }
   }
   if (existsSync(path.join(DIST_PROD_DIR, "env.prod.js"))) {
@@ -245,6 +249,7 @@ if (!existsSync(DIST_PROD_DIR)) {
       if (envBuilt.showTestMode !== false) errors.push("dist/prod/env.js: Test-läge är inte avstängt i den byggda artifakten.");
       if (envBuilt.showScore !== false) errors.push("dist/prod/env.js: poäng är inte avstängt i den byggda artifakten.");
       if (envBuilt.showMeasurementFacit !== false) errors.push("dist/prod/env.js: showMeasurementFacit är inte false i den byggda artifakten — tangentfacit inte avstängt (HOTFIX-v1.4.1).");
+      if (envBuilt.showGamification !== true) errors.push("dist/prod/env.js: showGamification är inte true i den byggda artifakten — nivåprogressionen (v1.5.0-beslutet) är inte aktiverad.");
     }
   }
 

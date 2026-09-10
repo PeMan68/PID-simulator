@@ -1,7 +1,8 @@
-/* GAM-003B/GAM-003C — Synlig DEV-prototyp för XP och nivåprogression: bootstrap/glue.
+/* GAM-003B/GAM-003C — Synlig XP- och nivåprogression: bootstrap/glue.
  *
- * Kopplar ihop (alla DEV-only, laddade av app.js — se dess
- * ENV_CONFIG.showGamification-styrda injektion):
+ * Aktiverad i både DEV och PROD sedan v1.5.0 (PO:s beslut 2026-09-10).
+ * Kopplar ihop (alla laddade av app.js — se dess
+ * ENV_CONFIG.showGamification-styrda injektion, oberoende av environment):
  *  - gamification-xp-engine.js (DOM-fri XP-/nivåmotor, testad i Node)
  *  - gamification-store.js     (DOM-fri localStorage-adapter, testad i Node)
  *  - gamification-ui.js        (DOM-rendering mot index.html:s statiska skal)
@@ -27,7 +28,7 @@
  */
 (function () {
   if (typeof window === "undefined") return;
-  if (!window.ENV_CONFIG || window.ENV_CONFIG.environment !== "development" || !window.ENV_CONFIG.showGamification) return;
+  if (!window.ENV_CONFIG || !window.ENV_CONFIG.showGamification) return;
 
   function safeCall(fn, label) {
     try { return fn(); } catch (err) {

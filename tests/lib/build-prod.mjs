@@ -31,7 +31,17 @@ export function buildProd(outDir, appSrcDir) {
   const destContentDir = path.join(outDir, "content");
   mkdirSync(destContentDir, { recursive: true });
 
-  for (const f of ["index.html", "app.js", "sim-core.js", "README.md"]) {
+  // v1.5.0: activity-prototype-core.js/activity-prototype.js (GAM-002) och
+  // gamification-*.js (GAM-003) flyttades från "aldrig kopierade till PROD"
+  // till den vanliga, fasta fillistan — PO beslutade att aktivera
+  // nivåprogressionen i PROD (se docs/development/GAMIFICATION-XP-PROTOTYPE.md).
+  // Om filerna någon gång tas bort ur källträdet hoppas de bara över
+  // (samma `if (existsSync(...))`-mönster som redan gäller övriga filer här).
+  for (const f of [
+    "index.html", "app.js", "sim-core.js", "README.md",
+    "activity-prototype-core.js", "activity-prototype.js",
+    "gamification-xp-engine.js", "gamification-store.js", "gamification-ui.js", "gamification.js",
+  ]) {
     const src = path.join(appSrcDir, f);
     if (existsSync(src)) copyFileSync(src, path.join(outDir, f));
   }
