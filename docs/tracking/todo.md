@@ -1103,7 +1103,31 @@ därifrån. `develop` innehåller samma underlag.
 
 ---
 
-### HOTFIX-v1.4.1 — Dölj tangentlinjens facit i PROD, behåll i DEV
+### FEAT-036 — Cache-busting på appens script-taggar
+**Branch:** `feature/cache-busting-scripts`
+**Prioritet:** Låg — inget akut, men växande risk vid varje ny release
+**Beskrivning:**
+Upptäckt under `v1.5.1`-releasen (PO testade badgen lokalt direkt efter merge och såg en
+trasig, svart badge — en hård omladdning, Ctrl+Shift+R, löste det). Orsak: `index.html`
+laddar samtliga scriptfiler (`app.js`, `sim-core.js`, `gamification-*.js`,
+`activity-prototype*.js` m.fl.) utan versionsparameter
+(`<script src="./gamification-ui.js">`). GitHub Pages sätter inga cache-busting-headers
+på egen hand, så en webbläsare som redan besökt sidan kan efter en release fortsätta
+servera en **cachad, gammal JS-fil** samtidigt som den hämtar den nya `index.html`/CSS:en
+— en blandning av gammal och ny kod som kan ge trasigt, svårfelsökt beteende (exakt det
+som hände här: gammal `gamification-ui.js` mot ny CSS gav en helsvart badge eftersom
+SVG:ns default-fyllning är svart när ingen färgregel längre matchar).
+
+PO drabbades av detta som utvecklare, men samma sak kan drabba **studenter** efter en
+framtida release, utan att de vet att de ska hård-uppdatera.
+
+**Tänkbar lösning:** en versionsparameter på script-taggarna, t.ex.
+`<script src="./gamification-ui.js?v=1.5.1">`, kopplad till `APP_VERSION`
+(`apps/app/app.js`) så den automatiskt tvingar en ny hämtning vid varje release. Kräver
+att `APP_VERSION` blir tillgänglig innan script-taggarna skrivs (idag sätts den i
+`app.js`, som själv är en av filerna som behöver versioneras — kan kräva att versionen
+läggs i `env.js` istället, som redan laddas allra först).
+**Status:** Öppen
 **Branch:** `hotfix/v1.4.1-hide-tangent-facit-in-prod`
 **Prioritet:** Hög
 **Beskrivning:**
