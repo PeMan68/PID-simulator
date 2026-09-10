@@ -1067,10 +1067,29 @@ PO fick tre visuella förslag presenterade (mockup, se
 - Den befintliga återkopplingsloop-ikonen (`LOOP_ICON_SVG`) tas bort ur badgen som en
   del av denna omdesign (medaljongstilen ersätter den, inte kompletterar den).
 
-**Release:** PO vill ha detta med i nästa release till `main` (patch, v1.5.1 — ren
-visuell fix/förbättring av redan produktionsaktiv funktion, se `RELEASE-v1.5.0`-mönstret
-i `docs/handoffs/HANDOFF_2026-09-10.md` avsnitt 9).
-**Status:** Öppen — under implementation
+**Release:** Ingick i `RELEASE-v1.5.1` (se nedan) på PO:s uttryckliga begäran, direkt
+efter att medaljongförslaget godkänts.
+**Status:** Publicerad. Mergad till `develop` och `main` (taggad `v1.5.1`).
+
+---
+
+### RELEASE-v1.5.1 — Nivåmärke, medaljongdesign
+**Branch:** `develop` → `main` (taggad `v1.5.1`) → tillbaka till `develop`
+**Prioritet:** Låg — kosmetisk patch-release
+**Beslutsfattare:** PO ("kan färdigställas till release och mergas till main", 2026-09-10)
+**Beskrivning:**
+Ensam post: `FEAT-035` (nivåmärkets medaljongdesign, se ovan). Ingen cherry-pick — releasen
+tar med hela `develop` vid releasetillfället, enligt projektets vanliga releaseprincip.
+`CHANGELOG.md`, `README.md` och `APP_VERSION` uppdaterade direkt på `develop` inför
+mergen till `main` (samma mönster som `RELEASE-v1.5.0`).
+**Testresultat:** Node-syntaxkontroll, befintlig gamification-testsvit (64/64 OK,
+opåverkad — `badgeSvg`/`shade` är ren DOM-fri stränggenerering och testades isolerat med
+en fristående kopia av logiken, samma metod som testerna i `tests/`). Manuell visuell
+granskning gjordes via en HTML-mockup (Artifact) som PO godkände innan implementation;
+ingen live-webbläsartest i denna miljö (ingen webbläsare tillgänglig i sandboxen) — PO
+bör göra en snabb visuell kontroll av badgen i produktion efter deploy.
+**Status:** Publicerad. `main` taggad `v1.5.1`, GitHub Pages byggd och publicerad
+därifrån. `develop` innehåller samma underlag.
 
 ---
 

@@ -12,14 +12,14 @@ täcker inte kursens övriga innehåll om fysiska mätdon och styrdon.
 
 ## Officiell version
 
-- **Stabil version:** v1.5.0 (källkoden är taggad `v1.5.0`)
+- **Stabil version:** v1.5.1 (källkoden är taggad `v1.5.1`)
 - **Officiell URL:** https://peman68.github.io/PID-simulator/
 
 Använd den officiella URL:en för undervisning och självstudier. `main`-branchen är källan
 för den stabila undervisningsversionen, och GitHub Pages bygger och publicerar
 produktionsprofilen (PROD) uteslutande därifrån.
 
-## Funktioner i v1.5.0
+## Funktioner i v1.5.1
 
 Publicerat i produktionsversionen:
 

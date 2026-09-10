@@ -2,6 +2,17 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.5.1] — 2026-09-10
+
+### Ändrat
+
+- **Nivåmärkets utseende** (FEAT-035). Badgen i nivåpanelen är omdesignad som en
+  medaljong: nivåsiffran är nu en riktig del av grafiken, centrerad i sexkanten
+  (tidigare låg den i ett separat element som inte alltid hamnade rätt), sexkanten
+  fylls med en gradient i nivåns egen färg med en tunn innerfälg, och högsta nivån
+  (Reglerlegend) får en mjuk glöd. Ingen förändring av XP-regler, nivågränser eller
+  hur progression sparas — se `docs/development/GAMIFICATION-XP-PROTOTYPE.md`.
+
 ## [v1.5.0] — 2026-09-10
 
 ### Nytt i denna release
