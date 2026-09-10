@@ -1,4 +1,4 @@
-# Synlig XP- och nivåprototyp (GAM-003B/GAM-003C) — DEV-only
+# Synlig XP- och nivåprototyp (GAM-003B/GAM-003C/GAM-003D) — DEV-only
 
 **Status:** DEV-prototyp. Inte produktionsgodkänd — ingen produktionsaktivering
 är beslutad. Nivån mäter **aktivitet och progression** i PID Simulator. Den är
@@ -375,13 +375,39 @@ Inget av detta existerar i PROD (`gamification.js` laddas aldrig där).
   DEV-objekt, simulatorn fungerar normalt). Detta hittade och verifierade
   fixen av en verklig bugg (se "Kända begränsningar").
 
+## GAM-003D (2026-09-10) — Finalisering av pågående försök vid sessionsavslut
+
+Löste den osäkerhet punkt 1–2 nedan ursprungligen beskrev: om ett
+kvalificerande försök (>= 20 steg) aldrig finaliserades genom en vanlig
+avslutande händelse innan sidan laddades om, navigerades bort från, eller
+fliken/webbläsaren stängdes, gick försöks-/distinktkonfigurations-/
+jämförelsepar-XP:n permanent förlorad (nästa session startar helt tom).
+**Buggen reproducerades och är nu åtgärdad**, utan att ändra XP-värden,
+nivågränser, stegkvalificering, hjälpkvalificering, bar-avstämningspunkter
+eller nivå-UI:
+
+- Ny händelsetyp `session_ending` i `activity-prototype-core.js` —
+  finaliserar ENDAST ett försök som redan uppfyller 20-stegsvillkoret; ett
+  kortare, ofärdigt försök lämnas helt orört. Idempotent (kan inte
+  dubbelkreditera samma försök).
+- `activity-prototype.js` dispatchar detta på `pagehide` (inte
+  `beforeunload` — synkront, inget asynkront arbete).
+- Ingen ändring i XP-motorn behövdes — `session_ending` går genom samma
+  diff-baserade bokföring som alla andra avslutande händelser.
+- Verifierat i riktig webbläsare: omladdning, navigering bort och stängd
+  flik bevarar nu XP:n korrekt; PROD är helt opåverkat (skriptet laddas
+  aldrig där).
+
+Se `tests/gamification/gamification-session-finalization.test.mjs` och
+`tests/activity-prototype.test.mjs` (tester 39–41) för den fullständiga
+testtäckningen.
+
 ## Kända begränsningar
 
-1. **Sista pågående försöket i en session räknas inte förrän en avslutande
-   händelse sker** (kontextbyte, betydande parameterändring, "Återställ
-   system") — ärvt, oförändrat GAM-002-beteende, inte nytt i GAM-003B.
-2. **Ingen `beforeunload`-baserad "flush"** av det allra sista försöket —
-   bedömt som en otillförlitlig komplexitetsökning, inte implementerat.
+1. **Ett kortare (< 20 steg) försök räknas fortfarande varken som
+   genomfört eller avbrutet om sidan stängs innan en avslutande händelse
+   sker** — det är korrekt, avsett beteende (ett ofärdigt försök ska varken
+   belönas eller straffas), inte en brist.
 3. **`lambda-comparison`s pardragning** (sekventiell kedja kontra gemensam
    referens, se PED-005 avsnitt 12/14) är oförändrad i GAM-003B — det är ett
    öppet PO/PM-beslut om en riktad motorutökning, inte del av detta uppdrag.

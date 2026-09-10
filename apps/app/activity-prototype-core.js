@@ -316,6 +316,25 @@
         }
         break;
       }
+      // GAM-003D — dispatchas av activity-prototype.js:s pagehide-lyssnare
+      // (sidan laddas om, navigeras bort från, eller fliken/webbläsaren
+      // stängs). Till skillnad från "system_reset" ovan finaliseras HÄR
+      // bara ett försök som REDAN uppfyller villkoret för ett genomfört
+      // försök (>= completedAttemptMinSteps) — ett kortare, ofärdigt försök
+      // lämnas orört (markeras alltså INTE som avbrutet här). Detta
+      // förhindrar att ett kvalificerande försök går förlorat om sidan
+      // stängs innan någon annan avslutande händelse (stegbyte,
+      // scenariobyte, betydande parameterändring, Återställ system) hinner
+      // inträffa — se docs/development/GAMIFICATION-XP-PROTOTYPE.md.
+      case "session_ending": {
+        if (session.currentContextKey) {
+          const ctx = getOrCreateContext(session, session.currentContextKey);
+          if (ctx.currentAttempt && ctx.currentAttempt.stepCount >= session.config.completedAttemptMinSteps) {
+            finalizeAttempt(session, session.currentContextKey, ctx, now);
+          }
+        }
+        break;
+      }
       case "parameter_changed":
       case "regulator_mode_changed":
       case "process_type_changed": {

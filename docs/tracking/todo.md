@@ -849,6 +849,46 @@ på PO:s nya användartest.
 
 ---
 
+### GAM-003D — Verifiera finalisering av pågående försök vid sessionsavslut
+**Branch:** `feature/GAM-003D-session-finalization`
+**Prioritet:** Låg — DEV-prototyp, buggfix utan produktionsaktivering
+**Beskrivning:**
+Efter godkänt användartest av GAM-003C kvarstod en osäkerhet: ett genomfört
+försök (>=20 simulerade steg) finaliseras bara vid en avslutande händelse
+(stegbyte, scenariobyte, betydande parameterändring, Återställ system). Om
+INGEN sådan händelse hinner ske innan sidan laddas om, navigeras bort från,
+eller fliken/webbläsaren stängs, startar nästa session helt tom och
+försöks-/distinktkonfigurations-/jämförelsepar-XP:n för det ofinaliserade
+försöket gick permanent förlorad. **Buggen reproducerades** (både i ett
+Node-skript och i en riktig webbläsare) och är nu åtgärdad.
+**Genomförande:**
+- Ny, smalt avgränsad händelsetyp `"session_ending"` i
+  `activity-prototype-core.js` — finaliserar ENDAST ett försök som redan
+  uppfyller villkoret för ett genomfört försök (>= 20 steg); ett kortare,
+  ofärdigt försök lämnas helt orört (varken completed eller aborted).
+  Idempotent: `finalizeAttempt` nollställer `ctx.currentAttempt`, så en
+  upprepad `session_ending` kan aldrig finalisera/kreditera samma försök
+  två gånger.
+- `activity-prototype.js` dispatchar `session_ending` på `pagehide` (INTE
+  `beforeunload` — synkront, inget asynkront arbete, fångar
+  omladdning/navigering/stängning tillförlitligt utan `beforeunload`s
+  kända nackdelar).
+- Ingen ändring i `gamification-xp-engine.js`/`gamification.js` behövdes —
+  den befintliga diff-baserade XP-bokföringen (samma `completedAttempt`/
+  `distinctConfig`/`comparisonPair`-kategorier som alla andra avslutande
+  händelser) hanterar `session_ending` helt utan särskilt fall.
+- Nya tester: `tests/gamification/gamification-session-finalization.test.mjs`
+  (15, hela XP-kedjan) samt 3 nya tester (39–41) i
+  `tests/activity-prototype.test.mjs` (Core-nivå, isolerat). Verifierat i
+  riktig webbläsare: omladdning, navigering bort, stängd flik — alla tre
+  bevarar XP:n korrekt; kort försök ger fortsatt ingen XP; PROD helt
+  opåverkat (skriptet laddas aldrig där).
+- Inga XP-värden, nivågränser, stegkvalificering, hjälpkvalificering, bar-
+  avstämningspunkter, nivå-UI, lärstigar eller scenarier ändrade.
+**Status:** Mergad till `develop`. Ingen release, `main` oförändrat.
+
+---
+
 ### FEAT-031 — Övningsdokument "Regulatortrimning i praktiken"
 **Branch:** `feature/regulatortrimning`
 **Prioritet:** Medel

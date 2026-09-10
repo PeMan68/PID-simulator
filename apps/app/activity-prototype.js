@@ -70,6 +70,20 @@
   window.addEventListener("focus", () => safeCall(() => Core.setFocused(session, true, now())));
   window.addEventListener("blur", () => safeCall(() => Core.setFocused(session, false, now())));
 
+  // GAM-003D — sidan laddas om, navigeras bort från, eller fliken/
+  // webbläsaren stängs: ett redan kvalificerande men ännu ofinaliserat
+  // försök (>= 20 steg utan efterföljande stegbyte/scenariobyte/Reset)
+  // skulle annars gå förlorat, eftersom en ny session vid nästa sidladdning
+  // startar helt tom (se activity-prototype-core.js:s "session_ending").
+  // `pagehide` (inte `beforeunload`) — körs synkront, kräver inget asynkront
+  // arbete, och fångar navigation/stängning/omladdning tillförlitligt utan
+  // `beforeunload`s kända nackdelar (kan blockera bfcache, uppmuntrar inte
+  // till asynkront arbete som ändå inte hinner slutföras). Anropet är
+  // idempotent — `Core`s finalizeAttempt nollställer `ctx.currentAttempt`,
+  // så ett upprepat `pagehide` (t.ex. vid bfcache-återställning som sedan
+  // döljs igen) finaliserar aldrig samma försök två gånger.
+  window.addEventListener("pagehide", () => dispatch("session_ending", {}));
+
   // ── Rena aktivitetssignaler (inget innehåll, ingen loggrad) ──
   window.addEventListener("pointerdown", () => safeCall(() => Core.markActive(session, now())), { passive: true });
   window.addEventListener("keydown", () => safeCall(() => Core.markActive(session, now())), { passive: true });
