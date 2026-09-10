@@ -889,6 +889,40 @@ Node-skript och i en riktig webbläsare) och är nu åtgärdad.
 
 ---
 
+### RELEASE-v1.5.0 — Nivåprogression i produktion + Störningar och robusthet
+**Branch:** `release/v1.5.0` (från `develop`) → `main` (taggad `v1.5.0`) → tillbaka till `develop`
+**Prioritet:** Hög — produktionsrelease
+**Beslutsfattare:** PO (PM otillgänglig vid tillfället — PO tog besluten direkt, 2026-09-10)
+**Beskrivning:**
+Efter PO:s godkända användartest av GAM-003B/C/D beslutade PO att:
+1. Aktivera nivåprogressionen (GAM-002/GAM-003) i PROD i sitt nuvarande,
+   testade DEV-skick, **inklusive** DEV-konsolstödet
+   (`window.ActivityPrototype`/`window.GamificationDev`) för felsökning på
+   plats i produktion.
+2. Publicera FEAT-030 (lärstigen "Störningar och robusthet") som sjunde
+   PROD-lärstig.
+3. Bekräftade explicit: progression sparas per webbläsare/enhet (inte per
+   konto) — ett känt, accepterat förhållande, inte ett krav på ändring.
+4. Bekräftade explicit: allt annat i PROD-profilen (Test-läge, poäng,
+   mätfacit, experimentellt innehåll) förblir avstängt, oförändrat.
+
+**Genomförande:** se `feature/PROD-v1.5.0-activate-gamification`-posten
+ovan för den tekniska arkitekturändringen (frikoppling av
+`showGamification` från `ENV_CONFIG.environment`). Releasen i sig tog med
+hela `develop` (ingen cherry-pick, enligt projektets vanliga
+releaseprincip) — `CHANGELOG.md` och `README.md` uppdaterade på
+release-branchen.
+**Testresultat:** 269 automatiska tester gröna (samtliga GAM-/innehålls-/
+simulerings-/PROD-tester). Manuell verifiering i riktig webbläsare mot en
+byggd PROD-artifakt: nivåprogression fungerar och bokförs korrekt,
+DEV-konsolstödet tillgängligt, Störningar och robusthet laddas som sjunde
+lärstig, Test-läge/poäng/facit/experimentellt förblir avstängda, ingen
+DEV-badge, appversion v1.5.0, inga konsolfel.
+**Status:** Publicerad. `main` taggad `v1.5.0`, GitHub Pages byggd och
+publicerad därifrån. `develop` innehåller samma underlag.
+
+---
+
 ### FEAT-031 — Övningsdokument "Regulatortrimning i praktiken"
 **Branch:** `feature/regulatortrimning`
 **Prioritet:** Medel
