@@ -1027,7 +1027,19 @@ avsiktligt avsteg från den principen — PO har vägt nyttan (användningsstati
 avsteget och godkänt det. Blockerar inte lokal DEV-testning: GoatCounters skript
 exkluderar `localhost`/lokala nätverk från räkningen som standard, så
 `python -m http.server` mot `apps/app/` skickar inga händelser.
-**Status:** Öppen
+
+**Stängd utan implementation (2026-09-10):** Byggd och lokalt testad på
+`feature/goatcounter-analytics`, men PO:s test visade att begäran till `gc.zgo.at`
+blockeras av webbläsarens säkerhetsinställningar (bekräftat i DevTools Network-fliken —
+"Provisional headers are shown", ingen statuskod, alltså stoppad innan nätverksanropet
+ens skickades). PO bedömer att skoldatorerna som studenterna faktiskt använder har
+samma typ av restriktiva säkerhets-/nätverksinställningar, vilket gör GoatCounter
+opålitligt för målgruppen — inte ett adblock-i-en-enskild-webbläsare-problem utan ett
+strukturellt problem med klientside-JS-analys i den här miljön. Featuren och branchen
+skrotas. Om besöksstatistik önskas igen senare krävs antingen en server-/proxy-baserad
+lösning (inte blockerbar av klientens nätverksfilter) eller ett annat spårningssätt än
+ett tredjeparts-JS-skript.
+**Status:** Stängd — se motivering ovan
 
 ---
 
