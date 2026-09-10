@@ -1,4 +1,4 @@
-# Synlig XP- och nivåprototyp (GAM-003B) — DEV-only
+# Synlig XP- och nivåprototyp (GAM-003B/GAM-003C) — DEV-only
 
 **Status:** DEV-prototyp. Inte produktionsgodkänd — ingen produktionsaktivering
 är beslutad. Nivån mäter **aktivitet och progression** i PID Simulator. Den är
@@ -12,6 +12,60 @@ tekniska underlag denna prototyp bygger på.
 Efter leverans ska PO användartesta visuell UX, nivåtempo, repetition,
 persistens, återställning och nivåanimation innan något beslut om
 produktionsaktivering tas — se GAM-003B:s uppdragstext (RELEASEINSTRUKTION).
+
+## GAM-003C (2026-09-10) — Kvalificerad och fördröjd XP-visning
+
+PO:s användartest av GAM-003B visade att barens omedelbara respons gjorde
+det lätt att kartlägga exakt vilket klick som gav XP. GAM-003C ändrar
+**inga XP-värden och inga nivågränser** — bara NÄR och UNDER VILKA VILLKOR
+XP bokförs/visas:
+
+- **Bokföring och visning är frikopplade.** `engine.totalXP` (bestående,
+  bokförd) uppdateras fortfarande direkt när ett villkor uppfylls. Baren
+  visar istället `engine.displayedXP`, som bara synkas vid en "naturlig
+  avstämningspunkt" (`Engine.shouldFlush`/`flush()`): stegbyte,
+  scenariobyte, avslutat försök, slutförd lärstig, eller om bokförd XP
+  redan skulle ge en högre nivå än den senast visade.
+- **"Nytt högsta lärsteg" (2 XP) kräver nu kvalificering** innan det
+  bokförs — se `classifyStep()`/`evaluatePending()` i
+  `gamification-xp-engine.js`: teoristeg kräver aktiv lästid
+  (`4s + antal ord/4`, klämt 8–60s), scenariosteg kräver relevant aktivitet
+  (väntetid räcker inte), blandade steg (heuristik: ett längre
+  scenario-steg, ≥40 ord) kräver 50 % av lästiden OCH aktivitet. Ett
+  `progressRequirement`-fält (valfritt, inget innehåll sätter det ännu) kan
+  i framtiden styra klassificeringen per steg utan att motorn ändras.
+  Navigationen låses ALDRIG — ett steg som lämnas okvalificerat ger bara
+  ingen XP.
+- **"Unik hjälptext" (2 XP) kräver nu minst 3 sekunders aktiv tid** med
+  samma hjälptext öppen. Byte av hjälptext eller stängd hjälppanel
+  (`help_closed`, ny händelse dispatchad när högersidopanelen kollapsas)
+  avbryter kvalificeringen utan XP.
+- **En enda, punktvis timer** (`gamification.js`s `scheduleNextPendingCheck`,
+  INTE en polling-loop) fångar fallet där en tidsbaserad kvalificering
+  (teoristeg/hjälp) skulle uppfyllas medan användaren är overksam — annars
+  hade den bara upptäckts retroaktivt vid nästa riktiga händelse.
+- **Panelen är komprimerad**: bara badge, nivånummer, nivånamn och baren
+  syns permanent. Förklaringstexten, "HÖGSTA NIVÅ"-texten och "Återställ
+  progression"-knappen togs bort som permanenta element — de två förstnämnda
+  helt, den sista flyttad in i den klickbara informationsytan
+  (`#gamLevelInfo`). Detta löste samtidigt en verklig CSS-bugg: elementens
+  egna `display`-deklarationer slog igenom `[hidden]`-attributet (samma
+  buggmönster som redan fanns för `.gam-level-panel`), vilket gjorde att de
+  syntes permanent redan i GAM-003B trots att koden satte `hidden`.
+- **Utökat DEV-konsolstöd**: `window.GamificationDev.pending()` (stegtyp,
+  beräknad lästid, aktiv tid, uppfyllda villkor), `.log()` (varför XP gavs
+  eller inte), `.setXP()`/`.jumpToLevel()`/`.placeNearLevel()` (exakt
+  placering runt en nivågräns), `.simulateLevelUpSequence()` (flera
+  nivåbyten i rad) och `.forceFlush()` (tvinga bar-synk). Se
+  `apps/app/gamification.js`s kommentarer för exakt vad som speglar verklig
+  aktivitet kontra rena testhjälpmedel.
+
+Nya/ändrade filer: `apps/app/app.js` (skickar `stepType`/`wordCount`/
+`progressRequirement` med `learning_step_reached`, dispatchar `help_closed`),
+`apps/app/gamification-xp-engine.js`, `apps/app/gamification.js`,
+`apps/app/gamification-ui.js`, `apps/app/index.html`. `apps/app/gamification-store.js`
+och persistensformatet är OFÖRÄNDRADE (inget nytt sparas — pendingStep/
+pendingHelp/displayedXP är sessionsbundna, återställs alltid vid sidladdning).
 
 ## Var den finns
 
