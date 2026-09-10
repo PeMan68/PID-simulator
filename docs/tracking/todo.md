@@ -1004,6 +1004,33 @@ ovan.
 
 ---
 
+### FEAT-034 — Enkel besöks- och nivåstatistik (GoatCounter)
+**Branch:** `feature/goatcounter-analytics`
+**Prioritet:** Medel — PO vill kunna se hur mycket appen faktiskt används
+**Beskrivning:**
+PO vill kunna se hur många studenter som använder appen (unika besökare per datum) samt
+vilken gamification-nivå de når, som ett grovt mått på användningsomfattning. Vald lösning:
+[GoatCounter](https://www.goatcounter.com) — gratis, cookiefri, kräver inget
+samtyckesbanner, visar unika besökare per dag i sin dashboard. Sitekod: `pid-simulator`
+(`https://pid-simulator.goatcounter.com`).
+
+Två delar:
+1. Vanlig sidvisningsräkning: GoatCounters standardskript i `apps/app/index.html`.
+2. Anonym nivå-händelse: när `flushed.leveledUp` inträffar i `gamification.js` (samma
+   punkt som redan triggar `UI.showLevelUp`) skickas en `window.goatcounter.count()`-
+   händelse med nivåindex/-namn som `path`/`title`. Ingen koppling till individ utöver
+   GoatCounters egna, dagsroterande anonyma besökshash.
+
+**Avsteg från tidigare princip:** `FEAT-033` (se ovan) noterar att webbappen medvetet
+saknar externa beroenden/CDN-script i `index.html`. GoatCounter är ett uttryckligt,
+avsiktligt avsteg från den principen — PO har vägt nyttan (användningsstatistik) mot
+avsteget och godkänt det. Blockerar inte lokal DEV-testning: GoatCounters skript
+exkluderar `localhost`/lokala nätverk från räkningen som standard, så
+`python -m http.server` mot `apps/app/` skickar inga händelser.
+**Status:** Öppen
+
+---
+
 ### HOTFIX-v1.4.1 — Dölj tangentlinjens facit i PROD, behåll i DEV
 **Branch:** `hotfix/v1.4.1-hide-tangent-facit-in-prod`
 **Prioritet:** Hög
