@@ -2,6 +2,61 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.5.0] — 2026-09-10
+
+### Nytt i denna release
+
+- **Nivåprogression aktiverad i produktion.** En kompakt nivåyta i vänstra
+  sidopanelen (badge, nivånummer, nivånamn och en grafisk mätare — inga
+  synliga XP-tal) visar aktivitet och progression medan du använder
+  simulatorn. Nivån är **inte ett betyg och inte ett mått på
+  yrkeskompetens** — bara ett sätt att synliggöra eget arbete och
+  repetition. Klicka på nivåytan för en kort förklaring och möjligheten
+  att återställa progressionen. Progression sparas lokalt i webbläsaren,
+  per enhet.
+- Ny publicerad lärstig: **Störningar och robusthet** — sjunde lärstigen,
+  om mätbrus, pulsstörningar och hur P-, I- och D-delen påverkas olika av
+  dem.
+
+### Om nivåprogressionen
+
+Funktionen bygger på samma tekniska grund som redan fanns i
+utvecklingsversionen och är produktionsaktiverad i sitt testade skick.
+Den mäter aktivitet (genomförda försök, egna parameterförsök,
+jämförelser, hjälpanvändning, lästid) — inte rätt/fel-svar eller
+kunskapsnivå. Progressionen är knuten till webbläsaren/enheten du
+använder, inte ett konto. Se
+`docs/development/GAMIFICATION-XP-PROTOTYPE.md` för den tekniska
+beskrivningen.
+
+### Produktionsurval i v1.5.0
+
+Sju lärstigar är publicerade i undervisningsversionen, i denna ordning:
+
+1. Kom igång med PID Simulator
+2. Öppen slinga, On/Off och P-reglering
+3. Proportionalband och regulatorförstärkning
+4. PI- och PID-reglering
+5. Processens begränsningar
+6. Windup och anti-windup
+7. Störningar och robusthet
+
+### Kända förhållanden
+
+- Test-läge (kontrollfrågor med poängräkning) ingår fortfarande inte i den
+  publicerade undervisningsversionen.
+- Tre lärstigar (Integrerande process och nivåreglering, Stegsvar och
+  processidentifiering, Lambda-metoden) ligger kvar i utvecklingsversionen
+  för fortsatt pedagogisk granskning innan de publiceras.
+- Nivåprogressionen sparas per webbläsare/enhet — på en delad dator ser
+  nästa användare föregående persons nivå.
+
+### Version
+
+`APP_VERSION` = 1.5.0. Ändrade filer: `apps/app/app.js`,
+`apps/app/activity-prototype.js`, `apps/app/gamification.js`,
+`apps/app/env.prod.js`, `apps/app/content/catalog.prod.json`.
+
 ## [v1.4.1] — 2026-09-08
 
 ### Rättat (HOTFIX-v1.4.1)
