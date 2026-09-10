@@ -12,14 +12,14 @@ täcker inte kursens övriga innehåll om fysiska mätdon och styrdon.
 
 ## Officiell version
 
-- **Stabil version:** v1.3.0 (källkoden är taggad `v1.3.0`)
+- **Stabil version:** v1.5.0 (källkoden är taggad `v1.5.0`)
 - **Officiell URL:** https://peman68.github.io/PID-simulator/
 
 Använd den officiella URL:en för undervisning och självstudier. `main`-branchen är källan
 för den stabila undervisningsversionen, och GitHub Pages bygger och publicerar
 produktionsprofilen (PROD) uteslutande därifrån.
 
-## Funktioner i v1.3.0
+## Funktioner i v1.5.0
 
 Publicerat i produktionsversionen:
 
@@ -32,16 +32,21 @@ Publicerat i produktionsversionen:
 - Hjälptexter för samtliga parametrar och regulatorlägen
 - Statusrad med SP, PV, e (reglerfel) och u (utsignal), samt regulatorns P-, I- och
   D-bidrag var för sig
+- Nivåprogression (badge, nivånamn, grafisk mätare — inga synliga XP-tal) som
+  synliggör aktivitet och repetition. Sparas lokalt per enhet. Inte ett betyg eller
+  mått på yrkeskompetens — se [`docs/development/GAMIFICATION-XP-PROTOTYPE.md`](docs/development/GAMIFICATION-XP-PROTOTYPE.md).
 
-Fem publicerade lärstigar, i denna ordning:
+Sju publicerade lärstigar, i denna ordning:
 
 1. Kom igång med PID Simulator
 2. Öppen slinga, On/Off och P-reglering
 3. Proportionalband och regulatorförstärkning
 4. PI- och PID-reglering
 5. Processens begränsningar
+6. Windup och anti-windup
+7. Störningar och robusthet
 
-Produktionsversionen innehåller **inte** Test-läge, poängräkning, spelifiering eller
+Produktionsversionen innehåller **inte** Test-läge, poängräkning eller
 experimentella scenarier — se nästa avsnitt.
 
 ## DEV och PROD
@@ -53,9 +58,10 @@ uttrycklig produktionsallowlist — inte av separata kodgrenar med olika innehå
 | | PROD (publicerad, `main`) | DEV (`develop`, feature branches) |
 |---|---|---|
 | Byggs från | `main` | lokalt, från `apps/app/` |
-| Lärstigar | 5 (produktionsgodkända) | 9 (samtliga aktiva) |
+| Lärstigar | 7 (produktionsgodkända) | 10 (samtliga aktiva) |
 | Test-läge | Dolt, kan inte aktiveras | Synligt och fungerande |
 | Poängräkning | Dold | Synlig i Test-läge |
+| Nivåprogression | Aktiverad (sedan v1.5.0) | Aktiverad |
 | Miljömärkning | Ingen | Röd "DEV"-etikett i sidopanelen |
 | Publiceras på | https://peman68.github.io/PID-simulator/ | endast lokalt |
 
@@ -69,7 +75,7 @@ produktionsallowlistet. Fullständig teknisk beskrivning: [`docs/development/ENV
 Kräver [Node.js](https://nodejs.org/) och en lokal HTTP-server (exemplen nedan använder
 Python; appen kräver `fetch()` mot en server, dubbelklick på `index.html` fungerar inte).
 
-**DEV-förhandsvisning** (samtliga 9 lärstigar, Test-läge, poäng):
+**DEV-förhandsvisning** (samtliga 10 lärstigar, Test-läge, poäng):
 
 ```bash
 node tests/build-preview.mjs dev
@@ -120,13 +126,12 @@ innan det visas i PROD.
 
 ## Projektstatus
 
-v1.3.0 är den första stabila undervisningsversionen. Fortsatt utveckling sker i
-`develop`. Fyra ytterligare lärstigar (Windup och anti-windup, Integrerande process och
-nivåreglering, Stegsvar och processidentifiering, Lambda-metoden) finns i
-utvecklingsversionen och väntar på pedagogisk granskning innan produktionsgodkännande.
-Test-läge med poängräkning är tekniskt klart men ingår inte i PROD v1.3.0. Spelifiering
-(nivåer, progression, belöningar) är ett möjligt framtida utvecklingsspår, inte en
-fastställd leverans. Se [`CHANGELOG.md`](CHANGELOG.md) för fullständig releasehistorik.
+v1.5.0 är den senaste stabila undervisningsversionen. Fortsatt utveckling sker i
+`develop`. Tre ytterligare lärstigar (Integrerande process och nivåreglering, Stegsvar
+och processidentifiering, Lambda-metoden) finns i utvecklingsversionen och väntar på
+pedagogisk granskning innan produktionsgodkännande. Test-läge med poängräkning är
+tekniskt klart men ingår inte i PROD. Nivåprogression aktiverades i PROD med v1.5.0. Se
+[`CHANGELOG.md`](CHANGELOG.md) för fullständig releasehistorik.
 
 ## Licens
 
