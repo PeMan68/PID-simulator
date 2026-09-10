@@ -1082,12 +1082,22 @@ Ensam post: `FEAT-035` (nivåmärkets medaljongdesign, se ovan). Ingen cherry-pi
 tar med hela `develop` vid releasetillfället, enligt projektets vanliga releaseprincip.
 `CHANGELOG.md`, `README.md` och `APP_VERSION` uppdaterade direkt på `develop` inför
 mergen till `main` (samma mönster som `RELEASE-v1.5.0`).
-**Testresultat:** Node-syntaxkontroll, befintlig gamification-testsvit (64/64 OK,
-opåverkad — `badgeSvg`/`shade` är ren DOM-fri stränggenerering och testades isolerat med
-en fristående kopia av logiken, samma metod som testerna i `tests/`). Manuell visuell
-granskning gjordes via en HTML-mockup (Artifact) som PO godkände innan implementation;
-ingen live-webbläsartest i denna miljö (ingen webbläsare tillgänglig i sandboxen) — PO
-bör göra en snabb visuell kontroll av badgen i produktion efter deploy.
+**Testresultat:** Hela startkontrollsviten från `docs/handoffs/HANDOFF_2026-09-10.md`
+avsnitt 13 kördes grönt (innehåll, simulering, aktivitet, samtliga gamification-svit,
+build-preview, validate-prod). `badgeSvg`/`shade` är ren DOM-fri stränggenerering och
+testades isolerat med en fristående kopia av logiken. Manuell visuell granskning gjordes
+via en HTML-mockup (Artifact) som PO godkände innan implementation; ingen live-
+webbläsartest i denna miljö (ingen webbläsare tillgänglig i sandboxen) — PO bör göra en
+snabb visuell kontroll av badgen i produktion efter deploy.
+
+**Sidofynd under testkörningen:** `tests/hotfix-v1.4.1-facit-env.test.mjs` kontroll 4c
+var föråldrad — den påstod att `activity-prototype*.js` INTE skulle finnas i
+`dist/prod`, vilket var sant före v1.5.0 men fel sedan PO:s beslut att aktivera
+gamification i PROD (redan korrekt skyddat åt rätt håll i `tests/validate-prod.mjs:172`).
+Testet uppdaterades aldrig när arkitekturen ändrades. Rättat i samma release eftersom det
+annars permanent skulle visa falsk röd status vid varje framtida testkörning — inte en
+del av `FEAT-035`, men för litet och uppenbart fel för att motivera en egen
+bugfix-branch/buglog-post.
 **Status:** Publicerad. `main` taggad `v1.5.1`, GitHub Pages byggd och publicerad
 därifrån. `develop` innehåller samma underlag.
 
