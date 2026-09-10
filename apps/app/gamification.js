@@ -175,6 +175,22 @@
       clearPendingCheckTimer();
       safeCall(() => Store.resetProgression(), "återställ progression");
       bootstrapEngine();
+      // Bugg 2026-013: ett nytt, tomt `engine`-objekt räcker INTE ensamt —
+      // GAM-002:s aktivitetssession (session.attempts/comparisonPairs/
+      // help.opened/distinctConfigs per kontext) är sessionsbunden och
+      // fortsätter annars leva kvar oförändrad med all aktivitet från FÖRE
+      // återställningen. Motorns diff-baserade bokföring jämför sessionens
+      // RÅA räknare mot sin egen (nu nollställda) ögonblicksbild — nästa
+      // händelse, oavsett typ, skulle då tolka HELA den gamla sessionens
+      // redan-existerande aktivitet som "ny" och kreditera den i klump
+      // (reproducerat: ett enda "Stega"-klick gav nivå 2 direkt). Att även
+      // starta om själva aktivitetssessionen (samma mekanism som en vanlig
+      // sidladdning) eliminerar detta helt — dispatchar "session_started",
+      // som redan hanteras av handleEvent() nedan (nollställer motorns
+      // sessionsräknare OCH seedar om den NYA sessionen mot det nu tomma,
+      // återställda tillståndet). Måste ske EFTER bootstrapEngine() ovan,
+      // så seedningen sker mot rätt (tomma) learningPathMeta.
+      safeCall(() => window.ActivityPrototype.reset(), "återställ aktivitetssession");
       devLog = []; // GAM-003C — "återställa progression OCH debugdata"
       renderDisplayed();
     }
