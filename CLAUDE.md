@@ -1,5 +1,20 @@
 # Claude Code — projektinstruktioner
 
+## Överlämning (läs FÖRST, innan allt annat)
+
+`docs/handoffs/` innehåller en eller flera handoff-dokument, namngivna
+`HANDOFF_ÅÅÅÅ-MM-DD.md`. **Läs alltid det SENAST daterade filnamnet** — nya sessioner
+skriver ett nytt, dagsfärskt dokument istället för att redigera ett gammalt, så flera
+kan finnas samtidigt. Det senaste dokumentet beskriver aktuella roller, produktvision,
+git-status, senaste uppdrag och öppna beslut. Ett äldre dokument kan vara flera veckor
+ur fas — ta inte dess sakinnehåll (avsnitt om git-status, lärstigar, beslut) för
+nuvarande sanning om ett nyare dokument finns.
+
+Om du (CC) avslutar en session efter ett större uppdrag (release, arkitekturändring,
+flera sammanhängande uppdrag) och det gamla handoff-dokumentet börjar bli inaktuellt:
+skriv ett NYTT, dagsdaterat handoff-dokument i `docs/handoffs/` istället för att patcha
+det gamla — det är det etablerade mönstret i det här projektet.
+
 ## Workflow (obligatorisk läsning)
 
 Läs [docs/WORKFLOW.md](docs/WORKFLOW.md) innan du börjar koda.
