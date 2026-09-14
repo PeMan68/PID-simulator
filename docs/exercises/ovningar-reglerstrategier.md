@@ -64,7 +64,8 @@ gärna "Spara" för att jämföra 2–3 kurvor visuellt när du ska styrka ett r
 **Process:** Samma som ovan, men aktivera brus (noiseStd ≈ 1.0).
 **Krav:** Snabbast möjliga respons på störningar.
 
-1. Testa PID med Td > 0 (t.ex. Td=1.0) mot brus.
+1. Testa PID med Td > 0 (t.ex. Td=2.0–3.0 — behövs för att effekten ska synas tydligt)
+   mot brus.
 2. Testa PI (Td=0) mot samma brus.
 3. **Fråga:** När är D-delens vinst (snabbhet) värd priset (bruskänslighet)? Ge ett exempel
    ur Fall A–C var för sig.
@@ -81,23 +82,26 @@ gärna "Spara" för att jämföra 2–3 kurvor visuellt när du ska styrka ett r
 **Syfte:** Samma process, två helt olika verksamhetskrav — visa att "bästa" inställning
 inte finns i ett vakuum.
 
-**Process (båda fallen):** Självreglerande, K=1.0, T=20.0, Dötid=5.0. Börvärde 60.
+**Process (båda fallen):** Självreglerande, K=1.5, T=20.0, Dötid=5.0. Börvärde 60.
 
-Utgå från Lambda-metodens tre färdiga scenarier (samma process, olika λ):
-- Konservativ: Kp=1.33, Ti=20 (λ=L=5, se `lambda-pi-conservative`)
-- Balanserad/aggressiv: testa själv med lägre λ, eller använd `lambda-pi-aggressive`
+Använd Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samtliga):
+Kp = T / (K·(λ+Dötid)).
+- **Konservativ:** λ=3T=60 → Kp≈0.21, Ti=20
+- **Balanserad:** λ=T=20 → Kp≈0.53, Ti=20
+- **Aggressiv:** λ=Dötid=5 → Kp≈1.33, Ti=20
 
 ### Fall A — Säkerhetskritisk process (t.ex. reaktortemperatur)
 **Krav:** Överskjutning är oacceptabelt, oavsett tidsåtgång.
-1. Kör den konservativa Lambda-inställningen.
+1. Kör den konservativa inställningen (Kp=0.21, Ti=20).
 2. **Fråga:** Räcker konservativ, eller behöver du gå ännu försiktigare? Testa om osäker.
 
 ### Fall B — Genomströmningskritisk process (t.ex. produktionslinje)
 **Krav:** Snabbast möjliga inställning accepteras, viss översläng är OK så länge systemet
 inte blir instabilt.
-1. Kör en mer aggressiv Lambda-inställning (lägre λ).
+1. Kör den aggressiva inställningen (Kp=1.33, Ti=20).
 2. **Fråga:** Var går gränsen innan det blir oacceptabelt — vad använder du som mått
-   (översläng %, oscillation, marginal till instabilitet)?
+   (översläng %, oscillation, marginal till instabilitet)? Notera även max utsignal —
+   vad händer med den vid den aggressiva inställningen?
 
 **Reflektion 2:**
 - Samma process gav två olika "rätta" svar. Vad var det egentligen som styrde valet —
@@ -112,7 +116,7 @@ inte blir instabilt.
 **Syfte:** Förstå dötid som en strategisk begränsning, inte bara ännu en parameter.
 
 **Process:** Självreglerande, K=1.5, T=15s. Regulator: PI, Kp=1.5, Ti=20 (oförändrad i
-båda testerna — se `pi-deadtime-comparison`).
+båda testerna).
 
 1. **Test A:** Dötid L=0s. Kör börvärdessteg till 60. Notera översläng/beteende.
 2. **Test B:** Samma regulatorinställning, men L=5s. Kör samma steg.
@@ -133,13 +137,15 @@ båda testerna — se `pi-deadtime-comparison`).
 och grundläggande angreppssätt.
 
 **Process:** Integrerande (tanknivå), K=0.01, T=1.0, normalvärde 20, utflöde 0.5,
-mätområde 0–100. Börvärde 60 (se `integrating-pi`).
+mätområde 0–100. Börvärde 60.
 
 1. Testa enbart P-reglering (rimligt Kp, t.ex. 1.2). Kör länge nog att se hela förloppet.
 2. **Fråga:** Vad händer som *inte* händer vid självreglerande processer (jämför med
-   Uppgift 1, Fall A)?
-3. Byt till PI (t.ex. Kp=1.5, Ti=80). Testa samma börvärdessteg.
-4. Aktivera pulsstörning (magnitud 5, ~20 steg) och observera återhämtningen.
+   Uppgift 1, Fall A)? Var landar processvärdet — och varför just där?
+3. Byt till PI (t.ex. Kp=1.5, Ti=40–50). Testa samma börvärdessteg.
+4. Aktivera pulsstörning (magnitud 1, ~10 steg — observera att "magnitud" läggs till
+   processvärdet varje steg under hela pulsens längd, så en för stor magnitud/längd ger
+   en orimligt kraftig störning) och observera återhämtningen.
 
 **Reflektion 4:**
 - Varför räcker inte P-reglering på en integrerande process, medan den fungerade
@@ -156,10 +162,12 @@ mätområde 0–100. Börvärde 60 (se `integrating-pi`).
 inte något man lägger till efteråt när det redan gått fel.
 
 **Process:** Självreglerande, K=1.0, T=20s. Regulator: PI, Kp=3.0, Ti=20.
-**Utsignal begränsad:** Max 50 (se `pi-windup-demo`). Börvärde 80.
+**Utsignal begränsad:** Max 50. Börvärde 80.
 
-1. **Test A:** Anti-windup AV. Kör börvärdessteg 0→80, notera hur länge utsignalen ligger
-   i taket och vad som händer när du sedan sänker börvärdet till 40.
+1. **Test A:** Anti-windup AV. Kör börvärdessteg 0→80, låt processen ligga stilla ~150s
+   (utsignalen kommer mätta i taket), sänk sedan börvärdet till 40 och fortsätt köra.
+   Notera hur länge utsignalen ligger kvar i taket efter att börvärdet sänkts — var
+   beredd på att det kan ta väldigt lång tid (betydligt längre än du först tror).
 2. **Test B:** Samma allt, men Anti-windup PÅ. Upprepa.
 3. **Fråga:** Om du designade denna regulator *innan* idrifttagning och visste att
    ventilen/manöverdonet kunde begränsas till 50% — hade du valt samma Kp/Ti som utan den
@@ -176,16 +184,15 @@ inte något man lägger till efteråt när det redan gått fel.
 **Syfte:** Samma regulatortyp kan behöva trimmas olika beroende på vad som faktiskt
 händer mest i drift: börvärdesändringar eller störningar.
 
-**Process:** Självreglerande, K=1.0, T=20s, Dötid=0s. Regulator: PID, Kp=1.0, Ti=10, Td=2
-(se `pid-pulse-rejection`).
+**Process:** Självreglerande, K=1.0, T=20s, Dötid=0s. Regulator: PID, Kp=1.0, Ti=10, Td=2.
 
 ### Fall A — Batchprocess med täta börvärdesändringar
 **Drift:** Börvärdet ändras ofta (t.ex. varje batch), störningar är sällsynta.
 1. Testa börvärdessteg 30→70→30 med nuvarande inställning. Bedöm respons.
 
 ### Fall B — Kontinuerlig process med ständiga störningar, fast börvärde
-**Drift:** Börvärdet ligger still på 50, men pulsstörningar (magnitud 10, 5 steg) kommer
-regelbundet.
+**Drift:** Börvärdet ligger still på 50, men pulsstörningar (magnitud 2, 5 steg — kom
+ihåg att magnituden läggs till varje steg, så detta blir totalt +10) kommer regelbundet.
 1. Testa samma inställning mot upprepade pulsstörningar vid fast börvärde.
 2. Justera Kp/Ti/Td för att prioritera snabb störningsåterhämtning, även om det skulle
    ge sämre börvärdessvar.
@@ -211,6 +218,13 @@ själv får undersöka i simulatorn:
   ställ in Utsignal Max=85.
 - **Drift:** Börvärdet ändras sällan, men processen utsätts för återkommande
   störningar (flödesvariationer).
+- **Notera innan du testar störningar:** utsignalen kan bara vara 0–85% — processen kan
+  alltså bara *tillföras* mer (t.ex. värme), aldrig kylas aktivt. Om du kör
+  störningstestet med börvärde = normalvärde (65) ligger regulatorns viloläge redan på
+  u=0%. En störning som höjer processvärdet kan då inte motverkas aktivt av regulatorn —
+  den kan bara gå till u=0% och vänta ut processens egen avklingning. Det är förväntat
+  beteende, inte ett fel i simulatorn. Håll pulsstörningen liten (t.ex. magnitud 1,
+  5 steg — kom ihåg att magnituden läggs till varje steg).
 
 ### Uppgift
 Skriv ett kort PM (en halv till en sida) som besvarar:
