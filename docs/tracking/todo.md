@@ -1298,6 +1298,40 @@ klar.
 
 ---
 
+### FEAT-038 — Hjälplinjer för 2/10/90 % i Mätläge, samt tunnare/transparenta hjälplinjer
+**Prioritet:** Hög — PO har uttryckligen rangordnat denna över bugg 2026-014.
+**Beskrivning:**
+PO:s observation vid arbete med `facit-reglerstrategier.md`s nya "Termer och
+definitioner"-avsnitt: 2 % (toleransband för insvängningstid), 10 % och 90 %
+(stigtidsdefinitionen) förekommer som mätbegrepp, men Mätläget i appen har bara en
+kryssruta för 63 %-linjen (`#mp63Line` i `index.html`, ritas i `drawChart()` i `app.js`,
+rad ~236–246).
+
+**Önskat:**
+1. Lägg till nya, togglingsbara hjälplinjer för **10 %** och **90 %** — samma mönster som
+   63 %-linjen: en `measure-check`-kryssruta i Mätläge-panelen (`index.html`, bredvid
+   `#mp63Line`/`#mpTangentField`), beräknad relativt samma `mpPv0`/`mpPvInf`-referenser
+   som redan används (`y10% = pv0 + 0.10·(pvInf−pv0)`, `y90% = pv0 + 0.90·(pvInf−pv0)`),
+   ritad som en streckad linje i `drawChart()`.
+2. Lägg till en togglingsbar **2 %-linje**. Viktig skillnad mot 10/90/63 %: 2 % är
+   definitionsmässigt ett **toleransband** (±2 % av stegstorleken kring slutvärdet, se
+   `tests/simulation/lib/analyze.mjs`s `referenceTolerance`), inte en enkel tröskel — bör
+   alltså troligen ritas som ETT PAR tunna linjer (övre/undre gräns runt `pvInf`), inte en
+   enda linje som 63/10/90 %. Bekräfta med PO/PM innan implementation om det ska vara ett
+   band eller en enkel linje.
+3. **Design/konsekvensfix, gäller ALLA hjälplinjer (63 %, tangentlinjen, och de nya
+   2/10/90 %-linjerna):** de ska vara tydligt tunnare än PV/SP/u-kurvorna. Nuläge (verifierat
+   i koden): huvudkurvorna (`drawSeries()`, rad 124) använder `lineWidth = 2`; 63 %-linjen
+   är nästan lika tjock (`lineWidth = 1.5`, rad 240); tangentlinjens huvudsegment är
+   **lika tjock som huvudkurvorna** (`lineWidth = 2`, rad 284/309) — ingen visuell hierarki
+   idag. PO föreslår även lätt transparens. Appen har redan ett bra mönster att följa för
+   detta (parameterändringsmarkörerna, rad 220: `rgba(90,90,90,0.55)`, `lineWidth = 1`) —
+   använd samma stil (tunn linje, ~50–65 % opacitet) konsekvent för samtliga hjälplinjer,
+   inklusive att retroaktivt tunna ner 63 %-linjen och tangentlinjen.
+**Status:** Öppen — ej påbörjad.
+
+---
+
 ## Python-app (`main.py`)
 
 Python-appen är nedlagd — se BESLUT-002. Alla öppna Python-features är stängda utan
