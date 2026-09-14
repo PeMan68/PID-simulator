@@ -1285,6 +1285,17 @@ högst upp (PO-önskemål) som definierar alla återkommande begrepp (SP/PV/u/e,
 kvarstående fel, översläng, toleransband, insvängningstid, stigtid, mättning, windup,
 dötid, process- och regulatorparametrar, Lambda-metoden, u_std).
 
+**Kvarstående TODO (PO-beslut 2026-09-14, görs INTE nu):** När
+`ovningar-reglerstrategier.md` är färdigredigerad (PO klar med sin granskning/manuella
+redigering) ska `facit-reglerstrategier.md` **renskrivas helt** — nuvarande facit
+innehåller mycket historik/motivering från denna och tidigare verifieringssessioner
+("Viktigast: justeringar..."-listan, alla "en tidigare version av detta facit angav
+X"-noter, resonemang om varför toleransband/pulsstorlek ändrades). Den historiken ska
+INTE finnas kvar i slutversionen. Renskrivningen ska producera ett rent facit som helt
+matchar den färdiga övningsfilens uppgifter/steg/numrering, utan spår av
+redigeringsprocessen. Vänta med detta tills PO uttryckligen säger att övningsfilen är
+klar.
+
 ---
 
 ## Python-app (`main.py`)
