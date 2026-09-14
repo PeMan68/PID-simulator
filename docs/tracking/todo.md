@@ -1226,6 +1226,28 @@ Verktyg för design med störningsreserver (gain margin, phase margin).
 
 ---
 
+### FEAT-037 — Övningsdokument "Reglerstrategier"
+**Branch:** `feature/reglerstrategier`
+**Prioritet:** Medel — kursmål nästa vecka
+**Beskrivning:**
+Nytt fristående övningsdokument (`docs/exercises/ovningar-reglerstrategier.md`), samma
+mönster som `FEAT-031` (`ovningar-regulatortrimning.md`) och befintliga
+`docs/exercises/ovningar-systemoptimering.md`: uppgifter i lösbladsform, inte en guidad
+lärstig. Kursmål "Reglerstrategier" ska täckas denna vecka; manuell PID-optimering flyttas
+hit från nästa veckas mer avancerade kursmål (kaskadreglering, kvotreglering, framkoppling,
+parameterstyrning — de kräver simulatorutveckling för flerslinge-/processpar-stöd och tas i
+en separat, senare tråd).
+
+Till skillnad från `ovningar-systemoptimering.md` (som tränar *hur* man trimmar
+Kp/Ti/Td mekaniskt) fokuserar detta dokument på *vilken strategi man väljer och varför* —
+regulatortyp, aggressivitet, hantering av dötid/integrerande process/windup, och
+prioritering börvärdesföljning vs störningsavvisning — som beslut kopplade till processens
+egenskaper och driftkrav. Bygger enbart på funktioner som redan finns i webbappen (inga nya
+simulatorfunktioner krävs).
+**Status:** Öppen — utkast under granskning
+
+---
+
 ## Python-app (`main.py`)
 
 Python-appen är nedlagd — se BESLUT-002. Alla öppna Python-features är stängda utan
