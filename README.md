@@ -12,21 +12,22 @@ täcker inte kursens övriga innehåll om fysiska mätdon och styrdon.
 
 ## Officiell version
 
-- **Stabil version:** v1.5.1 (källkoden är taggad `v1.5.1`)
+- **Stabil version:** v1.5.2 (källkoden är taggad `v1.5.2`)
 - **Officiell URL:** https://peman68.github.io/PID-simulator/
 
 Använd den officiella URL:en för undervisning och självstudier. `main`-branchen är källan
 för den stabila undervisningsversionen, och GitHub Pages bygger och publicerar
 produktionsprofilen (PROD) uteslutande därifrån.
 
-## Funktioner i v1.5.1
+## Funktioner i v1.5.2
 
 Publicerat i produktionsversionen:
 
 - Guidat läge genom lärstigarna, med kontrollfrågor som reflektionsstöd
 - Presentationsläge ("Presentera steg") för visning på projektor — visar aldrig svaren på
   kontrollfrågor
-- "Mät K/T/L" — avläsning av processparametrar direkt i grafen
+- "Mät K/T/L" — avläsning av processparametrar direkt i grafen, med togglingsbara
+  hjälplinjer (63%, 10%/90% för stigtid, 2%-toleransband för insvängningstid)
 - Scenariobaserad simulering med regulatorlägena Manuell, On/Off, P, PI och PID
 - Fritt justerbara process- och regulatorparametrar
 - Hjälptexter för samtliga parametrar och regulatorlägen

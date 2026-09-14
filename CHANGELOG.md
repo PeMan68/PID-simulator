@@ -2,6 +2,20 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.5.2] — 2026-09-14
+
+### Nytt
+
+- **Fler hjälplinjer i Mätläge** (FEAT-038). Utöver den befintliga 63%-linjen kan du
+  nu även visa 10%/90%-linjer (för att mäta stigtid) och ett 2%-toleransband (för att
+  avgöra insvängningstid) — samma togglingsbara kryssrutor som 63%-linjen.
+
+### Ändrat
+
+- **Hjälplinjerna i Mätläge är nu tunnare och lätt transparenta** (63%-linjen,
+  tangentlinjen och de nya 10%/90%/2%-linjerna), så de tydligare skiljer sig från
+  PV-, SP- och u-kurvorna istället för att konkurrera visuellt med dem.
+
 ## [v1.5.1] — 2026-09-10
 
 ### Ändrat
