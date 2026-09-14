@@ -1260,7 +1260,30 @@ tillagt steg där de omtrimmade parametrarna testas tillbaka mot Fall A, vilket 
 att Reflektion 6:s avvägningsfråga faktiskt ska gå att besvara. Rättade även en faktisk
 felaktighet i "Arbetssätt"-avsnittet: texten hänvisade till en "Spara"-funktion för att
 jämföra kurvor som inte finns i appen (PO:s iakttagelse) — ersatt med en ärlig
-beskrivning (ingen inbyggd kurvjämförelse, föreslå skärmdump).
+beskrivning (ingen inbyggd kurvjämförelse, föreslå skärmdump). Bytte även Uppgift 1
+Fall A:s etikett från "Nivåprocess" till "Temperaturprocess" (PO påpekade att Uppgift 4
+redan äger nivåprocess-som-integrerande-exempel; en självreglerande nivåprocess är
+möjlig men kräver en förklaring — nivåberoende utflöde — som inte hör hemma i Uppgift 1).
+
+**Uppdatering 2026-09-14 (PO-uppdrag: bygg ut Uppgift 2 med Td, flytta brusinsikten,
+full facit-konsekvens):** Uppgift 2 fick en ny Fall C, simulatorverifierad (Node mot
+`sim-core.js` via `tests/simulation/lib/analyze.mjs`): ett lagom Td (≈1) på den
+aggressiva Lambda-inställningen eliminerar överslängen HELT och mer än halverar den
+äkta insvängningstiden, med försumbar bruskostnad — men ett överdrivet Td (3) gör allt
+sämre samtidigt (långsammare, mer översläng, klart brusigare). Uppgift 1 Fall C
+(brus/D-del) flyttades dit som planerat; Uppgift 1 är nu bara P/PI.
+
+Verifieringsarbetet avslöjade att facit genomgående använt ett löst och odokumenterat
+±5 %-toleransband för "insvängningstid" (i ett fall nästan lika brett som själva
+överslängen, vilket dolde Td:s verkliga nytta) — och att Uppgift 6 Fall B:s siffror var
+räknade på fel (gammal, för kraftig) pulsstorlek. Efter PO-godkännande är HELA facit
+(Uppgift 1, 2, 3, 4, 6, 7) omräknat med ett enhetligt, dokumenterat 2 %-band (samma som
+analysverktygets standardvärde) och Uppgift 6 omräknat med rätt pulsstorlek — flera
+insvängningstider ändrades påtagligt (t.ex. Uppgift 4:s PI-fall 385 s→167 s, Uppgift
+2:s aggressiva PI 16 s→46 s). Facit fick även ett nytt "Termer och definitioner"-avsnitt
+högst upp (PO-önskemål) som definierar alla återkommande begrepp (SP/PV/u/e, slutvärde,
+kvarstående fel, översläng, toleransband, insvängningstid, stigtid, mättning, windup,
+dötid, process- och regulatorparametrar, Lambda-metoden, u_std).
 
 ---
 
