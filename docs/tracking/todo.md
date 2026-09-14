@@ -1328,7 +1328,24 @@ rad ~236–246).
    detta (parameterändringsmarkörerna, rad 220: `rgba(90,90,90,0.55)`, `lineWidth = 1`) —
    använd samma stil (tunn linje, ~50–65 % opacitet) konsekvent för samtliga hjälplinjer,
    inklusive att retroaktivt tunna ner 63 %-linjen och tangentlinjen.
-**Status:** Öppen — ej påbörjad.
+**Branch:** `feature/matlage-hjalplinjer` (mergad till `develop`, raderad efter merge)
+**Status:** Tekniskt klar, mergad till `develop` 2026-09-14 — väntar på PO:s test i DEV
+innan ev. produktionsgodkännande.
+
+**Implementation (2026-09-14):**
+- Punkt 1: `#mpRiseTimeLines` — EN kryssruta ritar BÅDA 10%- och 90%-linjerna
+  tillsammans (blå, streckad), eftersom de alltid används ihop som stigtidsdefinitionen.
+  Om PO vill ha dem som två separata, oberoende togglingsbara linjer istället, säg till.
+- Punkt 2: `#mpToleranceBand` — implementerad som ett band (två linjer, ±2 % av
+  stegstorleken kring PV∞), grön, tätare streckning. Detta beslutades utan att invänta
+  PO/PM-bekräftelse (se ursprunglig brasklapp ovan) eftersom det är den tekniskt korrekta
+  tolkningen av "toleransband" — flagga om en enkel linje ändå önskas.
+- Punkt 3: samtliga hjälplinjer (63 %, tangentlinjen, de två nya) är nu `lineWidth = 1`
+  och `globalAlpha = 0.6`, konsekvent med parameterändringsmarkörernas stil.
+- Ingen ny miljögating — de nya linjerna är ogated (samma som 63 %-linjen), till
+  skillnad från tangentlinjen som styrs av `ENV_CONFIG.showMeasurementFacit`.
+- Verifierat med Playwright mot en lokal server (skärmdumpar, inga konsolfel) och
+  `tests/build-preview.test.mjs` (10 OK).
 
 ---
 
