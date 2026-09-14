@@ -34,9 +34,12 @@ processer/regulatorer och täcks i ett separat, senare uppdrag när simulatorn s
 - Uppgift 6: Prioritering — börvärdesföljning vs störningsavvisning
 - Mästaruppgift 7: Skriv en reglerstrategi-PM
 
-**Arbetssätt:** Klicka **"Återställ"** före varje nytt test. Anteckna dina motiveringar i
-ett separat dokument — det är själva leveransen i dessa uppgifter, inte kurvorna. Använd
-gärna "Spara" för att jämföra 2–3 kurvor visuellt när du ska styrka ett resonemang.
+**Arbetssätt:** Klicka **"Återställ"** före varje nytt test — annars blandas den nya
+körningen ihop med den förra. Anteckna dina motiveringar OCH de uppmätta värdena
+(slutvärde, fel, översläng, insvängningstid) i ett separat dokument — det är själva
+leveransen i dessa uppgifter, inte kurvorna. Appen har ingen inbyggd funktion för att
+spara eller lägga flera kurvor ovanpå varandra — vill du jämföra 2–3 körningar visuellt
+i efterhand, ta en skärmdump av grafen innan du återställer.
 
 ---
 
@@ -46,27 +49,36 @@ gärna "Spara" för att jämföra 2–3 kurvor visuellt när du ska styrka ett r
 
 ### Fall A — Nivåprocess där litet kvarstående fel accepteras
 **Process:** Självreglerande, K=1.3, T=15s, Dötid=0s. **Börvärde:** 60.
-**Krav:** Snabb respons viktigare än exakt slutvärde; litet statiskt fel är OK.
+**Krav:** Snabb respons viktigare än exakt slutvärde. Ett kvarstående fel accepteras
+**om det är högst 15 % av börvärdet** (dvs. slutvärdet måste ligga på minst 51).
 
-1. Testa med enbart P (Ti=OFF, Td=OFF), rimligt Kp.
-2. Notera slutvärde och statiskt fel.
-3. **Fråga:** Uppfyller P-reglering kraven här? Varför/varför inte?
+1. Testa med enbart P (Ti=OFF, Td=OFF), Kp=2.0.
+2. Notera **slutvärdet**, det kvarstående felet (i enheter och i %), och
+   **insvängningstiden** (tiden tills kurvan planar ut och inte längre ändras nämnvärt) —
+   du behöver alla tre för att jämföra med Fall B.
+3. **Fråga:** Uppfyller P-reglering 15 %-kravet här? Varför/varför inte?
+4. **Extra (frivilligt):** Höj Kp kraftigt, t.ex. till 6. Hamnar felet under 15 % nu?
+   Försvinner det helt, oavsett hur högt du sätter Kp?
 
 ### Fall B — Doseringsprocess där statiskt fel INTE accepteras
 **Process:** Samma som Fall A (K=1.3, T=15s, Dötid=0s). **Börvärde:** 60.
-**Krav:** Slutvärdet måste träffa börvärdet exakt (t.ex. dosering av kemikalie).
+**Krav:** Slutvärdet måste träffa börvärdet exakt (t.ex. dosering av kemikalie) — 0 %
+kvarstående fel accepteras.
 
-1. Testa samma Kp som i Fall A, enbart P.
+1. Testa samma Kp (2.0) som i Fall A, enbart P.
 2. **Fråga:** Varför duger inte P-reglering här trots att processen är identisk?
-3. Lägg till Ti (rimligt värde) och verifiera att felet försvinner.
+3. Lägg till Ti=15 (PI). Notera slutvärde, fel och insvängningstid — verifiera att
+   felet försvinner helt och jämför insvängningstiden med Fall A.
 
 ### Fall C — Brusig mätsignal
-**Process:** Samma som ovan, men aktivera brus (noiseStd ≈ 1.0).
+**Process:** Samma som ovan, men aktivera brus (noiseStd ≈ 1.0). **Regulator:** samma
+Kp=2.0, Ti=15 som Fall B.
 **Krav:** Snabbast möjliga respons på störningar.
 
-1. Testa PID med Td > 0 (t.ex. Td=2.0–3.0 — behövs för att effekten ska synas tydligt)
-   mot brus.
-2. Testa PI (Td=0) mot samma brus.
+1. Testa PID med Td > 0 (t.ex. Td=2.0–3.0 — behövs för att effekten ska synas tydligt
+   mot bruset) mot brus. Titta på hur mycket **utsignalen (u)** hoppar/skakar, inte bara
+   PV-kurvan — det är där bruskänsligheten syns tydligast.
+2. Testa PI (samma Kp=2.0, Ti=15, men Td=0) mot samma brus.
 3. **Fråga:** När är D-delens vinst (snabbhet) värd priset (bruskänslighet)? Ge ett exempel
    ur Fall A–C var för sig.
 
@@ -93,15 +105,18 @@ Kp = T / (K·(λ+Dötid)).
 ### Fall A — Säkerhetskritisk process (t.ex. reaktortemperatur)
 **Krav:** Överskjutning är oacceptabelt, oavsett tidsåtgång.
 1. Kör den konservativa inställningen (Kp=0.21, Ti=20).
-2. **Fråga:** Räcker konservativ, eller behöver du gå ännu försiktigare? Testa om osäker.
+2. Notera slutvärde, ev. översläng (%), insvängningstid och maximal utsignal — du
+   behöver dessa för att jämföra med Fall B.
+3. **Fråga:** Räcker konservativ, eller behöver du gå ännu försiktigare? Testa om osäker.
 
 ### Fall B — Genomströmningskritisk process (t.ex. produktionslinje)
 **Krav:** Snabbast möjliga inställning accepteras, viss översläng är OK så länge systemet
 inte blir instabilt.
 1. Kör den aggressiva inställningen (Kp=1.33, Ti=20).
-2. **Fråga:** Var går gränsen innan det blir oacceptabelt — vad använder du som mått
-   (översläng %, oscillation, marginal till instabilitet)? Notera även max utsignal —
-   vad händer med den vid den aggressiva inställningen?
+2. Notera slutvärde, översläng (%), insvängningstid och maximal utsignal.
+3. **Fråga:** Var går gränsen innan det blir oacceptabelt — vad använder du som mått
+   (översläng %, oscillation, marginal till instabilitet)? Vad hände med den maximala
+   utsignalen vid den aggressiva inställningen — ligger den fortfarande under 100 %?
 
 **Reflektion 2:**
 - Samma process gav två olika "rätta" svar. Vad var det egentligen som styrde valet —
@@ -118,11 +133,15 @@ inte blir instabilt.
 **Process:** Självreglerande, K=1.5, T=15s. Regulator: PI, Kp=1.5, Ti=20 (oförändrad i
 båda testerna).
 
-1. **Test A:** Dötid L=0s. Kör börvärdessteg till 60. Notera översläng/beteende.
-2. **Test B:** Samma regulatorinställning, men L=5s. Kör samma steg.
+1. **Test A:** Dötid L=0s. Kör börvärdessteg till 60. Notera slutvärde, ev. översläng
+   (%) och insvängningstid.
+2. **Test B:** Samma regulatorinställning, men L=5s. Kör samma steg. Notera samma tre
+   mått som i Test A.
 3. **Fråga:** Vad hände med *samma* regulatorinställning när enbart dötiden ändrades?
-4. Justera regulatorn (t.ex. sänk Kp eller öka Ti) tills Test B blir lika välartat som
-   Test A. Hur mycket "kostade" dötiden dig i aggressivitet?
+4. Justera regulatorn (t.ex. sänk Kp eller öka Ti) tills Test B inte längre har någon
+   översläng (dvs. samma välartade kurvform som Test A, om än långsammare). Jämför den
+   nya insvängningstiden med Test A:s — hur mycket längre tid tog det? Hur mycket
+   "kostade" dötiden dig i aggressivitet?
 
 **Reflektion 3:**
 - Varför gör dötid processen svårare att reglera aggressivt trots att K och T är oförändrade?
@@ -139,11 +158,15 @@ och grundläggande angreppssätt.
 **Process:** Integrerande (tanknivå), K=0.01, T=1.0, normalvärde 20, utflöde 0.5,
 mätområde 0–100. Börvärde 60.
 
-1. Testa enbart P-reglering (rimligt Kp, t.ex. 1.2). Kör länge nog att se hela förloppet.
-2. **Fråga:** Vad händer som *inte* händer vid självreglerande processer (jämför med
+1. Testa enbart P-reglering (Kp=1.2). Kör länge nog (minst ~200 s) att se kurvan plana ut.
+2. Notera var processvärdet landar (slutvärdet) och ungefär hur lång tid det tar innan
+   kurvan slutar röra sig.
+3. **Fråga:** Vad händer som *inte* händer vid självreglerande processer (jämför med
    Uppgift 1, Fall A)? Var landar processvärdet — och varför just där?
-3. Byt till PI (t.ex. Kp=1.5, Ti=40–50). Testa samma börvärdessteg.
-4. Aktivera pulsstörning (magnitud 1, ~10 steg — observera att "magnitud" läggs till
+4. Byt till PI (t.ex. Kp=1.5, Ti=40–50). Testa samma börvärdessteg. Notera slutvärde/fel,
+   ev. översläng och insvängningstid — jämför med Uppgift 1 Fall B (samma typ av krav,
+   annan processtyp).
+5. Aktivera pulsstörning (magnitud 1, ~10 steg — observera att "magnitud" läggs till
    processvärdet varje steg under hela pulsens längd, så en för stor magnitud/längd ger
    en orimligt kraftig störning) och observera återhämtningen.
 
@@ -168,7 +191,10 @@ inte något man lägger till efteråt när det redan gått fel.
    (utsignalen kommer mätta i taket), sänk sedan börvärdet till 40 och fortsätt köra.
    Notera hur länge utsignalen ligger kvar i taket efter att börvärdet sänkts — var
    beredd på att det kan ta väldigt lång tid (betydligt längre än du först tror).
-2. **Test B:** Samma allt, men Anti-windup PÅ. Upprepa.
+2. **Test B:** Samma allt, men Anti-windup PÅ. Upprepa. Notera ungefär hur snabbt (i
+   sekunder) utsignalen börjar röra sig nedåt efter att börvärdet sänktes, och efter hur
+   lång tid processvärdet har stabiliserats nära det nya börvärdet (40) — jämför direkt
+   med väntetiden du noterade i Test A.
 3. **Fråga:** Om du designade denna regulator *innan* idrifttagning och visste att
    ventilen/manöverdonet kunde begränsas till 50% — hade du valt samma Kp/Ti som utan den
    begränsningen? Hade du aktiverat anti-windup direkt eller väntat tills problemet syns?
@@ -188,14 +214,21 @@ händer mest i drift: börvärdesändringar eller störningar.
 
 ### Fall A — Batchprocess med täta börvärdesändringar
 **Drift:** Börvärdet ändras ofta (t.ex. varje batch), störningar är sällsynta.
-1. Testa börvärdessteg 30→70→30 med nuvarande inställning. Bedöm respons.
+1. Testa börvärdessteg 30→70→30 med nuvarande inställning.
+2. Notera översläng (%) och insvängningstid för steget 30→70 — du behöver dessa för
+   jämförelsen i Fall B, steg 3.
 
 ### Fall B — Kontinuerlig process med ständiga störningar, fast börvärde
 **Drift:** Börvärdet ligger still på 50, men pulsstörningar (magnitud 2, 5 steg — kom
 ihåg att magnituden läggs till varje steg, så detta blir totalt +10) kommer regelbundet.
-1. Testa samma inställning mot upprepade pulsstörningar vid fast börvärde.
+1. Testa samma inställning mot upprepade pulsstörningar vid fast börvärde. Notera
+   maximal avvikelse från börvärdet (SP−PV) under och efter pulsen.
 2. Justera Kp/Ti/Td för att prioritera snabb störningsåterhämtning, även om det skulle
-   ge sämre börvärdessvar.
+   ge sämre börvärdessvar. Notera den nya maximala avvikelsen — hur mycket bättre blev
+   den?
+3. **Viktigt:** Testa dina nya, omtrimmade parametrar tillbaka på Fall A:s
+   börvärdessteg (30→70→30). Notera översläng, insvängningstid, och om utsignalen
+   mättar (når 100 %). Försämrades börvärdessvaret?
 
 **Reflektion 6:**
 - Blev samma parametrar optimala i Fall A och B, eller var det en avvägning?

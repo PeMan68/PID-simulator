@@ -1250,6 +1250,18 @@ felaktigt K-värde och några orealistiska störningsparametrar i övningsdokume
 till `develop` och pushad i förtid 2026-09-14 inför datorbyte (inget innehållsmässigt
 kvarstår att göra före merge — bara försiktighetsåtgärd för att säkra arbetet).
 
+**Uppdatering 2026-09-14 (slipning av uppgiftstexten):** Gick igenom samtliga uppgifter i
+`ovningar-reglerstrategier.md` med facit som referens och skärpte instruktionerna för
+nybörjare: varje fall som jämförs mot ett annat anger nu explicit vilka mått som ska
+noteras (slutvärde, fel/%, översläng/%, insvängningstid, max utsignal) istället för
+vaga "notera beteende"-formuleringar; Uppgift 1 Fall A fick ett konkret
+acceptanskriterium (≤15 % fel) i stället för "litet fel är OK"; Uppgift 6 Fall B fick ett
+tillagt steg där de omtrimmade parametrarna testas tillbaka mot Fall A, vilket krävs för
+att Reflektion 6:s avvägningsfråga faktiskt ska gå att besvara. Rättade även en faktisk
+felaktighet i "Arbetssätt"-avsnittet: texten hänvisade till en "Spara"-funktion för att
+jämföra kurvor som inte finns i appen (PO:s iakttagelse) — ersatt med en ärlig
+beskrivning (ingen inbyggd kurvjämförelse, föreslå skärmdump).
+
 ---
 
 ## Python-app (`main.py`)
