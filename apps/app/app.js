@@ -237,11 +237,46 @@ function drawChart() {
       const y63 = pv0 + 0.632 * (pvInf - pv0);
       const y63px = yScaleTop(y63);
       ctx.save();
-      ctx.strokeStyle = "#c8870a"; ctx.lineWidth = 1.5; ctx.setLineDash([8, 5]);
+      ctx.globalAlpha = 0.6;
+      ctx.strokeStyle = "#c8870a"; ctx.lineWidth = 1; ctx.setLineDash([8, 5]);
       ctx.beginPath(); ctx.moveTo(pad.left, y63px); ctx.lineTo(w - pad.right, y63px); ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = "#c8870a"; ctx.font = "10px Segoe UI"; ctx.textAlign = "right";
       ctx.fillText("63% = " + y63.toFixed(2), w - pad.right - 3, y63px - 3);
+      ctx.restore();
+    }
+
+    // 10%/90%-hjälplinjer (stigtid)
+    if (document.getElementById("mpRiseTimeLines").checked && hasRange) {
+      const y10 = pv0 + 0.10 * (pvInf - pv0);
+      const y90 = pv0 + 0.90 * (pvInf - pv0);
+      const y10px = yScaleTop(y10);
+      const y90px = yScaleTop(y90);
+      ctx.save();
+      ctx.globalAlpha = 0.6;
+      ctx.strokeStyle = "#2980b9"; ctx.lineWidth = 1; ctx.setLineDash([8, 5]);
+      ctx.beginPath(); ctx.moveTo(pad.left, y10px); ctx.lineTo(w - pad.right, y10px); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pad.left, y90px); ctx.lineTo(w - pad.right, y90px); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#2980b9"; ctx.font = "10px Segoe UI"; ctx.textAlign = "right";
+      ctx.fillText("10% = " + y10.toFixed(2), w - pad.right - 3, y10px - 3);
+      ctx.fillText("90% = " + y90.toFixed(2), w - pad.right - 3, y90px - 3);
+      ctx.restore();
+    }
+
+    // 2%-toleransband (insvängning) — band kring PV∞, inte en enkel linje
+    if (document.getElementById("mpToleranceBand").checked && hasRange) {
+      const tol = Math.abs(pvInf - pv0) * 0.02;
+      const yUpper = yScaleTop(pvInf + tol);
+      const yLower = yScaleTop(pvInf - tol);
+      ctx.save();
+      ctx.globalAlpha = 0.6;
+      ctx.strokeStyle = "#27ae60"; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+      ctx.beginPath(); ctx.moveTo(pad.left, yUpper); ctx.lineTo(w - pad.right, yUpper); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pad.left, yLower); ctx.lineTo(w - pad.right, yLower); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#27ae60"; ctx.font = "10px Segoe UI"; ctx.textAlign = "right";
+      ctx.fillText("±2% (" + pvInf.toFixed(2) + ")", w - pad.right - 3, yUpper - 3);
       ctx.restore();
     }
 
@@ -275,13 +310,14 @@ function drawChart() {
         const pvLineAt = tv => pvInfl + maxSl * (tv - tInfl);
 
         ctx.save();
+        ctx.globalAlpha = 0.6;
         if (hasRange) {
           const tL = tInfl - (pvInfl - pv0) / maxSl;
           const tLT = tInfl + (pvInf - pvInfl) / maxSl;
           const tLineStart = Math.max(0, tL);
           const tLineEnd = Math.min(tMax, tLT);
 
-          ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 2; ctx.setLineDash([8, 4]);
+          ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1; ctx.setLineDash([8, 4]);
           ctx.beginPath();
           ctx.moveTo(xScale(tLineStart), yScaleTop(pvLineAt(tLineStart)));
           ctx.lineTo(xScale(tLineEnd), yScaleTop(pvLineAt(tLineEnd)));
@@ -290,14 +326,14 @@ function drawChart() {
           const tStep = t[stepIdx] ?? 0;
           if (tL >= 0 && tL <= tMax) {
             const xL = xScale(tL), yL = yScaleTop(pv0);
-            ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1.5;
+            ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(xL, yL - 8); ctx.lineTo(xL, yL + 8); ctx.stroke();
             ctx.fillStyle = "#8e44ad"; ctx.font = "bold 10px Segoe UI"; ctx.textAlign = "center";
             ctx.fillText("L≈" + Math.round(tL - tStep), xL, yL + 20);
           }
           if (tLT >= 0 && tLT <= tMax) {
             const xLT = xScale(tLT), yLT = yScaleTop(pvInf);
-            ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1.5;
+            ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(xLT, yLT - 8); ctx.lineTo(xLT, yLT + 8); ctx.stroke();
             ctx.fillStyle = "#8e44ad"; ctx.font = "bold 10px Segoe UI"; ctx.textAlign = "center";
             ctx.fillText("T≈" + Math.round(tLT - tL), xLT, yLT - 12);
@@ -306,7 +342,7 @@ function drawChart() {
           const ext = tMax * 0.25;
           const tLineStart = Math.max(0, tInfl - ext);
           const tLineEnd = Math.min(tMax, tInfl + ext * 1.5);
-          ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 2; ctx.setLineDash([8, 4]);
+          ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 1; ctx.setLineDash([8, 4]);
           ctx.beginPath();
           ctx.moveTo(xScale(tLineStart), yScaleTop(pvLineAt(tLineStart)));
           ctx.lineTo(xScale(tLineEnd), yScaleTop(pvLineAt(tLineEnd)));
@@ -1057,6 +1093,8 @@ document.getElementById("btnFacit").addEventListener("click", () => {
 document.getElementById("mpPv0").addEventListener("input", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mpPv0", contextKey: activityContextKey() }); } });
 document.getElementById("mpPvInf").addEventListener("input", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mpPvInf", contextKey: activityContextKey() }); } });
 document.getElementById("mp63Line").addEventListener("change", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mp63Line", contextKey: activityContextKey() }); } });
+document.getElementById("mpRiseTimeLines").addEventListener("change", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mpRiseTimeLines", contextKey: activityContextKey() }); } });
+document.getElementById("mpToleranceBand").addEventListener("change", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mpToleranceBand", contextKey: activityContextKey() }); } });
 document.getElementById("mpTangent").addEventListener("change", () => { if (measureMode) { drawChart(); activityDispatch("measurement_adjusted", { field: "mpTangent", contextKey: activityContextKey() }); } });
 
 chartCanvas.addEventListener("mousemove", e => {
