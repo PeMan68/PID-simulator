@@ -1227,7 +1227,7 @@ Verktyg för design med störningsreserver (gain margin, phase margin).
 ---
 
 ### FEAT-037 — Övningsdokument "Reglerstrategier"
-**Branch:** `feature/reglerstrategier`
+**Branch:** `feature/reglerstrategier` (mergad till `develop`, se nedan)
 **Prioritet:** Medel — kursmål nästa vecka
 **Beskrivning:**
 Nytt fristående övningsdokument (`docs/exercises/ovningar-reglerstrategier.md`), samma
@@ -1243,8 +1243,12 @@ Kp/Ti/Td mekaniskt) fokuserar detta dokument på *vilken strategi man väljer oc
 regulatortyp, aggressivitet, hantering av dötid/integrerande process/windup, och
 prioritering börvärdesföljning vs störningsavvisning — som beslut kopplade till processens
 egenskaper och driftkrav. Bygger enbart på funktioner som redan finns i webbappen (inga nya
-simulatorfunktioner krävs).
-**Status:** Öppen — utkast under granskning
+simulatorfunktioner krävs). Ett facit (`docs/exercises/facit-reglerstrategier.md`,
+verifierat mot faktisk simulering) togs fram parallellt och användes för att rätta ett
+felaktigt K-värde och några orealistiska störningsparametrar i övningsdokumentet.
+**Status:** Öppen — innehållsmässigt fortfarande under granskning/test av PO, men mergad
+till `develop` och pushad i förtid 2026-09-14 inför datorbyte (inget innehållsmässigt
+kvarstår att göra före merge — bara försiktighetsåtgärd för att säkra arbetet).
 
 ---
 
