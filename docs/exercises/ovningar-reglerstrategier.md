@@ -47,7 +47,7 @@ i efterhand, ta en skärmdump av grafen innan du återställer.
 
 **Syfte:** Öva att välja regulatortyp utifrån processens krav, inte som standardval.
 
-### Fall A — Nivåprocess där litet kvarstående fel accepteras
+### Fall A — Temperaturprocess där litet kvarstående fel accepteras
 **Process:** Självreglerande, K=1.3, T=15s, Dötid=0s. **Börvärde:** 60.
 **Krav:** Snabb respons viktigare än exakt slutvärde. Ett kvarstående fel accepteras
 **om det är högst 15 % av börvärdet** (dvs. slutvärdet måste ligga på minst 51).
