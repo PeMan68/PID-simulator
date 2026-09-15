@@ -1008,6 +1008,7 @@ function openPresentMode() {
 function closePresentMode() {
   document.getElementById("presentOverlay").hidden = true;
 }
+document.getElementById("btnKomIgang").addEventListener("click", showWelcome);
 document.getElementById("btnPresent").addEventListener("click", openPresentMode);
 document.getElementById("presentClose").addEventListener("click", closePresentMode);
 document.getElementById("presentOverlay").addEventListener("click", (e) => {
