@@ -8,6 +8,66 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-040 — Filtrering av mätsignal (dämpning av brus) — long term förbättring
+**Prioritet:** Låg — PO:s explicita beslut: långsiktig backlog, inte närmast i kö.
+**Bakgrund:**
+Uppstod ur PO:s eget test av Uppgift 2 Fall C i `ovningar-reglerstrategier.md`: en
+brusig mätsignal (noiseStd≈1.0) håller aldrig PV inom övningarnas 2 %-toleransband,
+oavsett Kp/Ti/Td (verifierat: PV utanför bandet ~74 % av tiden vid noiseStd=1.0, eftersom
+brusets egen spridning redan är bredare än bandet). Reflektion 2 i övningsdokumentet
+förklarar nu att en regulator inte kan "reglera bort" brus i mätningen — men simulatorn
+saknar helt verktyg för att visa den RIKTIGA lösningen: filtrering av mätsignalen.
+PO:s idé: lägg till ett filter (dämpning av brus) som en ny simulatorfunktion, och bygg
+en övning kring vad filtrering gör för regleringen (mindre bruskänslighet, men ny fördröjning/
+fasvridning — ett eget avvägningsproblem, parallellt med D-delens brusavvägning i Uppgift 2
+Fall C).
+
+**Utredning genomförd (se konversationen 2026-09-15) — två alternativ:**
+
+**Alternativ A — filtrera det regulatorn "ser", rör inte processen (rekommenderas):**
+Ett nytt, tillståndsbärande lågpassfilter i `Simulation.step()` i `apps/app/sim-core.js`,
+mellan den råa `process.y` och det värde som skickas in i `PIDController.step()`:
+```js
+const rawPv = this.process.y;
+const alpha = Math.min(1, this.dt / filterTau);
+this.filteredPv += (rawPv - this.filteredPv) * alpha;
+// regulatorn får this.filteredPv istället för rawPv
+```
+- **Simuleringskärna:** litet, isolerat tillägg (~15 rader), ett nytt valfritt
+  scenariofält som default är 0/av — **helt bakåtkompatibelt**, påverkar INGEN
+  befintlig scenariofil, lärstig eller redan verifierat facit.
+- **UI:** litet — samma etablerade mönster som alla andra parametrar
+  (`fields{}`/`syncParamsFromUI()`), ett nytt inputfält + hjälptext.
+- **Graf:** medelstort — poängen syns bara om både den råa (brusiga) och den filtrerade
+  PV-kurvan kan visas samtidigt (ny historik-serie, ny togglingsbar linje/legend).
+  Jämförbart i omfattning med FEAT-038:s hjälplinjer.
+- **Övningsinnehåll:** medelstort — kräver simulatorverifierat facit av samma typ som
+  Uppgift 2 Fall C:s Td-svep (svep över filterTau, mät u_std vs. insvängningstid/
+  översläng, hitta var fördröjningen börjar kosta mer än den ger).
+- **Sammanfattning:** litet/lågrisk i simuleringskärnan, medelstort totalt pga graf +
+  övningsinnehåll. Ungefär samma storleksordning som FEAT-038 + Uppgift 2 Fall C
+  tillsammans.
+
+**Alternativ B — separera "sant" processvärde från "avläst" mätvärde (inte rekommenderat
+utan uttryckligt PO/PM-beslut):**
+I dagens kod adderas brus direkt till `process.y` (processens EGNA tillstånd, som
+sedan bär vidare in i nästa stegs dynamik) — mer likt en verklig processtörning
+(turbulens, flödesvariation) än sensor-/mätbrus, trots att uppgiftstexten kallar det
+"brusig mätsignal". Ett tekniskt mer korrekt alternativ vore att brus bara ska påverka
+det AVLÄSTA värdet (inte processens sanna tillstånd), medan pulsstörningen även
+fortsättningsvis påverkar det sanna tillståndet (den ÄR en verklig störning).
+- **Detta ÄNDRAR simuleringsresultatet för alla befintliga brusanvändande scenarier**
+  (t.ex. `pid-disturbance-noise.json`) och den publicerade lärstigen
+  `storningar-robusthet.v1` (i PROD sedan v1.5.0) — kräver omverifiering av tester,
+  facit och ev. lärstigsinnehåll som redan är produktionsgodkänt.
+- Stort/riskabelt jämfört med Alternativ A. Görs bara om PO/PM uttryckligen bedömer att
+  den tekniska korrektheten är värd den risken.
+
+**Rekommendation:** Alternativ A om/när detta plockas upp. Alternativ B sparas som
+antecknad möjlighet, inte som plan.
+**Status:** Öppen — long term backlog, ej påbörjad, inget uppdrag givet.
+
+---
 ### BESLUT-001 — Ta ställning till appens namn inför slutlig prod-version
 **Prioritet:** Låg (innan release)
 **Beskrivning:**
