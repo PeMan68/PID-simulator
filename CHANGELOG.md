@@ -2,6 +2,24 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.5.3] — 2026-09-15
+
+### Rättat
+
+- **Versionsvisningen i appens sidfot visade "v1.5.1" trots att v1.5.2 var publicerad**
+  (bugg 2026-015). `APP_VERSION`-konstanten glömdes bort i föregående releaseprocess.
+
+### Nytt (dokumentation)
+
+- **Nytt övningsdokument: Reglerstrategier** (FEAT-037). Ett fristående lösblad
+  (`docs/exercises/ovningar-reglerstrategier.md`, samma mönster som befintliga
+  `ovningar-systemoptimering.md`) med sju uppgifter om att *välja och motivera en
+  reglerstrategi* — regulatortyp, aggressivitet, dötid, integrerande process, windup och
+  prioritering mellan börvärdesföljning/störningsavvisning — istället för att bara
+  mekaniskt trimma parametrar. Facit (`docs/exercises/facit-reglerstrategier.md`) är
+  verifierat mot appens egen simuleringskod. Ingår inte i den byggda webbappen (det är
+  ett lösblad, inte en lärstig) utan distribueras separat till studerande.
+
 ## [v1.5.2] — 2026-09-14
 
 ### Nytt

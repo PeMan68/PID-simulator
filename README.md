@@ -12,14 +12,14 @@ täcker inte kursens övriga innehåll om fysiska mätdon och styrdon.
 
 ## Officiell version
 
-- **Stabil version:** v1.5.2 (källkoden är taggad `v1.5.2`)
+- **Stabil version:** v1.5.3 (källkoden är taggad `v1.5.3`)
 - **Officiell URL:** https://peman68.github.io/PID-simulator/
 
 Använd den officiella URL:en för undervisning och självstudier. `main`-branchen är källan
 för den stabila undervisningsversionen, och GitHub Pages bygger och publicerar
 produktionsprofilen (PROD) uteslutande därifrån.
 
-## Funktioner i v1.5.2
+## Funktioner i v1.5.3
 
 Publicerat i produktionsversionen:
 
@@ -146,3 +146,6 @@ produktägaren — se `docs/tracking/todo.md`.
   produktionsgodkännande, hela livscykeln från idé till publicerad funktion
 - [`tests/simulation/README.md`](tests/simulation/README.md) — simulerings- och
   analysverktyget
+- [`docs/exercises/`](docs/exercises/) — fristående övningsdokument i lösbladsform
+  (t.ex. systemoptimering, reglerstrategier), med facit för lärare. Distribueras separat
+  till studerande, ingår inte i den byggda webbappen.
