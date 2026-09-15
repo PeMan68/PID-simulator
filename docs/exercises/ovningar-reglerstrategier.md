@@ -1,5 +1,5 @@
 # Övningsuppgifter: Reglerstrategier
-*PID-simulator — uppgifter i lösbladsform, ej inbyggd lärstig*
+v1.0
 
 > **⚠️ Viktigt**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
