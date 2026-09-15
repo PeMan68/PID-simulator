@@ -3,18 +3,39 @@
 
 > **⚠️ Viktigt**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
-> **UTKAST** — under granskning, ej fastställt kursmaterial.
-
 ## Inledning
 
-Där [ovningar-systemoptimering.md](ovningar-systemoptimering.md) tränar **hur** man mekaniskt trimmar Kp/Ti/Td, tränar det här dokumentet **vilken reglerstrategi man väljer och varför**. Varje uppgift ger en process och ett driftkrav — du ska välja/motivera regulatortyp, aggressivitet och särskilda hänsyn (dötid, integrerande process, windup, prioritering), inte hitta det matematiskt optimala parametersetet. Facit i denna samling är alltså ett **resonemang**, inte ett tal.
+Där simulatorns lärstigar tränar **hur** man mekaniskt trimmar Kp/Ti/Td, tränar det här dokumentet **vilken reglerstrategi man väljer och varför**. Varje uppgift ger en process och ett driftkrav — du ska välja/motivera regulatortyp, aggressivitet och särskilda hänsyn (dötid, integrerande process, windup, prioritering), inte hitta det matematiskt optimala parametersetet. Facit i denna samling är alltså ett **resonemang**, inte ett tal.
 
-**Förkunskaper:** Grundläggande PID-förståelse (P/I/D var för sig), gärna genomförda uppgifter i systemoptimeringssamlingen.
+**Förkunskaper:** Grundläggande PID-förståelse (P/I/D var för sig), gärna genomfört alla lärstigar i PID-simulatorn.
 
 **Mål:** Kunna koppla processens egenskaper och verksamhetens krav till ett medvetet val av reglerstrategi, och kunna motivera det valet skriftligt.
 
-**Avgränsning:** Denna samling förutsätter enkel-loop-reglering (en process, en regulator). Kaskadreglering, kvotreglering, framkoppling och parameterstyrning kräver flera kopplade processer/regulatorer och täcks i ett separat, senare uppdrag när simulatorn stödjer det.
+**Avgränsning:** Denna samling förutsätter enkel-loop-reglering (en process, en regulator). Kaskadreglering, kvotreglering, framkoppling och parameterstyrning kräver flera kopplade processer/regulatorer och täcks inte i PID-simulator 1.5.x.
 
+## Termer och definitioner
+
+Kort referens för begreppen som används:
+
+- **SP (börvärde)** — det värde processen ska styras mot.
+- **PV (processvärde)** — det uppmätta/simulerade värdet just nu.
+- **u (utsignal)** — regulatorns styrsignal till processen, i %.
+- **e (fel)** — SP−PV vid ett givet ögonblick.
+- **Slutvärde** — det värde PV till slut lägger sig vid.
+- **Kvarstående fel / stationärt fel** — SP−slutvärde. Ett fel som INTE försvinner även om man väntar hur länge som helst.
+- **Översläng** — hur mycket PV passerar sitt slutvärde innan den lägger sig, angivet i enheter och i % av stegets storlek (SP−startvärde).
+- **Toleransband** — den marginal runt slutvärdet som avgör om kurvan räknas som "insvängd". Dokumentet använder genomgående ett **2 %-band** (2 % av stegets storlek).
+- **Insvängningstid** — tiden tills PV går in i toleransbandet OCH stannar där (minst 10 sammanhängande steg). En kurva som bara snuddar vid bandet under en översläng och sedan fortsätter röra sig räknas INTE som insvängd förrän den stannar kvar.
+- **Stigtid (10–90 %)** — tiden det tar för PV att gå från 10 % till 90 % av vägen mellan start- och slutvärde. Mäter hur snabbt kurvan FÖRST närmar sig målet — inte samma sak som insvängningstid.
+- **Mättning ("mättar")** — utsignalen ligger i sitt gränsvärde (t.ex. u=100 % eller u=0 %) och kan inte styra mer i den riktningen även om regulatorn "vill".
+- **Windup** — när I-delen fortsätter ackumulera fel medan utsignalen är mättad, vilket gör att regulatorn reagerar för sent när felet väl vänder. **Anti-windup** är en teknik som pausar I-delens uppräkning under mättning.
+- **Dötid (L)** — tiden mellan att u ändras och att PV börjar reagera alls.
+- **Självreglerande process** — en process som själv hittar ett nytt jämviktsläge efter en förändring i u (beskrivs av K och T).
+- **Integrerande process** — en process utan egen jämvikt; PV fortsätter röra sig så länge u inte exakt matchar den last som håller processen still.
+- **K, T, L** — processens förstärkning (K), tidskonstant (T) och dötid (L) i en självreglerande förstaordningsmodell.
+- **Kp, Ti, Td** — regulatorns förstärkning, integraltid och derivatatid.
+- **Lambda-metoden** — en systematisk metod för att beräkna Kp/Ti utifrån en vald önskad tidskonstant λ för det slutna systemet: Kp=T/(K·(λ+L)), Ti=T.
+- **u_std** — standardavvikelsen hos utsignalen över en period vid stabil drift; facitets mått på hur "orolig"/bruskänslig en inställning är.
 ## Innehållsförteckning
 
 - Uppgift 1: Regulatortyp som strategival (P / PI)
@@ -25,7 +46,7 @@ Där [ovningar-systemoptimering.md](ovningar-systemoptimering.md) tränar **hur*
 - Uppgift 6: Prioritering — börvärdesföljning vs störningsavvisning
 - Mästaruppgift 7: Skriv en reglerstrategi-PM
 
-**Arbetssätt:** Klicka **"Återställ"** före varje nytt test — annars blandas den nya körningen ihop med den förra. Anteckna dina motiveringar OCH de uppmätta värdena (slutvärde, fel, översläng, insvängningstid) i ett separat dokument — det är själva leveransen i dessa uppgifter, inte kurvorna. **Insvängningstid** betyder här: tiden tills kurvan ligger kvar nära slutvärdet UTAN att lämna det området igen — en kurva som råkar snudda vid börvärdet under en översläng och sedan fortsätter röra sig räknas inte som insvängd förrän den stannar. Appen har ingen inbyggd funktion för att spara eller lägga flera kurvor ovanpå varandra — vill du jämföra 2–3 körningar visuellt i efterhand, ta en skärmdump av grafen innan du återställer.
+**Arbetssätt:** Klicka **"Återställ"** före varje nytt test när resultat ska jämföras. Anteckna dina motiveringar OCH de uppmätta värdena (slutvärde, fel, översläng, insvängningstid etc) i ett separat dokument — det är själva leveransen i dessa uppgifter, inte kurvorna. Vill du jämföra 2–3 körningar visuellt i efterhand, ta en skärmdump av grafen innan du återställer.
 
 ---
 
@@ -57,24 +78,24 @@ Där [ovningar-systemoptimering.md](ovningar-systemoptimering.md) tränar **hur*
 
 ## Uppgift 2: Aggressivitet — matcha strategi till driftkrav
 
-**Syfte:** Samma process, två helt olika verksamhetskrav — visa att "bästa" inställning inte finns i ett vakuum. Fall C bygger vidare på detta och visar att regulatortyp (PID) och aggressivitet inte är oberoende val.
+**Syfte:** Samma process, två helt olika verksamhetskrav — visa att "bästa" inställning inte är ett absolut påstående.
 
 **Process (samtliga fall):** Självreglerande, K=1.5, T=20.0, Dötid=5.0. Börvärde 60.
 
-Använd Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samtliga): Kp = T / (K·(λ+Dötid)).
+Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samtliga): Kp = T / (K·(λ+Dötid)).
 - **Konservativ:** λ=3T=60 → Kp≈0.21, Ti=20
 - **Balanserad:** λ=T=20 → Kp≈0.53, Ti=20
 - **Aggressiv:** λ=Dötid=5 → Kp≈1.33, Ti=20
 
 ### Fall A — Säkerhetskritisk process (t.ex. reaktortemperatur)
 **Krav:** Överskjutning är oacceptabelt, oavsett tidsåtgång.
-1. Kör den konservativa inställningen (Kp=0.21, Ti=20).
+1. Kör PI-reglering med den konservativa inställningen (Kp=0.21, Ti=20).
 2. Notera slutvärde, ev. översläng (%), insvängningstid och maximal utsignal — du behöver dessa för att jämföra med Fall B.
 3. **Fråga:** Räcker konservativ, eller behöver du gå ännu försiktigare? Testa om osäker.
 
 ### Fall B — Genomströmningskritisk process (t.ex. produktionslinje)
 **Krav:** Snabbast möjliga inställning accepteras, viss översläng är OK så länge systemet inte blir instabilt.
-1. Kör den aggressiva inställningen (Kp=1.33, Ti=20).
+1. Kör PI-reglering med den aggressiva inställningen (Kp=1.33, Ti=20).
 2. Notera slutvärde, översläng (%), insvängningstid och maximal utsignal.
 3. **Fråga:** Var går gränsen innan det blir oacceptabelt — vad använder du som mått (översläng %, oscillation, marginal till instabilitet)? Vad hände med den maximala utsignalen vid den aggressiva inställningen — ligger den fortfarande under 100 %?
 
@@ -85,7 +106,7 @@ Använd Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samtliga)
 2. Notera slutvärde, översläng (%) och insvängningstid. Jämför båda måtten med Fall B:s rena PI (Td=0).
 3. **Fråga:** Vad hände med överslängen jämfört med Fall B? Och med den verkliga insvängningstiden — inte bara hur snabbt kurvan först närmar sig börvärdet, utan hur snabbt den helt slutar röra sig?
 4. Aktivera brus (noiseStd ≈ 1.0) på PID-inställningen (Kp=1.33, Ti=20, Td=1). Jämför utsignalens (u) oro med samma brus men Td=0 (ren PI) — syns någon tydlig skillnad?
-5. Höj Td ytterligare, t.ex. till Td=3 (fortfarande med brus aktiverat). Notera hur mycket mer utsignalen nu hoppar — och kontrollera samtidigt (utan brus) vad som hände med överslängen och insvängningstiden vid detta höga Td.
+5. Höj Td ytterligare, t.ex. till Td=3 (fortfarande med brus aktiverat). Notera hur mycket mer utsignalen nu hoppar — och kontrollera också (utan brus) vad som hände med överslängen och insvängningstiden vid detta höga Td.
 6. Gå tillbaka till PI (Td=0) med brus aktiverat. Jämför u och PV en sista gång mot båda PID-varianterna (Td=1 och Td=3).
 7. **Fråga:** Fanns det ett Td-intervall där du fick en förbättring nästan utan bruskostnad (snabbare, mindre översläng, knappt märkbart oroligare utsignal)? Och ett intervall där mer Td gjorde saken sämre på alla mått samtidigt — inte bara brusigare, utan även långsammare och med mer översläng?
 
@@ -202,8 +223,5 @@ Skriv ett kort PM (en halv till en sida) som besvarar:
 
 ## Avslutande reflektion
 
-- Vilken skillnad ser du mellan att "trimma parametrar" (systemoptimeringssamlingen) och att "välja en reglerstrategi" (denna samling)? Är det två separata steg i praktiken, eller går de in i varandra?
+- Vilken skillnad ser du mellan att "trimma parametrar" (simulatorns lärstigar) och att "välja en reglerstrategi" (denna samling)? Är det två separata steg i praktiken, eller går de in i varandra?
 - Vilken av dagens sex strategifrågor (regulatortyp, aggressivitet, dötid, integrerande process, windup, prioritering) tror du är lättast att missa i ett verkligt projekt om man bara "kör på" med standardinställningar?
-
----
-**Svårighetsgrad:** Medel-Avancerad

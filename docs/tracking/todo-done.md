@@ -35,6 +35,63 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande features 
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-037 — Övningsdokument "Reglerstrategier"
+**Branch:** `feature/reglerstrategier` (mergad till `develop`)
+**Beskrivning:**
+Nytt fristående övningsdokument (`docs/exercises/ovningar-reglerstrategier.md`), samma
+mönster som `ovningar-systemoptimering.md`: uppgifter i lösbladsform, inte en guidad
+lärstig. Tränar *vilken reglerstrategi man väljer och varför* — regulatortyp (P/PI, med
+PID:s avvägningar i Uppgift 2 Fall C), aggressivitet (Lambda-metoden), dötid,
+integrerande process, windup och prioritering börvärdesföljning/störningsavvisning.
+Sju uppgifter (varav en mästaruppgift, ett sammanfattande PM). Bygger enbart på
+funktioner som redan fanns i webbappen.
+
+Ett facit (`docs/exercises/facit-reglerstrategier.md`) togs fram parallellt, verifierat
+mot faktisk simulering (`apps/app/sim-core.js` kört i Node via
+`tests/simulation/lib/analyze.mjs`, seed=42). Verifieringen hittade och rättade flera
+sakfel innan publicering: fel processförstärkning i Uppgift 2, orealistiskt kraftiga
+standardpulsstorlekar (appens pulsmagnitud läggs till PER STEG, inte engångs — lätt att
+missbedöma), samt att HELA facit inledningsvis använde ett löst/odokumenterat
+toleransband för "insvängningstid" som gav missvisande jämförelser mellan strategier.
+Facit standardiserades till ett enhetligt, dokumenterat 2 %-toleransband
+(`analyze.mjs`s standardvärde) innan publicering.
+
+PO gjorde flera manuella redigeringsomgångar (skärpte acceptanskriterier och vilka
+mätvärden studenten ska notera, bytte Uppgift 1 Fall A:s exempel från "Nivåprocess" till
+"Temperaturprocess" för att inte krocka med Uppgift 4:s nivå=integrerande-lektion, tog
+bort kvarvarande referenser till andra övningsdokument för att göra dokumentet
+självständigt). CC byggde ut Uppgift 2 med en ny Fall C (Td-svep, simulatorverifierad:
+lagom Td≈1 eliminerar överslängen och mer än halverar insvängningstiden med försumbar
+bruskostnad, medan överdrivet Td gör allt sämre samtidigt) och flyttade dit
+brus/D-dels-undersökningen från Uppgift 1.
+
+Facit renskrevs slutligen helt (all historik/motivering om vad som rättades och varför
+togs bort) för att matcha det färdigredigerade övningsdokumentet exakt.
+**Status:** Klar, mergad till `develop`. Publicerad till `main` 2026-09-15 (se
+`CHANGELOG.md`) — ren dokumentation, ingår inte i PROD-appens byggda innehåll
+(`catalog.prod.json`) eftersom det är ett fristående lösblad, inte en lärstig.
+
+---
+
+### FEAT-038 — Hjälplinjer 10 %/90 %/2 %-band i Mätläge
+**Branch:** `feature/matlage-hjalplinjer` (mergad till `develop`)
+**Beskrivning:**
+Två nya togglingsbara hjälplinjer i Mätläge, samma mönster som befintlig 63 %-linje:
+"Visa 10 %/90 %-linjer (stigtid)" (en gemensam kryssruta, båda linjerna hör ihop som
+stigtidsdefinitionen) och "Visa 2 %-toleransband (insvängning)" (ritas som ETT BAND —
+övre/undre gräns kring PV∞ — eftersom 2 % definitionsmässigt är ett toleransband, inte
+en enkel tröskel som 63/10/90 %). Samtidigt gjordes samtliga hjälplinjer (63 %,
+tangentlinjen, de två nya) tunnare och lätt transparenta (`lineWidth 1`,
+`globalAlpha 0.6`) så de tydligt skiljer sig visuellt från PV/SP/u-kurvorna — tidigare
+var tangentlinjen lika tjock som huvudkurvorna.
+
+Verifierat med Playwright mot en lokal server (skärmdumpar, inga konsolfel) och
+`tests/build-preview.test.mjs`.
+**Status:** Klar, mergad till `develop`. **Produktionsaktiverad i v1.5.2**
+(2026-09-14/15, PO:s beslut, se `CHANGELOG.md`).
+
+---
+
 ### FEAT-030 — Lärstig "Störningar och robusthet"
 **Branch:** `feature/storningar-robusthet` (mergad till `develop`)
 **Beskrivning:**
