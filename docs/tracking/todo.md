@@ -1247,12 +1247,17 @@ dator. De två andra PDF:erna i `docs/exercises/` (`ovningar-systemoptimering.pd
 `processforstärkning-förklaring.pdf`) kontrollerades och är bara lokala PDF-exporter av
 redan git-spårade `.md`-filer — inget Python-app-innehåll, lämnade orörda.
 
-**Öppen fråga (väntar på PO/PM-beslut, se avsnitt nedan i konversationen):** hur "Kom
-igång"-lärstigen ska göras upptäckbar. Den visas idag bara automatiskt en gång per
-webbläsare (`localStorage`-flaggan `pidSimWelcomed`, se `showWelcome()` i
-`apps/app/app.js:773`) — därefter finns ingen synlig påminnelse, bara att den råkar ligga
-överst i lärstigslistan.
-**Status:** Öppen — utkast, väntar på PO-granskning
+**Discoverability löst:** "Kom igång"-lärstigen visades tidigare bara automatiskt en
+gång per webbläsare (`localStorage`-flaggan `pidSimWelcomed`, `showWelcome()` i
+`apps/app/app.js:773`) — därefter fanns ingen synlig påminnelse. PO valde alternativet
+"permanent knapp i appen". Implementerat: ny knapp `❓ Kom igång` direkt under apptiteln
+i vänster sidebar (alltid synlig, oavsett `pidSimWelcomed`), öppnar samma välkomstruta.
+Verifierat med Playwright mot lokal `http.server`: knappen syns efter simulerat
+återbesök, klick visar välkomstrutan, "Kom igång »" i rutan laddar lärstigen korrekt,
+inga konsol-/sidfel. Berör `apps/app/index.html` (knapp + `.komigang-btn`-stil) och
+`apps/app/app.js` (klick-koppling till befintlig `showWelcome()`).
+**Status:** Öppen — utkast klart (dokument + appändring), väntar på PO-granskning innan
+merge till `develop`
 
 ---
 
