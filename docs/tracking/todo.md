@@ -1233,14 +1233,25 @@ Verktyg för design med störningsreserver (gain margin, phase margin).
 PO efterfrågade en kort, fristående text studerande kan läsa innan de öppnar appen — så
 PO slipper förklara appen muntligt varje gång. Ny fil
 `docs/exercises/introduktion.md`: kort syftesbeskrivning, en punktlista över vad appen
-kan idag (hämtad från `README.md`s funktionslista för v1.5.3), en pekare till den redan
-befintliga inbyggda lärstigen "Kom igång med PID Simulator" (första posten i
-`catalog.prod.json`) som går igenom själva gränssnittet, en numrerad översikt över samtliga
-sju publicerade lärstigar i ordning, och en kort notis om att fristående övningsblad
-(`ovningar-*.md`) också finns. Upptäckte samtidigt att `docs/exercises/README.pdf` är en
-användarmanual för den **nedlagda Python-appen** (tkinter/matplotlib) — föråldrad och
-missvisande för webbappen, bör INTE delas ut till studerande (ingen ändring gjord i detta
-uppdrag, bara flaggat).
+kan idag (hämtad från `README.md`s funktionslista för v1.5.3), och en pekare till den
+redan befintliga inbyggda lärstigen "Kom igång med PID Simulator" (första posten i
+`catalog.prod.json`) plus en numrerad översikt över samtliga sju publicerade lärstigar i
+ordning. Omfattar **endast** appens inbyggda innehåll — PO beslutade att fristående
+övningsblad (`ovningar-*.md`) inte ska nämnas i detta dokument.
+
+**Arkivering av Python-app-material (PO-instruktion):** `docs/exercises/README.pdf` var
+en användarmanual för den nedlagda Python-appen (tkinter/matplotlib) — flyttad till
+`docs/python-app-archive/README.pdf`. Filen var aldrig git-spårad (`*.pdf` i
+`.gitignore` sedan tidigare), så flytten syns inte i historiken, bara lokalt på denna
+dator. De två andra PDF:erna i `docs/exercises/` (`ovningar-systemoptimering.pdf`,
+`processforstärkning-förklaring.pdf`) kontrollerades och är bara lokala PDF-exporter av
+redan git-spårade `.md`-filer — inget Python-app-innehåll, lämnade orörda.
+
+**Öppen fråga (väntar på PO/PM-beslut, se avsnitt nedan i konversationen):** hur "Kom
+igång"-lärstigen ska göras upptäckbar. Den visas idag bara automatiskt en gång per
+webbläsare (`localStorage`-flaggan `pidSimWelcomed`, se `showWelcome()` i
+`apps/app/app.js:773`) — därefter finns ingen synlig påminnelse, bara att den råkar ligga
+överst i lärstigslistan.
 **Status:** Öppen — utkast, väntar på PO-granskning
 
 ---

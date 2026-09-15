@@ -34,9 +34,11 @@ process → mätdon → regulator → styrdon → process
 ## Börja här: "Kom igång med PID Simulator"
 
 Appen har en inbyggd guide som går igenom gränssnittet steg för steg — panelerna, hur du
-laddar ett scenario, kör/stegar en simulering, ändrar parametrar och hittar hjälp. Välj den
-längst upp i lärstigslistan i vänster sidebar och klicka "Ladda lärstig". Den tar 5–10
-minuter och kräver inga förkunskaper.
+laddar ett scenario, kör/stegar en simulering, ändrar parametrar och hittar hjälp. Den
+visas automatiskt som en välkomstruta första gången du öppnar appen i en webbläsare. Ser
+du den inte (t.ex. om du redan klickat bort den en gång): den ligger alltid överst i
+lärstigslistan i vänster sidebar — välj "Kom igång med PID Simulator" och klicka
+"Ladda lärstig". Tar 5–10 minuter, kräver inga förkunskaper.
 
 ## Lärstigarna — i ordning
 
@@ -53,13 +55,6 @@ fenomen:
 
 Varje lärstig körs i **Guidat läge** — fri utforskning i din egen takt, med
 reflektionsfrågor längs vägen, ingen poängräkning.
-
-## Övningsblad vid sidan av
-
-Utöver lärstigarna i appen finns fristående övningsdokument i `docs/exercises/` som du
-löser med hjälp av simulatorn men som inte är inbyggda i appen (t.ex.
-[ovningar-reglerstrategier.md](ovningar-reglerstrategier.md)). De pekar ut vilka
-process-/regulatorvärden du ska ställa in själv i appen — inget extra att installera.
 
 ---
 **Version:** matchar PID Simulator v1.5.3.
