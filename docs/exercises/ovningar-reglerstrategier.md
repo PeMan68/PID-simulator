@@ -114,6 +114,7 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 - Samma process gav två olika "rätta" svar i Fall A/B. Vad var det egentligen som styrde valet — processen eller kravet?
 - Vilket av dina svar (A eller B) skulle du vilja ha extra säkerhetsmarginal på i verkligheten, och varför?
 - Fall C visade att D-delen inte alltid är en ren avvägning (snabbhet mot brus) — inom rätt intervall kan den ge vinst på flera mått samtidigt, medan för mycket Td kan göra allt sämre på en gång. Vad säger det om att bara "lägga på mer D" som tumregel?
+- Med brus aktiverat (steg 4–6) "lägger sig" PV aldrig lika stilla som i Fall A/B, oavsett hur du trimmar Kp/Ti/Td — mätbruset finns kvar i den avlästa signalen oavsett regulatorinställning. En regulator kan inte reglera bort ett brus som redan sitter i mätningen. Vad skulle du göra åt en brusig mätsignal i verkligheten, om trimning av regulatorn inte hjälper (t.ex. signalfiltrering, bättre/skyddad sensor, annan mätplacering)?
 
 ---
 
@@ -225,3 +226,4 @@ Skriv ett kort PM (en halv till en sida) som besvarar:
 
 - Vilken skillnad ser du mellan att "trimma parametrar" (simulatorns lärstigar) och att "välja en reglerstrategi" (denna samling)? Är det två separata steg i praktiken, eller går de in i varandra?
 - Vilken av dagens sex strategifrågor (regulatortyp, aggressivitet, dötid, integrerande process, windup, prioritering) tror du är lättast att missa i ett verkligt projekt om man bara "kör på" med standardinställningar?
+ 
