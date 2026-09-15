@@ -2,6 +2,19 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.5.4] — 2026-09-15
+
+### Rättat (HOTFIX-2026-014)
+
+- **"Återställ system" kunde lämna en osynlig, permanent styrsignal-offset kvar**
+  efter ett lägesbyte med "Bumpless" aktiverat, om återställningen klickades innan den
+  5 steg långa mjuka övergången hunnit köra klart. Effekten: en P-regulator kunde få
+  I-liknande nollfels-beteende (t.ex. på en integrerande process, styra hela vägen till
+  börvärdet istället för att stanna vid sitt korrekta kvarstående fel) utan att något i
+  statusraden visade varför — utsignalen (u) matchade inte längre P+I+D-summan.
+  `Simulation.reset()` nollställer nu båda speglade kopiorna av bias-tillståndet, inte
+  bara den ena. Regressionstest tillagt (`tests/hotfix-2026-014-bumpless-reset.test.mjs`).
+
 ## [v1.5.3] — 2026-09-15
 
 ### Rättat
