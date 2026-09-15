@@ -20,6 +20,42 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande buggar st
 
 ## Webbapp (`apps/app/`)
 
+### 2026-014 — "Återställ system" rensade inte en pågående bumpless-bias
+**Prio:** Medel (visade sig vara allvarligare än ursprungligen bedömt — se nedan)
+**Datum:** 2026-09-14 (registrerad), 2026-09-15 (rotorsak funnen och åtgärdad, HOTFIX)
+**Branch:** `bugfix/2026-014` (grenad från `main`, hotfix)
+**Ursprunglig beskrivning:** PO:s observation: kör en integrerande process till jämvikt,
+tryck **"Återställ system"** — PV verkade inte alltid börja om rent.
+
+**Bekräftad grundorsak (efter felsökning i appen, inte bara kodläsning):** inget med
+`sim.history` (den ursprungliga misstanken var fel). Den verkliga orsaken är
+"Bumpless"-funktionen (mjuk övergång vid lägesbyte): `Simulation.step()` i
+`sim-core.js` håller en bias-term i två speglade platser — `this.pid.bias` (motorns
+egen kopia) och `this.scenario.controller.bias` (en kopia `app.js` läser/skriver vid
+lägesbyten). `Simulation.reset()` nollställde bara den förstnämnda. Om en
+bumpless-övergång var påbörjad (inom sina första 5 steg efter ett lägesbyte med
+Bumpless aktiverat) och "Återställ system" klickades innan de hunnit köra klart,
+överlevde den gamla biasen i `scenario.controller.bias`. Nästa steg återupplivade den
+via `step()`s else-gren — UTAN att sätta `biasFadeSteps` igen — så biasen blev
+**permanent och helt osynlig** (syns inte i statusradens P/I/D-uppdelning; u ≠ P+I+D).
+
+**Faktisk effekt, bekräftad av PO:** en P-regulator på en integrerande process fick
+I-liknande nollfels-beteende — PV drev mot börvärdet istället för att stanna vid det
+korrekta, facit-verifierade kvarstående felet. Detta hade kunnat ge felaktiga
+undervisningsresultat i produktion utan någon synlig varningssignal.
+
+**Fix:** `Simulation.reset()` nollställer nu även `this.scenario.controller.bias`,
+samma par som redan nollställs tillsammans när en övergång fadear klart naturligt.
+En rads ändring i `sim-core.js`.
+
+**Status:** Stängd — HOTFIX till `main` som **v1.5.4** (branchad från `main`, inte
+`develop`, eftersom buggen var live i produktion). Verifierad med ny regressionstest
+(`tests/hotfix-2026-014-bumpless-reset.test.mjs` — röd utan fixen, grön med), hela den
+befintliga testsviten grön, och manuellt återskapad + bekräftad löst i en riktig
+webbläsare (Playwright) mot PO:s exakta repro-scenario. Mergad tillbaka till `develop`.
+
+---
+
 ### 2026-015 — `APP_VERSION` glömdes bort vid release v1.5.2
 **Prio:** Låg
 **Datum:** 2026-09-15
