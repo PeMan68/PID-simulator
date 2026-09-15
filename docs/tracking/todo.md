@@ -1226,6 +1226,25 @@ Verktyg för design med störningsreserver (gain margin, phase margin).
 
 ---
 
+### FEAT-039 — Kort introduktionsdokument för studerande
+**Branch:** `feature/app-introduktion`
+**Prioritet:** Medel
+**Beskrivning:**
+PO efterfrågade en kort, fristående text studerande kan läsa innan de öppnar appen — så
+PO slipper förklara appen muntligt varje gång. Ny fil
+`docs/exercises/introduktion.md`: kort syftesbeskrivning, en punktlista över vad appen
+kan idag (hämtad från `README.md`s funktionslista för v1.5.3), en pekare till den redan
+befintliga inbyggda lärstigen "Kom igång med PID Simulator" (första posten i
+`catalog.prod.json`) som går igenom själva gränssnittet, en numrerad översikt över samtliga
+sju publicerade lärstigar i ordning, och en kort notis om att fristående övningsblad
+(`ovningar-*.md`) också finns. Upptäckte samtidigt att `docs/exercises/README.pdf` är en
+användarmanual för den **nedlagda Python-appen** (tkinter/matplotlib) — föråldrad och
+missvisande för webbappen, bör INTE delas ut till studerande (ingen ändring gjord i detta
+uppdrag, bara flaggat).
+**Status:** Öppen — utkast, väntar på PO-granskning
+
+---
+
 ## Python-app (`main.py`)
 
 Python-appen är nedlagd — se BESLUT-002. Alla öppna Python-features är stängda utan
