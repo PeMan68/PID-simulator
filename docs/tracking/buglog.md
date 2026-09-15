@@ -9,25 +9,6 @@ Stängda buggar finns i [buglog-done.md](buglog-done.md).
 
 ## Webbapp (`apps/app/`)
 
-### 2026-015 — `APP_VERSION` glömdes bort vid release v1.5.2
-**Prio:** Låg
-**Datum:** 2026-09-15
-**Branch:** `bugfix/2026-015`
-**Beskrivning:**
-PO:s observation: v1.5.2 (FEAT-038, hjälplinjer i Mätläge) är publicerad i PROD, men
-appens versionsvisning i sidofoten visar fortfarande "v1.5.1". Orsak: `APP_VERSION` i
-`apps/app/app.js` (rad 7) är en hårdkodad sträng som glömdes bort i release-processen
-för v1.5.2 — `CHANGELOG.md` och `README.md` uppdaterades, men inte denna konstant.
-**Förväntat beteende:** Versionen i appens UI matchar den senast taggade releasen.
-**Faktiskt beteende:** Visar en release bakåt i tiden.
-**Åtgärd:** `APP_VERSION` rättad till `"1.5.2"` i `develop` (se nedan) — får effekt
-först vid nästa release till `main`/PROD, per PO:s uttryckliga instruktion ("fixa i
-nästa släpp", ingen hotfix för detta). Lägg gärna till en kontroll av `APP_VERSION`
-mot `CHANGELOG.md`s senaste rubrik i release-checklistan så detta inte glöms igen.
-**Status:** Åtgärdad i `develop`, väntar på nästa release.
-
----
-
 ### 2026-014 — "Återställ system" startar om från föregående PV, inte normalvärdet
 **Prio:** Medel
 **Datum:** 2026-09-14
