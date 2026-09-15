@@ -20,6 +20,24 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande buggar st
 
 ## Webbapp (`apps/app/`)
 
+### 2026-015 — `APP_VERSION` glömdes bort vid release v1.5.2
+**Prio:** Låg
+**Datum:** 2026-09-15
+**Branch:** `bugfix/2026-015`
+**Beskrivning:**
+PO:s observation: v1.5.2 (FEAT-038, hjälplinjer i Mätläge) publicerades i PROD, men
+appens versionsvisning i sidofoten visade fortfarande "v1.5.1". Orsak: `APP_VERSION` i
+`apps/app/app.js` (rad 7) är en hårdkodad sträng som glömdes bort i release-processen
+för v1.5.2 — `CHANGELOG.md` och `README.md` uppdaterades, men inte denna konstant.
+**Fix:** `APP_VERSION` rättad till `"1.5.2"`.
+**Status:** Stängd — mergad till `develop` 2026-09-15. Fixen får effekt i PROD först
+vid nästa release till `main` (PO:s uttryckliga instruktion — ingen hotfix för detta).
+PROD visar alltså fortsatt "v1.5.1" i UI:t tills dess, trots att v1.5.2:s faktiska
+funktion (mätlinjerna) redan är live. Lägg gärna till en kontroll av `APP_VERSION` mot
+`CHANGELOG.md`s senaste rubrik i release-checklistan så detta inte glöms igen.
+
+---
+
 ### 2026-013 — Återställ progression: nästa händelse ger massiv felaktig XP-återhämtning
 **Prio:** Hög
 **Datum:** 2026-09-10
