@@ -776,16 +776,11 @@ function showWelcome() {
     <p>Simulera och utforska reglerteknik — från enkel on/off till avancerade metoder som Lambda-tuning.</p>
     <p>Appen passar både nybörjare och den som vill repetera eller fördjupa sig.</p>
     <button id="welcomeStart">Kom igång »</button>
-    <button id="welcomeSkip" class="secondary">Utforska fritt</button>
   </div>`;
   document.getElementById("welcomeStart").onclick = () => {
     localStorage.setItem("pidSimWelcomed", "1");
     loadPath("kom-igång.v1");
     nextPathStep();
-  };
-  document.getElementById("welcomeSkip").onclick = () => {
-    localStorage.setItem("pidSimWelcomed", "1");
-    loadScenarioByName("basic-step-self-regulating.json");
   };
 }
 
