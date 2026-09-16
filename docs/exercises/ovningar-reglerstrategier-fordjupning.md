@@ -67,6 +67,7 @@ Det här är den fördjupande fortsättningen på [ovningar-reglerstrategier.md]
 | *(från grunddokumentet)* Lambda Aggressiv | 1,33 | 20 | — | | | | |
 
 **Reflektion:**
+
 - Ziegler-Nichols kräver att du faktiskt driver processen till gränsen av instabilitet för att hitta Ku. Vilka verkliga processer skulle du INTE våga göra det på? Vad gör man då istället?
 - Lambda-metoden lät dig välja aggressivitet fritt (λ). Ziegler-Nichols ger bara en fast, ganska aggressiv inställning per regulatortyp. Är det en styrka eller en svaghet?
 - Om din ZN PID-inställning gav mer översläng än Lambda Aggressiv — betyder det att Ziegler-Nichols är en sämre metod, eller mäter du bara "aggressivitet" på olika sätt? Motivera.
@@ -82,6 +83,7 @@ Det här är den fördjupande fortsättningen på [ovningar-reglerstrategier.md]
 
 ### Uppgift
 Designa och testa **två varianter vardera** av P, PI och PID — en **aggressiv** och en **säker** variant (6 tester totalt). Du väljer själva Kp/Ti/Td-värdena; det finns inget facit-recept här. Utgå från vad du redan vet:
+
 - P kan aldrig ge nollfel på denna process (grunddokumentets Uppgift 4) — men hur nära börvärdet kan du ändå komma med en tillräckligt hög Kp, och vad kostar det (utsignal, marginal)?
 - PI ger nollfel, men hur mycket översläng är du beredd att acceptera för snabbhet?
 - Testa om PID (lägg till Td) faktiskt hjälper här, på samma sätt som du undersökte i grunddokumentets Uppgift 2 Fall C. Räkna inte med att svaret blir detsamma som där.
@@ -98,6 +100,7 @@ Designa och testa **två varianter vardera** av P, PI och PID — en **aggressiv
 | PID | Aggressiv | | | | | | | | |
 
 **Reflektion:**
+
 - Vilken av dina sex inställningar skulle du faktiskt rekommendera för en verklig tanknivåreglering, och varför?
 - Hjälpte Td dig här på samma sätt som i Uppgift 2 Fall C? Om inte — vad tror du skiljer de två situationerna åt (dötidens storlek relativt processens övriga dynamik är en ledtråd)?
 - Din "säkra P" hamnar sannolikt fortfarande långt ifrån börvärdet. Finns det ett Kp-värde som gör att P-only "fungerar bra nog" här, eller är regulatortypen i sig fel val oavsett hur du trimmar den (jämför med grunddokumentets Reflektion 4)?
@@ -144,6 +147,7 @@ Upprepa exakt Del 1:s tre tester (Kp=3.0, Ti=20 oförändrat), men med anti-wind
 | 30 % | | |
 
 **Reflektion:**
+
 - Hjälpte det att sänka Kp/Ti i Del 2, jämfört med att bara aktivera anti-windup i Del 3?
 - Formulera om din strategiregel från grunddokumentets Reflektion 5 ("Om manöverdonet kan mättas ska regulatorn alltid…") baserat på vad du just sett — behöver den skärpas?
 - I Del 1 blev återhämtningstiden dramatiskt längre för varje steg mot en hårdare gräns. I Del 3 var skillnaden knappt märkbar. Vad säger det om HUR mycket du behöver oroa dig för exakt var utsignalgränsen sätts, förutsatt att anti-windup är aktiverat?
@@ -167,6 +171,7 @@ Du har redan två inställningar från grunddokumentets Uppgift 6: den **ursprun
 | Omtrimmad | | | |
 
 **Reflektion:**
+
 - I grunddokumentets Uppgift 6 vann den omtrimmade inställningen på störningsåterhämtning. Vinner den fortfarande när brus också är med i bilden — eller finns det en dold kostnad som bara syns när båda störningarna är aktiva samtidigt?
 - Om du var tvungen att välja EN inställning att driftsätta, och du visste att verkligheten alltid innehåller BÅDE kontinuerligt brus och enstaka pulser — skulle du välja annorlunda än om du bara testat dem var för sig (som i Uppgift 6)?
 - Koppla till Uppgift 2 Fall C: gäller samma lärdom om D-delens avvägning (snabbhet mot brus) här, i en annan process och ett annat sammanhang?

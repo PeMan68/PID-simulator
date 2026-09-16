@@ -77,6 +77,7 @@ Kort referens för begreppen som används:
 | B (PI) | 15 | | | | |
 
 **Reflektion 1:**
+
 - Skriv en tumregel för P och för PI: "Välj P när …", "Välj PI när …". 
 - Kravet, inte processen, avgjorde valet i Fall A vs B (samma process!). Håller det resonemanget även i verkligheten?
 
@@ -89,18 +90,21 @@ Kort referens för begreppen som används:
 **Process (samtliga fall):** Självreglerande, K=1.5, T=20.0, Dötid=5.0. Börvärde 60.
 
 Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samtliga): Kp = T / (K·(λ+Dötid)).
+
 - **Konservativ:** λ=3T=60 → Kp≈0.21, Ti=20
 - **Balanserad:** λ=T=20 → Kp≈0.53, Ti=20
 - **Aggressiv:** λ=Dötid=5 → Kp≈1.33, Ti=20
 
 ### Fall A — Säkerhetskritisk process (t.ex. reaktortemperatur)
 **Krav:** Överskjutning är oacceptabelt, oavsett tidsåtgång.
+
 1. Kör PI-reglering med den konservativa inställningen (Kp=0.21, Ti=20).
 2. Notera slutvärde, ev. översläng (%), insvängningstid och maximal utsignal — du behöver dessa för att jämföra med Fall B.
 3. **Fråga:** Räcker konservativ, eller behöver du gå ännu försiktigare? Testa om osäker.
 
 ### Fall B — Genomströmningskritisk process (t.ex. produktionslinje)
 **Krav:** Snabbast möjliga inställning accepteras, viss översläng är OK så länge systemet inte blir instabilt.
+
 1. Kör PI-reglering med den aggressiva inställningen (Kp=1.33, Ti=20).
 2. Notera slutvärde, översläng (%), insvängningstid och maximal utsignal.
 3. **Fråga:** Var går gränsen innan det blir oacceptabelt — vad använder du som mått (översläng %, oscillation, marginal till instabilitet)? Vad hände med den maximala utsignalen vid den aggressiva inställningen — ligger den fortfarande under 100 %?
@@ -132,6 +136,7 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 | 3 | | | |
 
 **Reflektion 2:**
+
 - Samma process gav två olika "rätta" svar i Fall A/B. Vad var det egentligen som styrde valet — processen eller kravet?
 - Vilket av dina svar (A eller B) skulle du vilja ha extra säkerhetsmarginal på i verkligheten, och varför?
 - Fall C visade att D-delen inte alltid är en ren avvägning (snabbhet mot brus) — inom rätt intervall kan den ge vinst på flera mått samtidigt, medan för mycket Td kan göra allt sämre på en gång. Vad säger det om att bara "lägga på mer D" som tumregel?
@@ -159,6 +164,7 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 | B (justerad) | 5s | | | ingen | |
 
 **Reflektion 3:**
+
 - Varför gör dötid processen svårare att reglera aggressivt trots att K och T är oförändrade?
 - Om du inte visste dötiden i förväg — vilken strategi skulle du välja som standard (aggressiv eller försiktig) tills du mätt den? Motivera.
 
@@ -184,6 +190,7 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 | PI | | | | | | |
 
 **Reflektion 4:**
+
 - Varför räcker inte P-reglering på en integrerande process, medan den fungerade "hyfsat" i Uppgift 1?
 - Skulle du våga köra en aggressiv Lambda-strategi (Uppgift 2) rakt av på en integrerande process? Varför/varför inte?
 
@@ -208,6 +215,7 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 | B | PÅ | | |
 
 **Reflektion 5:**
+
 - Vilka driftsituationer (utöver hårda utsignalgränser) kan orsaka windup?
 - Formulera en strategiregel: "Om manöverdonet kan mättas, ska regulatorn alltid …".
 
@@ -221,11 +229,13 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 
 ### Fall A — Batchprocess med täta börvärdesändringar
 **Drift:** Börvärdet ändras ofta (t.ex. varje batch), störningar är sällsynta.
+
 1. Testa börvärdessteg 30→70→30 med nuvarande inställning.
 2. Notera översläng (%) och insvängningstid för steget 30→70 — du behöver dessa för jämförelsen i Fall B, steg 3.
 
 ### Fall B — Kontinuerlig process med ständiga störningar, fast börvärde
 **Drift:** Börvärdet ligger still på 50, men pulsstörningar (magnitud 2, 5 steg — kom ihåg att magnituden läggs till varje steg, så detta blir totalt +10) kommer regelbundet.
+
 1. Testa samma inställning mot upprepade pulsstörningar vid fast börvärde. Notera maximal avvikelse från börvärdet (SP−PV) under och efter pulsen.
 2. Justera Kp/Ti/Td för att prioritera snabb störningsåterhämtning, även om det skulle ge sämre börvärdessvar. Notera den nya maximala avvikelsen — hur mycket bättre blev den?
 3. **Viktigt:** Testa dina nya, omtrimmade parametrar tillbaka på Fall A:s börvärdessteg (30→70→30). Notera översläng, insvängningstid, och om utsignalen mättar (når 100 %). Försämrades börvärdessvaret?
@@ -238,6 +248,7 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 | Omtrimmad | | | | | | |
 
 **Reflektion 6:**
+
 - Blev samma parametrar optimala i Fall A och B, eller var det en avvägning?
 - I vilken av dina verksamheter (om du kan komma på en) är störningsavvisning viktigare än börvärdesföljning — och tvärtom?
 
@@ -274,6 +285,7 @@ Skriv ett kort PM (en halv till en sida) som besvarar:
 6. **Testresultat:** Ange den regulatorinställning du till slut testade i simulatorn och ett kort observerat resultat (stabiliseringstid, ev. översläng, beteende vid störningspuls) som styrker ditt PM.
 
 **Reflektion 7:**
+
 - Vilket av de fem besluten (1–5) styrde de andra mest?
 - Om säkerhetsgränsen hade varit 100% istället för 85% — vilket/vilka av dina fem svar hade ändrats?
 
