@@ -34,6 +34,7 @@ Kort referens för begreppen som används:
 - **Kp, Ti, Td** — regulatorns förstärkning, integraltid och derivatatid.
 - **Lambda-metoden** — en systematisk metod för att beräkna Kp/Ti utifrån en vald önskad tidskonstant λ för det slutna systemet: Kp=T/(K·(λ+L)), Ti=T.
 - **u_std** — standardavvikelsen hos utsignalen över en period vid stabil drift; facitets mått på hur "orolig"/bruskänslig en inställning är.
+
 ## Innehållsförteckning
 
 - Uppgift 1: Regulatortyp som strategival (P / PI)
