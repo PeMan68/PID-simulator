@@ -1,5 +1,5 @@
 # Övningsuppgifter: Reglerstrategier
-v1.0
+*Dokumentversion 1.0, Övningsuppgifter för PID-simulator 1.5.3 eller högre*
 
 > **⚠️ Viktigt**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
@@ -10,8 +10,6 @@ Där simulatorns lärstigar tränar **hur** man mekaniskt trimmar Kp/Ti/Td, trä
 **Förkunskaper:** Grundläggande PID-förståelse (P/I/D var för sig), gärna genomfört alla lärstigar i PID-simulatorn.
 
 **Mål:** Kunna koppla processens egenskaper och verksamhetens krav till ett medvetet val av reglerstrategi, och kunna motivera det valet skriftligt.
-
-**Avgränsning:** Denna samling förutsätter enkel-loop-reglering (en process, en regulator). Kaskadreglering, kvotreglering, framkoppling och parameterstyrning kräver flera kopplade processer/regulatorer och täcks inte i PID-simulator 1.5.x.
 
 ## Termer och definitioner
 

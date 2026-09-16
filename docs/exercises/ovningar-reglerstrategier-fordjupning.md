@@ -1,5 +1,5 @@
 # Övningsuppgifter: Reglerstrategier — Fördjupning
-v1.0
+*Dokumentversion 1.0, Övningsuppgifter för PID-simulator 1.5.3 eller högre*
 
 > **⚠️ Viktigt**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
@@ -78,7 +78,7 @@ Det här är den fördjupande fortsättningen på [ovningar-reglerstrategier.md]
 
 **Syfte:** Bygga en systematisk, egen jämförelsetabell istället för att bara följa två föreskrivna tester (som i grunddokumentets Uppgift 4).
 
-**Process:** Samma som grunddokumentets Uppgift 4: Integrerande (tanknivå), K=0.01, L=1.0, utflöde 0.5. Börvärde 60 (processen startar vid sitt normalvärde, 20).
+**Process:** Samma som grunddokumentets Uppgift 4: Integrerande (tanknivå), K=0.01, L=1.0, utflöde 0.5. Börvärde 60.
 
 ### Uppgift
 Designa och testa **två varianter vardera** av P, PI och PID — en **aggressiv** och en **säker** variant (6 tester totalt). Du väljer själva Kp/Ti/Td-värdena; det finns inget facit-recept här. Utgå från vad du redan vet:
@@ -173,11 +173,4 @@ Du har redan två inställningar från grunddokumentets Uppgift 6: den **ursprun
 
 ---
 
-## Avslutande reflektion
-
-- Fyra av dagens fördjupningar gav minst ett resultat som INTE var vad du väntade dig innan du testade (t.ex. att detuning inte hjälper mot windup, eller att en "vinnande" inställning från en tidigare uppgift visar en dold svaghet när förhållandena ändras). Vilket av dem överraskade dig mest?
-- Grunddokumentet testar en sak i taget. Den här samlingen kombinerar och sätter tidigare resultat i nya sammanhang. Vilken typ av förståelse ger det ena som det andra inte gör?
-- Om du skulle skriva en sjunde fördjupningsuppgift själv — vilken kombination av grunddokumentets sex strategiområden skulle du vilja utforska?
-
----
 **Svårighetsgrad:** Avancerad — kräver att grunddokumentet är genomfört.

@@ -49,12 +49,14 @@ mätprotokoll-tabeller (samma stil som de gamla dokumentens tomma tabeller, avse
 att skrivas ut och fyllas i för hand) — en tabell per uppgift/fall som redan bad om
 flera uppmätta värden.
 
-**När fördjupningsdokumentet är komplett:** de tre gamla dokumenten ska flyttas till
-en arkivmapp (PO-beslut, görs INTE förrän PO granskat och godkänt hela
-fördjupningsdokumentet).
-**Status:** Öppen — samtliga fyra fördjupningsuppgifter (inkl. facit) klara och
-simulatorverifierade. Väntar på PO:s granskning/godkännande innan arkivering av de
-tre gamla dokumenten.
+**PO har granskat och godkänt** både grunddokumentet och fördjupningsdokumentet
+(inkl. facit) i sin helhet (2026-09-16).
+
+**Kvarstående steg:** de tre gamla dokumenten (`ovningar-grundlaggande.md`,
+`ovningar-systemoptimering.md`, `ovningar-signalstorningar.md`) ska flyttas till en
+arkivmapp (PO-beslut) — **ej begärt ännu**, avvaktar explicit instruktion.
+**Status:** Innehåll klart och godkänt. Arkivering av de tre gamla dokumenten
+återstår som separat, ej ännu beställt uppdrag.
 
 ---
 ### FEAT-040 — Filtrering av mätsignal (dämpning av brus) — long term förbättring
