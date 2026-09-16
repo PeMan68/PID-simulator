@@ -33,9 +33,16 @@ nya/djupare moment identifierades för fördjupningsdokumentet:
    Lambda-metoden visar att ZN PI faktiskt slår Lambda Aggressiv på båda måtten
    samtidigt — en äkta, icke-uppenbar poäng).
 2. Fullständig P/PI/PID-tabell (aggressiv + säker variant) på grunddokumentets
-   integrerande process — **ej påbörjad**.
-3. Stegvis allt hårdare utsignalgräns, hur mycket måste man detune:a — **ej påbörjad**.
-4. Kombinerad brus+puls-stresstest — **ej påbörjad**.
+   integrerande process — **KLAR, simulatorverifierad** (icke-uppenbar poäng: Td
+   hjälper INTE på den här processen, till skillnad från Uppgift 2 Fall C, eftersom
+   dötiden här är liten relativt tidskonstanten).
+3. Stegvis allt hårdare utsignalgräns, hur mycket måste man detune:a — **KLAR,
+   simulatorverifierad** (icke-uppenbar poäng: detuning hjälper INTE alls mot
+   windup — endast anti-windup gör det, oavsett hur hård utsignalgränsen är).
+4. Kombinerad brus+puls-stresstest — **KLAR, simulatorverifierad** (icke-uppenbar
+   poäng: den "vinnande" omtrimmade inställningen från Uppgift 6 har mer än dubbelt
+   så hög bruskänslighet som originalinställningen — en dold kostnad som bara syns
+   när brus och puls testas tillsammans).
 
 **Övrigt PO-önskemål (genomfört):** grunddokumentets uppgifter fick ifyllningsbara
 mätprotokoll-tabeller (samma stil som de gamla dokumentens tomma tabeller, avsedda
@@ -43,8 +50,11 @@ att skrivas ut och fyllas i för hand) — en tabell per uppgift/fall som redan 
 flera uppmätta värden.
 
 **När fördjupningsdokumentet är komplett:** de tre gamla dokumenten ska flyttas till
-en arkivmapp (PO-beslut, görs INTE förrän fördjupning 2-4 är klara och godkända).
-**Status:** Öppen — fördjupning 1 (Ziegler-Nichols) klar och verifierad, 2-4 kvarstår.
+en arkivmapp (PO-beslut, görs INTE förrän PO granskat och godkänt hela
+fördjupningsdokumentet).
+**Status:** Öppen — samtliga fyra fördjupningsuppgifter (inkl. facit) klara och
+simulatorverifierade. Väntar på PO:s granskning/godkännande innan arkivering av de
+tre gamla dokumenten.
 
 ---
 ### FEAT-040 — Filtrering av mätsignal (dämpning av brus) — long term förbättring
