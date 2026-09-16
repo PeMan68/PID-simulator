@@ -1,6 +1,13 @@
 # Övningsuppgifter: Signalstörningar och Robusthet
 *PID-simulator v1.6.1 - Pedagogiska övningar med historikjämförelse*
 
+> **📦 Arkiverad**: Detta dokument skrevs för den gamla Python-appen och innehåller
+> funktioner som inte finns i webbappen (t.ex. "Spara", "Autopaus", preset-knappar)
+> samt "amplitude"-terminologi utan medvetenhet om att pulsmagnitud läggs till PER
+> STEG i webbappen. Innehållet (störnings/D-avvägning) är sedan absorberat i
+> [ovningar-reglerstrategier.md](../ovningar-reglerstrategier.md) (Uppgift 2 Fall C).
+> Behålls som historisk referens, används inte längre aktivt.
+
 > **⚠️ Viktigt meddelande**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
 ## Inledning

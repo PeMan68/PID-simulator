@@ -73,6 +73,53 @@ togs bort) för att matcha det färdigredigerade övningsdokumentet exakt.
 
 ---
 
+### FEAT-041 — Reglerstrategier: uppdela i grund- och fördjupningsdokument
+**Beskrivning:**
+PO:s beslut efter genomläsning av de gamla Python-app-övningarna
+(`ovningar-grundlaggande.md` v1.7.0, `ovningar-systemoptimering.md` v1.7.0,
+`ovningar-signalstorningar.md` v1.6.1 — alla tre bekräftat Python-app-era: gamla
+funktionsnamn som "Spara"/"Autopaus"/"Spärrning"/preset-knappar som inte finns i
+webbappen, "amplitude"-terminologi utan medvetenhet om att pulsmagnitud läggs till
+PER STEG): `ovningar-reglerstrategier.md` blir **grunddokumentet** (en bas som ger
+alla studerande en känsla för samtliga sex strategiområden), och ett nytt
+`ovningar-reglerstrategier-fordjupning.md` blir en **separat, svårare** fortsättning
+för snabba/nyfikna studerande — inte "fler grunduppgifter", utan uppgifter med
+mindre facit-styrning (process + driftkrav givet, testplan och val av mätvärden upp
+till studenten själv).
+
+**Innehållsanalys av de gamla dokumenten** visade att det mesta redan är absorberat
+(grundläggande Del 1-5 → lärstigarna; systemoptimerings Lambda-avsnitt och
+Masterövning → redan i reglerstrategiers Uppgift 2/Mästaruppgift 7;
+signalstorningars störnings/D-avvägning → redan i Uppgift 2 Fall C). Fyra genuint
+nya/djupare moment byggdes för fördjupningsdokumentet, alla simulatorverifierade:
+1. **Ziegler-Nichols-metoden** (helt saknad tidigare) — Ku≈4,2, Tu≈20s på samma
+   process som grund-Uppgift 2; jämförelse mot Lambda-metoden visar att ZN PI
+   faktiskt slår Lambda Aggressiv på båda måtten samtidigt — en äkta,
+   icke-uppenbar poäng.
+2. Fullständig P/PI/PID-tabell (aggressiv + säker variant) på grunddokumentets
+   integrerande process — icke-uppenbar poäng: Td hjälper INTE på den här
+   processen, till skillnad från Uppgift 2 Fall C, eftersom dötiden här är liten
+   relativt tidskonstanten.
+3. Stegvis allt hårdare utsignalgräns, hur mycket måste man detune:a — icke-uppenbar
+   poäng: detuning hjälper INTE alls mot windup — endast anti-windup gör det,
+   oavsett hur hård utsignalgränsen är.
+4. Kombinerad brus+puls-stresstest — icke-uppenbar poäng: den "vinnande" omtrimmade
+   inställningen från Uppgift 6 har mer än dubbelt så hög bruskänslighet som
+   originalinställningen — en dold kostnad som bara syns när brus och puls testas
+   tillsammans.
+
+**Övrigt PO-önskemål (genomfört):** grunddokumentets uppgifter fick ifyllningsbara
+mätprotokoll-tabeller (samma stil som de gamla dokumentens tomma tabeller, avsedda
+att skrivas ut och fyllas i för hand) — en tabell per uppgift/fall som redan bad om
+flera uppmätta värden.
+
+De tre gamla dokumenten flyttades till `docs/exercises/arkiv/`, var och en med en
+kort not överst om varför den är arkiverad och vart innehållet absorberats.
+**Status:** Klar, mergad till `develop`. PO har granskat och godkänt både
+grunddokumentet och fördjupningsdokumentet (inkl. facit) i sin helhet (2026-09-16).
+
+---
+
 ### FEAT-038 — Hjälplinjer 10 %/90 %/2 %-band i Mätläge
 **Branch:** `feature/matlage-hjalplinjer` (mergad till `develop`)
 **Beskrivning:**

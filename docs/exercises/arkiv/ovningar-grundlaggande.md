@@ -1,6 +1,13 @@
 # Övningsuppgifter: Grundläggande Reglerteknik
 *PID-simulator v1.7.0 - Nybörjarvänliga övningar*
 
+> **📦 Arkiverad**: Detta dokument skrevs för den gamla Python-appen och innehåller
+> funktioner som inte finns i webbappen (t.ex. "Spara", "Autopaus", preset-knappar).
+> Innehållet är sedan absorberat i simulatorns lärstigar samt i
+> [ovningar-reglerstrategier.md](../ovningar-reglerstrategier.md) och
+> [ovningar-reglerstrategier-fordjupning.md](../ovningar-reglerstrategier-fordjupning.md).
+> Behålls som historisk referens, används inte längre aktivt.
+
 > **⚠️ Viktigt meddelande**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
 ## Inledning
