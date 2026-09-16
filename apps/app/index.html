@@ -126,6 +126,26 @@
       padding: 1px 6px;
       vertical-align: middle;
     }
+    .komigang-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      width: auto;
+      margin: 8px 0 2px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: normal;
+      background: var(--panel-strong);
+      color: var(--muted);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    .komigang-btn:hover { background: var(--line); color: var(--ink); box-shadow: none; transform: none; }
+    /* [hidden] måste vinna över den egna display: inline-flex ovan — samma
+       mönster som .gam-level-info[hidden]/.gam-level-toast[hidden]. */
+    .komigang-btn[hidden] { display: none; }
     .sidebar-section { display: flex; flex-direction: column; gap: 6px; }
     .sidebar-section-label {
       font-size: 11px;
@@ -413,8 +433,6 @@
     .welcome-panel h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
     .welcome-panel p { font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height: 1.55; }
     .welcome-panel button { width: 100%; margin-bottom: 6px; }
-    .welcome-panel button.secondary { background: var(--panel-strong); color: var(--muted); border: 1px solid var(--line); box-shadow: none; }
-    .welcome-panel button.secondary:hover { background: var(--line); color: var(--ink); }
 
     /* ── Step rendering ── */
     .step-header { font-weight: 700; font-size: 13px; color: var(--ink); margin-bottom: 4px; }
@@ -563,6 +581,7 @@
   <aside class="sidebar sidebar-left" id="sidebarLeft">
     <div class="sidebar-inner">
       <div class="sidebar-title">PID Simulator <span id="appVersion" style="font-size:10px;font-weight:400;opacity:0.55;margin-left:4px;"></span> <span id="envBadge" class="env-badge" style="display:none;">DEV</span></div>
+      <button type="button" id="btnKomIgang" class="komigang-btn" title="Visa introduktionsguiden igen">❓ Kom igång</button>
 
       <!-- GAM-003B/GAM-003C — Synlig DEV-prototyp för XP och nivåprogression.
            Statisk, tom skal-markup: förblir "hidden" och opåverkad av CSS/JS

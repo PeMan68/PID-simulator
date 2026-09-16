@@ -1286,6 +1286,41 @@ Verktyg för design med störningsreserver (gain margin, phase margin).
 
 ---
 
+### FEAT-039 — Kort introduktionsdokument för studerande
+**Branch:** `feature/app-introduktion`
+**Prioritet:** Medel
+**Beskrivning:**
+PO efterfrågade en kort, fristående text studerande kan läsa innan de öppnar appen — så
+PO slipper förklara appen muntligt varje gång. Ny fil
+`docs/exercises/introduktion.md`: kort syftesbeskrivning, en punktlista över vad appen
+kan idag (hämtad från `README.md`s funktionslista för v1.5.3), och en pekare till den
+redan befintliga inbyggda lärstigen "Kom igång med PID Simulator" (första posten i
+`catalog.prod.json`) plus en numrerad översikt över samtliga sju publicerade lärstigar i
+ordning. Omfattar **endast** appens inbyggda innehåll — PO beslutade att fristående
+övningsblad (`ovningar-*.md`) inte ska nämnas i detta dokument.
+
+**Arkivering av Python-app-material (PO-instruktion):** `docs/exercises/README.pdf` var
+en användarmanual för den nedlagda Python-appen (tkinter/matplotlib) — flyttad till
+`docs/python-app-archive/README.pdf`. Filen var aldrig git-spårad (`*.pdf` i
+`.gitignore` sedan tidigare), så flytten syns inte i historiken, bara lokalt på denna
+dator. De två andra PDF:erna i `docs/exercises/` (`ovningar-systemoptimering.pdf`,
+`processforstärkning-förklaring.pdf`) kontrollerades och är bara lokala PDF-exporter av
+redan git-spårade `.md`-filer — inget Python-app-innehåll, lämnade orörda.
+
+**Discoverability löst:** "Kom igång"-lärstigen visades tidigare bara automatiskt en
+gång per webbläsare (`localStorage`-flaggan `pidSimWelcomed`, `showWelcome()` i
+`apps/app/app.js:773`) — därefter fanns ingen synlig påminnelse. PO valde alternativet
+"permanent knapp i appen". Implementerat: ny knapp `❓ Kom igång` direkt under apptiteln
+i vänster sidebar (alltid synlig, oavsett `pidSimWelcomed`), öppnar samma välkomstruta.
+Verifierat med Playwright mot lokal `http.server`: knappen syns efter simulerat
+återbesök, klick visar välkomstrutan, "Kom igång »" i rutan laddar lärstigen korrekt,
+inga konsol-/sidfel. Berör `apps/app/index.html` (knapp + `.komigang-btn`-stil) och
+`apps/app/app.js` (klick-koppling till befintlig `showWelcome()`).
+**Status:** Öppen — utkast klart (dokument + appändring), väntar på PO-granskning innan
+merge till `develop`
+
+---
+
 ## Python-app (`main.py`)
 
 Python-appen är nedlagd — se BESLUT-002. Alla öppna Python-features är stängda utan
