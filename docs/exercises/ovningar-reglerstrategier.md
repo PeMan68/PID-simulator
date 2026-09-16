@@ -70,6 +70,13 @@ Kort referens för begreppen som används:
 1. Använd samma Kp (2.0) som i Fall A, lägg till Ti=15 (PI). Notera slutvärde, fel och insvängningstid — verifiera att felet försvinner helt och jämför insvängningstiden med Fall A.
 2. **Fråga:** Varför duger inte P-reglering här trots att processen är identisk?
 
+**Mätprotokoll Uppgift 1** (samma process, K=1.3/T=15/Dötid=0, SP=60, Kp=2.0 i båda):
+
+| Fall | Ti | Slutvärde | Kvarstående fel | Fel i % | Insvängningstid |
+|---|---|---|---|---|---|
+| A (P) | OFF | | | | |
+| B (PI) | 15 | | | | |
+
 **Reflektion 1:**
 - Skriv en tumregel för P och för PI: "Välj P när …", "Välj PI när …". 
 - Kravet, inte processen, avgjorde valet i Fall A vs B (samma process!). Håller det resonemanget även i verkligheten?
@@ -99,6 +106,13 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 2. Notera slutvärde, översläng (%), insvängningstid och maximal utsignal.
 3. **Fråga:** Var går gränsen innan det blir oacceptabelt — vad använder du som mått (översläng %, oscillation, marginal till instabilitet)? Vad hände med den maximala utsignalen vid den aggressiva inställningen — ligger den fortfarande under 100 %?
 
+**Mätprotokoll Fall A/B** (K=1.5/T=20/Dötid=5, SP=60):
+
+| Fall | Kp | Ti | Slutvärde | Översläng % | Insvängningstid | Max u |
+|---|---|---|---|---|---|---|
+| A (Konservativ) | 0.21 | 20 | | | | |
+| B (Aggressiv) | 1.33 | 20 | | | | |
+
 ### Fall C — Lägg till derivata: går det att bli både snabbare och mjukare?
 **Krav:** Undersök om Fall B:s aggressiva inställning kan förbättras ytterligare utan att ge upp säkerhetsmarginalen helt.
 
@@ -109,6 +123,14 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 5. Höj Td ytterligare, t.ex. till Td=3 (fortfarande med brus aktiverat). Notera hur mycket mer utsignalen nu hoppar — och kontrollera också (utan brus) vad som hände med överslängen och insvängningstiden vid detta höga Td.
 6. Gå tillbaka till PI (Td=0) med brus aktiverat. Jämför u och PV en sista gång mot båda PID-varianterna (Td=1 och Td=3).
 7. **Fråga:** Fanns det ett Td-intervall där du fick en förbättring nästan utan bruskostnad (snabbare, mindre översläng, knappt märkbart oroligare utsignal)? Och ett intervall där mer Td gjorde saken sämre på alla mått samtidigt — inte bara brusigare, utan även långsammare och med mer översläng?
+
+**Mätprotokoll Fall C** (Kp=1.33, Ti=20, samma process):
+
+| Td | Översläng % | Insvängningstid | Utsignalens oro vid brus (låg/måttlig/hög) |
+|---|---|---|---|
+| 0 (Fall B) | | | |
+| 1 | | | |
+| 3 | | | |
 
 **Reflektion 2:**
 - Samma process gav två olika "rätta" svar i Fall A/B. Vad var det egentligen som styrde valet — processen eller kravet?
@@ -129,6 +151,14 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 3. **Fråga:** Vad hände med *samma* regulatorinställning när enbart dötiden ändrades?
 4. Justera regulatorn (t.ex. sänk Kp eller öka Ti) tills Test B inte längre har någon översläng (dvs. samma välartade kurvform som Test A, om än långsammare). Jämför den nya insvängningstiden med Test A:s — hur mycket längre tid tog det? Hur mycket "kostade" dötiden dig i aggressivitet?
 
+**Mätprotokoll Uppgift 3:**
+
+| Test | Dötid | Kp | Ti | Översläng % | Insvängningstid |
+|---|---|---|---|---|---|
+| A | 0s | 1.5 | 20 | | |
+| B (ojusterad) | 5s | 1.5 | 20 | | |
+| B (justerad) | 5s | | | ingen | |
+
 **Reflektion 3:**
 - Varför gör dötid processen svårare att reglera aggressivt trots att K och T är oförändrade?
 - Om du inte visste dötiden i förväg — vilken strategi skulle du välja som standard (aggressiv eller försiktig) tills du mätt den? Motivera.
@@ -139,7 +169,7 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 
 **Syfte:** Visa att strategivalet inte bara handlar om aggressivitet, utan om regulatortyp och grundläggande angreppssätt.
 
-**Process:** Integrerande (tanknivå), K=0.01, T=1.0, normalvärde 20, utflöde 0.5, mätområde 0–100. Börvärde 60.
+**Process:** Integrerande (tanknivå), K=0.01, L=1.0, utflöde 0.5, mätområde 0–100. Börvärde 60.
 
 1. Testa enbart P-reglering (Kp=1.2). Kör länge nog (minst ~200 s) att se kurvan plana ut.
 2. Notera var processvärdet landar (slutvärdet) och ungefär hur lång tid det tar innan kurvan slutar röra sig.
@@ -147,9 +177,15 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 4. Byt till PI (t.ex. Kp=1.5, Ti=40–50). Testa samma börvärdessteg. Notera slutvärde/fel, ev. översläng och insvängningstid — jämför med Uppgift 1 Fall B (samma typ av krav, annan processtyp).
 5. Aktivera pulsstörning (magnitud 1, ~10 steg — observera att "magnitud" läggs till processvärdet varje steg under hela pulsens längd, så en för stor magnitud/längd ger en orimligt kraftig störning) och observera återhämtningen.
 
+**Mätprotokoll Uppgift 4:**
+
+| Regulator | Kp | Ti | Slutvärde | Kvarstående fel | Översläng % | Insvängningstid |
+|---|---|---|---|---|---|---|
+| P | 1.2 | OFF | | | ingen | |
+| PI | | | | | | |
+
 **Reflektion 4:**
 - Varför räcker inte P-reglering på en integrerande process, medan den fungerade "hyfsat" i Uppgift 1?
-- Vilka verkliga processer i din bransch är integrerande snarare än självreglerande?
 - Skulle du våga köra en aggressiv Lambda-strategi (Uppgift 2) rakt av på en integrerande process? Varför/varför inte?
 
 ---
@@ -164,6 +200,13 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 1. **Test A:** Anti-windup AV. Kör börvärdessteg 0→80, låt processen ligga stilla ~150s (utsignalen kommer mätta i taket), sänk sedan börvärdet till 40 och fortsätt köra. Notera hur länge utsignalen ligger kvar i taket efter att börvärdet sänkts — var beredd på att det kan ta väldigt lång tid (betydligt längre än du först tror).
 2. **Test B:** Samma allt, men Anti-windup PÅ. Upprepa. Notera ungefär hur snabbt (i sekunder) utsignalen börjar röra sig nedåt efter att börvärdet sänktes, och efter hur lång tid processvärdet har stabiliserats nära det nya börvärdet (40) — jämför direkt med väntetiden du noterade i Test A.
 3. **Fråga:** Om du designade denna regulator *innan* idrifttagning och visste att ventilen/manöverdonet kunde begränsas till 50% — hade du valt samma Kp/Ti som utan den begränsningen? Hade du aktiverat anti-windup direkt eller väntat tills problemet syns?
+
+**Mätprotokoll Uppgift 5** (tid räknad från att börvärdet sänktes 80→40):
+
+| Test | Anti-windup | Tid tills u börjar röra sig | Tid tills PV stabiliserat nära 40 |
+|---|---|---|---|
+| A | AV | | |
+| B | PÅ | | |
 
 **Reflektion 5:**
 - Vilka driftsituationer (utöver hårda utsignalgränser) kan orsaka windup?
@@ -188,6 +231,13 @@ Vi använder Lambda-metoden för att beräkna Kp vid tre olika λ (Ti = T i samt
 2. Justera Kp/Ti/Td för att prioritera snabb störningsåterhämtning, även om det skulle ge sämre börvärdessvar. Notera den nya maximala avvikelsen — hur mycket bättre blev den?
 3. **Viktigt:** Testa dina nya, omtrimmade parametrar tillbaka på Fall A:s börvärdessteg (30→70→30). Notera översläng, insvängningstid, och om utsignalen mättar (når 100 %). Försämrades börvärdessvaret?
 
+**Mätprotokoll Uppgift 6:**
+
+| Inställning | Kp | Ti | Td | Fall A: Översläng % | Fall A: Insvängningstid | Fall B: Max avvikelse från SP |
+|---|---|---|---|---|---|---|
+| Ursprunglig | 1.0 | 10 | 2 | | | |
+| Omtrimmad | | | | | | |
+
 **Reflektion 6:**
 - Blev samma parametrar optimala i Fall A och B, eller var det en avvägning?
 - I vilken av dina verksamheter (om du kan komma på en) är störningsavvisning viktigare än börvärdesföljning — och tvärtom?
@@ -205,6 +255,14 @@ Du är nyanställd processingenjör och ska föreslå en reglerstrategi för en 
 - **Säkerhetsgräns:** Utsignal får aldrig överstiga 85% (överhettningsskydd) — ställ in Utsignal Max=85.
 - **Drift:** Börvärdet ändras sällan, men processen utsätts för återkommande störningar (flödesvariationer).
 - **Notera innan du testar störningar:** utsignalen kan bara vara 0–85% — processen kan alltså bara *tillföras* mer (t.ex. värme), aldrig kylas aktivt. Om du kör störningstestet med börvärde = normalvärde (65) ligger regulatorns viloläge redan på u=0%. En störning som höjer processvärdet kan då inte motverkas aktivt av regulatorn — den kan bara gå till u=0% och vänta ut processens egen avklingning. Det är förväntat beteende, inte ett fel i simulatorn. Håll pulsstörningen liten (t.ex. magnitud 1, 5 steg — kom ihåg att magnituden läggs till varje steg).
+
+**Mätprotokoll — testa 2–3 kandidatinställningar innan du skriver PM:et:**
+
+| Kandidat | Kp | Ti | Fel | Översläng % | Insvängningstid | Max u |
+|---|---|---|---|---|---|---|
+| | | | | | | |
+| | | | | | | |
+| | | | | | | |
 
 ### Uppgift
 Skriv ett kort PM (en halv till en sida) som besvarar:
