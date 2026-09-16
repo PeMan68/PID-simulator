@@ -144,6 +144,14 @@
     // GAM-003C: ingen "HÖGSTA NIVÅ"-text längre — nivå 8 indikeras enbart
     // genom att baren är helt fylld (ratio === 1 hanteras redan av
     // levelForDisplay/levelInfo, pct blir 100 utan särskild kod här).
+
+    // FEAT-039: "❓ Kom igång"-knappen döljs från nivå 3 (levelIndex 2) och
+    // uppåt — PO:s bedömning: då har man kört appen tillräckligt mycket för
+    // att introduktionsguiden inte längre behövs framträdande. Knappen ägs
+    // av app.js/index.html, inte av gamification-panelen, så elementet
+    // hämtas separat (inte via `els`) och koden är defensiv om det saknas.
+    const komIgangBtn = document.getElementById("btnKomIgang");
+    if (komIgangBtn) komIgangBtn.hidden = levelInfo.levelIndex >= 2;
   }
 
   function showLevelUp(levelInfo) {

@@ -143,6 +143,9 @@
       box-shadow: none;
     }
     .komigang-btn:hover { background: var(--line); color: var(--ink); box-shadow: none; transform: none; }
+    /* [hidden] måste vinna över den egna display: inline-flex ovan — samma
+       mönster som .gam-level-info[hidden]/.gam-level-toast[hidden]. */
+    .komigang-btn[hidden] { display: none; }
     .sidebar-section { display: flex; flex-direction: column; gap: 6px; }
     .sidebar-section-label {
       font-size: 11px;
