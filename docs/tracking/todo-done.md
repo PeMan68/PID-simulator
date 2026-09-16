@@ -120,6 +120,49 @@ grunddokumentet och fördjupningsdokumentet (inkl. facit) i sin helhet (2026-09-
 
 ---
 
+### FEAT-039 — Kort introduktionsdokument för studerande + discoverability-knapp
+**Branch:** `feature/app-introduktion` (mergad till `develop`)
+**Beskrivning:**
+PO efterfrågade en kort, fristående text studerande kan läsa innan de öppnar appen — så
+PO slipper förklara appen muntligt varje gång. Ny fil `docs/exercises/introduktion.md`:
+kort syftesbeskrivning, en punktlista över vad appen kan idag, och en pekare till den
+redan befintliga inbyggda lärstigen "Kom igång med PID Simulator" plus en numrerad
+översikt över samtliga sju publicerade lärstigar i ordning. Omfattar **endast** appens
+inbyggda innehåll — PO beslutade att fristående övningsblad (`ovningar-*.md`) inte ska
+nämnas i detta dokument.
+
+**Arkivering av Python-app-material:** `docs/exercises/README.pdf` (användarmanual för
+den nedlagda Python-appen) flyttad till `docs/python-app-archive/README.pdf` (var aldrig
+git-spårad).
+
+**Discoverability löst med en permanent knapp:** "Kom igång"-lärstigen visades tidigare
+bara automatiskt en gång per webbläsare. PO valde (via tre föreslagna alternativ)
+"permanent knapp i appen" framför att bara förlita sig på dokumentet. Implementerat: ny
+knapp `❓ Kom igång` i vänster sidebar (alltid synlig, oavsett tidigare besök), öppnar
+samma välkomstruta.
+
+**PO:s granskningsrunda hittade och lät åtgärda två saker innan merge:**
+1. Välkomstrutans "Utforska fritt"-knapp gav inget synligt resultat vid klick (laddade
+   ett scenario i bakgrunden men lämnade rutan kvar orörd på skärmen) — borttagen helt
+   istället för att bygga en egen stängningslogik för ett flöde ingen efterfrågat.
+2. **Nytt PO-beslut vid granskningen:** "Kom igång"-knappen döljs automatiskt från nivå 3
+   (Signalspanare, gamification-nivåmotorns `levelIndex >= 2`) och uppåt — vid den nivån
+   har man kört appen tillräckligt mycket för att introduktionen inte längre behöver vara
+   framträdande. Kopplad till `gamification-ui.js`s enda centrala `render()`-funktion
+   (körs vid bootstrap, varje nivåflush och progressionsåterställning), så knappen alltid
+   speglar aktuell/hållen nivå utan egen polling-logik. Krävde även en `.komigang-btn[hidden]
+   { display: none; }`-CSS-regel — samma mönster som redan fanns för
+   `.gam-level-info[hidden]`/`.gam-level-toast[hidden]`, annars hade knappens egna
+   `display: inline-flex` vunnit över `hidden`-attributet.
+
+Båda granskningsfynden verifierade med Playwright mot en lokal server (nivå 1–2: synlig,
+nivå 3–8: dold, återkommer efter "Återställ progression"; välkomstrutan visar bara
+"Kom igång »" nu). Inga konsol-/sidfel.
+
+**Status:** Klar, mergad till `develop`, släppt (se `CHANGELOG.md` för versionsnummer).
+
+---
+
 ### FEAT-038 — Hjälplinjer 10 %/90 %/2 %-band i Mätläge
 **Branch:** `feature/matlage-hjalplinjer` (mergad till `develop`)
 **Beskrivning:**

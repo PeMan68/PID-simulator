@@ -2,6 +2,23 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.5.5] — 2026-09-16
+
+### Nytt
+
+- **Introduktionsdokument för studerande** (FEAT-039). Kort, fristående text
+  (`docs/exercises/introduktion.md`) som beskriver vad appen kan och pekar till den
+  inbyggda "Kom igång"-lärstigen samt en översikt över samtliga publicerade lärstigar.
+- **Permanent "❓ Kom igång"-knapp** i vänster sidebar öppnar välkomstrutan när som
+  helst, inte bara vid första besöket som tidigare. Knappen döljs automatiskt från
+  nivå 3 (Signalspanare) och uppåt i nivåprogressionen, eftersom introduktionen då
+  inte längre behöver vara framträdande.
+
+### Rättat
+
+- Välkomstrutans "Utforska fritt"-knapp togs bort — den gav inget synligt resultat vid
+  klick.
+
 ## [v1.5.4] — 2026-09-15
 
 ### Rättat (HOTFIX-2026-014)
