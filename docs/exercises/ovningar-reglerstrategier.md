@@ -268,11 +268,11 @@ Du är nyanställd processingenjör och ska föreslå en reglerstrategi för en 
 
 **Mätprotokoll — testa 2–3 kandidatinställningar innan du skriver PM:et:**
 
-| Kandidat | Kp | Ti | Fel | Översläng % | Insvängningstid | Max u |
-|---|---|---|---|---|---|---|
-| | | | | | | |
-| | | | | | | |
-| | | | | | | |
+| Kandidat | Kp  | Ti  | Fel | Översläng % | Insvängningstid | Max u |
+| -------- | --- | --- | --- | ----------- | --------------- | ----- |
+|          |     |     |     |             |                 |       |
+|          |     |     |     |             |                 |       |
+|          |     |     |     |             |                 |       |
 
 ### Uppgift
 Skriv ett kort PM (en halv till en sida) som besvarar:
