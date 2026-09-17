@@ -627,6 +627,9 @@ function updateProcessUIState() {
   document.getElementById("kLabel").textContent = isIntegrating ? "Kv" : "K";
   document.getElementById("kHelpBtn").dataset.help = isIntegrating ? "kv" : "k";
   fields.k.step = isIntegrating ? "0.001" : "0.1";
+  // min måste vara ett jämnt multipel av step, annars räknar webbläsaren giltiga
+  // stegvärden med min som bas (t.ex. 1.401 istället för 1.4) — se bugg 2026-016.
+  fields.k.min = isIntegrating ? "0.001" : "0.1";
   fields.t.parentElement.style.display = isIntegrating ? "none" : "";
   fields.normalValue.parentElement.style.display = isIntegrating ? "none" : "";
   fields.outflow.parentElement.style.display = isIntegrating ? "" : "none";
@@ -656,7 +659,7 @@ function loadPath(name) {
   checkpointAnswered = false;
   updateNavButtons();
   updateScoreDisplay();
-  learnBody.innerHTML = "<em>" + currentPath.title + "</em><br><small>" + (currentPath.description || "") + "</small><br><br>Klicka <strong>Nästa »</strong> för att börja.";
+  learnBody.innerHTML = "<em>" + currentPath.title + "</em><br>" + (currentPath.description || "") + "<br><br>Klicka <strong>Nästa »</strong> för att börja.";
   activityDispatch("learning_path_loaded", { learningPathId: currentPathId });
 }
 /* GAM-003C — Antal ord i ett stegs lästext, skickas med learning_step_reached
