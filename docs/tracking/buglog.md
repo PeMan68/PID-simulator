@@ -37,7 +37,13 @@ relativt startvärdet (1,4 / 1,5 / 1,6 / 1,7 ...), inte med ett konstant offset 
 - Kontrollera om flyttalsavrundning introducerar offset.
 - Säkerställ att step-basen ligger på ett värde jämnt delbart med vald upplösning.
 - Verifiera i flera webbläsare efter fix.
-**Status:** Öppen
+**Fix-notering:** Grundorsak: `fields.k.step` sattes dynamiskt (`updateProcessUIState()` i
+`app.js`) men `min="0.001"` (satt i `index.html`) uppdaterades aldrig i takt. Webbläsaren
+räknar giltiga stegvärden som `min + n × step`, så med `min=0.001, step=0.1` blev giltiga
+värden 0.001, 0.101, ..., 1.401, 1.501, 1.601 — exakt offsetten i buggrapporten. Fix: `min`
+sätts nu till samma värde som `step` (0.1 för självreglerande, 0.001 för integrerande) i
+samma funktion. Verifierat i headless Chrome: stepUp() från 1.5 ger 1.6 → 1.7, `checkValidity()` = true.
+**Status:** Klar, väntar på merge till develop via test-branch
 
 ---
 
@@ -57,7 +63,13 @@ i fontstorlek, radavstånd och läsbarhet.
 - Kontrollera om introduktionssteget använder annan CSS-klass eller annan komponent.
 - Kontrollera om arv från container-CSS skiljer sig mellan första steget och övriga steg.
 - Verifiera i minst en ytterligare lärstig efter fix.
-**Status:** Öppen
+**Fix-notering:** Det var inte ett steg i `currentPath.steps` utan introduktionsskärmen som
+visas innan man klickar "Nästa" första gången (`loadPath()` i `app.js`). Beskrivningstexten
+wrappades i `<small>`, vilket via webbläsarens default-stilmall ger ~83% av `#learnBody`s
+egen `font-size: 12px` — mindre än `.step-body` (också 12px) som används i alla efterföljande
+steg. Fix: tog bort `<small>`-taggen. Verifierat i headless Chrome på "Öppen slinga, On/Off
+och P-reglering": introtext och steg 1:s brödtext har nu båda `font-size: 12px`.
+**Status:** Klar, väntar på merge till develop via test-branch
 
 ---
 
