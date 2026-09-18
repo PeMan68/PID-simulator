@@ -8,6 +8,23 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### STRAT-002 — Behöver Parameterstyrning en icke-linjär processmodell först?
+**Branch:** `feature/STRAT-002-icke-linjar-process-forstudie`
+**Prioritet:** Medel — analysuppdrag, ingen implementation
+**Beskrivning:**
+Uppföljningsuppdrag från PO efter STRAT-001. PO:s bedömning: STRAT-001s viktigaste
+fynd var att Parameterstyrning (Gain Scheduling) riskerar att sakna en verklig
+pedagogisk anledning att existera så länge processens K är konstant — men STRAT-001
+lämnade frågan öppen istället för att ta ställning. Uppdrag: analysera om Gain
+Scheduling kräver en ny/utökad icke-linjär processmodell för verkligt pedagogiskt
+värde, föreslå 2–5 konkreta processfall (pedagogiskt värde, teknisk omfattning,
+realism, lämplighet för PID Simulator) och avgör om Parameterstyrning bör byggas
+direkt eller om en enkel icke-linjär processmodell bör införas först. Ingen
+implementation, ingen kod.
+**Status:** Öppen — uppdrag pågår.
+
+---
+
 ### FEAT-040 — Filtrering av mätsignal (dämpning av brus) — long term förbättring
 **Prioritet:** Låg — PO:s explicita beslut: långsiktig backlog, inte närmast i kö.
 **Bakgrund:**
