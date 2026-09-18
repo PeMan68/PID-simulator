@@ -8,6 +8,33 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-042 — Parameterstyrning + olinjär ventilkarakteristik
+**Prioritet:** Medel — designspecifikation klar, väntar på bygguppdrag
+**Beskrivning:**
+Uppdrag från PO efter STRAT-001/STRAT-002: fullständig designspecifikation för
+Parameterstyrning (Gain Scheduling) och olinjär ventilkarakteristik (processens K
+som funktion av utsignalen), byggda tillsammans eftersom de delar samma mekanism
+(en fast 3-zons brytpunktstabell). Ingen kod skriven, ingen branch skapad — rent
+designuppdrag.
+**Genomförande:**
+Full designspecifikation: `docs/reports/STRAT-003_DESIGN-PARAMETERSTYRNING-VENTILKARAKTERISTIK.md`.
+Nyckelbeslut: exakt 3 fasta zoner (inga N-zonsystem, ingen dynamisk
+tabellredigerare), skarp zonövergång med återanvänd bumplös bias-fade-logik på
+regulatorsidan (ingen ny mekanism), fasta driftpunktsvariabler (PV för
+regulatorschemat, u för processchemat — ingen valbar variabel i UI), helt
+bakåtkompatibelt scenarioformat (`enabled: false`/fält saknas ⇒ oförändrat
+beteende för alla 24 befintliga scenarier). Gain Scheduling och ventilkarakteristik
+rekommenderas i SAMMA lärstig (kausal berättelse: olinjäritet → problem → lösning),
+i tre jämförbara försök (samma comparisonGroup-mönster som redan finns). Konisk
+tank (K(y) på `integrating`) rekommenderas **inte** ingå i detta uppdrag — men
+processtypsvillkoret bör lämnas öppet i koden (kostar i praktiken inget extra) så
+att konisk tank blir en ren innehållsleverans senare, inte ett nytt
+arkitekturuppdrag.
+**Status:** Öppen — designspecifikation klar (mergad till `develop`), väntar på att
+PO/PM beslutar om och när ett bygguppdrag ska formuleras.
+
+---
+
 ### FEAT-040 — Filtrering av mätsignal (dämpning av brus) — long term förbättring
 **Prioritet:** Låg — PO:s explicita beslut: långsiktig backlog, inte närmast i kö.
 **Bakgrund:**
