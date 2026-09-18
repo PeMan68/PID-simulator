@@ -1378,4 +1378,35 @@ att Parameterstyrning (Gain Scheduling) utvecklas först — se rapportens avsni
 
 ---
 
+### STRAT-002 — Behöver Parameterstyrning en icke-linjär processmodell först?
+**Branch:** `feature/STRAT-002-icke-linjar-process-forstudie`
+**Prioritet:** Medel — analysuppdrag, ingen implementation
+**Beskrivning:**
+Uppföljningsuppdrag från PO efter STRAT-001. PO:s bedömning: STRAT-001s viktigaste
+fynd var att Parameterstyrning (Gain Scheduling) riskerar att sakna en verklig
+pedagogisk anledning att existera så länge processens K är konstant — men STRAT-001
+lämnade frågan öppen istället för att ta ställning. Uppdrag: analysera om Gain
+Scheduling kräver en ny/utökad icke-linjär processmodell för verkligt pedagogiskt
+värde, föreslå 2–5 konkreta processfall (pedagogiskt värde, teknisk omfattning,
+realism, lämplighet för PID Simulator) och avgör om Parameterstyrning bör byggas
+direkt eller om en enkel icke-linjär processmodell bör införas först. Ingen
+implementation, ingen kod.
+**Genomförande:**
+Full rapport: `docs/reports/STRAT-002_ICKE-LINJAR-PROCESSMODELL.md`. Svar: varken
+"direkt" eller "först" — **tillsammans**. Parameterstyrningens regulatorschema och en
+enkel icke-linjär processmodell löses av samma lilla brytpunktstabellsmekanism, så
+att bygga dem separat sparar inget och riskerar att lämna Parameterstyrning utan
+verklig pedagogisk grund. Fyra konkreta processfall analyserade: ventilkarakteristik
+(K som funktion av utsignalen, på `self_regulating` — rekommenderas byggas
+tillsammans med Parameterstyrning som ETT uppdrag, bredast återanvändning av
+befintligt innehåll), konisk tank (K som funktion av PV, på `integrating` —
+rekommenderas som billig uppföljning mot redan existerande
+`integrerande-process-niva.v1`), belastningsberoende förstärkning (kräver
+STRAT-001:s hjälpsignal-koncept — bör medvetet vänta till efter Framkoppling för att
+undvika dubbelarbete), samt pH-neutralisering (mycket realistiskt läroboksexempel,
+men avfärdas — bryter appens genomgående 0–100 %-konvention).
+**Status:** Mergad till `develop`. Ren analys, ingen appkod ändrad.
+
+---
+
 
