@@ -1350,4 +1350,32 @@ därifrån. `develop` innehåller samma underlag.
 
 ---
 
+### STRAT-001 — Teknisk förstudie: fyra framtida reglerstrategier
+**Branch:** `feature/STRAT-001-forstudie-reglerstrategier`
+**Prioritet:** Medel — analysuppdrag, ingen implementation
+**Beskrivning:**
+Uppdrag från PO/PM: teknisk förstudie för fyra möjliga framtida reglerstrategier, i
+prioriteringsordning (1) Parameterstyrning (Gain Scheduling), (2) Framkoppling
+(Feedforward), (3) Kvotreglering (Ratio Control), (4) Kaskadreglering (Cascade
+Control). Analyserar pedagogiskt värde, teknisk komplexitet, påverkan på
+simuleringskärnan/UI/scenarioformat/tester, samt gemensam arkitektur som bör införas
+tidigt för att minska framtida omarbete — de fyra som en sammanhängande
+utvecklingsplan, inte fyra isolerade features. Explicit inget kodarbete.
+**Genomförande:**
+Full rapport: `docs/reports/STRAT-001_FORSTUDIE-REGLERSTRATEGIER.md`. Kärnfynd:
+dagens simuleringskärna (`sim-core.js`) är en strikt enkelslinge-arkitektur (en
+process, en regulator, skalär omätbar störning) — Parameterstyrning passar den
+oförändrad, Framkoppling kräver en genuint ny mätbar hjälpsignal, Kvotreglering kan
+återanvända den signalen om Framkoppling byggs generellt, och Kaskadreglering är den
+enda som kräver en andra regulator-/processinstans plus nytt UI-/grafmönster.
+Rekommenderad byggordning matchar PO/PM:s prioritering. Enda motiverade
+framtidssäkringen: namnge Framkopplings nya signal generellt ("hjälpsignal") istället
+för hårdkodat, så Kvotreglering kan återanvända den. Ingen ytterligare
+framtidssäkring rekommenderas — se rapportens avsnitt 5.4 för vad som medvetet
+avråds som överdesign.
+**Status:** Mergad till `develop`. Ren analys, ingen appkod ändrad. Rekommenderat
+att Parameterstyrning (Gain Scheduling) utvecklas först — se rapportens avsnitt 9.
+
+---
+
 

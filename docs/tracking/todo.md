@@ -8,21 +8,6 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
-### STRAT-001 — Teknisk förstudie: fyra framtida reglerstrategier
-**Branch:** `feature/STRAT-001-forstudie-reglerstrategier`
-**Prioritet:** Medel — analysuppdrag, ingen implementation
-**Beskrivning:**
-Uppdrag från PO/PM: teknisk förstudie för fyra möjliga framtida reglerstrategier, i
-prioriteringsordning (1) Parameterstyrning (Gain Scheduling), (2) Framkoppling
-(Feedforward), (3) Kvotreglering (Ratio Control), (4) Kaskadreglering (Cascade
-Control). Analyserar pedagogiskt värde, teknisk komplexitet, påverkan på
-simuleringskärnan/UI/scenarioformat/tester, samt gemensam arkitektur som bör införas
-tidigt för att minska framtida omarbete — de fyra som en sammanhängande
-utvecklingsplan, inte fyra isolerade features. Explicit inget kodarbete.
-**Status:** Öppen — uppdrag pågår.
-
----
-
 ### FEAT-040 — Filtrering av mätsignal (dämpning av brus) — long term förbättring
 **Prioritet:** Låg — PO:s explicita beslut: långsiktig backlog, inte närmast i kö.
 **Bakgrund:**
