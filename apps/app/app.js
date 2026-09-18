@@ -97,7 +97,17 @@ const fields = {
   manualOutput: document.getElementById("manualOutput"),
   mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"), pulseDuration: document.getElementById("pulseDuration"), showPB: document.getElementById("showPB"),
   hysteresLower: document.getElementById("hysteresLower"), hysteresUpper: document.getElementById("hysteresUpper"),
-  antiWindup: document.getElementById("antiWindup")
+  antiWindup: document.getElementById("antiWindup"),
+  // FEAT-042 — Parameterstyrning (regulatorns kp/ti/td-schema, keyed på PV)
+  gainScheduleEnabled: document.getElementById("gainScheduleEnabled"),
+  gsBreak1: document.getElementById("gsBreak1"), gsBreak2: document.getElementById("gsBreak2"),
+  gsZ1Kp: document.getElementById("gsZ1Kp"), gsZ1Ti: document.getElementById("gsZ1Ti"), gsZ1Td: document.getElementById("gsZ1Td"),
+  gsZ2Kp: document.getElementById("gsZ2Kp"), gsZ2Ti: document.getElementById("gsZ2Ti"), gsZ2Td: document.getElementById("gsZ2Td"),
+  gsZ3Kp: document.getElementById("gsZ3Kp"), gsZ3Ti: document.getElementById("gsZ3Ti"), gsZ3Td: document.getElementById("gsZ3Td"),
+  // FEAT-042 — Olinjär ventilkarakteristik (processens K-schema, keyed på u)
+  nonlinearGainEnabled: document.getElementById("nonlinearGainEnabled"),
+  ngBreak1: document.getElementById("ngBreak1"), ngBreak2: document.getElementById("ngBreak2"),
+  ngZ1K: document.getElementById("ngZ1K"), ngZ2K: document.getElementById("ngZ2K"), ngZ3K: document.getElementById("ngZ3K")
 };
 
 let currentScenario = null;
@@ -189,7 +199,40 @@ function drawChart() {
     ctx.fillStyle = "#9b59b6"; ctx.font = "10px Segoe UI"; ctx.textAlign = "right";
     ctx.fillText("PB=" + pb.toFixed(1) + "% (u=100%)", w - pad.right - 4, yBot + 11);
   }
-  
+
+  // FEAT-042 — Brytpunkter för Parameterstyrning (PV, övre panelen) och
+  // olinjär ventilkarakteristik (u, nedre panelen). Samma tunna,
+  // halvtransparenta hjälplinje-stil som FEAT-038 (10 %/90 %/2 %-linjerna) —
+  // horisontella referenslinjer vid ett fast värde, inte tidsmarkeringar.
+  const gs042 = sim.scenario.controller.gainSchedule;
+  if (gs042 && gs042.enabled) {
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+    ctx.strokeStyle = "#e67e22"; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+    [gs042.breakpoint1, gs042.breakpoint2].forEach(bp => {
+      const py = yScaleTop(bp);
+      ctx.beginPath(); ctx.moveTo(pad.left, py); ctx.lineTo(w - pad.right, py); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#e67e22"; ctx.font = "10px Segoe UI"; ctx.textAlign = "right";
+    ctx.fillText("Zongräns (PV)", w - pad.right - 4, yScaleTop(gs042.breakpoint2) - 3);
+    ctx.restore();
+  }
+  const ng042 = sim.scenario.process.nonlinearGain;
+  if (ng042 && ng042.enabled) {
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+    ctx.strokeStyle = "#16a085"; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+    [ng042.breakpoint1, ng042.breakpoint2].forEach(bp => {
+      const py = yScaleBot(bp);
+      ctx.beginPath(); ctx.moveTo(pad.left, py); ctx.lineTo(w - pad.right, py); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#16a085"; ctx.font = "10px Segoe UI"; ctx.textAlign = "right";
+    ctx.fillText("Zongräns (u)", w - pad.right - 4, yScaleBot(ng042.breakpoint2) - 3);
+    ctx.restore();
+  }
+
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
   ctx.fillText("PV/SP", pad.left + 6, pad.top + 14);
   ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
@@ -426,7 +469,23 @@ function updateStatus() {
   // korrigerar denna tidsskillnad; simuleringskärnans beräkning av e är
   // oförändrad.
   const spAtStep = sim.history.sp[sim.history.sp.length - 1] ?? sim.scenario.runtime.setpoint;
-  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning;
+  // FEAT-042 — kompakt zonavläsning, bara synlig när respektive schema är
+  // aktiverat. Beräknad direkt från currentScenario + aktuellt PV/u (inte
+  // sim.pid.kp), så den alltid stämmer även innan nästa steg körts.
+  let scheduleInfo = "";
+  if (currentScenario) {
+    const gs = currentScenario.controller.gainSchedule;
+    if (gs && gs.enabled) {
+      const zi = scheduleZone(s.y, gs.breakpoint1, gs.breakpoint2);
+      scheduleInfo += "  | Zon " + (zi + 1) + " (Kp=" + fmt1(gs.zones[zi].kp) + ")";
+    }
+    const ng = currentScenario.process.nonlinearGain;
+    if (ng && ng.enabled) {
+      const zi = scheduleZone(s.u, ng.breakpoint1, ng.breakpoint2);
+      scheduleInfo += "  | K-zon " + (zi + 1) + " (K=" + fmt1(ng.zones[zi]) + ")";
+    }
+  }
+  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning + scheduleInfo;
 }
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;
@@ -440,6 +499,26 @@ function hydrateFields(s) {
   fields.antiWindup.checked = s.controller.antiWindup !== false;
   fields.processType.value = s.process.type || "self_regulating";
   fields.outflow.value = s.process.outflow ?? 0;
+  // FEAT-042 — Parameterstyrning: förifyll schemat med scenariots ordinarie
+  // kp/ti/td (även om schemat inte finns/är avstängt) så att aktivering av
+  // kryssrutan aldrig ger en oväntad, tom eller orimlig startpunkt.
+  const gs = s.controller.gainSchedule;
+  fields.gainScheduleEnabled.checked = !!(gs && gs.enabled);
+  fields.gsBreak1.value = gs?.breakpoint1 ?? 33;
+  fields.gsBreak2.value = gs?.breakpoint2 ?? 66;
+  const gsZones = gs?.zones || [];
+  const gsFallback = { kp: s.controller.kp || 0, ti: s.controller.ti || 0, td: s.controller.td || 0 };
+  [fields.gsZ1Kp, fields.gsZ2Kp, fields.gsZ3Kp].forEach((f, i) => { f.value = gsZones[i]?.kp ?? gsFallback.kp; });
+  [fields.gsZ1Ti, fields.gsZ2Ti, fields.gsZ3Ti].forEach((f, i) => { f.value = gsZones[i]?.ti ?? gsFallback.ti; });
+  [fields.gsZ1Td, fields.gsZ2Td, fields.gsZ3Td].forEach((f, i) => { f.value = gsZones[i]?.td ?? gsFallback.td; });
+  // FEAT-042 — Olinjär ventilkarakteristik: samma förifyllningsprincip, med
+  // scenariots ordinarie K som gemensam startpunkt för alla tre zonerna.
+  const ng = s.process.nonlinearGain;
+  fields.nonlinearGainEnabled.checked = !!(ng && ng.enabled);
+  fields.ngBreak1.value = ng?.breakpoint1 ?? 33;
+  fields.ngBreak2.value = ng?.breakpoint2 ?? 66;
+  const ngZones = ng?.zones || [];
+  [fields.ngZ1K, fields.ngZ2K, fields.ngZ3K].forEach((f, i) => { f.value = ngZones[i] ?? s.process.K; });
 }
 // GAM-002: kontext för aktivitetsprototypens försöks-/konfigurationsspårning —
 // lärstigssteg om en lärstig är aktiv, annars scenariot självt.
@@ -472,7 +551,11 @@ function markerSnapshot(scenario) {
     mode: scenario.controller.mode,
     kp: scenario.controller.kp, ti: scenario.controller.ti, td: scenario.controller.td,
     sp: scenario.runtime.setpoint, noise: scenario.disturbance.noiseStd,
-    k: scenario.process.K, t: scenario.process.T, l: scenario.process.L, processType: scenario.process.type
+    k: scenario.process.K, t: scenario.process.T, l: scenario.process.L, processType: scenario.process.type,
+    // FEAT-042 — hela schemat som en jämförbar sträng räcker (bara ändring/
+    // ingen ändring behöver detekteras, inte VAD som ändrades i detalj).
+    gainSchedule: JSON.stringify(scenario.controller.gainSchedule || null),
+    nonlinearGain: JSON.stringify(scenario.process.nonlinearGain || null),
   };
 }
 function modeLabel(modeValue) {
@@ -485,6 +568,8 @@ function describeMarkerChange(a, b) {
   if (a.sp !== b.sp) return "SP " + a.sp + "→" + b.sp;
   if (a.kp !== b.kp || a.ti !== b.ti || a.td !== b.td) return "Kp/Ti/Td ändrat";
   if (a.k !== b.k || a.t !== b.t || a.l !== b.l || a.processType !== b.processType) return "Process ändrad";
+  if (a.gainSchedule !== b.gainSchedule) return "Parameterstyrning ändrad";
+  if (a.nonlinearGain !== b.nonlinearGain) return "Ventilkarakteristik ändrad";
   return null;
 }
 function captureMarkerBaseline() {
@@ -533,6 +618,37 @@ function syncParamsFromUI() {
   currentScenario.controller.hysteresis.lower = readClamped(fields.hysteresLower, 0);
   currentScenario.controller.hysteresis.upper = readClamped(fields.hysteresUpper, 0);
   currentScenario.controller.antiWindup = fields.antiWindup.checked;
+
+  // FEAT-042 — Parameterstyrning: regulatorns kp/ti/td-schema, keyed på PV.
+  // Brytpunkter tvingas i stigande ordning (samma mönster som umin/umax ovan).
+  {
+    const b1 = clamp(Number(fields.gsBreak1.value), 0, 100);
+    const b2 = clamp(Number(fields.gsBreak2.value), 0, 100);
+    const gsBreak1 = Math.min(b1, b2), gsBreak2 = Math.max(b1, b2);
+    fields.gsBreak1.value = gsBreak1; fields.gsBreak2.value = gsBreak2;
+    currentScenario.controller.gainSchedule = {
+      enabled: fields.gainScheduleEnabled.checked,
+      breakpoint1: gsBreak1, breakpoint2: gsBreak2,
+      zones: [
+        { kp: readClamped(fields.gsZ1Kp, 0.1), ti: readClamped(fields.gsZ1Ti, 0), td: readClamped(fields.gsZ1Td, 0) },
+        { kp: readClamped(fields.gsZ2Kp, 0.1), ti: readClamped(fields.gsZ2Ti, 0), td: readClamped(fields.gsZ2Td, 0) },
+        { kp: readClamped(fields.gsZ3Kp, 0.1), ti: readClamped(fields.gsZ3Ti, 0), td: readClamped(fields.gsZ3Td, 0) },
+      ],
+    };
+  }
+  // FEAT-042 — Olinjär ventilkarakteristik: processens K-schema, keyed på u.
+  // Bara meningsfullt för self_regulating — se sim-core.js: ProcessModel.effectiveK().
+  {
+    const b1 = clamp(Number(fields.ngBreak1.value), 0, 100);
+    const b2 = clamp(Number(fields.ngBreak2.value), 0, 100);
+    const ngBreak1 = Math.min(b1, b2), ngBreak2 = Math.max(b1, b2);
+    fields.ngBreak1.value = ngBreak1; fields.ngBreak2.value = ngBreak2;
+    currentScenario.process.nonlinearGain = {
+      enabled: fields.nonlinearGainEnabled.checked,
+      breakpoint1: ngBreak1, breakpoint2: ngBreak2,
+      zones: [readClamped(fields.ngZ1K, 0.001), readClamped(fields.ngZ2K, 0.001), readClamped(fields.ngZ3K, 0.001)],
+    };
+  }
 
   if (prevMode !== nextMode) {
     const bumplessOn = document.getElementById("bumpless").checked;
@@ -608,7 +724,12 @@ function updateControllerUIState() {
   fields.hysteresLower.parentElement.style.display = isOnOff ? "" : "none";
   fields.hysteresUpper.parentElement.style.display = isOnOff ? "" : "none";
   fields.showPB.parentElement.style.display = (isOnOff || isManual) ? "none" : "";
-  
+  // FEAT-042 — Parameterstyrning gäller bara p/pi/pid (samma villkor som kp
+  // självt), av samma anledning som antiWindup ovan.
+  document.getElementById("gainScheduleField").style.display = noIntegral ? "none" : "";
+  if (noIntegral) fields.gainScheduleEnabled.checked = false;
+  updateGainScheduleUIState();
+
   // Update controller parameters based on mode
   if (currentScenario && currentScenario.controller) {
     if (isManual) {
@@ -622,6 +743,10 @@ function updateControllerUIState() {
     }
   }
 }
+// FEAT-042 — Parameterstyrning: visa/dölj de 11 schemafälten som grupp.
+function updateGainScheduleUIState() {
+  document.getElementById("gainScheduleFields").hidden = !fields.gainScheduleEnabled.checked;
+}
 function updateProcessUIState() {
   const isIntegrating = fields.processType.value === "integrating";
   document.getElementById("kLabel").textContent = isIntegrating ? "Kv" : "K";
@@ -633,6 +758,17 @@ function updateProcessUIState() {
   fields.t.parentElement.style.display = isIntegrating ? "none" : "";
   fields.normalValue.parentElement.style.display = isIntegrating ? "none" : "";
   fields.outflow.parentElement.style.display = isIntegrating ? "" : "none";
+  // FEAT-042 — Olinjär ventilkarakteristik gäller bara self_regulating (se
+  // STRAT-003 avsnitt 6 — integrating/konisk tank är en öppen uppföljning,
+  // inte del av detta uppdrag). Döljs och stängs av för övriga processtyper.
+  const isSelfRegulating = fields.processType.value === "self_regulating";
+  document.getElementById("nonlinearGainField").style.display = isSelfRegulating ? "" : "none";
+  if (!isSelfRegulating) fields.nonlinearGainEnabled.checked = false;
+  updateNonlinearGainUIState();
+}
+// FEAT-042 — Olinjär ventilkarakteristik: visa/dölj de 5 schemafälten som grupp.
+function updateNonlinearGainUIState() {
+  document.getElementById("nonlinearGainFields").hidden = !fields.nonlinearGainEnabled.checked;
 }
 
 function updateScoreDisplay() {
@@ -927,6 +1063,15 @@ fields.showPB.addEventListener("change", drawChart);
 [fields.kp, fields.sp, fields.hysteresLower, fields.hysteresUpper].forEach(f => {
   f.addEventListener("change", () => { syncParamsFromUI(); drawChart(); });
 });
+// FEAT-042 — brytpunkter och zonvärden ritas i grafen (hjälplinjer) redan
+// innan ett steg körts, samma motivering som kp/sp/hysteres ovan.
+[fields.gsBreak1, fields.gsBreak2, fields.gsZ1Kp, fields.gsZ1Ti, fields.gsZ1Td,
+ fields.gsZ2Kp, fields.gsZ2Ti, fields.gsZ2Td, fields.gsZ3Kp, fields.gsZ3Ti, fields.gsZ3Td,
+ fields.ngBreak1, fields.ngBreak2, fields.ngZ1K, fields.ngZ2K, fields.ngZ3K].forEach(f => {
+  f.addEventListener("change", () => { syncParamsFromUI(); drawChart(); });
+});
+fields.gainScheduleEnabled.addEventListener("change", () => { updateGainScheduleUIState(); syncParamsFromUI(); drawChart(); });
+fields.nonlinearGainEnabled.addEventListener("change", () => { updateNonlinearGainUIState(); syncParamsFromUI(); drawChart(); });
 // GAM-002: tunt, tillagt lyssnarpar enbart för aktivitetsloggning — rör inte
 // appens egen parameterhantering ovan/i syncParamsFromUI().
 [["k", fields.k], ["t", fields.t], ["l", fields.l], ["kp", fields.kp], ["ti", fields.ti], ["td", fields.td],

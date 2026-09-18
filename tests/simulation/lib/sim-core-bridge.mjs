@@ -14,4 +14,4 @@ export const CONTENT_DIR = path.resolve(__dirname, "..", "..", "..", "apps", "ap
 
 const simCore = require(SIM_CORE_PATH);
 
-export const { Simulation, OnOffController, PIDController, ProcessModel, seededRandom, gaussian } = simCore;
+export const { Simulation, OnOffController, PIDController, ProcessModel, seededRandom, gaussian, scheduleZone, scheduledValue } = simCore;

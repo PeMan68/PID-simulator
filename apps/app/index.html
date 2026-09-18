@@ -367,6 +367,8 @@
     .param-group.collapsed .group-toggle { transform: rotate(-90deg); }
     .param-group-body { display: contents; }
     .param-group.collapsed .param-group-body { display: none; }
+    .schedule-fields { display: contents; }
+    .schedule-fields[hidden] { display: none; }
     .field { display: flex; flex-direction: column; gap: 4px; transition: opacity 120ms ease; }
     .field label {
       font-size: 12px;
@@ -676,6 +678,32 @@
             <label for="outflow">Utflöde <button class="help-btn" data-help="outflow">?</button></label>
             <input id="outflow" type="number" step="0.1" min="0">
           </div>
+          <div class="field" id="nonlinearGainField">
+            <label for="nonlinearGainEnabled">Olinjär ventilkarakteristik <button class="help-btn" data-help="nonlinearGainEnabled">?</button></label>
+            <input id="nonlinearGainEnabled" type="checkbox" title="Processens K varierar med utsignalen i tre fasta zoner">
+          </div>
+          <div class="schedule-fields" id="nonlinearGainFields" hidden>
+            <div class="field">
+              <label for="ngBreak1">Brytpunkt 1 (u) <button class="help-btn" data-help="ngBreak">?</button></label>
+              <input id="ngBreak1" type="number" step="1" min="0" max="100">
+            </div>
+            <div class="field">
+              <label for="ngBreak2">Brytpunkt 2 (u) <button class="help-btn" data-help="ngBreak">?</button></label>
+              <input id="ngBreak2" type="number" step="1" min="0" max="100">
+            </div>
+            <div class="field">
+              <label for="ngZ1K">K vid låg u <button class="help-btn" data-help="ngZoneK">?</button></label>
+              <input id="ngZ1K" type="number" step="0.01" min="0.001">
+            </div>
+            <div class="field">
+              <label for="ngZ2K">K vid mellan-u <button class="help-btn" data-help="ngZoneK">?</button></label>
+              <input id="ngZ2K" type="number" step="0.01" min="0.001">
+            </div>
+            <div class="field">
+              <label for="ngZ3K">K vid hög u <button class="help-btn" data-help="ngZoneK">?</button></label>
+              <input id="ngZ3K" type="number" step="0.01" min="0.001">
+            </div>
+          </div>
         </div>
       </div>
 
@@ -704,6 +732,56 @@
           <div class="field">
             <label for="td">Td <button class="help-btn" data-help="td">?</button></label>
             <input id="td" type="number" step="0.1" min="0">
+          </div>
+          <div class="field" id="gainScheduleField">
+            <label for="gainScheduleEnabled">Parameterstyrning <button class="help-btn" data-help="gainScheduleEnabled">?</button></label>
+            <input id="gainScheduleEnabled" type="checkbox" title="Kp/Ti/Td väljs utifrån PV i tre fasta zoner">
+          </div>
+          <div class="schedule-fields" id="gainScheduleFields" hidden>
+            <div class="field">
+              <label for="gsBreak1">Brytpunkt 1 (PV) <button class="help-btn" data-help="gsBreak">?</button></label>
+              <input id="gsBreak1" type="number" step="1" min="0" max="100">
+            </div>
+            <div class="field">
+              <label for="gsBreak2">Brytpunkt 2 (PV) <button class="help-btn" data-help="gsBreak">?</button></label>
+              <input id="gsBreak2" type="number" step="1" min="0" max="100">
+            </div>
+            <div class="field">
+              <label for="gsZ1Kp">Zon 1 Kp <button class="help-btn" data-help="gsZoneKp">?</button></label>
+              <input id="gsZ1Kp" type="number" step="0.1" min="0.1">
+            </div>
+            <div class="field">
+              <label for="gsZ1Ti">Zon 1 Ti <button class="help-btn" data-help="gsZoneTi">?</button></label>
+              <input id="gsZ1Ti" type="number" step="0.1" min="0">
+            </div>
+            <div class="field">
+              <label for="gsZ1Td">Zon 1 Td <button class="help-btn" data-help="gsZoneTd">?</button></label>
+              <input id="gsZ1Td" type="number" step="0.1" min="0">
+            </div>
+            <div class="field">
+              <label for="gsZ2Kp">Zon 2 Kp <button class="help-btn" data-help="gsZoneKp">?</button></label>
+              <input id="gsZ2Kp" type="number" step="0.1" min="0.1">
+            </div>
+            <div class="field">
+              <label for="gsZ2Ti">Zon 2 Ti <button class="help-btn" data-help="gsZoneTi">?</button></label>
+              <input id="gsZ2Ti" type="number" step="0.1" min="0">
+            </div>
+            <div class="field">
+              <label for="gsZ2Td">Zon 2 Td <button class="help-btn" data-help="gsZoneTd">?</button></label>
+              <input id="gsZ2Td" type="number" step="0.1" min="0">
+            </div>
+            <div class="field">
+              <label for="gsZ3Kp">Zon 3 Kp <button class="help-btn" data-help="gsZoneKp">?</button></label>
+              <input id="gsZ3Kp" type="number" step="0.1" min="0.1">
+            </div>
+            <div class="field">
+              <label for="gsZ3Ti">Zon 3 Ti <button class="help-btn" data-help="gsZoneTi">?</button></label>
+              <input id="gsZ3Ti" type="number" step="0.1" min="0">
+            </div>
+            <div class="field">
+              <label for="gsZ3Td">Zon 3 Td <button class="help-btn" data-help="gsZoneTd">?</button></label>
+              <input id="gsZ3Td" type="number" step="0.1" min="0">
+            </div>
           </div>
           <div class="field">
             <label for="bumpless">Bumpless <button class="help-btn" data-help="bumpless">?</button></label>
