@@ -86,6 +86,7 @@ const statusEl = document.getElementById("status");
 const logEl = document.getElementById("log");
 const chartCanvas = document.getElementById("chart");
 const learnBody = document.getElementById("learnBody");
+const btnExtendSteps = document.getElementById("btnExtendSteps");
 
 const fields = {
   processType: document.getElementById("processType"),
@@ -396,6 +397,12 @@ function fmt1(v) {
   const s = v.toFixed(1);
   return s === "-0.0" ? "0.0" : s;
 }
+// FEAT-043 — visar knappen "Fler steg" bara när scenariots aktiva tak faktiskt
+// är nått. Anropas efter varje händelse som kan ändra stepNo/maxSteps (steg,
+// kör, rensa, återställ, scenario-/lärstigsbyte) — se respektive lyssnare.
+function updateStepLimitUI() {
+  btnExtendSteps.hidden = !sim || sim.stepNo < sim.maxSteps;
+}
 function updateStatus() {
   if (!sim) { statusEl.textContent = "Status: ej laddad"; return; }
   const s = sim.getState();
@@ -459,7 +466,7 @@ function loadScenarioByName(name) {
   appendLog("Laddat scenario: " + currentScenario.id);
   updateControllerUIState();
   updateProcessUIState();
-  updateStatus(); drawChart();
+  updateStatus(); updateStepLimitUI(); drawChart();
   activityDispatch("scenario_loaded", { scenarioId: currentScenario.id, contextKey: activityContextKey() });
 }
 
@@ -964,11 +971,21 @@ document.getElementById("processType").addEventListener("change", () => {
   updateProcessUIState();
   activityDispatch("process_type_changed", { field: "processType", value: fields.processType.value });
 });
-document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); drawChart(); activityDispatch("simulation_step", { contextKey: activityContextKey() }); });
-document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg."); updateStatus(); drawChart(); activityDispatch("simulation_run", { steps: fs.length, contextKey: activityContextKey() }); });
+document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad — scenariots maxantal steg är nått. Klicka “Fler steg →” för att fortsätta."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("simulation_step", { contextKey: activityContextKey() }); });
+document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg." + (fs.length < 10 ? " Scenariots maxantal steg är nått — klicka “Fler steg →” för att fortsätta." : "")); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("simulation_run", { steps: fs.length, contextKey: activityContextKey() }); });
+document.getElementById("btnExtendSteps").addEventListener("click", () => {
+  if (!sim) return;
+  sim.extendSteps();
+  if (!sim.history.markers) sim.history.markers = [];
+  sim.history.markers.push({ t: sim.history.t[sim.history.t.length - 1] ?? 0, label: "Fler steg" });
+  appendLog("Fler steg tillgängliga (nytt tak: " + sim.maxSteps + " steg).");
+  updateStepLimitUI();
+  drawChart();
+  activityDispatch("steps_extended", { contextKey: activityContextKey(), newMax: sim.maxSteps });
+});
 document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); if (!sim.history.markers) sim.history.markers = []; sim.history.markers.push({ t: sim.history.t[sim.history.t.length - 1] ?? 0, label: "Puls" }); appendLog("Puls triggad."); activityDispatch("disturbance_triggered", { contextKey: activityContextKey() }); });
-document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); drawChart(); activityDispatch("chart_cleared", {}); });
-document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);

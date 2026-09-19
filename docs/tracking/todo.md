@@ -19,7 +19,26 @@ upptäckte detta som en inkonsekvent upplevelse mellan olika lärstigar/scenarie
 manuell test av FEAT-042 (se `docs/tracking/todo.md`s tidigare konversation/
 FEAT-042-granskning). Uppdrag: när taket nås, visa en knapp som släpper fram fler
 steg så att man kan fortsätta utforska SAMMA körning (inte en ny, återställd körning).
-**Status:** Öppen — uppdrag pågår.
+**Genomförande:**
+`Simulation` i `sim-core.js` fick `baseMaxSteps` (scenariots eget, oförändrade tak)
+skilt från `maxSteps` (det AKTIVA taket) samt `extendSteps()` (höjer `maxSteps` med
+ytterligare ett `baseMaxSteps`-block, rör aldrig historik/processtillstånd — körningen
+fortsätter exakt där den stannade). `reset()` återställer `maxSteps` till
+`baseMaxSteps`, så "Återställ system" ger tillbaka scenariots ursprungliga tak;
+"Rensa graf" gör det medvetet INTE (rör redan idag inte process-/regulatortillstånd).
+Ny knapp `#btnExtendSteps` i steg-/kör-knapprad, dold tills taket nås
+(`updateStepLimitUI()`, anropad efter Stega/Kör 10/Rensa graf/Återställ/
+scenariobyte). Klick lägger även en markeringslinje ("Fler steg") i grafen, samma
+mönster som pulsknappen. Loggtexterna vid Stega/Kör 10 uppdaterade att uttryckligen
+nämna knappen när taket nås (adresserar PO:s ursprungliga observation att stoppet
+var för otydligt).
+Ny testsvit `tests/feat-043-extend-max-steps.test.mjs` (15 kontroller). Fullständig
+regression (samma 15 testsviter som FEAT-042) grön, DEV-/PROD-byggnation och
+`validate-prod.mjs` kontrollerade — ingen DEV/PROD-skillnad, gäller alla scenarier
+och lärstigar lika.
+**Status:** Implementerad på feature-branchen, EJ mergad till `develop` — väntar på
+PO:s beslut om merge. Ingen webbläsartest genomförd (ingen webbläsare tillgänglig
+i denna miljö).
 
 ### FEAT-042 — Parameterstyrning + olinjär ventilkarakteristik
 **Prioritet:** Medel — designspecifikation klar, väntar på bygguppdrag
