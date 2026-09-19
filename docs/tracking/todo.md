@@ -92,11 +92,17 @@ riktvärden (K=1.3, auxGain=0.8, teoretiskt korrekt kff=-auxGain/K≈-0.62 —
 notera det NEGATIVA tecknet, en icke-uppenbar poäng) — flaggat som
 arbetshypoteser som måste simuleringsverifieras innan de låses fast, samma
 disciplin som PED-003E/FEAT-042.
-**Status:** Implementation klar på feature-branchen, väntar på PO:s visuella
-och pedagogiska granskning (se leveransrapporten). Ingen webbläsare tillgänglig
-i denna miljö — UI:t är smoke-testat (HTTP 200 på alla nya innehållsfiler) men
-INTE visuellt verifierat. Ingen merge till `develop` utan PO-granskning. Ingen
-release.
+**Status:** Efter PO:s användartest + nytt produktbeslut ("varje reglerstrategi
+ska förankras i ett konkret processexempel") krävs en andra implementations-
+omgång innan PO:s slutgranskning. Full genomgång + åtgärdsförslag:
+`docs/reports/FEAT-045_ANVANDARTEST-ATGARDER.md`. Två KONKRETA BUGGAR hittade
+(inte bara pedagogik): (1) lärstigens Mätläge-ordning är i praktiken omöjlig
+att utföra — `.measure-locked` (pointer-events:none) blockerar "Trigga
+last"-knappen; (2) lastens graflinje är osynlig för negativa värden (klipps
+bort av `drawChart()`s panel-clip, eftersom yMin=0). Väntar på PO:s beslut om
+(a) värmeväxlare som rekommenderat processexempel och (b) att ersätta
+graflinjen med en statusradsavläsning, innan nästa omgång påbörjas. Ingen
+merge till `develop` utan PO-granskning. Ingen release.
 
 ---
 

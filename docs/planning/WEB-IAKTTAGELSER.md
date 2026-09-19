@@ -179,3 +179,12 @@ Reflektionsfrågor i .md-filerna omvandlas till `quiz`-steg med MCQ. Simulerings
 ### Konsekvens: Studenten kan inte testa hur regulatorn hanterar störningsimpulser, vilket är en central del av PID-pedagogiken.
 ### Förslag / nästa tanke: Felsök hur `triggerPulse()` kopplar till `ProcessModel.step()` — troligen en synk-miss eller felaktig puls-magnitude i scenario-JSON (magnitude=0 i defaults).
 ### Status: Noterad
+
+---
+
+### Datum: 2026-09-19
+### Del av webbappen: Parametergrid (Process/Regulator/Styrning/Störningar) — övergripande
+### Iakttagelse: PO:s observation under FEAT-045-användartest: antalet parametrar och funktioner i parametergridet har vuxit stadigt (P/PI/PID → Parameterstyrning, 11 fält → olinjär ventilkarakteristik, 5 fält → Framkoppling, 3 fält). Allt visas för alla processer/tillämpningar samtidigt — bara dolt när det är irrelevant för aktuellt REGULATORLÄGE (t.ex. P vs PID), inte för vilken PROCESSTYP/tillämpning studenten faktiskt arbetar med.
+### Konsekvens: Risk för kognitiv överbelastning och otydlighet om vilka fält som är relevanta för den aktuella uppgiften, särskilt när fler reglerstrategier (Kvotreglering, Kaskadreglering) läggs till framöver.
+### Förslag / nästa tanke: PO föreslog processpecifika vyer/tillämpningar (t.ex. Temperaturprocess, Nivåprocess, Flödesprocess, Framkopplingsprocess, Kvotregleringsprocess, Kaskadprocess) som styr vilka parametergrupper som visas — en betydligt större arkitekturfråga (troligen ett nytt "processtyp"/"tillämpnings"-val, utöver dagens lägesstyrda visning) än en enskild feature. Inte moget för ett FEAT-nummer ännu — kräver egen designspecifikation (STRAT-nivå) den dag det blir aktuellt.
+### Status: Noterad — se docs/reports/FEAT-045_ANVANDARTEST-ATGARDER.md punkt 7 för full kontext.
