@@ -35,6 +35,36 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande features 
 
 ## Webbapp (`apps/app/`)
 
+### STRAT-004 — Förstudie: Framkoppling (Feedforward)
+**Prioritet:** Medel — analysuppdrag, ingen implementation
+**Beskrivning:**
+Uppdrag från PO: förstudie för Framkoppling (Feedforward), näst i STRAT-001s
+prioritetsordning efter Parameterstyrning (FEAT-042, nu levererad). Analys av
+pedagogiskt mål, teknisk lösning, visualisering, scenarier/lärstigar och
+arkitektur — samt lärdomar från FEAT-042s tre granskningsrundor. Ingen kod,
+ingen branch, ren analys.
+**Genomförande:**
+Full rapport: `docs/reports/STRAT-004_FORSTUDIE-FRAMKOPPLING.md`. Rekommenderad
+designriktning: ett generellt namngivet `scenario.auxSignal`-koncept (STRAT-001s
+hjälpsignal, konkretiserat), manuellt triggad via en ny knapp ("Trigga last")
+i exakt samma mönster som `triggerPulse()`/"Trigga puls" redan etablerat.
+Statisk framkoppling (`u_ff = Kff × auxSignal`), ingen dynamisk
+fördröjningsmodell. Lastsignalen ritas som en tredje linje i den redan
+existerande övre grafpanelen — ingen ny panel. "Ren framkoppling utan
+återkoppling" uppnås genom Kp≈UI-minimum, inget nytt regulatorläge behövs.
+Samma hjälpsignal återanvändbar rakt av för Kvotreglering senare (kostar i
+praktiken noll extra att hålla generell). Fyra risker identifierade, viktigast:
+beslutet "övergående kontra permanent laststörning" är olöst och bör avgöras
+innan en designspecifikation skrivs. Tre konkreta FEAT-042-lärdomar inbakade i
+rekommendationen: dedikerade scenariofiler per lärstigssteg (inte
+reload-beroende), Mätläge+2%-toleransband som mätmetod redan från start, och
+kompakt fältgruppering (FEAT-044-mönstret) redan i förstadesignen.
+**Status:** Mergad till `develop`. Ren analys, ingen appkod ändrad.
+Rekommenderat nästa steg: PO-beslut om öppen fråga (avsnitt 3.1), därefter en
+designspecifikation (STRAT-003s roll) innan ett bygguppdrag.
+
+---
+
 ### FEAT-042 — Parameterstyrning + olinjär ventilkarakteristik
 **Branch:** `feature/FEAT-042-parameterstyrning-ventilkarakteristik` (mergad till
 `develop`, raderad)
