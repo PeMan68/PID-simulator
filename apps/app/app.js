@@ -458,25 +458,28 @@ function activeZones() {
   const processZone = (ng && ng.enabled) ? scheduleZone(s.u, ng.breakpoint1, ng.breakpoint2) : null;
   return { gainZone, processZone };
 }
-const GS_ZONE_FIELD_GROUPS = [
-  [fields.gsZ1Kp, fields.gsZ1Ti, fields.gsZ1Td],
-  [fields.gsZ2Kp, fields.gsZ2Ti, fields.gsZ2Td],
-  [fields.gsZ3Kp, fields.gsZ3Ti, fields.gsZ3Td],
+// FEAT-044 — de 3 zonerna ligger nu i en tabell (en rad per zon) istället
+// för utspridda enskilda fält, se index.html. Highlighten sätts därför på
+// HELA raden, inte på varje enskilt fält.
+const GS_ZONE_ROWS = [
+  document.getElementById("gsZoneRow1"),
+  document.getElementById("gsZoneRow2"),
+  document.getElementById("gsZoneRow3"),
 ];
-const NG_ZONE_FIELD_GROUPS = [[fields.ngZ1K], [fields.ngZ2K], [fields.ngZ3K]];
-// FEAT-042 (PO-granskning, punkt 3) — highlight på aktiv zons egna fält, så
+const NG_ZONE_ROWS = [
+  document.getElementById("ngZoneRow1"),
+  document.getElementById("ngZoneRow2"),
+  document.getElementById("ngZoneRow3"),
+];
+// FEAT-042 (PO-granskning, punkt 3) — highlight på aktiv zons rad, så
 // studenten ser VILKEN Kp/Ti/Td (eller K) som gäller just nu. En textbadge
 // ("Aktiv: Zon N") fanns här tidigare men togs bort efter PO:s sista
 // granskningsrunda — bedömdes inte tillföra pedagogiskt värde utöver
-// fälthighlighten, statusradens zonavläsning och grafens markeringslinjer.
+// radhighlighten, statusradens zonavläsning och grafens markeringslinjer.
 function updateZoneIndicators() {
   const { gainZone, processZone } = activeZones();
-  GS_ZONE_FIELD_GROUPS.forEach((group, i) => {
-    group.forEach(f => f.parentElement.classList.toggle("zone-active-regulator", gainZone === i));
-  });
-  NG_ZONE_FIELD_GROUPS.forEach((group, i) => {
-    group.forEach(f => f.parentElement.classList.toggle("zone-active-process", processZone === i));
-  });
+  GS_ZONE_ROWS.forEach((row, i) => row.classList.toggle("zone-active-regulator", gainZone === i));
+  NG_ZONE_ROWS.forEach((row, i) => row.classList.toggle("zone-active-process", processZone === i));
 }
 // FEAT-042 (PO-granskning, punkt 5) — markeringslinje vid zonbyte, samma
 // mekanism (sim.history.markers) som redan används för parameterändringar
