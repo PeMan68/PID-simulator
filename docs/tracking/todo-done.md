@@ -35,6 +35,36 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande features 
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-043 — Knapp för att släppa fram fler steg vid maxSteps-taket
+**Branch:** `feature/FEAT-043-extend-max-steps` (mergad till `develop`)
+**Beskrivning:**
+Uppdrag från PO: varje scenario har ett tyst, per-scenario `runtime.maxSteps`-tak
+(300/600/900/2000 osv, beroende på fil) — `Simulation.step()` returnerade `null` utan
+tydlig varning när taket nåddes, och det fanns ingen UI-kontroll för att höja det. PO
+upptäckte detta som en inkonsekvent upplevelse mellan olika lärstigar/scenarier under
+manuell test av FEAT-042. Uppdrag: när taket nås, visa en knapp som släpper fram fler
+steg så att man kan fortsätta utforska SAMMA körning (inte en ny, återställd körning).
+**Genomförande:**
+`Simulation` i `sim-core.js` fick `baseMaxSteps` (scenariots eget, oförändrade tak)
+skilt från `maxSteps` (det AKTIVA taket) samt `extendSteps()` (höjer `maxSteps` med
+ytterligare ett `baseMaxSteps`-block, rör aldrig historik/processtillstånd — körningen
+fortsätter exakt där den stannade). `reset()` återställer `maxSteps` till
+`baseMaxSteps`, så "Återställ system" ger tillbaka scenariots ursprungliga tak;
+"Rensa graf" gör det medvetet INTE (rör redan idag inte process-/regulatortillstånd).
+Ny knapp `#btnExtendSteps` i steg-/kör-knapprad, dold tills taket nås
+(`updateStepLimitUI()`, anropad efter Stega/Kör 10/Rensa graf/Återställ/
+scenariobyte). Klick lägger även en markeringslinje ("Fler steg") i grafen, samma
+mönster som pulsknappen. Loggtexterna vid Stega/Kör 10 uppdaterade att uttryckligen
+nämna knappen när taket nås.
+Ny testsvit `tests/feat-043-extend-max-steps.test.mjs` (15 kontroller). Fullständig
+regression (15 testsviter) grön, DEV-/PROD-byggnation och `validate-prod.mjs`
+kontrollerade — ingen DEV/PROD-skillnad, gäller alla scenarier och lärstigar lika.
+**Status:** Mergad till `develop`. PO testade manuellt (`onoff-basic`, 300-stegs
+maxSteps-scenario) och bekräftade att knappen fungerar som avsett. Kölagd för nästa
+release — ingen egen release ännu, `main` oförändrat tills vidare.
+
+---
+
 ### FEAT-037 — Övningsdokument "Reglerstrategier"
 **Branch:** `feature/reglerstrategier` (mergad till `develop`)
 **Beskrivning:**
