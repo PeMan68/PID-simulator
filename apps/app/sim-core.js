@@ -102,7 +102,12 @@
     constructor(scenario, seed) {
       this.scenario = scenario;
       this.dt = scenario.runtime.dt;
-      this.maxSteps = scenario.runtime.maxSteps;
+      // FEAT-043 — baseMaxSteps är scenariots eget, oföränderliga tak (från
+      // JSON:en). maxSteps är det AKTIVA taket, som extendSteps() kan höja
+      // för att låta en student fortsätta utforska samma körning istället
+      // för att tvingas till en tyst stopp eller en full återställning.
+      this.baseMaxSteps = scenario.runtime.maxSteps;
+      this.maxSteps = this.baseMaxSteps;
       this.stepNo = 0;
       this.rng = seededRandom(seed || 42);
       this.process = new ProcessModel(scenario.process, this.dt);
@@ -113,8 +118,11 @@
       this.pulseStepsLeft = 0;
       this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0] };
     }
-    reset() { this.stepNo = 0; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.scenario.controller.bias = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0] }; }
+    reset() { this.stepNo = 0; this.maxSteps = this.baseMaxSteps; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.scenario.controller.bias = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0] }; }
     triggerPulse() { const p = this.scenario.disturbance.pulse; if (p && p.durationSteps > 0) this.pulseStepsLeft = p.durationSteps; }
+    // FEAT-043 — släpper fram ytterligare ett "baseMaxSteps"-block av steg,
+    // så att en pågående körning kan fortsätta utan att tappa historik/tillstånd.
+    extendSteps() { this.maxSteps += this.baseMaxSteps; }
     step() {
       if (this.stepNo >= this.maxSteps) return null;
       const sp = this.scenario.runtime.setpoint;
