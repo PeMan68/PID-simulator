@@ -1,5 +1,5 @@
 # Övningsuppgifter: Framkoppling (Feedforward)
-*Dokumentversion 1.2. Kräver PID Simulator med stöd för Framkoppling (FEAT-045).*
+*Dokumentversion 1.3. Kräver PID Simulator med stöd för Framkoppling (FEAT-045).*
 
 > **⚠️ Viktigt**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
@@ -18,7 +18,7 @@ Det här dokumentet är fristående lösblad — samma mönster som `ovningar-pa
 - **Last** — i det här dokumentet: en mätbar förändring i värmeväxlarens inkommande temperatur, uppmätt av en temperaturgivare uppströms. Anges på simulatorns gemensamma 0–100-skala, precis som PV/SP — inte i grader eller en annan fysisk enhet; en riktig givares egen kalibrering till den skalan ligger utanför vad simulatorn modellerar. Triggas med knappen "Trigga last" (Störningar-gruppen) och ligger sedan kvar BESTÅENDE tills systemet återställs eller en ny last triggas — till skillnad från Puls, som återgår till 0 av sig själv.
 - **Lastförstärkning** — hur starkt den triggade lasten fysiskt påverkar utgående temperatur. Processens egen egenskap, i Process-gruppen.
 - **Kff (framkopplingsförstärkning)** — regulatorns kompensation för lasten (hur mycket ångventilen förjusteras), adderad direkt till utsignalen. I Regulator-gruppen. Kan vara negativt.
-- **Teoretiskt korrekt Kff** — det värde som exakt kompensationerar lastens effekt: `Kff = −auxGain / K`.
+- **Teoretiskt korrekt Kff** — det värde som exakt kompensationerar lastens effekt: `Kff = −auxGain / K`, där K är PROCESSENS EGNA K (samma K-fält som i Process-gruppen) — inte auxGain igen och ingen tredje storhet.
 - **t_last, t_slut, Δt** — t-värdet (avläst i grafen) när lasten triggas, t-värdet när PV har stabiliserat sig, och skillnaden mellan dem (`Δt = t_slut − t_last`) — den faktiska insvängningstiden EFTER lasten, inte ett absolut stegnummer.
 - **K, T, L, Kp, Ti, Td** — se `ovningar-reglerstrategier.md` för grundläggande definitioner om de är nya begrepp för dig.
 
