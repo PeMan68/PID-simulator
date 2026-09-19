@@ -35,9 +35,22 @@
     }
   }
 
+  // Parameterstyrning (FEAT-042) — delad, fast 3-zons brytpunktsmekanism.
+  // Används identiskt för regulatorns kp/ti/td-schema (keyed på PV) och
+  // processens K-schema (keyed på u/ud) — se STRAT-003. Exakt 3 zoner,
+  // skarp (icke interpolerad) övergång vid brytpunkterna.
+  function scheduleZone(x, breakpoint1, breakpoint2) {
+    if (x < breakpoint1) return 0;
+    if (x < breakpoint2) return 1;
+    return 2;
+  }
+  function scheduledValue(zones, breakpoint1, breakpoint2, x) {
+    return zones[scheduleZone(x, breakpoint1, breakpoint2)];
+  }
+
   class PIDController {
-    constructor(cfg = {}, dt = 1) { this.kp = cfg.kp || 0; this.ti = cfg.ti || 0; this.td = cfg.td || 0; this.dt = dt; this.integral = 0; this.prevPv = 0; this.mode = "pid"; this.bias = cfg.bias || 0; this.biasFadeSteps = 0; this.biasFadePerStep = 0; }
-    reset() { this.integral = 0; this.prevPv = 0; this.bias = 0; this.biasFadeSteps = 0; this.biasFadePerStep = 0; }
+    constructor(cfg = {}, dt = 1) { this.kp = cfg.kp || 0; this.ti = cfg.ti || 0; this.td = cfg.td || 0; this.dt = dt; this.integral = 0; this.prevPv = 0; this.mode = "pid"; this.bias = cfg.bias || 0; this.biasFadeSteps = 0; this.biasFadePerStep = 0; this.gainZone = null; }
+    reset() { this.integral = 0; this.prevPv = 0; this.bias = 0; this.biasFadeSteps = 0; this.biasFadePerStep = 0; this.gainZone = null; }
     step(sp, pv, limits, antiWindup) {
       const error = sp - pv;
       const integralCandidate = this.integral + error * this.dt;
@@ -73,6 +86,17 @@
       if (this.delay.length > 0) this.delay.fill(0);
       if (this.stages.length > 0) this.stages.fill(this.cfg.normalValue);
     }
+    // Olinjär ventilkarakteristik (FEAT-042) — processens K som funktion av
+    // utsignalen (ud), bara för self_regulating. Se STRAT-003 avsnitt 6 för
+    // varför bara self_regulating stöds i detta uppdrag (integrating/konisk
+    // tank lämnas som en öppen, billig uppföljning — inte hårdkodat bort).
+    effectiveK(ud) {
+      const ng = this.cfg.nonlinearGain;
+      if (ng && ng.enabled && this.cfg.type === "self_regulating") {
+        return scheduledValue(ng.zones, ng.breakpoint1, ng.breakpoint2, ud);
+      }
+      return this.cfg.K;
+    }
     step(u, dt, disturbance) {
       let ud;
       if (this.delay.length > 0) { this.delay.push(u); ud = this.delay.shift(); }
@@ -89,7 +113,7 @@
         this.stages[1] += (-(this.stages[1] - this.stages[0]) * dt) / Ti;
         this.y += (-(this.y - this.stages[1]) * dt) / Ti;
       }
-      else this.y += ((-(this.y - this.cfg.normalValue) + this.cfg.K * ud) * dt) / T;
+      else this.y += ((-(this.y - this.cfg.normalValue) + this.effectiveK(ud) * ud) * dt) / T;
       this.y += disturbance;
       return this.y;
     }
@@ -134,17 +158,53 @@
       else if (mode === "onoff") ctrl = { u: this.onoff.step(sp, pv, limits), error: sp - pv, pTerm: 0, iTerm: 0, dTerm: 0 };
       else {
         this.pid.mode = mode;
-        if (mode === "p") { this.pid.ti = 0; this.pid.td = 0; this.pid.integral = 0; this.pid.prevPv = pv; }
-        if (mode === "pi") { this.pid.td = 0; this.pid.prevPv = pv; }
-        this.pid.kp = this.scenario.controller.kp || 0;
-        this.pid.ti = this.scenario.controller.ti || 0;
-        this.pid.td = this.scenario.controller.td || 0;
-        if (this.pid.biasFadeSteps > 0) {
-          this.pid.bias -= this.pid.biasFadePerStep;
-          this.pid.biasFadeSteps--;
-          if (this.pid.biasFadeSteps === 0) { this.pid.bias = 0; this.scenario.controller.bias = 0; }
+        const gs = this.scenario.controller.gainSchedule;
+        let zoneIdx = null;
+        let gkp, gti, gtd;
+        if (gs && gs.enabled) {
+          zoneIdx = scheduleZone(pv, gs.breakpoint1, gs.breakpoint2);
+          const z = gs.zones[zoneIdx];
+          gkp = z.kp; gti = z.ti; gtd = z.td;
         } else {
-          this.pid.bias = this.scenario.controller.bias || 0;
+          gkp = this.scenario.controller.kp || 0;
+          gti = this.scenario.controller.ti || 0;
+          gtd = this.scenario.controller.td || 0;
+        }
+        if (mode === "p") { gti = 0; gtd = 0; this.pid.integral = 0; this.pid.prevPv = pv; }
+        if (mode === "pi") { gtd = 0; this.pid.prevPv = pv; }
+        // Bumplös övergång vid zonbyte (inkl. på/av) — återanvänder samma
+        // bias/biasFadeSteps/biasFadePerStep-fält som manuell/auto-bytet
+        // redan använder (se STRAT-003 avsnitt 1.3). Ingen effekt på steg 0
+        // (undviker en konstlad startbias för scenarier som redan startar
+        // schemalagda). Till skillnad från lägesbytets bias (satt av app.js
+        // INNAN nästa step() anropas, så den befintliga nedräkningen nedan
+        // redan hinner konsumera ett steg av fasningen där) sätts och
+        // används zonbytets bias inom SAMMA step()-anrop — nedräkningen
+        // hoppas därför över just det första, triggande steget, så den
+        // beräknade biasen får full effekt innan den börjar fasas ut.
+        let freshGainFade = false;
+        if (this.stepNo > 0 && this.pid.gainZone !== zoneIdx) {
+          const prevU = this.history.u[this.history.u.length - 1] || 0;
+          const prevE = this.history.e[this.history.e.length - 1] || 0;
+          const bias = prevU - gkp * prevE;
+          this.pid.bias = Number.isFinite(bias) ? bias : 0;
+          this.pid.biasFadeSteps = 5;
+          this.pid.biasFadePerStep = this.pid.bias / 5;
+          this.scenario.controller.bias = this.pid.bias;
+          freshGainFade = true;
+        }
+        this.pid.gainZone = zoneIdx;
+        this.pid.kp = gkp;
+        this.pid.ti = gti;
+        this.pid.td = gtd;
+        if (!freshGainFade) {
+          if (this.pid.biasFadeSteps > 0) {
+            this.pid.bias -= this.pid.biasFadePerStep;
+            this.pid.biasFadeSteps--;
+            if (this.pid.biasFadeSteps === 0) { this.pid.bias = 0; this.scenario.controller.bias = 0; }
+          } else {
+            this.pid.bias = this.scenario.controller.bias || 0;
+          }
         }
         ctrl = this.pid.step(sp, pv, limits, this.scenario.controller.antiWindup !== false);
       }
@@ -161,5 +221,5 @@
     getState() { const i = this.history.t.length - 1; if (i < 0) return { step: 0, t: 0, y: 0, u: 0, e: 0, pTerm: 0, iTerm: 0, dTerm: 0 }; return { step: this.stepNo, t: this.history.t[i], y: this.history.y[i], u: this.history.u[i], e: this.history.e[i], pTerm: this.history.p[i] || 0, iTerm: this.history.i[i] || 0, dTerm: this.history.d[i] || 0 }; }
   }
 
-  return { seededRandom, gaussian, OnOffController, PIDController, ProcessModel, Simulation };
+  return { seededRandom, gaussian, scheduleZone, scheduledValue, OnOffController, PIDController, ProcessModel, Simulation };
 });

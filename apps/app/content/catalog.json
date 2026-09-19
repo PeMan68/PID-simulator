@@ -1,5 +1,5 @@
 {
-  "version": "v1.5.3",
+  "version": "v1.5.4",
   "help": "help.json",
   "scenarios": [
     { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json" },
@@ -25,7 +25,10 @@
     { "id": "p-pi-comparison-pi",          "file": "scenarios/p-pi-comparison-pi.json" },
     { "id": "pi-pid-comparison-pi",        "file": "scenarios/pi-pid-comparison-pi.json" },
     { "id": "pi-pid-comparison-pid",       "file": "scenarios/pi-pid-comparison-pid.json" },
-    { "id": "pi-deadtime-comparison",      "file": "scenarios/pi-deadtime-comparison.json" }
+    { "id": "pi-deadtime-comparison",      "file": "scenarios/pi-deadtime-comparison.json" },
+    { "id": "valve-nonlinear-gain-demo",   "file": "scenarios/valve-nonlinear-gain-demo.json" },
+    { "id": "valve-nonlinear-gain-demo-kp3",       "file": "scenarios/valve-nonlinear-gain-demo-kp3.json" },
+    { "id": "valve-nonlinear-gain-demo-scheduled", "file": "scenarios/valve-nonlinear-gain-demo-scheduled.json" }
   ],
   "theory": [
     { "id": "pid-intro",      "file": "theory/pid-intro.v1.json" },
@@ -36,13 +39,15 @@
     { "id": "lambda-metoden",          "file": "theory/lambda-metoden.v1.json" },
     { "id": "tangentmetoden",          "file": "theory/tangentmetoden.v1.json" },
     { "id": "proportionalband",        "file": "theory/proportionalband.v1.json" },
-    { "id": "disturbance-robustness",  "file": "theory/disturbance-robustness.v1.json" }
+    { "id": "disturbance-robustness",  "file": "theory/disturbance-robustness.v1.json" },
+    { "id": "parameterstyrning-ventilkarakteristik", "file": "theory/parameterstyrning-ventilkarakteristik.v1.json" }
   ],
   "learning_paths": [
     { "id": "kom-igång.v1",                    "file": "exercises/kom-igång.v1.json" },
     { "id": "oppen-slinga-onoff-p.v1",         "file": "exercises/oppen-slinga-onoff-p.v1.json" },
     { "id": "proportionalband-forstarkning.v1", "file": "exercises/proportionalband-forstarkning.v1.json" },
     { "id": "pi-pid.v1",                       "file": "exercises/pi-pid.v1.json" },
+    { "id": "parameterstyrning-ventilkarakteristik.v1", "file": "exercises/parameterstyrning-ventilkarakteristik.v1.json" },
     { "id": "processbegransningar.v1",         "file": "exercises/processbegransningar.v1.json" },
     { "id": "windup-antiwindup.v1",            "file": "exercises/windup-antiwindup.v1.json" },
     { "id": "storningar-robusthet.v1",         "file": "exercises/storningar-robusthet.v1.json" },

@@ -94,5 +94,37 @@
   "tangentlinje": {
     "title": "Tangentlinje — Ziegler-Nichols reaktionskurva",
     "body": "Tangenten ritas vid stegsvarets brantaste punkt (inflexionspunkten).\n\nEnkapacitiv process: max lutning är i STARTEN av PV-uppgången (direkt när dödtiden löpt ut).\nFlerkapacitiv (S-kurva): inflexionspunkten är mitt i uppgången.\n\nFörlängd tangent skär PV₀- och PV∞-nivåerna:\n• L = tid från stegändringen till PV₀-skärningen\n• T = tid mellan PV₀- och PV∞-skärningarna\n\nKrav: Ange PV₀ och PV∞ i mätpanelen för att skärningspunkterna ska beräknas rätt.\n\nJämför med 63%-metoden: tangentmetoden ger en geometrisk approximation via tangentlinjens skärningar; 63%-metoden läser direkt av vid 63.2% av ΔPV."
+  },
+  "gainScheduleEnabled": {
+    "title": "Parameterstyrning (Gain Scheduling)",
+    "body": "Regulatorns Kp/Ti/Td väljs automatiskt utifrån var PV befinner sig, istället för att vara samma i hela driftområdet.\n\nTre fasta zoner (Låg/Mellan/Hög), avgränsade av två brytpunkter på PV-skalan. Så fort PV passerar en brytpunkt byts hela Kp/Ti/Td-uppsättningen omedelbart till den nya zonens.\n\nVarför: en process kan svara olika kraftigt beroende på driftpunkt (t.ex. en olinjär ventil — se 'Olinjär ventilkarakteristik'). Samma Kp fungerar då bra i en zon men dåligt i en annan.\n\nBytet sker stötfritt (samma mjuka övergång som Bumpless vid lägesbyte) — u hoppar inte vid en zongräns.\n\nDen zon som gäller just nu får en orange ram runt sina egna Kp/Ti/Td-fält, och visas i statusraden. Ett zonbyte markeras även med en streckad linje i grafen, precis som andra parameterändringar.\n\nGäller bara i P/PI/PID-läge."
+  },
+  "gsBreak": {
+    "title": "Brytpunkt (Parameterstyrning)",
+    "body": "PV-värdet (0–100) där regulatorn byter från en zons Kp/Ti/Td till nästa.\n\nBrytpunkt 1 skiljer Zon 1 (låg PV) från Zon 2 (mellan). Brytpunkt 2 skiljer Zon 2 från Zon 3 (hög PV).\n\nOrdningen tvingas alltid stigande (Brytpunkt 1 ≤ Brytpunkt 2), samma princip som u_min/u_max."
+  },
+  "gsZoneKp": {
+    "title": "Zonens Kp (Parameterstyrning)",
+    "body": "Den Kp som används när PV ligger i just den här zonen. Samma innebörd som det vanliga Kp-fältet, se dess hjälptext.\n\nAlla tre zoner förifylls med scenariots ordinarie Kp när Parameterstyrning aktiveras — ändra dem för att ge varje zon sin egen inställning."
+  },
+  "gsZoneTi": {
+    "title": "Zonens Ti (Parameterstyrning)",
+    "body": "Den Ti som används när PV ligger i just den här zonen. Samma innebörd som det vanliga Ti-fältet, se dess hjälptext."
+  },
+  "gsZoneTd": {
+    "title": "Zonens Td (Parameterstyrning)",
+    "body": "Den Td som används när PV ligger i just den här zonen. Samma innebörd som det vanliga Td-fältet, se dess hjälptext."
+  },
+  "nonlinearGainEnabled": {
+    "title": "Olinjär ventilkarakteristik",
+    "body": "Processens egen förstärkning K varierar med utsignalen u, istället för att vara konstant.\n\nTre fasta K-zoner (låg/mellan/hög u), avgränsade av två brytpunkter på u-skalan (0–100 %).\n\nVarför: verkliga styrventiler är sällan linjära — samma ändring i u ger olika stor effekt på PV beroende på var ventilen redan står (t.ex. en likprocentuell karakteristik: liten effekt nära stängt, stor effekt nära öppet).\n\nBara T och L är konstanta — bara K byter zon.\n\nDen zon som gäller just nu får en grön ram runt sitt eget K-fält, och visas i statusraden. Ett zonbyte markeras även med en streckad linje i grafen, precis som andra parameterändringar.\n\nOBS: den här K-zonen styrs av utsignalen u — regulatorns EGET zonschema ('Parameterstyrning') styrs istället av PV. De två kan alltså ligga i olika zonnummer samtidigt, det är fullt normalt.\n\nGäller bara processtyp Självreglerande."
+  },
+  "ngBreak": {
+    "title": "Brytpunkt (ventilkarakteristik)",
+    "body": "u-värdet (0–100 %) där processens K byter från en zons värde till nästa.\n\nBrytpunkt 1 skiljer låg u från mellan-u. Brytpunkt 2 skiljer mellan-u från hög u.\n\nOrdningen tvingas alltid stigande, samma princip som u_min/u_max."
+  },
+  "ngZoneK": {
+    "title": "Zonens K (ventilkarakteristik)",
+    "body": "Den processförstärkning K som gäller när utsignalen u ligger i just det här intervallet. Samma innebörd som det vanliga K-fältet, se dess hjälptext.\n\nAlla tre zoner förifylls med scenariots ordinarie K när ventilkarakteristiken aktiveras — ändra dem för att ge varje intervall sin egen förstärkning."
   }
 }

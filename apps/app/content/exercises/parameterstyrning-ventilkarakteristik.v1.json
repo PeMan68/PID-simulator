@@ -1,0 +1,107 @@
+{
+  "id": "parameterstyrning-ventilkarakteristik.v1",
+  "version": "v1.2.0",
+  "title": "Parameterstyrning och olinjär ventilkarakteristik",
+  "description": "En fast Kp räcker inte alltid — se varför en olinjär process kräver olika regulatorinställningar i olika driftpunkter, och hur Parameterstyrning löser det utan manuell kompromiss.",
+  "difficulty": "intro",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "parameterstyrning-ventilkarakteristik.v1.json",
+      "title": "Varför räcker inte alltid en fast Kp?",
+      "objective": "Förstå att processens egen förstärkning K kan skilja sig åt beroende på driftpunkt, och vad Parameterstyrning gör åt det.",
+      "checkpoint": {
+        "question": "Varför kan samma Kp fungera bra vid en driftpunkt men dåligt vid en annan?",
+        "options": [
+          "Processens egen förstärkning K kan vara olika stark i olika delar av arbetsområdet (t.ex. en olinjär ventil) — samma Kp ger då olika stark reglerverkan",
+          "Ti och Td byter automatiskt tecken vid hög utsignal",
+          "SP är fel inställt i scenariot",
+          "PID-blocket i simulatorn räknar fel vid höga PV-värden"
+        ],
+        "correct": 0,
+        "explanation": "Regulatorns utsignal u = Kp × e (plus I/D-delarna) — men hur mycket EFFEKT den utsignalen ger på processen avgörs av K, som här varierar med driftpunkten. Samma Kp ger då olika stark verklig reglering beroende på var processen befinner sig."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "valve-nonlinear-gain-demo.json",
+      "comparisonGroup": "ventilkarakteristik-problem",
+      "title": "Visa problemet — svag zon",
+      "objective": "Se hur en fast Kp presterar i processens svaga zon (K=0.5, u under 25 %).",
+      "instruction": "Ladda scenariot 'Olinjär ventilkarakteristik — demo' (SP=10, Kp=1.2 — scenariots standardvärden; olinjär ventilkarakteristik är redan aktiverad).\n\nI det här scenariot delar Zon 2 och Zon 3 samma K-värde (2.5) — mekanismen har alltid tre zoner, men just den här processen behöver bara TVÅ olika beteenden (svag/stark) för att visa poängen tydligt.\n\nKör minst 150 steg (klicka 'Kör 10' upprepade gånger) tills PV ser stabil ut.\n\nMät insvängningstiden EXAKT, inte på ögonmått: aktivera Mätläge (knappen 'Mät K/T/L'), ange PV₀=0 och PV∞=10 i mätpanelen, och kryssa i 'Visa 2%-toleransband (insvängning)'. Håll musen över grafen tills du hittar exakt vid vilket steg PV går in i det streckade bandet och stannar kvar där — det är insvängningstiden.\n\nAnteckna: SP=10, Kp=1.2, insvängningstid. Kalla insvängningstiden A — du jämför A mot ett nytt värde redan i nästa steg."
+    },
+    {
+      "type": "scenario",
+      "ref": "valve-nonlinear-gain-demo.json",
+      "comparisonGroup": "ventilkarakteristik-problem",
+      "title": "Visa problemet — stark zon",
+      "objective": "Jämföra med föregående steg: SAMMA Kp, men en driftpunkt där processens K är mycket starkare.",
+      "instruction": "Ändra SP till 90 (Kp=1.2 oförändrat). Klicka 'Återställ system' och kör minst 60 steg tills PV ser stabil ut.\n\nMät insvängningstiden på samma sätt som i steg 2: Mätläge, PV₀=0, PV∞=90, 2%-toleransband.\n\nAnteckna: SP=90, Kp=1.2, insvängningstid. Kalla insvängningstiden B.\n\nJämför A (steg 2) och B (det här steget) — vilket är störst? Titta gärna på den färgade ramen kring K-fältet i Process-gruppen (grön när Zon 2/3 är aktiv), som visar vilken K-zon u befinner sig i just nu.",
+      "checkpoint": {
+        "question": "Med exakt samma Kp=1.2 blev B (steg 3, SP=90) betydligt mindre än A (steg 2, SP=10) — alltså snabbare insvängning. Varför?",
+        "options": [
+          "Vid SP=90 hamnar utsignalen u i processens starka zon (K=2.5, u över 25 %) — samma Kp ger då en kraftigare, snabbare reglerverkan än i den svaga zonen (K=0.5) från steg 2",
+          "Regulatorn byter automatiskt till PID-läge vid höga SP-värden",
+          "Ett högre SP gör alltid regleringen snabbare, oavsett process",
+          "Simulatorn använder olika Kp beroende på SP-värdet"
+        ],
+        "correct": 0,
+        "explanation": "Processens K är fem gånger så stort i den starka zonen (2.5 mot 0.5). Samma Kp ger alltså en mycket kraftigare verklig reglerverkan där — inte för att SP i sig gör något, utan för att u råkar hamna i en annan K-zon."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "valve-nonlinear-gain-demo-kp3.json",
+      "comparisonGroup": "ventilkarakteristik-kompromiss",
+      "title": "En kompromiss — försök 1: högre Kp i svag zon",
+      "objective": "Prova en högre, kompromissad Kp i den svaga zonen.",
+      "instruction": "Ladda scenariot 'Olinjär ventilkarakteristik — kompromiss-Kp'. Kontrollera att SP=10 och Kp=3 (scenariots egna standardvärden — ungefär dubbelt så aggressiv som i steg 2, ingen manuell ändring behövs).\n\nKör minst 90 steg tills PV ser stabil ut.\n\nMät insvängningstiden: Mätläge, PV₀=0, PV∞=10, 2%-toleransband.\n\nAnteckna: SP=10, Kp=3, insvängningstid. Kalla insvängningstiden C."
+    },
+    {
+      "type": "scenario",
+      "ref": "valve-nonlinear-gain-demo-kp3.json",
+      "comparisonGroup": "ventilkarakteristik-kompromiss",
+      "title": "En kompromiss — försök 2: samma högre Kp i stark zon",
+      "objective": "Se vad samma kompromiss-Kp gör i den starka zonen.",
+      "instruction": "Ändra SP till 90 (Kp=3 oförändrat). Klicka 'Återställ system' och kör minst 40 steg tills PV ser stabil ut.\n\nMät insvängningstiden: Mätläge, PV₀=0, PV∞=90, 2%-toleransband.\n\nAnteckna: SP=90, Kp=3, insvängningstid. Kalla insvängningstiden D.\n\nJämför: är C (steg 4) mindre än A (steg 2)? Är D (det här steget) i närheten av B (steg 3), trots det högre Kp:t?",
+      "checkpoint": {
+        "question": "Kp=3 gör den svaga zonen snabbare (C < A), men C kommer fortfarande inte ner i samma storleksordning som B (steg 3, som redan var snabb vid Kp=1.2). Vad säger det om att välja EN gemensam Kp för hela processen?",
+        "options": [
+          "Det går inte att hitta en Kp som ger lika bra prestanda i båda zonerna samtidigt — en kompromiss förbättrar den svaga zonen utan att nå den starkas naturliga prestanda, och att driva kompromissen längre riskerar att göra den starka zonen för kraftigt reglerad istället",
+          "Kp=3 är alltid det korrekta valet för alla processer",
+          "Insvängningstiden beror bara på Ti, inte på Kp",
+          "Problemet försvinner om man bara ökar Ti tillräckligt mycket"
+        ],
+        "correct": 0,
+        "explanation": "En enda Kp måste fungera i hela arbetsområdet. Höjer man den för att hjälpa den svaga zonen förblir den starka zonen ändå den 'lättaste' att reglera — och driver man Kp ännu högre för att helt matcha den, riskerar den starka zonen istället att bli för kraftigt reglerad (översläng, i värsta fall svängning).\n\nOm dina egna uppmätta A/B/C/D inte riktigt stämmer med detta: dubbelkolla att du mätte med Mätläge + 2%-toleransband (inte på ögonmått) — en kurva kan se 'ungefär stabil' ut långt innan den faktiskt gått in i och stannat kvar i det exakta 2%-bandet, vilket ger missvisande höga tider särskilt i steg 3/5 (SP=90)."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "valve-nonlinear-gain-demo-scheduled.json",
+      "comparisonGroup": "ventilkarakteristik-losning",
+      "title": "Lösningen — försök 1: Parameterstyrning i svag zon",
+      "objective": "Låta regulatorn själv välja rätt Kp för den svaga zonen, istället för en manuellt vald kompromiss.",
+      "instruction": "Ladda scenariot 'Olinjär ventilkarakteristik — Parameterstyrning aktiv'. Kontrollera att SP=10 och att kryssrutan 'Parameterstyrning' i Regulator-gruppen redan är ikryssad — scenariot aktiverar den automatiskt, ingen manuell åtgärd behövs. Lägg märke till den orange ramen kring Zon 1:s Kp/Ti/Td-fält (Kp=5) — det är regulatorns aktiva uppsättning just nu.\n\nKör minst 90 steg tills PV ser stabil ut.\n\nMät insvängningstiden: Mätläge, PV₀=0, PV∞=10, 2%-toleransband.\n\nAnteckna: SP=10, aktiv uppsättning=Zon 1 (Kp=5), insvängningstid. Kalla insvängningstiden E.\n\nUnder hela det här steget stannar PV under Brytpunkt 1 (25) — den orange ramen ligger kvar på Zon 1 hela tiden. Nästa steg är där det faktiska zonbytet sker."
+    },
+    {
+      "type": "scenario",
+      "ref": "valve-nonlinear-gain-demo-scheduled.json",
+      "comparisonGroup": "ventilkarakteristik-losning",
+      "title": "Lösningen — försök 2: Parameterstyrning i stark zon (se zonbytet)",
+      "objective": "Bekräfta att den starka zonen fortfarande presterar bra, och observera regulatorn faktiskt byta parameteruppsättning under körningen.",
+      "instruction": "Ändra SP till 90. Klicka 'Återställ system'.\n\nDen här gången passerar PV båda brytpunkterna (25 och 65) på väg mot 90 — regulatorn byter parameteruppsättning UNDER körningen, inte bara vid start. Processen reagerar snabbt i den här driftpunkten, så bytena sker redan inom de första stegen — klicka gärna 'Stega 1' upprepade gånger från start (istället för 'Kör 10') om du vill se den orange ramen hoppa mellan Zon 1/2/3-fälten steg för steg. Oavsett om du stegar eller kör snabbt läggs en streckad markeringslinje ('Zonbyte (Kp) → Zon N') automatiskt i grafen varje gång ett byte sker, så du alltid kan se EXAKT var det hände i efterhand.\n\nObservera även: en likadan markeringslinje ('Zonbyte (K) → Zon N') kan dyka upp för PROCESSENS egen zon (styrd av u), oberoende av regulatorns. De två zonsystemen är helt fristående — processen kan alltså ligga i en annan K-zon än den Kp-zon regulatorn just då använder. Det är inget fel, bara en konsekvens av att u (processens driftpunkt) och PV (regulatorns driftpunkt) inte alltid befinner sig i motsvarande delar av sina skalor samtidigt.\n\nNär PV ser stabil ut (minst 60 steg totalt): mät insvängningstiden (Mätläge, PV₀=0, PV∞=90, 2%-toleransband).\n\nAnteckna: SP=90, aktiv uppsättning vid stabilt läge=Zon 2/3 (Kp=1.2), insvängningstid. Kalla insvängningstiden F.\n\nJämför: är E (steg 6) mindre än A (steg 2) och C (steg 4)? Är F (det här steget) i närheten av B (steg 3), trots att Zon 1:s Kp=5 också var aktiv en del av vägen?",
+      "checkpoint": {
+        "question": "Med Parameterstyrning aktiverad blir BÅDE E (steg 6) och F (det här steget) klart bättre än den manuella kompromissen (C och D, steg 4–5) — samtidigt. Varför fungerar det?",
+        "options": [
+          "Regulatorn väljer automatiskt Kp=5 när PV är lågt (matchar processens svaga zon) och Kp=1.2 när PV är högt (matchar den starka zonen) — varje zon får sin egen, rätt avvägda inställning istället för en gemensam kompromiss",
+          "Parameterstyrning stänger av processens olinjäritet",
+          "Parameterstyrning fungerar bara vid SP under 50",
+          "Kp=5 och Kp=1.2 adderas till varandra"
+        ],
+        "correct": 0,
+        "explanation": "Parameterstyrning löser exakt det kompromissproblem steg 4–5 visade: istället för EN Kp som måste duga överallt, väljs rätt Kp automatiskt utifrån var PV befinner sig — fälthighlighten och markeringslinjerna du precis observerade visar exakt när det bytet sker, ingen kompromiss behövs. Att processens K-zon och regulatorns Kp-zon inte alltid matchar varandra numeriskt är förväntat — de styrs av olika signaler (u respektive PV)."
+      }
+    }
+  ]
+}
