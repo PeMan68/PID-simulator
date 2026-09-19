@@ -1,0 +1,83 @@
+<svg viewBox="0 0 900 440" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <title>Kaskadreglering</title>
+  <defs>
+    <marker id="arrow5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1b242c"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="440" fill="#ffffff"/>
+  <text x="450" y="24" text-anchor="middle" font-size="20" font-weight="700" fill="#1b242c">5. Kaskadreglering</text>
+  <text x="450" y="44" text-anchor="middle" font-size="13" fill="#5b6875">Två regulatorer i serie — den inre slingan måste vara snabbare än den yttre</text>
+
+  <!-- Outer loop label -->
+  <text x="20" y="70" font-size="12" font-weight="700" fill="#8e44ad">YTTRE SLINGA (långsam)</text>
+
+  <!-- Outer row y=110 -->
+  <text x="20" y="115" font-size="15" font-weight="700" fill="#1b242c">SP_yttre</text>
+  <line x1="90" y1="110" x2="95" y2="110" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow5)"/>
+
+  <circle cx="112" cy="110" r="17" fill="#ffffff" stroke="#1b242c" stroke-width="2"/>
+  <text x="112" y="115" text-anchor="middle" font-size="15" fill="#1b242c">Σ</text>
+  <text x="97" y="100" text-anchor="middle" font-size="12" fill="#1b242c">+</text>
+  <text x="112" y="139" text-anchor="middle" font-size="12" fill="#1b242c">−</text>
+
+  <line x1="129" y1="110" x2="178" y2="110" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow5)"/>
+  <rect x="180" y="85" width="110" height="50" rx="8" fill="#e07a2f"/>
+  <text x="235" y="115" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Yttre PID</text>
+
+  <!-- SP_inre connector -->
+  <line x1="235" y1="135" x2="235" y2="270" stroke="#1b242c" stroke-width="2"/>
+  <line x1="235" y1="270" x2="112" y2="270" stroke="#1b242c" stroke-width="2"/>
+  <line x1="112" y1="270" x2="112" y2="292" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow5)"/>
+  <text x="255" y="255" text-anchor="middle" font-size="12" font-weight="700" fill="#e07a2f">SP_inre</text>
+
+  <!-- Inner loop label -->
+  <text x="20" y="270" font-size="12" font-weight="700" fill="#2f7a8f">INRE SLINGA (snabb)</text>
+
+  <!-- Inner row y=310 -->
+  <circle cx="112" cy="310" r="17" fill="#ffffff" stroke="#1b242c" stroke-width="2"/>
+  <text x="112" y="315" text-anchor="middle" font-size="15" fill="#1b242c">Σ</text>
+  <text x="128" y="298" text-anchor="middle" font-size="12" fill="#1b242c">+</text>
+  <text x="97" y="325" text-anchor="middle" font-size="12" fill="#1b242c">−</text>
+
+  <line x1="129" y1="310" x2="178" y2="310" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow5)"/>
+  <rect x="180" y="285" width="100" height="50" rx="8" fill="#e07a2f"/>
+  <text x="230" y="315" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Inre PID</text>
+
+  <line x1="280" y1="310" x2="329" y2="310" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow5)"/>
+  <text x="305" y="297" text-anchor="middle" font-size="12" fill="#5b6875">u</text>
+
+  <rect x="331" y="285" width="90" height="50" rx="8" fill="#5b6875"/>
+  <text x="376" y="315" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Ventil</text>
+
+  <line x1="421" y1="310" x2="470" y2="310" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow5)"/>
+
+  <rect x="472" y="285" width="110" height="50" rx="8" fill="#3a4a58"/>
+  <text x="527" y="315" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Process</text>
+
+  <line x1="582" y1="310" x2="620" y2="310" stroke="#1b242c" stroke-width="2"/>
+  <circle cx="620" cy="310" r="2.5" fill="#1b242c"/>
+
+  <!-- Inner feedback: PV_inre -->
+  <line x1="620" y1="310" x2="620" y2="360" stroke="#1b242c" stroke-width="2"/>
+  <line x1="620" y1="360" x2="603" y2="360" stroke="#1b242c" stroke-width="2"/>
+  <rect x="513" y="339" width="90" height="42" rx="21" fill="none" stroke="#2f7a8f" stroke-width="2"/>
+  <text x="558" y="365" text-anchor="middle" font-size="12" font-weight="700" fill="#2f7a8f">Givare inre</text>
+  <line x1="513" y1="360" x2="112" y2="360" stroke="#1b242c" stroke-width="2"/>
+  <line x1="112" y1="360" x2="112" y2="328" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow5)"/>
+  <text x="655" y="365" font-size="12" font-weight="700" fill="#2f7a8f">PV_inre</text>
+
+  <!-- Outer feedback: PV_yttre -->
+  <line x1="620" y1="310" x2="660" y2="310" stroke="#1b242c" stroke-width="2"/>
+  <line x1="660" y1="310" x2="660" y2="405" stroke="#1b242c" stroke-width="2"/>
+  <line x1="660" y1="405" x2="390" y2="405" stroke="#1b242c" stroke-width="2"/>
+  <rect x="300" y="384" width="90" height="42" rx="21" fill="none" stroke="#8e44ad" stroke-width="2"/>
+  <text x="345" y="410" text-anchor="middle" font-size="12" font-weight="700" fill="#8e44ad">Givare yttre</text>
+  <line x1="300" y1="405" x2="50" y2="405" stroke="#1b242c" stroke-width="2"/>
+  <line x1="50" y1="405" x2="50" y2="127" stroke="#1b242c" stroke-width="2"/>
+  <line x1="50" y1="127" x2="95" y2="127" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow5)"/>
+  <text x="705" y="410" font-size="12" font-weight="700" fill="#8e44ad">PV_yttre</text>
+
+  <text x="450" y="432" text-anchor="middle" font-size="12" font-style="italic" fill="#5b6875">Yttre PID:s utsignal blir Inre PID:s börvärde — inre slingan hanterar en snabb störning innan den hinner påverka den yttre processvariabeln</text>
+</svg>

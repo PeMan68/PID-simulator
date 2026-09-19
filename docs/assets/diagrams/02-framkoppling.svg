@@ -1,0 +1,78 @@
+<svg viewBox="0 0 960 300" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <title>Framkoppling</title>
+  <defs>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1b242c"/>
+    </marker>
+    <marker id="arrowGray2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#95a5a6"/>
+    </marker>
+    <marker id="arrowPurple2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8e44ad"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="300" fill="#ffffff"/>
+  <text x="480" y="24" text-anchor="middle" font-size="20" font-weight="700" fill="#1b242c">2. Framkoppling</text>
+  <text x="480" y="44" text-anchor="middle" font-size="13" fill="#5b6875">En extra givare mäter lasten — den mätbara störningen kompenseras INNAN PV hinner påverkas</text>
+
+  <!-- Mätbar störning -->
+  <text x="305" y="63" text-anchor="middle" font-size="12" font-weight="700" fill="#8e44ad">Mätbar störning (last)</text>
+  <line x1="305" y1="68" x2="305" y2="88" stroke="#8e44ad" stroke-width="2" marker-end="url(#arrowPurple2)"/>
+
+  <!-- Lastgivare -->
+  <rect x="260" y="90" width="90" height="36" rx="18" fill="none" stroke="#2f7a8f" stroke-width="2"/>
+  <text x="305" y="113" text-anchor="middle" font-size="12" font-weight="700" fill="#2f7a8f">Lastgivare</text>
+  <line x1="305" y1="126" x2="305" y2="146" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <!-- Framkoppling block -->
+  <rect x="255" y="148" width="100" height="40" rx="8" fill="#16a085"/>
+  <text x="305" y="173" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Framkoppling</text>
+  <line x1="305" y1="188" x2="305" y2="203" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <!-- Omätbar störning -->
+  <text x="576" y="108" text-anchor="middle" font-size="12" fill="#7f8c8d">Omätbar störning</text>
+  <line x1="576" y1="113" x2="576" y2="148" stroke="#95a5a6" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrowGray2)"/>
+
+  <!-- Main row, y-center 220 -->
+  <text x="30" y="225" font-size="16" font-weight="700" fill="#1b242c">SP</text>
+  <line x1="48" y1="220" x2="95" y2="220" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <circle cx="112" cy="220" r="17" fill="#ffffff" stroke="#1b242c" stroke-width="2"/>
+  <text x="112" y="225" text-anchor="middle" font-size="15" fill="#1b242c">Σ</text>
+  <text x="97" y="210" text-anchor="middle" font-size="12" fill="#1b242c">+</text>
+  <text x="112" y="247" text-anchor="middle" font-size="12" fill="#1b242c">−</text>
+
+  <line x1="129" y1="220" x2="178" y2="220" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow2)"/>
+  <rect x="180" y="195" width="100" height="50" rx="8" fill="#e07a2f"/>
+  <text x="230" y="225" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">PID</text>
+
+  <line x1="280" y1="220" x2="287" y2="220" stroke="#1b242c" stroke-width="2"/>
+  <circle cx="305" cy="220" r="17" fill="#ffffff" stroke="#1b242c" stroke-width="2"/>
+  <text x="305" y="225" text-anchor="middle" font-size="15" fill="#1b242c">Σ</text>
+  <text x="322" y="210" text-anchor="middle" font-size="12" fill="#1b242c">+</text>
+  <line x1="305" y1="203" x2="305" y2="203" stroke="none"/>
+
+  <line x1="322" y1="220" x2="379" y2="220" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow2)"/>
+  <text x="351" y="207" text-anchor="middle" font-size="12" fill="#5b6875">u</text>
+
+  <rect x="381" y="195" width="90" height="50" rx="8" fill="#5b6875"/>
+  <text x="426" y="225" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Ventil</text>
+
+  <line x1="471" y1="220" x2="520" y2="220" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <rect x="521" y="195" width="110" height="50" rx="8" fill="#3a4a58"/>
+  <text x="576" y="225" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Process</text>
+
+  <line x1="631" y1="220" x2="650" y2="220" stroke="#1b242c" stroke-width="2"/>
+  <circle cx="650" cy="220" r="2.5" fill="#1b242c"/>
+  <line x1="650" y1="220" x2="695" y2="220" stroke="#1266f1" stroke-width="2.5" marker-end="url(#arrow2)"/>
+  <text x="705" y="225" font-size="16" font-weight="700" fill="#1266f1">PV</text>
+
+  <line x1="650" y1="220" x2="650" y2="270" stroke="#1b242c" stroke-width="2"/>
+  <line x1="650" y1="270" x2="633" y2="270" stroke="#1b242c" stroke-width="2"/>
+  <rect x="543" y="249" width="90" height="42" rx="21" fill="none" stroke="#2f7a8f" stroke-width="2"/>
+  <text x="588" y="275" text-anchor="middle" font-size="13" font-weight="700" fill="#2f7a8f">Givare</text>
+  <line x1="543" y1="270" x2="112" y2="270" stroke="#1b242c" stroke-width="2"/>
+  <line x1="112" y1="270" x2="112" y2="239" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow2)"/>
+</svg>

@@ -1,0 +1,71 @@
+<svg viewBox="0 0 960 300" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <title>Återkoppling (PID)</title>
+  <defs>
+    <marker id="arrow1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1b242c"/>
+    </marker>
+    <marker id="arrowGray1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#95a5a6"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="300" fill="#ffffff"/>
+  <text x="480" y="30" text-anchor="middle" font-size="20" font-weight="700" fill="#1b242c">1. Återkoppling (PID)</text>
+  <text x="480" y="52" text-anchor="middle" font-size="13" fill="#5b6875">Regulatorn ser bara PV — reagerar först när felet redan syns</text>
+
+  <!-- Omätbar störning -->
+  <text x="527" y="88" text-anchor="middle" font-size="12" fill="#7f8c8d">Omätbar störning</text>
+  <text x="527" y="102" text-anchor="middle" font-size="11" fill="#7f8c8d">(brus, puls)</text>
+  <line x1="527" y1="108" x2="527" y2="148" stroke="#95a5a6" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrowGray1)"/>
+
+  <!-- SP in -->
+  <text x="30" y="185" font-size="16" font-weight="700" fill="#1b242c">SP</text>
+  <line x1="48" y1="180" x2="95" y2="180" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow1)"/>
+
+  <!-- Sum junction -->
+  <circle cx="112" cy="180" r="17" fill="#ffffff" stroke="#1b242c" stroke-width="2"/>
+  <text x="112" y="185" text-anchor="middle" font-size="15" fill="#1b242c">Σ</text>
+  <text x="97" y="170" text-anchor="middle" font-size="12" fill="#1b242c">+</text>
+  <text x="112" y="207" text-anchor="middle" font-size="12" fill="#1b242c">−</text>
+
+  <!-- PID block -->
+  <line x1="129" y1="180" x2="178" y2="180" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow1)"/>
+  <rect x="180" y="155" width="100" height="50" rx="8" fill="#e07a2f"/>
+  <text x="230" y="185" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">PID</text>
+
+  <!-- u signal -->
+  <line x1="280" y1="180" x2="329" y2="180" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow1)"/>
+  <text x="305" y="165" text-anchor="middle" font-size="12" fill="#5b6875">u</text>
+
+  <!-- Ventil block -->
+  <rect x="331" y="155" width="90" height="50" rx="8" fill="#5b6875"/>
+  <text x="376" y="185" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Ventil</text>
+
+  <line x1="421" y1="180" x2="470" y2="180" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow1)"/>
+
+  <!-- Process block -->
+  <rect x="472" y="155" width="110" height="50" rx="8" fill="#3a4a58"/>
+  <text x="527" y="185" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Process</text>
+
+  <!-- PV out -->
+  <line x1="582" y1="180" x2="650" y2="180" stroke="#1b242c" stroke-width="2"/>
+  <circle cx="650" cy="180" r="2.5" fill="#1b242c"/>
+  <line x1="650" y1="180" x2="695" y2="180" stroke="#1266f1" stroke-width="2.5" marker-end="url(#arrow1)"/>
+  <text x="705" y="185" font-size="16" font-weight="700" fill="#1266f1">PV</text>
+
+  <!-- Feedback path with sensor -->
+  <line x1="650" y1="180" x2="650" y2="255" stroke="#1b242c" stroke-width="2"/>
+  <line x1="650" y1="255" x2="628" y2="255" stroke="#1b242c" stroke-width="2"/>
+  <rect x="538" y="230" width="90" height="42" rx="21" fill="none" stroke="#2f7a8f" stroke-width="2"/>
+  <text x="583" y="256" text-anchor="middle" font-size="13" font-weight="700" fill="#2f7a8f">Givare</text>
+  <line x1="538" y1="255" x2="112" y2="255" stroke="#1b242c" stroke-width="2"/>
+  <line x1="112" y1="255" x2="112" y2="200" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow1)"/>
+
+  <!-- Legend -->
+  <g font-size="11" fill="#5b6875">
+    <rect x="20" y="278" width="12" height="12" fill="#e07a2f"/><text x="36" y="288">Regulator</text>
+    <rect x="140" y="278" width="12" height="12" fill="#3a4a58"/><text x="156" y="288">Process/ventil</text>
+    <line x1="290" y1="284" x2="312" y2="284" stroke="#95a5a6" stroke-width="2" stroke-dasharray="5,4"/><text x="318" y="288">Omätbar störning</text>
+    <circle cx="470" cy="284" r="6" fill="none" stroke="#2f7a8f" stroke-width="2"/><text x="482" y="288">Givare (mätning)</text>
+  </g>
+</svg>

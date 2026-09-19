@@ -1,0 +1,61 @@
+<svg viewBox="0 0 960 320" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <title>Kvotreglering</title>
+  <defs>
+    <marker id="arrow4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1b242c"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="320" fill="#ffffff"/>
+  <text x="480" y="24" text-anchor="middle" font-size="20" font-weight="700" fill="#1b242c">4. Kvotreglering</text>
+  <text x="480" y="44" text-anchor="middle" font-size="13" fill="#5b6875">Flöde A bestämmer börvärdet för Flöde B — kvotblocket räknar fram SP_B, regulatorn arbetar som vanligt</text>
+
+  <!-- Flöde A chain -->
+  <text x="200" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1b242c">Flöde A</text>
+  <line x1="200" y1="72" x2="200" y2="88" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow4)"/>
+
+  <rect x="155" y="90" width="90" height="34" rx="17" fill="none" stroke="#2f7a8f" stroke-width="2"/>
+  <text x="200" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#2f7a8f">Givare A</text>
+  <line x1="200" y1="124" x2="200" y2="140" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow4)"/>
+
+  <rect x="150" y="142" width="100" height="50" rx="8" fill="#16a085"/>
+  <text x="200" y="163" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Kvotblock</text>
+  <text x="200" y="180" text-anchor="middle" font-size="12" fill="#e8f6f2">(B / A)</text>
+
+  <line x1="200" y1="192" x2="200" y2="217" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow4)"/>
+  <text x="235" y="207" text-anchor="middle" font-size="12" font-weight="700" fill="#16a085">SP_B</text>
+
+  <!-- Main loop, y-center 234 -->
+  <circle cx="200" cy="234" r="17" fill="#ffffff" stroke="#1b242c" stroke-width="2"/>
+  <text x="200" y="239" text-anchor="middle" font-size="15" fill="#1b242c">Σ</text>
+  <text x="212" y="221" text-anchor="middle" font-size="12" fill="#1b242c">+</text>
+  <text x="185" y="251" text-anchor="middle" font-size="12" fill="#1b242c">−</text>
+
+  <line x1="217" y1="234" x2="266" y2="234" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow4)"/>
+  <rect x="268" y="209" width="100" height="50" rx="8" fill="#e07a2f"/>
+  <text x="318" y="239" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">PID</text>
+
+  <line x1="368" y1="234" x2="417" y2="234" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow4)"/>
+  <text x="392" y="221" text-anchor="middle" font-size="12" fill="#5b6875">u</text>
+
+  <rect x="419" y="209" width="90" height="50" rx="8" fill="#5b6875"/>
+  <text x="464" y="239" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Ventil B</text>
+
+  <line x1="509" y1="234" x2="558" y2="234" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow4)"/>
+
+  <rect x="560" y="209" width="110" height="50" rx="8" fill="#3a4a58"/>
+  <text x="615" y="239" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">Flöde B</text>
+
+  <line x1="670" y1="234" x2="700" y2="234" stroke="#1266f1" stroke-width="2.5" marker-end="url(#arrow4)"/>
+  <text x="710" y="239" font-size="15" font-weight="700" fill="#1266f1">Flöde B</text>
+
+  <!-- Feedback via Givare B -->
+  <line x1="690" y1="234" x2="690" y2="284" stroke="#1b242c" stroke-width="2"/>
+  <line x1="690" y1="284" x2="673" y2="284" stroke="#1b242c" stroke-width="2"/>
+  <rect x="583" y="263" width="90" height="42" rx="21" fill="none" stroke="#2f7a8f" stroke-width="2"/>
+  <text x="628" y="289" text-anchor="middle" font-size="13" font-weight="700" fill="#2f7a8f">Givare B</text>
+  <line x1="583" y1="284" x2="200" y2="284" stroke="#1b242c" stroke-width="2"/>
+  <line x1="200" y1="284" x2="200" y2="253" stroke="#1b242c" stroke-width="2" marker-end="url(#arrow4)"/>
+
+  <text x="480" y="308" text-anchor="middle" font-size="12" font-style="italic" fill="#5b6875">Kvotblocket ersätter ett fast SP — regulatorloopen (Σ → PID → Ventil B → Flöde B) är i övrigt en helt vanlig återkopplad slinga</text>
+</svg>
