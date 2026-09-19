@@ -8,6 +8,19 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-043 — Knapp för att släppa fram fler steg vid maxSteps-taket
+**Branch:** `feature/FEAT-043-extend-max-steps`
+**Prioritet:** Medel — upptäckt av PO under FEAT-042-granskning
+**Beskrivning:**
+Uppdrag från PO: varje scenario har ett tyst, per-scenario `runtime.maxSteps`-tak
+(300/600/900/2000 osv, beroende på fil) — `Simulation.step()` returnerar `null` utan
+tydlig varning när taket nås, och det finns ingen UI-kontroll för att höja det. PO
+upptäckte detta som en inkonsekvent upplevelse mellan olika lärstigar/scenarier under
+manuell test av FEAT-042 (se `docs/tracking/todo.md`s tidigare konversation/
+FEAT-042-granskning). Uppdrag: när taket nås, visa en knapp som släpper fram fler
+steg så att man kan fortsätta utforska SAMMA körning (inte en ny, återställd körning).
+**Status:** Öppen — uppdrag pågår.
+
 ### FEAT-042 — Parameterstyrning + olinjär ventilkarakteristik
 **Prioritet:** Medel — designspecifikation klar, väntar på bygguppdrag
 **Beskrivning:**
