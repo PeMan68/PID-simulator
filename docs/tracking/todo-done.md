@@ -35,6 +35,80 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande features 
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-042 — Parameterstyrning + olinjär ventilkarakteristik
+**Branch:** `feature/FEAT-042-parameterstyrning-ventilkarakteristik` (mergad till
+`develop`, raderad)
+**Beskrivning:**
+Designspecifikation: `docs/reports/STRAT-003_DESIGN-PARAMETERSTYRNING-VENTILKARAKTERISTIK.md`
+(se `todo-done.md` för STRAT-001/002/003-kedjans fulla historik). Uppdrag från PO:
+implementera enligt STRAT-003 — Parameterstyrning (Gain Scheduling), olinjär
+ventilkarakteristik K(u), gemensam 3-zons brytpunktstabell, ny lärstig, nya
+övningsuppgifter i `docs/exercises/`. Explicit avgränsat: ingen konisk tank, ingen
+kvot-/framkopplings-/kaskadreglering, ingen generisk N-zonslösning, ingen dynamisk
+tabellredigerare, exakt 3 zoner, full bakåtkompatibilitet.
+**Genomförande:**
+Full leveransrapport: `docs/reports/FEAT-042_IMPLEMENTATION.md`. Sammanfattning:
+delad `scheduleZone()`/`scheduledValue()`-mekanism i `sim-core.js` (regulatorns
+kp/ti/td-schema + processens K-schema), 12 nya UI-fält (dolda tills aktiverade),
+grafhjälplinjer, statusradsavläsning, ny lärstig (7 steg, insatt efter `pi-pid.v1`)
+och nytt övningsdokument `docs/exercises/ovningar-parameterstyrning.md` (4
+uppgifter). Demoscenario och samtliga siffror i lärstig/övningar
+simuleringsverifierade via `tests/simulation/`. Ny testsvit
+`tests/feat-042-gain-schedule.test.mjs` (24 kontroller) + fullständig regression
+(15 testsviter, 0 FAIL). Fyra dokumenterade, simuleringsdrivna avsteg från
+STRAT-003 (bumplös övergångstajming, horisontella ej vertikala brytpunktslinjer,
+två separata jämförbara körningar istället för en sammanhängande, tvåstegs- istället
+för trestegs-K-profil i demoscenariot) — se rapportens avsnitt 5–6 för fullständig
+motivering. `catalog.prod.json` oförändrad — featuren är DEV-only tills PO beslutar
+om produktionsaktivering.
+**Uppföljning (PO:s användartest):** Full rapport:
+`docs/reports/FEAT-042_ANVANDARTEST-ATGARDER.md`. Fem punkter åtgärdade: tydligare,
+namngivna mätinstruktioner (A–F); rotorsak till "Parameterstyrning avstängd i steg 7"
+identifierad (varje lärstigssteg laddar om scenariofilen, vilket återställer
+kryssrutor till filens standardvärde — samma problem fanns latent i steg 4–5) och
+åtgärdad med två nya dedikerade scenariofiler (`valve-nonlinear-gain-demo-kp3.json`,
+`-scheduled.json`) så lärstigen själv aktiverar rätt inställning, ingen manuell
+ihågkommen åtgärd krävs; ny zonbadge + färgad fälthighlight (`activeZones()`,
+`updateZoneIndicators()`); guidning i steg 7 att stega för att observera zonbyten
+(simuleringsverifierat: båda bytena sker inom 6 steg — instruktionstexten skriven
+därefter); zonbytesmarkeringar i grafen (samma mekanism som övriga
+parameterändringar, `markZoneChangeIfAny()`, "Kör 10" omskriven till en explicit
+steg-loop för att fånga byten mitt i en batch). 10-stegsknappens låsning analyserad
+men INTE implementerad — rekommenderas avstyrkt, se rapportens avsnitt 4.
+Fullständig regression (15 testsviter) grön efter ändringarna.
+**Sista granskningsrundan (PO:s slutliga feedback):** Full rapport:
+`docs/reports/FEAT-042_SISTA-GRANSKNINGSRUNDA.md`. Sex punkter åtgärdade: (1)
+zonbadgen togs bort helt — behöll fälthighlight, statusrad och grafmarkeringar,
+som instruerat; (2) ny förklaring (teori + steg 7 + hjälptext) av att processens
+K-zon (styrs av u) och regulatorns Kp-zon (styrs av PV) är oberoende och kan visa
+olika zonnummer samtidigt; (3+5) PO:s notering att dessa två hänger ihop bekräftad
+— rotorsaksanalys visade att PO:s ögonmåttsbedömda tider skilde sig kraftigt vid
+SP=90 (B/D) men inte vid SP=10 (A/C), exakt matchande att PV tekniskt går in i det
+exakta 2%-bandet långt innan kurvan SER helt platt ut för ögat; åtgärdat genom att
+instruera exakt samma Mätläge+2%-toleransband-metod som redan är etablerad i
+övrigt kursmaterial för samtliga sex mätningar (A–F) — själva jämförelsepåståendena
+i texten verifierades korrekta mot scenariernas oförändrade, redan
+simuleringsverifierade beteende, inget sakfel hittades där; (4) varje steg
+instruerar nu att anteckna SP, Kp/aktiv zon-uppsättning OCH insvängningstid, inte
+bara tiden; (6) en mening tillagd i steg 2 om varför Zon 2/3 delar K-värde.
+Fullständig regression (15 testsviter) grön. `docs/exercises/ovningar-
+parameterstyrning.md` flaggat (inte åtgärdat, låg utanför uppdraget) som
+sannolikt drabbat av samma mätmetodsproblem.
+**Produktionsaktivering:** PO godkände efter granskning. Lärstigen tillagd sist i
+`catalog.prod.json` (`v1.5.5-prod`), efter `storningar-robusthet.v1` — samma
+mönster som `PROD-enable-windup-antiwindup`. Dess tre scenarioberoenden
+(`valve-nonlinear-gain-demo`, `-kp3`, `-scheduled`) och teorimodulen tillagda i
+PROD-katalogen; de två hjälpscenarierna (`-kp3`/`-scheduled`) satta
+`standalone: false` (rena lärstigsstöd, inte meningsfulla fristående — samma
+princip som `pi-deadtime-comparison`). `tests/validate-prod.mjs`s
+`EXPECTED_LEARNING_PATHS`-facit uppdaterat. `node tests/build-preview.mjs prod`
++ `validate-prod.mjs` gröna: 8 lärstigar i rätt ordning, 17 scenarier (14
+fristående), inga läckor.
+**Status:** Mergad till `develop`. `main` oförändrat tills vidare — väntar på
+nästa ordinarie release för att nå produktion.
+
+---
+
 ### FEAT-043 — Knapp för att släppa fram fler steg vid maxSteps-taket
 **Branch:** `feature/FEAT-043-extend-max-steps` (mergad till `develop`)
 **Beskrivning:**
