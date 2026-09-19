@@ -87,6 +87,8 @@ const logEl = document.getElementById("log");
 const chartCanvas = document.getElementById("chart");
 const learnBody = document.getElementById("learnBody");
 const btnExtendSteps = document.getElementById("btnExtendSteps");
+const gsZoneBadge = document.getElementById("gsZoneBadge");
+const ngZoneBadge = document.getElementById("ngZoneBadge");
 
 const fields = {
   processType: document.getElementById("processType"),
@@ -446,8 +448,68 @@ function fmt1(v) {
 function updateStepLimitUI() {
   btnExtendSteps.hidden = !sim || sim.stepNo < sim.maxSteps;
 }
+// FEAT-042 (PO-granskning, punkt 3/5) — enda källan för "vilken zon är
+// aktiv just nu", delad av statusraden, zonmärket/fälthighlighten och
+// zonbytesmarkeringarna i grafen. null = schemat är avstängt/saknas.
+function activeZones() {
+  if (!sim || !currentScenario) return { gainZone: null, processZone: null };
+  const s = sim.getState();
+  const gs = currentScenario.controller.gainSchedule;
+  const gainZone = (gs && gs.enabled) ? scheduleZone(s.y, gs.breakpoint1, gs.breakpoint2) : null;
+  const ng = currentScenario.process.nonlinearGain;
+  const processZone = (ng && ng.enabled) ? scheduleZone(s.u, ng.breakpoint1, ng.breakpoint2) : null;
+  return { gainZone, processZone };
+}
+const GS_ZONE_FIELD_GROUPS = [
+  [fields.gsZ1Kp, fields.gsZ1Ti, fields.gsZ1Td],
+  [fields.gsZ2Kp, fields.gsZ2Ti, fields.gsZ2Td],
+  [fields.gsZ3Kp, fields.gsZ3Ti, fields.gsZ3Td],
+];
+const NG_ZONE_FIELD_GROUPS = [[fields.ngZ1K], [fields.ngZ2K], [fields.ngZ3K]];
+// FEAT-042 (PO-granskning, punkt 3) — badge + highlight på aktiv zons egna
+// fält, så studenten omedelbart ser VILKEN Kp/Ti/Td (eller K) som gäller
+// just nu, inte bara ett zonnummer i statusraden.
+function updateZoneIndicators() {
+  const { gainZone, processZone } = activeZones();
+  GS_ZONE_FIELD_GROUPS.forEach((group, i) => {
+    group.forEach(f => f.parentElement.classList.toggle("zone-active-regulator", gainZone === i));
+  });
+  gsZoneBadge.hidden = gainZone === null;
+  if (gainZone !== null) gsZoneBadge.textContent = "Aktiv: Zon " + (gainZone + 1);
+  NG_ZONE_FIELD_GROUPS.forEach((group, i) => {
+    group.forEach(f => f.parentElement.classList.toggle("zone-active-process", processZone === i));
+  });
+  ngZoneBadge.hidden = processZone === null;
+  if (processZone !== null) ngZoneBadge.textContent = "Aktiv: Zon " + (processZone + 1);
+}
+// FEAT-042 (PO-granskning, punkt 5) — markeringslinje vid zonbyte, samma
+// mekanism (sim.history.markers) som redan används för parameterändringar
+// och pulser. lastGainZone/lastProcessZone håller den SENAST kända zonen så
+// ett byte kan upptäckas mellan två på varandra följande steg — nollställs
+// vid scenariobyte/rensning/återställning (se resetZoneChangeTracking()).
+let lastGainZone = null;
+let lastProcessZone = null;
+function resetZoneChangeTracking() {
+  const z = activeZones();
+  lastGainZone = z.gainZone;
+  lastProcessZone = z.processZone;
+}
+function markZoneChangeIfAny() {
+  if (!sim) return;
+  const { gainZone, processZone } = activeZones();
+  const t = sim.history.t[sim.history.t.length - 1] ?? 0;
+  if (!sim.history.markers) sim.history.markers = [];
+  if (gainZone !== null && lastGainZone !== null && gainZone !== lastGainZone) {
+    sim.history.markers.push({ t, label: "Zonbyte (Kp) → Zon " + (gainZone + 1) });
+  }
+  if (processZone !== null && lastProcessZone !== null && processZone !== lastProcessZone) {
+    sim.history.markers.push({ t, label: "Zonbyte (K) → Zon " + (processZone + 1) });
+  }
+  lastGainZone = gainZone;
+  lastProcessZone = processZone;
+}
 function updateStatus() {
-  if (!sim) { statusEl.textContent = "Status: ej laddad"; return; }
+  if (!sim) { statusEl.textContent = "Status: ej laddad"; updateZoneIndicators(); return; }
   const s = sim.getState();
   const pidInfo = (s.pTerm !== 0 || s.iTerm !== 0 || s.dTerm !== 0)
     ? " | P=" + fmt1(s.pTerm) + ", I=" + fmt1(s.iTerm) + ", D=" + fmt1(s.dTerm)
@@ -477,22 +539,19 @@ function updateStatus() {
   // oförändrad.
   const spAtStep = sim.history.sp[sim.history.sp.length - 1] ?? sim.scenario.runtime.setpoint;
   // FEAT-042 — kompakt zonavläsning, bara synlig när respektive schema är
-  // aktiverat. Beräknad direkt från currentScenario + aktuellt PV/u (inte
-  // sim.pid.kp), så den alltid stämmer även innan nästa steg körts.
+  // aktiverat. activeZones() är enda källan (se ovan) — statusraden,
+  // badgen/fälthighlighten och grafens zonbytesmarkeringar visar alltid
+  // samma zon.
   let scheduleInfo = "";
-  if (currentScenario) {
-    const gs = currentScenario.controller.gainSchedule;
-    if (gs && gs.enabled) {
-      const zi = scheduleZone(s.y, gs.breakpoint1, gs.breakpoint2);
-      scheduleInfo += "  | Zon " + (zi + 1) + " (Kp=" + fmt1(gs.zones[zi].kp) + ")";
-    }
-    const ng = currentScenario.process.nonlinearGain;
-    if (ng && ng.enabled) {
-      const zi = scheduleZone(s.u, ng.breakpoint1, ng.breakpoint2);
-      scheduleInfo += "  | K-zon " + (zi + 1) + " (K=" + fmt1(ng.zones[zi]) + ")";
-    }
+  const { gainZone, processZone } = activeZones();
+  if (gainZone !== null) {
+    scheduleInfo += "  | Zon " + (gainZone + 1) + " (Kp=" + fmt1(currentScenario.controller.gainSchedule.zones[gainZone].kp) + ")";
+  }
+  if (processZone !== null) {
+    scheduleInfo += "  | K-zon " + (processZone + 1) + " (K=" + fmt1(currentScenario.process.nonlinearGain.zones[processZone]) + ")";
   }
   statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning + scheduleInfo;
+  updateZoneIndicators();
 }
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;
@@ -581,6 +640,10 @@ function describeMarkerChange(a, b) {
 }
 function captureMarkerBaseline() {
   lastMarkerSnapshot = currentScenario ? markerSnapshot(currentScenario) : null;
+  // FEAT-042 (PO-granskning, punkt 5) — samma tre anropsställen (scenario-
+  // byte, Rensa graf, Återställ system) ska nollställa zonbytesspårningen
+  // som redan nollställer den vanliga markeringsbaslinjen ovan.
+  resetZoneChangeTracking();
 }
 function resetMarkers() {
   if (sim) sim.history.markers = [];
@@ -753,6 +816,10 @@ function updateControllerUIState() {
 // FEAT-042 — Parameterstyrning: visa/dölj de 11 schemafälten som grupp.
 function updateGainScheduleUIState() {
   document.getElementById("gainScheduleFields").hidden = !fields.gainScheduleEnabled.checked;
+  // FEAT-042 (PO-granskning, punkt 3) — håller badge/fälthighlight i synk
+  // även när kryssrutan ändras indirekt (t.ex. tvingas av vid lägesbyte),
+  // inte bara via det egna change-lyssnaren.
+  updateZoneIndicators();
 }
 function updateProcessUIState() {
   const isIntegrating = fields.processType.value === "integrating";
@@ -776,6 +843,9 @@ function updateProcessUIState() {
 // FEAT-042 — Olinjär ventilkarakteristik: visa/dölj de 5 schemafälten som grupp.
 function updateNonlinearGainUIState() {
   document.getElementById("nonlinearGainFields").hidden = !fields.nonlinearGainEnabled.checked;
+  // FEAT-042 (PO-granskning, punkt 3) — se motsvarande kommentar i
+  // updateGainScheduleUIState().
+  updateZoneIndicators();
 }
 
 function updateScoreDisplay() {
@@ -1116,8 +1186,25 @@ document.getElementById("processType").addEventListener("change", () => {
   updateProcessUIState();
   activityDispatch("process_type_changed", { field: "processType", value: fields.processType.value });
 });
-document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad — scenariots maxantal steg är nått. Klicka “Fler steg →” för att fortsätta."); else appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("simulation_step", { contextKey: activityContextKey() }); });
-document.getElementById("run10").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const fs = sim.run(10); appendLog("Körde " + fs.length + " steg." + (fs.length < 10 ? " Scenariots maxantal steg är nått — klicka “Fler steg →” för att fortsätta." : "")); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("simulation_run", { steps: fs.length, contextKey: activityContextKey() }); });
+document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad — scenariots maxantal steg är nått. Klicka “Fler steg →” för att fortsätta."); else { appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); markZoneChangeIfAny(); } updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("simulation_step", { contextKey: activityContextKey() }); });
+document.getElementById("run10").addEventListener("click", () => {
+  if (!sim) return;
+  syncParamsFromUI();
+  // FEAT-042 (PO-granskning, punkt 5) — stegar ETT i taget (istället för
+  // sim.run(10)) enbart för att kunna upptäcka ett zonbyte som sker MITT i
+  // batchen, inte bara jämföra före/efter hela klicket. Beteendet (antal
+  // körda steg, stopp vid maxSteps) är oförändrat.
+  let count = 0;
+  for (let i = 0; i < 10; i++) {
+    const f = sim.step();
+    if (!f) break;
+    count++;
+    markZoneChangeIfAny();
+  }
+  appendLog("Körde " + count + " steg." + (count < 10 ? " Scenariots maxantal steg är nått — klicka “Fler steg →” för att fortsätta." : ""));
+  updateStatus(); updateStepLimitUI(); drawChart();
+  activityDispatch("simulation_run", { steps: count, contextKey: activityContextKey() });
+});
 document.getElementById("btnExtendSteps").addEventListener("click", () => {
   if (!sim) return;
   sim.extendSteps();

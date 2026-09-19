@@ -35,10 +35,27 @@ två separata jämförbara körningar istället för en sammanhängande, tvåste
 för trestegs-K-profil i demoscenariot) — se rapportens avsnitt 5–6 för fullständig
 motivering. `catalog.prod.json` oförändrad — featuren är DEV-only tills PO beslutar
 om produktionsaktivering.
+**Uppföljning (PO:s användartest):** Full rapport:
+`docs/reports/FEAT-042_ANVANDARTEST-ATGARDER.md`. Fem punkter åtgärdade: tydligare,
+namngivna mätinstruktioner (A–F); rotorsak till "Parameterstyrning avstängd i steg 7"
+identifierad (varje lärstigssteg laddar om scenariofilen, vilket återställer
+kryssrutor till filens standardvärde — samma problem fanns latent i steg 4–5) och
+åtgärdad med två nya dedikerade scenariofiler (`valve-nonlinear-gain-demo-kp3.json`,
+`-scheduled.json`) så lärstigen själv aktiverar rätt inställning, ingen manuell
+ihågkommen åtgärd krävs; ny zonbadge + färgad fälthighlight (`activeZones()`,
+`updateZoneIndicators()`); guidning i steg 7 att stega för att observera zonbyten
+(simuleringsverifierat: båda bytena sker inom 6 steg — instruktionstexten skriven
+därefter); zonbytesmarkeringar i grafen (samma mekanism som övriga
+parameterändringar, `markZoneChangeIfAny()`, "Kör 10" omskriven till en explicit
+steg-loop för att fånga byten mitt i en batch). 10-stegsknappens låsning analyserad
+men INTE implementerad — rekommenderas avstyrkt, se rapportens avsnitt 4.
+Fullständig regression (15 testsviter) grön efter ändringarna.
 **Status:** Implementerad på feature-branchen, EJ mergad till `develop` (enligt
 uppdragets explicita instruktion). Ingen webbläsartest genomförd (ingen
-webbläsare tillgänglig i denna miljö) — PO bör granska manuellt innan
-mergebeslut. Väntar på PO:s explicita beslut om merge eller ytterligare arbete.
+webbläsare tillgänglig i denna miljö) — PO bör specifikt verifiera badge/
+fälthighlight, att steg 6→7 behåller Parameterstyrning aktiverad, och att
+zonbytesmarkeringarna syns korrekt i grafen (se uppföljningsrapportens avsnitt 6)
+innan mergebeslut.
 
 ---
 

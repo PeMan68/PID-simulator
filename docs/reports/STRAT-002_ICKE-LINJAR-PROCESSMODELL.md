@@ -68,7 +68,7 @@ rekommenderade att hålla fast vid.
 **Fysikalisk bakgrund:** Verkliga styrventiler har en "installerad karakteristik" —
 förhållandet mellan ventilställning (regulatorns utsignal, %) och verkligt flöde är
 sällan linjärt. Vanligast i kurslitteratur: linjär, snabböppnande och
-likaprocentuell (equal-percentage) karakteristik — den sistnämnda ger LÅG
+likprocentuell (equal-percentage) karakteristik — den sistnämnda ger LÅG
 processförstärkning nära stängd ventil och HÖG förstärkning nära fullt öppen.
 
 **Teknisk omfattning:** Litet–medelstort. K blir funktion av `ud` (utsignalen efter

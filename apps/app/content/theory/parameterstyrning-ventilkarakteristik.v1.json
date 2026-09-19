@@ -5,7 +5,7 @@
   "summary": "Verkliga processer är sällan lika \"starka\" i hela sitt arbetsområde. En regulator med FAST Kp måste kompromissa mellan driftpunkter — Parameterstyrning (Gain Scheduling) löser det genom att låta Kp/Ti/Td bero på var processen befinner sig.",
   "bullets": [
     "Simulatorns processmodell har hittills antagit att K (processförstärkningen) är konstant, oavsett driftpunkt. I verkligheten stämmer det sällan exakt.",
-    "Ett vanligt exempel: en styrventils installerade karakteristik. En likaprocentuell ventil ger en LITEN effekt på flödet nära stängt läge, men en STOR effekt nära helt öppet — samma ändring i utsignalen u ger då olika stor effekt på processen beroende på var u redan befinner sig.",
+    "Ett vanligt exempel: en styrventils installerade karakteristik. En likprocentuell ventil ger en LITEN effekt på flödet nära stängt läge, men en STOR effekt nära helt öppet — samma ändring i utsignalen u ger då olika stor effekt på processen beroende på var u redan befinner sig.",
     "Simulatorn kan modellera detta: processens K väljs i tre fasta zoner beroende på utsignalen u (\"Olinjär ventilkarakteristik\", processtyp Självreglerande). Två brytpunkter delar in u i Zon 1 (låg)/Zon 2 (mellan)/Zon 3 (hög).",
     "Konsekvens för regulatorn: en Kp som ger en bra, snabb reaktion när K är LÅGT blir för kraftig (risk för översläng) när K är HÖGT — och tvärtom, en försiktig Kp som passar det höga K-läget blir onödigt trög i det låga.",
     "Parameterstyrning löser detta genom att låta REGULATORNS Kp/Ti/Td själva bero på var PV befinner sig — tre fasta zoner, samma idé som processens egen zonindelning, men på PV istället för u.",

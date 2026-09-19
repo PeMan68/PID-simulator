@@ -1,6 +1,6 @@
 {
   "id": "parameterstyrning-ventilkarakteristik.v1",
-  "version": "v1.0.0",
+  "version": "v1.1.0",
   "title": "Parameterstyrning och olinjär ventilkarakteristik",
   "description": "En fast Kp räcker inte alltid — se varför en olinjär process kräver olika regulatorinställningar i olika driftpunkter, och hur Parameterstyrning löser det utan manuell kompromiss.",
   "difficulty": "intro",
@@ -28,7 +28,7 @@
       "comparisonGroup": "ventilkarakteristik-problem",
       "title": "Visa problemet — svag zon",
       "objective": "Se hur en fast Kp presterar i processens svaga zon (K=0.5, u under 25 %).",
-      "instruction": "Ladda scenariot 'Olinjär ventilkarakteristik — demo'. Kontrollera att SP=10, Kp=1.2 (scenariots standardvärden) och att kryssrutan 'Olinjär ventilkarakteristik' i Process-gruppen är ikryssad.\n\nKör minst 150 steg (klicka 'Kör 10' upprepade gånger).\n\nNotera:\n• Ungefär hur många steg det tar innan PV har stabiliserat sig nära SP=10\n• Hur utsignalen u ser ut när systemet stabiliserat sig (läs av i statusraden eller nedre grafen)"
+      "instruction": "Ladda scenariot 'Olinjär ventilkarakteristik — demo' (SP=10, Kp=1.2 — scenariots standardvärden; olinjär ventilkarakteristik är redan aktiverad).\n\nKör minst 150 steg (klicka 'Kör 10' upprepade gånger) tills PV har stabiliserat sig nära SP=10.\n\nNotera EN sak: ungefär hur många steg det tog innan PV stabiliserade sig. Kalla det värdet A — du jämför A mot ett nytt värde redan i nästa steg."
     },
     {
       "type": "scenario",
@@ -36,11 +36,11 @@
       "comparisonGroup": "ventilkarakteristik-problem",
       "title": "Visa problemet — stark zon",
       "objective": "Jämföra med föregående steg: SAMMA Kp, men en driftpunkt där processens K är mycket starkare.",
-      "instruction": "Ändra SP till 90 (samma Kp=1.2, oförändrat). Klicka 'Återställ system' och kör minst 60 steg.\n\nJämför med föregående steg:\n• Går det snabbare eller långsammare att stabiliseras nu?\n• Titta på 'Zongräns (u)'-linjerna i nedre grafen (grönt, streckat) — vilken zon hamnar u i den här gången, jämfört med föregående steg?",
+      "instruction": "Ändra SP till 90 (Kp=1.2 oförändrat). Klicka 'Återställ system' och kör minst 60 steg tills PV stabiliserat sig nära SP=90.\n\nNotera samma sak som i steg 2: ungefär hur många steg det tog. Kalla det B.\n\nJämför A (steg 2) och B (det här steget) — vilket är störst? Titta gärna på badgen 'Aktiv: Zon 2' bredvid 'Olinjär ventilkarakteristik' i Process-gruppen, som visar vilken K-zon u befinner sig i just nu.",
       "checkpoint": {
-        "question": "Med exakt samma Kp=1.2 stabiliseras SP=90-fallet betydligt snabbare än SP=10-fallet. Varför?",
+        "question": "Med exakt samma Kp=1.2 blev B (steg 3, SP=90) betydligt mindre än A (steg 2, SP=10) — alltså snabbare insvängning. Varför?",
         "options": [
-          "Vid SP=90 hamnar utsignalen u i processens starka zon (K=2.5, u över 25 %) — samma Kp ger då en kraftigare, snabbare reglerverkan än i den svaga zonen (K=0.5) från föregående steg",
+          "Vid SP=90 hamnar utsignalen u i processens starka zon (K=2.5, u över 25 %) — samma Kp ger då en kraftigare, snabbare reglerverkan än i den svaga zonen (K=0.5) från steg 2",
           "Regulatorn byter automatiskt till PID-läge vid höga SP-värden",
           "Ett högre SP gör alltid regleringen snabbare, oavsett process",
           "Simulatorn använder olika Kp beroende på SP-värdet"
@@ -51,23 +51,23 @@
     },
     {
       "type": "scenario",
-      "ref": "valve-nonlinear-gain-demo.json",
+      "ref": "valve-nonlinear-gain-demo-kp3.json",
       "comparisonGroup": "ventilkarakteristik-kompromiss",
-      "title": "En kompromiss — försök 1: höjt Kp i svag zon",
-      "objective": "Prova att höja Kp för att snabba upp den svaga zonen.",
-      "instruction": "Ändra SP till 10 igen. Höj Kp till 3 (ungefär dubbelt så aggressiv som tidigare). Klicka 'Återställ system' och kör minst 90 steg.\n\nNotera insvängningstiden — den är kortare än med Kp=1.2 (steg 2), men jämför den ändå med hur snabbt den STARKA zonen redan presterade i steg 3, trots ett lägre Kp där."
+      "title": "En kompromiss — försök 1: högre Kp i svag zon",
+      "objective": "Prova en högre, kompromissad Kp i den svaga zonen.",
+      "instruction": "Ladda scenariot 'Olinjär ventilkarakteristik — kompromiss-Kp'. Kontrollera att SP=10 och Kp=3 (scenariots egna standardvärden — ungefär dubbelt så aggressiv som i steg 2, ingen manuell ändring behövs).\n\nKör minst 90 steg tills PV stabiliserat sig.\n\nNotera insvängningstiden. Kalla den C."
     },
     {
       "type": "scenario",
-      "ref": "valve-nonlinear-gain-demo.json",
+      "ref": "valve-nonlinear-gain-demo-kp3.json",
       "comparisonGroup": "ventilkarakteristik-kompromiss",
-      "title": "En kompromiss — försök 2: samma höjda Kp i stark zon",
+      "title": "En kompromiss — försök 2: samma högre Kp i stark zon",
       "objective": "Se vad samma kompromiss-Kp gör i den starka zonen.",
-      "instruction": "Behåll Kp=3. Ändra SP till 90. Klicka 'Återställ system' och kör minst 40 steg.\n\nJämför med steg 3 (samma driftpunkt, men Kp=1.2 där) — går regleringen fortfarande bra, eller börjar du ana att regulatorn är väl kraftig här nu?",
+      "instruction": "Ändra SP till 90 (Kp=3 oförändrat). Klicka 'Återställ system' och kör minst 40 steg tills PV stabiliserat sig.\n\nNotera insvängningstiden. Kalla den D.\n\nJämför: är C (steg 4) mindre än A (steg 2)? Är D (det här steget) i närheten av B (steg 3), trots det högre Kp:t?",
       "checkpoint": {
-        "question": "Kp=3 gör den svaga zonen snabbare (försök 1), men den kommer fortfarande inte upp i samma tempo som den starka zonen redan presterade vid Kp=1.2 (steg 3). Vad säger det om att välja EN gemensam Kp för hela processen?",
+        "question": "Kp=3 gör den svaga zonen snabbare (C < A), men C kommer fortfarande inte ner i samma storleksordning som B (steg 3, som redan var snabb vid Kp=1.2). Vad säger det om att välja EN gemensam Kp för hela processen?",
         "options": [
-          "Det går inte att hitta en Kp som ger lika bra prestanda i båda zonerna samtidigt — en kompromiss förbättrar den ena zonen utan att nå den andras naturliga prestanda, och att driva kompromissen längre riskerar att göra den starka zonen för kraftigt reglerad istället",
+          "Det går inte att hitta en Kp som ger lika bra prestanda i båda zonerna samtidigt — en kompromiss förbättrar den svaga zonen utan att nå den starkas naturliga prestanda, och att driva kompromissen längre riskerar att göra den starka zonen för kraftigt reglerad istället",
           "Kp=3 är alltid det korrekta valet för alla processer",
           "Insvängningstiden beror bara på Ti, inte på Kp",
           "Problemet försvinner om man bara ökar Ti tillräckligt mycket"
@@ -78,21 +78,21 @@
     },
     {
       "type": "scenario",
-      "ref": "valve-nonlinear-gain-demo.json",
+      "ref": "valve-nonlinear-gain-demo-scheduled.json",
       "comparisonGroup": "ventilkarakteristik-losning",
       "title": "Lösningen — försök 1: Parameterstyrning i svag zon",
       "objective": "Låta regulatorn själv välja rätt Kp för den svaga zonen, istället för en manuellt vald kompromiss.",
-      "instruction": "Ladda om scenariot (Kp återgår till 1.2). Kryssa i 'Parameterstyrning' i Regulator-gruppen — tre zoner med egna Kp/Ti/Td dyker upp, redan ifyllda (Zon 1: Kp=5, Zon 2/3: Kp=1.2).\n\nMed SP=10 (scenariots standardvärde): kör minst 90 steg.\n\nJämför insvängningstiden med steg 2 (samma SP=10, men utan Parameterstyrning) OCH med steg 4 (samma SP=10, men med den manuella kompromissen Kp=3)."
+      "instruction": "Ladda scenariot 'Olinjär ventilkarakteristik — Parameterstyrning aktiv'. Kontrollera att SP=10 och att kryssrutan 'Parameterstyrning' i Regulator-gruppen redan är ikryssad — scenariot aktiverar den automatiskt, ingen manuell åtgärd behövs. Lägg märke till badgen 'Aktiv: Zon 1' som dyker upp bredvid kryssrutan.\n\nKör minst 90 steg tills PV stabiliserat sig.\n\nNotera insvängningstiden. Kalla den E.\n\nUnder hela det här steget stannar PV under Brytpunkt 1 (25) — badgen visar Zon 1 hela tiden. Nästa steg är där det faktiska zonbytet sker."
     },
     {
       "type": "scenario",
-      "ref": "valve-nonlinear-gain-demo.json",
+      "ref": "valve-nonlinear-gain-demo-scheduled.json",
       "comparisonGroup": "ventilkarakteristik-losning",
-      "title": "Lösningen — försök 2: Parameterstyrning i stark zon",
-      "objective": "Bekräfta att den starka zonen fortfarande presterar bra, samtidigt som den svaga zonen förbättrats.",
-      "instruction": "Ändra SP till 90. Klicka 'Återställ system' och kör minst 60 steg.\n\nJämför med steg 3 och steg 5 (samma driftpunkt, andra inställningar).",
+      "title": "Lösningen — försök 2: Parameterstyrning i stark zon (se zonbytet)",
+      "objective": "Bekräfta att den starka zonen fortfarande presterar bra, och observera regulatorn faktiskt byta parameteruppsättning under körningen.",
+      "instruction": "Ändra SP till 90. Klicka 'Återställ system'.\n\nDen här gången passerar PV båda brytpunkterna (25 och 65) på väg mot 90 — regulatorn byter parameteruppsättning UNDER körningen, inte bara vid start. Processen reagerar snabbt i den här driftpunkten, så bytena sker redan inom de första stegen — klicka gärna 'Stega 1' upprepade gånger från start (istället för 'Kör 10') om du vill se badgen 'Aktiv: Zon N' bredvid 'Parameterstyrning' byta värde steg för steg. Oavsett om du stegar eller kör snabbt läggs en streckad markeringslinje ('Zonbyte (Kp) → Zon N') automatiskt i grafen varje gång ett byte sker, så du alltid kan se EXAKT var det hände i efterhand.\n\nNär PV stabiliserat sig (minst 60 steg totalt): notera insvängningstiden. Kalla den F.\n\nJämför: är E (steg 6) mindre än A (steg 2) och C (steg 4)? Är F (det här steget) i närheten av B (steg 3), trots att Zon 1:s Kp=5 också var aktiv en del av vägen?",
       "checkpoint": {
-        "question": "Med Parameterstyrning aktiverad presterar båda driftpunkterna (SP=10 och SP=90) klart bättre än den manuella kompromissen (steg 4–5), samtidigt. Varför fungerar det?",
+        "question": "Med Parameterstyrning aktiverad blir BÅDE E (steg 6) och F (det här steget) klart bättre än den manuella kompromissen (C och D, steg 4–5) — samtidigt. Varför fungerar det?",
         "options": [
           "Regulatorn väljer automatiskt Kp=5 när PV är lågt (matchar processens svaga zon) och Kp=1.2 när PV är högt (matchar den starka zonen) — varje zon får sin egen, rätt avvägda inställning istället för en gemensam kompromiss",
           "Parameterstyrning stänger av processens olinjäritet",
@@ -100,7 +100,7 @@
           "Kp=5 och Kp=1.2 adderas till varandra"
         ],
         "correct": 0,
-        "explanation": "Parameterstyrning löser exakt det kompromissproblem steg 4–5 visade: istället för EN Kp som måste duga överallt, väljs rätt Kp automatiskt utifrån var PV befinner sig — ingen kompromiss behövs."
+        "explanation": "Parameterstyrning löser exakt det kompromissproblem steg 4–5 visade: istället för EN Kp som måste duga överallt, väljs rätt Kp automatiskt utifrån var PV befinner sig — badgen och markeringslinjen du precis observerade visar exakt när det bytet sker, ingen kompromiss behövs."
       }
     }
   ]

@@ -97,7 +97,7 @@
   },
   "gainScheduleEnabled": {
     "title": "Parameterstyrning (Gain Scheduling)",
-    "body": "Regulatorns Kp/Ti/Td väljs automatiskt utifrån var PV befinner sig, istället för att vara samma i hela driftområdet.\n\nTre fasta zoner (Låg/Mellan/Hög), avgränsade av två brytpunkter på PV-skalan. Så fort PV passerar en brytpunkt byts hela Kp/Ti/Td-uppsättningen omedelbart till den nya zonens.\n\nVarför: en process kan svara olika kraftigt beroende på driftpunkt (t.ex. en olinjär ventil — se 'Olinjär ventilkarakteristik'). Samma Kp fungerar då bra i en zon men dåligt i en annan.\n\nBytet sker stötfritt (samma mjuka övergång som Bumpless vid lägesbyte) — u hoppar inte vid en zongräns.\n\nGäller bara i P/PI/PID-läge."
+    "body": "Regulatorns Kp/Ti/Td väljs automatiskt utifrån var PV befinner sig, istället för att vara samma i hela driftområdet.\n\nTre fasta zoner (Låg/Mellan/Hög), avgränsade av två brytpunkter på PV-skalan. Så fort PV passerar en brytpunkt byts hela Kp/Ti/Td-uppsättningen omedelbart till den nya zonens.\n\nVarför: en process kan svara olika kraftigt beroende på driftpunkt (t.ex. en olinjär ventil — se 'Olinjär ventilkarakteristik'). Samma Kp fungerar då bra i en zon men dåligt i en annan.\n\nBytet sker stötfritt (samma mjuka övergång som Bumpless vid lägesbyte) — u hoppar inte vid en zongräns.\n\nEn orange badge ('Aktiv: Zon N') visar alltid vilken zon som gäller just nu, och samma zons Kp/Ti/Td-fält får en orange ram. Ett zonbyte markeras även med en streckad linje i grafen, precis som andra parameterändringar.\n\nGäller bara i P/PI/PID-läge."
   },
   "gsBreak": {
     "title": "Brytpunkt (Parameterstyrning)",
@@ -117,7 +117,7 @@
   },
   "nonlinearGainEnabled": {
     "title": "Olinjär ventilkarakteristik",
-    "body": "Processens egen förstärkning K varierar med utsignalen u, istället för att vara konstant.\n\nTre fasta K-zoner (låg/mellan/hög u), avgränsade av två brytpunkter på u-skalan (0–100 %).\n\nVarför: verkliga styrventiler är sällan linjära — samma ändring i u ger olika stor effekt på PV beroende på var ventilen redan står (t.ex. en likaprocentuell karakteristik: liten effekt nära stängt, stor effekt nära öppet).\n\nBara T och L är konstanta — bara K byter zon.\n\nGäller bara processtyp Självreglerande."
+    "body": "Processens egen förstärkning K varierar med utsignalen u, istället för att vara konstant.\n\nTre fasta K-zoner (låg/mellan/hög u), avgränsade av två brytpunkter på u-skalan (0–100 %).\n\nVarför: verkliga styrventiler är sällan linjära — samma ändring i u ger olika stor effekt på PV beroende på var ventilen redan står (t.ex. en likprocentuell karakteristik: liten effekt nära stängt, stor effekt nära öppet).\n\nBara T och L är konstanta — bara K byter zon.\n\nEn grönteal badge ('Aktiv: Zon N') visar alltid vilken zon som gäller just nu, och samma zons K-fält får en grönteal ram. Ett zonbyte markeras även med en streckad linje i grafen, precis som andra parameterändringar.\n\nGäller bara processtyp Självreglerande."
   },
   "ngBreak": {
     "title": "Brytpunkt (ventilkarakteristik)",

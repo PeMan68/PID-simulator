@@ -26,7 +26,9 @@
     { "id": "pi-pid-comparison-pi",        "file": "scenarios/pi-pid-comparison-pi.json" },
     { "id": "pi-pid-comparison-pid",       "file": "scenarios/pi-pid-comparison-pid.json" },
     { "id": "pi-deadtime-comparison",      "file": "scenarios/pi-deadtime-comparison.json" },
-    { "id": "valve-nonlinear-gain-demo",   "file": "scenarios/valve-nonlinear-gain-demo.json" }
+    { "id": "valve-nonlinear-gain-demo",   "file": "scenarios/valve-nonlinear-gain-demo.json" },
+    { "id": "valve-nonlinear-gain-demo-kp3",       "file": "scenarios/valve-nonlinear-gain-demo-kp3.json" },
+    { "id": "valve-nonlinear-gain-demo-scheduled", "file": "scenarios/valve-nonlinear-gain-demo-scheduled.json" }
   ],
   "theory": [
     { "id": "pid-intro",      "file": "theory/pid-intro.v1.json" },
