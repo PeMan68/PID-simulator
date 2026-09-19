@@ -50,12 +50,29 @@ parameterändringar, `markZoneChangeIfAny()`, "Kör 10" omskriven till en explic
 steg-loop för att fånga byten mitt i en batch). 10-stegsknappens låsning analyserad
 men INTE implementerad — rekommenderas avstyrkt, se rapportens avsnitt 4.
 Fullständig regression (15 testsviter) grön efter ändringarna.
+**Sista granskningsrundan (PO:s slutliga feedback):** Full rapport:
+`docs/reports/FEAT-042_SISTA-GRANSKNINGSRUNDA.md`. Sex punkter åtgärdade: (1)
+zonbadgen togs bort helt — behöll fälthighlight, statusrad och grafmarkeringar,
+som instruerat; (2) ny förklaring (teori + steg 7 + hjälptext) av att processens
+K-zon (styrs av u) och regulatorns Kp-zon (styrs av PV) är oberoende och kan visa
+olika zonnummer samtidigt; (3+5) PO:s notering att dessa två hänger ihop bekräftad
+— rotorsaksanalys visade att PO:s ögonmåttsbedömda tider skilde sig kraftigt vid
+SP=90 (B/D) men inte vid SP=10 (A/C), exakt matchande att PV tekniskt går in i det
+exakta 2%-bandet långt innan kurvan SER helt platt ut för ögat; åtgärdat genom att
+instruera exakt samma Mätläge+2%-toleransband-metod som redan är etablerad i
+övrigt kursmaterial för samtliga sex mätningar (A–F) — själva jämförelsepåståendena
+i texten verifierades korrekta mot scenariernas oförändrade, redan
+simuleringsverifierade beteende, inget sakfel hittades där; (4) varje steg
+instruerar nu att anteckna SP, Kp/aktiv zon-uppsättning OCH insvängningstid, inte
+bara tiden; (6) en mening tillagd i steg 2 om varför Zon 2/3 delar K-värde.
+Fullständig regression (15 testsviter) grön. `docs/exercises/ovningar-
+parameterstyrning.md` flaggat (inte åtgärdat, låg utanför uppdraget) som
+sannolikt drabbat av samma mätmetodsproblem.
 **Status:** Implementerad på feature-branchen, EJ mergad till `develop` (enligt
 uppdragets explicita instruktion). Ingen webbläsartest genomförd (ingen
-webbläsare tillgänglig i denna miljö) — PO bör specifikt verifiera badge/
-fälthighlight, att steg 6→7 behåller Parameterstyrning aktiverad, och att
-zonbytesmarkeringarna syns korrekt i grafen (se uppföljningsrapportens avsnitt 6)
-innan mergebeslut.
+webbläsare tillgänglig i denna miljö) — PO bör slutligt verifiera visuellt
+(fälthighlight utan badge, Mätläge+2%-band-avläsning, steg 7:s zontexter) innan
+mergebeslut.
 
 ---
 

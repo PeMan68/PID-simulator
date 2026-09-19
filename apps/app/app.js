@@ -87,8 +87,6 @@ const logEl = document.getElementById("log");
 const chartCanvas = document.getElementById("chart");
 const learnBody = document.getElementById("learnBody");
 const btnExtendSteps = document.getElementById("btnExtendSteps");
-const gsZoneBadge = document.getElementById("gsZoneBadge");
-const ngZoneBadge = document.getElementById("ngZoneBadge");
 
 const fields = {
   processType: document.getElementById("processType"),
@@ -466,21 +464,19 @@ const GS_ZONE_FIELD_GROUPS = [
   [fields.gsZ3Kp, fields.gsZ3Ti, fields.gsZ3Td],
 ];
 const NG_ZONE_FIELD_GROUPS = [[fields.ngZ1K], [fields.ngZ2K], [fields.ngZ3K]];
-// FEAT-042 (PO-granskning, punkt 3) — badge + highlight på aktiv zons egna
-// fält, så studenten omedelbart ser VILKEN Kp/Ti/Td (eller K) som gäller
-// just nu, inte bara ett zonnummer i statusraden.
+// FEAT-042 (PO-granskning, punkt 3) — highlight på aktiv zons egna fält, så
+// studenten ser VILKEN Kp/Ti/Td (eller K) som gäller just nu. En textbadge
+// ("Aktiv: Zon N") fanns här tidigare men togs bort efter PO:s sista
+// granskningsrunda — bedömdes inte tillföra pedagogiskt värde utöver
+// fälthighlighten, statusradens zonavläsning och grafens markeringslinjer.
 function updateZoneIndicators() {
   const { gainZone, processZone } = activeZones();
   GS_ZONE_FIELD_GROUPS.forEach((group, i) => {
     group.forEach(f => f.parentElement.classList.toggle("zone-active-regulator", gainZone === i));
   });
-  gsZoneBadge.hidden = gainZone === null;
-  if (gainZone !== null) gsZoneBadge.textContent = "Aktiv: Zon " + (gainZone + 1);
   NG_ZONE_FIELD_GROUPS.forEach((group, i) => {
     group.forEach(f => f.parentElement.classList.toggle("zone-active-process", processZone === i));
   });
-  ngZoneBadge.hidden = processZone === null;
-  if (processZone !== null) ngZoneBadge.textContent = "Aktiv: Zon " + (processZone + 1);
 }
 // FEAT-042 (PO-granskning, punkt 5) — markeringslinje vid zonbyte, samma
 // mekanism (sim.history.markers) som redan används för parameterändringar
