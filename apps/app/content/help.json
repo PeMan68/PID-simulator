@@ -126,5 +126,17 @@
   "ngZoneK": {
     "title": "Zonens K (ventilkarakteristik)",
     "body": "Den processförstärkning K som gäller när utsignalen u ligger i just det här intervallet. Samma innebörd som det vanliga K-fältet, se dess hjälptext.\n\nAlla tre zoner förifylls med scenariots ordinarie K när ventilkarakteristiken aktiveras — ändra dem för att ge varje intervall sin egen förstärkning."
+  },
+  "auxGain": {
+    "title": "Lastförstärkning — auxGain",
+    "body": "Hur starkt en triggad last (se 'Last mag'/'Trigga last' i Störningar-gruppen) påverkar processen — processens EGEN egenskap, precis som K.\n\nTill skillnad från Puls/Brus (som adderas direkt till PV, odämpat) går lasten genom SAMMA tröghet/tidskonstant (T) som huvudprocessen — en triggad last ger alltså en mjuk, T-fördröjd förändring av PV, inte ett hopp.\n\nauxGain=0 → lasten har ingen effekt alls, oavsett triggat värde."
+  },
+  "kff": {
+    "title": "Kff — Framkopplingsförstärkning",
+    "body": "Regulatorns kompensation för en MÄTBAR last (auxSignal), adderad direkt till utsignalen — utan att vänta på att felet (SP−PV) hinner uppstå, till skillnad från Kp/Ti/Td.\n\nu = ... + Kff × (triggat lastvärde)\n\nKan vara NEGATIVT — inte ett misstag. En last som pressar PV UPPÅT (auxGain>0) kräver att regulatorn MINSKAR sin utsignal för att hålla PV vid SP, alltså ett negativt Kff. Det teoretiskt korrekta värdet är Kff = −auxGain / K.\n\nKff=0 → ingen framkoppling, regulatorn reagerar bara på felet precis som vanligt (ren återkoppling)."
+  },
+  "auxMag": {
+    "title": "Last mag — Mätbar laststörning",
+    "body": "Det värde lasten antar när den triggas med knappen 'Trigga last'.\n\nTill skillnad från Puls (som återgår till 0 av sig själv) ligger lasten kvar BESTÅENDE tills du klickar 'Återställ system', eller triggar ett nytt lastvärde (t.ex. 0, för att ta bort lasten igen).\n\nKombinera med 'Lastförstärkning' (hur mycket lasten fysiskt påverkar processen) och 'Kff' (hur mycket regulatorn kompenserar för den i förväg)."
   }
 }

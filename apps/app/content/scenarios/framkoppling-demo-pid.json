@@ -1,0 +1,28 @@
+{
+  "id": "framkoppling-demo-pid",
+  "version": "v1.0.0",
+  "title": "Framkoppling — demo: PID ensam",
+  "description": "Självreglerande process i stabilt läge vid SP. En mätbar last kan triggas (FEAT-045) — här utan framkoppling (Kff=0), regulatorn måste reagera reaktivt via återkoppling. Simuleringsverifierat (se docs/reports/STRAT-005 och FEAT-045-leveransrapporten).",
+  "tags": ["pid", "feedforward", "auxsignal"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.3,
+    "T": 15.0,
+    "L": 0.0,
+    "normalValue": 50.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 },
+    "auxGain": 0.8
+  },
+  "controller": {
+    "mode": "pid",
+    "kp": 1.2,
+    "ti": 20.0,
+    "td": 0.0,
+    "kff": 0.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "auxSignal": { "magnitude": -20.0 },
+  "runtime": { "dt": 1.0, "maxSteps": 250, "setpoint": 50.0, "autopause": false }
+}

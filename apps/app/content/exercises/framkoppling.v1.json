@@ -1,0 +1,72 @@
+{
+  "id": "framkoppling.v1",
+  "version": "v1.0.0",
+  "title": "Framkoppling (Feedforward)",
+  "description": "En mätbar störning behöver inte vänta på att bli ett fel innan regulatorn reagerar. Se skillnaden mellan ren återkoppling, ren (men ofullständig) framkoppling, och kombinationen av båda.",
+  "difficulty": "intermediate",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "framkoppling.v1.json",
+      "title": "Vad är framkoppling?",
+      "objective": "Förstå skillnaden mellan reaktiv reglering (återkoppling) och direktkompenserande reglering (framkoppling), och varför Kff kan vara negativt.",
+      "checkpoint": {
+        "question": "En mätbar last pressar PV UPPÅT. Varför blir framkopplingens Kff-värde ofta NEGATIVT, inte positivt?",
+        "options": [
+          "Regulatorns utsignal behöver MINSKAS för att motverka att PV pressas uppåt — ett negativt Kff drar alltså ner utsignalen precis när lasten trycker upp PV, vilket håller kvar PV vid SP",
+          "Kff är alltid negativt, oavsett vilken riktning lasten verkar i",
+          "Ett negativt Kff är ett tecken på ett fel i simulatorn — Kff ska alltid vara positivt precis som Kp",
+          "Tecknet på Kff avgörs av om regulatorn är i P-, PI- eller PID-läge"
+        ],
+        "correct": 0,
+        "explanation": "u = ... + Kff × (lastens värde). Om lasten (positiv) själv pressar PV uppåt (K × auxGain > 0) måste regulatorns bidrag gå åt andra hållet för att nettoeffekten på PV ska bli noll — det kräver ett negativt Kff. Tecknet beror på hur lasten fysiskt påverkar processen (auxGain), inte på ett fast mönster."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "framkoppling-demo-pid.json",
+      "comparisonGroup": "framkoppling-jamforelse",
+      "title": "Återkoppling ensam — reaktiv reglering",
+      "objective": "Se hur en vanlig PID-regulator (ingen framkoppling) hanterar en mätbar last helt reaktivt.",
+      "instruction": "Scenariot laddar processen redan i stabilt läge vid SP=50 (Kff=0 — framkoppling är inte aktiv i det här steget). Kontrollera i Störningar-gruppen att 'Last mag' visar −20.\n\nAktivera Mätläge (knappen 'Mät K/T/L') för att få crosshair-avläsning i grafen. Klicka sedan 'Trigga last' i Störningar-gruppen — en markeringslinje ('Last → -20') dyker upp i grafen.\n\nKör minst 200 steg efter triggningen (klicka 'Kör 10 steg' upprepade gånger).\n\nHovra över grafens lägsta punkt (dippen strax efter markeringslinjen) och läs av PV-värdet i crosshair-rutan — det är den STÖRSTA avvikelsen från SP. Kalla den A (avvikelse från SP=50, dvs 50 minus det avlästa värdet).\n\nHovra sedan vidare längs kurvan tills den planar ut helt vid SP=50 igen — läs av ungefär vid vilket t-värde (steg) det sker EFTER triggningen. Kalla det B.\n\nAnteckna: A (störst avvikelse) och B (steg tills PV är tillbaka vid SP)."
+    },
+    {
+      "type": "scenario",
+      "ref": "framkoppling-demo-ren-ff.json",
+      "comparisonGroup": "framkoppling-jamforelse",
+      "title": "Ren framkoppling — snabb men bara så bra som sin modell",
+      "objective": "Se att framkoppling reagerar direkt, men att ett FEL Kff ger ett kvarstående fel som aldrig försvinner av sig själv.",
+      "instruction": "Nytt scenario: regulatorn kör nu praktiskt taget UTAN återkoppling (Kp=0.1 — simulatorns UI-minimum, Ti=Td=0). Kff är satt till −0.31 — ett MEDVETET FEL värde (ungefär halva det teoretiskt korrekta, se steg 3). Last mag är fortfarande −20.\n\nMätläge är fortfarande aktivt sedan förra steget. Klicka 'Trigga last'.\n\nKör minst 150 steg efter triggningen.\n\nObservera: till skillnad från föregående steg reagerar PV nästan OMEDELBART (inget stort, växande fel som i steg 2 — framkopplingen kompenserar redan från första steget), MEN kurvan planar ut på ett HELT ANNAT värde än SP=50, och stannar där — den återgår ALDRIG till SP, hur många steg du än kör.\n\nAktivera 'Visa 2%-toleransband (insvängning)' i mätpanelen: sätt PV₀=50 (värdet precis innan triggning) och PV∞ till det nya, stabila värdet du ser att kurvan lägger sig på (hovra för att läsa av det exakt). Nu ritas ett tydligt band kring det nya, FELAKTIGA slutvärdet.\n\nAnteckna: det kvarstående felet, dvs |50 − PV∞|. Kalla det C.",
+      "checkpoint": {
+        "question": "Med Kff=−0.31 (fel) reagerar PID nästan direkt på lasten, men PV återgår ALDRIG till SP=50 — den kvarstannar vid ett nytt, felaktigt värde. Varför?",
+        "options": [
+          "Framkopplingen kompenserar bara delvis (fel Kff ger fel kompensationsnivå), och utan meningsfull återkoppling (Ti=0, i praktiken ingen I-verkan) finns inget som upptäcker och rättar till den kvarstående skillnaden mot SP",
+          "Kp=0.1 är för lågt för att regulatorn ska kunna nå SP överhuvudtaget, oavsett Kff",
+          "Framkoppling fungerar bara vid positiva laster, inte negativa som −20",
+          "Simulatorn saknar stöd för att kombinera Kff med P-läge"
+        ],
+        "correct": 0,
+        "explanation": "Framkoppling är ett ÖPPET system — den räknar ut sin kompensation en gång (Kff × lastvärde) och litar blint på att modellen stämmer. Är Kff fel blir kompensationen fel, och eftersom det inte finns någon meningsfull I-verkan (Ti=0) som fortsätter jaga felet mot noll, fastnar PV permanent vid en felaktig nivå. Jämför med steg 2 (ren PID): där rättade integratorn TILL SLUT till exakt SP, trots att den startade lika 'okunnig' om lasten som framkopplingen här."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "framkoppling-demo-pid-ff.json",
+      "comparisonGroup": "framkoppling-jamforelse",
+      "title": "PID + korrekt Kff — det bästa av båda",
+      "objective": "Se att kombinationen av framkoppling (snabb) och återkoppling (garanterat korrekt) nästan helt eliminerar avvikelsen.",
+      "instruction": "Nytt scenario: full PID återställd (Kp=1.2, Ti=20, som i steg 1), och Kff är nu satt till −0.6154 — (nära) det teoretiskt korrekta värdet, se Kff-fältets hjälptext för formeln. Last mag fortfarande −20.\n\nKlicka 'Trigga last'. Kör ett antal steg som vanligt.\n\nObservera: kurvan knappt rör sig alls — avvikelsen är i praktiken försumbar redan vid triggande steget, och PV ligger kvar vid SP=50 hela tiden efteråt.\n\nAnteckna: den (försumbara) största avvikelsen du kan se, om någon. Kalla den D. Notera också att ingen märkbar insvängningstid finns — kalla den E ('omedelbar').\n\nJämför nu alla tre stegen: D är mycket mindre än A (steg 1), och PV återgår OCH stannar exakt vid SP — till skillnad från C (steg 2), som aldrig gjorde det.",
+      "checkpoint": {
+        "question": "Varför ger PID + korrekt Kff ett bättre resultat än BÅDA de tidigare strategierna för sig — snabbare än steg 1, och mer korrekt än steg 2?",
+        "options": [
+          "Framkopplingen tar hand om nästan hela kompensationen OMEDELBART (ingen väntan på att ett fel ska byggas upp, till skillnad från steg 1), och den lilla rest som blir kvar (om Kff inte är HELT perfekt) städas garanterat upp av PID:s återkoppling (till skillnad från steg 2, som saknade den städningen helt)",
+          "PID och framkoppling adderar sina Kp-värden till varandra, vilket gör regulatorn dubbelt så aggressiv",
+          "Kff=−0.6154 stänger av återkopplingen automatiskt, så resultatet beror bara på framkopplingen",
+          "Kombinationen fungerar bara för negativa laster, inte positiva"
+        ],
+        "correct": 0,
+        "explanation": "De två strategierna kompletterar varandra istället för att konkurrera: framkoppling ger HASTIGHET (ingen väntan på ett synligt fel), återkoppling ger GARANTI (den rättar alltid till slut, oavsett hur bra eller dålig Kff-gissningen var). Ensam är framkoppling snabb men opålitlig om modellen är fel (steg 2); ensam är återkoppling pålitlig men reaktiv/långsam (steg 1). Tillsammans: snabbt OCH pålitligt."
+      }
+    }
+  ]
+}

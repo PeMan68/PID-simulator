@@ -93,10 +93,16 @@ const fields = {
   k: document.getElementById("k"), t: document.getElementById("t"), l: document.getElementById("l"),
   normalValue: document.getElementById("normalValue"),
   outflow: document.getElementById("outflow"),
+  // FEAT-045 — Framkoppling: processens egen lastförstärkning
+  auxGain: document.getElementById("auxGain"),
   kp: document.getElementById("kp"), ti: document.getElementById("ti"), td: document.getElementById("td"),
+  // FEAT-045 — Framkoppling: regulatorns framkopplingsförstärkning (kan vara negativ)
+  kff: document.getElementById("kff"),
   sp: document.getElementById("sp"), umin: document.getElementById("umin"), umax: document.getElementById("umax"),
   manualOutput: document.getElementById("manualOutput"),
   mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"), pulseDuration: document.getElementById("pulseDuration"), showPB: document.getElementById("showPB"),
+  // FEAT-045 — Framkoppling: den mätbara lastens triggade nivå
+  auxMag: document.getElementById("auxMag"),
   hysteresLower: document.getElementById("hysteresLower"), hysteresUpper: document.getElementById("hysteresUpper"),
   antiWindup: document.getElementById("antiWindup"),
   // FEAT-042 — Parameterstyrning (regulatorns kp/ti/td-schema, keyed på PV)
@@ -130,9 +136,13 @@ let currentScenarioRef = null; // senast laddade scenariots FIL-referens (t.ex. 
 
 function appendLog(line) { logEl.textContent += line + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 function fitCanvas() { const w = Math.max(680, chartCanvas.clientWidth); if (chartCanvas.width !== w) chartCanvas.width = w; }
+// FEAT-045 — dashed accepterar nu antingen en boolean (befintligt beteende,
+// PV/u=solid, SP=enkel streckning) eller en array (t.ex. ett prick-streck-
+// mönster för lastlinjen), se anropet i drawChart().
 function drawSeries(ctx, points, color, dashed) {
   if (!points.length) return;
-  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash(dashed ? [6, 4] : []);
+  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
+  ctx.setLineDash(Array.isArray(dashed) ? dashed : (dashed ? [6, 4] : []));
   ctx.moveTo(points[0].x, points[0].y);
   for (let i = 1; i < points.length; i += 1) ctx.lineTo(points[i].x, points[i].y);
   ctx.stroke(); ctx.setLineDash([]);
@@ -237,12 +247,23 @@ function drawChart() {
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
   ctx.fillText("PV/SP", pad.left + 6, pad.top + 14);
   ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
+  if (sim.scenario.auxSignal) {
+    ctx.fillStyle = "#8e44ad";
+    ctx.fillText("Last", pad.left + 52, pad.top + 14);
+  }
   ctx.save();
   ctx.beginPath();
   ctx.rect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top);
   ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
+  // FEAT-045 — lastsignalen (auxSignal), tredje linjen i samma övre panel
+  // (STRAT-005 avsnitt 4). Ritas bara när scenariot faktiskt har ett
+  // auxSignal-fält (se syncParamsFromUI()) — annars osynlig, ingen flat
+  // 0-linje på scenarier som inte handlar om framkoppling.
+  if (sim.scenario.auxSignal && sim.history.aux) {
+    drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sim.history.aux[i] ?? 0) })), "#8e44ad", [2, 3, 8, 3]);
+  }
   ctx.restore();
 
   ctx.save();
@@ -551,11 +572,14 @@ function updateStatus() {
 }
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;
+  fields.auxGain.value = s.process.auxGain ?? 0;
   fields.normalValue.value = s.process.normalValue ?? 0;
   fields.kp.value = s.controller.kp || 0; fields.ti.value = s.controller.ti || 0; fields.td.value = s.controller.td || 0;
+  fields.kff.value = s.controller.kff ?? 0;
   fields.manualOutput.value = s.controller.manualOutput ?? 0;
   fields.sp.value = s.runtime.setpoint; fields.umin.value = s.controller.outputLimits.min; fields.umax.value = s.controller.outputLimits.max;
   fields.mode.value = s.controller.mode; fields.noise.value = s.disturbance.noiseStd || 0; fields.pulseMag.value = s.disturbance.pulse.magnitude || 0; fields.pulseDuration.value = s.disturbance.pulse.durationSteps || 3;
+  fields.auxMag.value = s.auxSignal?.magnitude ?? 0;
   fields.hysteresLower.value = s.controller.hysteresis?.lower ?? 2;
   fields.hysteresUpper.value = s.controller.hysteresis?.upper ?? 2;
   fields.antiWindup.checked = s.controller.antiWindup !== false;
@@ -614,6 +638,8 @@ function markerSnapshot(scenario) {
     kp: scenario.controller.kp, ti: scenario.controller.ti, td: scenario.controller.td,
     sp: scenario.runtime.setpoint, noise: scenario.disturbance.noiseStd,
     k: scenario.process.K, t: scenario.process.T, l: scenario.process.L, processType: scenario.process.type,
+    // FEAT-045 — samma jämförbarhetsprincip som gainSchedule/nonlinearGain nedan.
+    kff: scenario.controller.kff, auxGain: scenario.process.auxGain,
     // FEAT-042 — hela schemat som en jämförbar sträng räcker (bara ändring/
     // ingen ändring behöver detekteras, inte VAD som ändrades i detalj).
     gainSchedule: JSON.stringify(scenario.controller.gainSchedule || null),
@@ -632,6 +658,7 @@ function describeMarkerChange(a, b) {
   if (a.k !== b.k || a.t !== b.t || a.l !== b.l || a.processType !== b.processType) return "Process ändrad";
   if (a.gainSchedule !== b.gainSchedule) return "Parameterstyrning ändrad";
   if (a.nonlinearGain !== b.nonlinearGain) return "Ventilkarakteristik ändrad";
+  if (a.kff !== b.kff || a.auxGain !== b.auxGain) return "Framkoppling ändrad";
   return null;
 }
 function captureMarkerBaseline() {
@@ -663,11 +690,18 @@ function syncParamsFromUI() {
   currentScenario.process.L = readClamped(fields.l, 0);
   currentScenario.process.normalValue = Number(fields.normalValue.value);
   currentScenario.process.outflow = readClamped(fields.outflow, 0);
+  // FEAT-045 — processens egen lastförstärkning. Alltid synkad (som outflow
+  // ovan), oberoende av om scenariot triggar en last eller ej — utan ett
+  // triggat auxSignal-värde (0) har den ingen effekt (se ProcessModel.step()).
+  currentScenario.process.auxGain = Number(fields.auxGain.value);
   const noTi = nextMode === "p" || nextMode === "manual" || nextMode === "onoff";
   const noTd = nextMode === "p" || nextMode === "pi" || nextMode === "manual" || nextMode === "onoff";
   currentScenario.controller.kp = readClamped(fields.kp, 0.1);
   currentScenario.controller.ti = noTi ? 0 : readClamped(fields.ti, 0);
   currentScenario.controller.td = noTd ? 0 : readClamped(fields.td, 0);
+  // FEAT-045 — framkopplingsförstärkning. Medvetet OKLIPPT (till skillnad
+  // från kp ovan) — Kff kan vara negativt, se STRAT-005 avsnitt 6/help.json.
+  currentScenario.controller.kff = Number(fields.kff.value);
   currentScenario.controller.manualOutput = readClamped(fields.manualOutput, 0, 100);
   currentScenario.runtime.setpoint = readClamped(fields.sp, 0, 100);
   const safeUmin = clamp(Number(fields.umin.value), 0, 100);
@@ -680,6 +714,18 @@ function syncParamsFromUI() {
   currentScenario.disturbance.noiseStd = readClamped(fields.noise, 0);
   currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
   currentScenario.disturbance.pulse.durationSteps = Math.max(0, Number(fields.pulseDuration.value));
+  // FEAT-045 — auxSignal (mätbar last) skapas bara i scenariot om fältet
+  // faktiskt används (redan satt av scenariofilen, eller ett nollskilt värde
+  // manuellt inskrivet) — INTE defensivt för alla scenarier, till skillnad
+  // från auxGain/kff ovan. Annars skulle grafens lastlinje (drawChart, se
+  // STRAT-005 avsnitt 4) börja ritas som en flat 0-linje på alla ~40
+  // befintliga scenarier så fort ETT UI-fält synkas, inte bara de scenarier
+  // som faktiskt demonstrerar framkoppling.
+  const auxMagVal = Number(fields.auxMag.value);
+  if (currentScenario.auxSignal || auxMagVal !== 0) {
+    if (!currentScenario.auxSignal) currentScenario.auxSignal = {};
+    currentScenario.auxSignal.magnitude = auxMagVal;
+  }
   if (!currentScenario.controller.hysteresis) currentScenario.controller.hysteresis = {};
   currentScenario.controller.hysteresis.lower = readClamped(fields.hysteresLower, 0);
   currentScenario.controller.hysteresis.upper = readClamped(fields.hysteresUpper, 0);
@@ -1147,9 +1193,9 @@ fields.gainScheduleEnabled.addEventListener("change", () => { updateGainSchedule
 fields.nonlinearGainEnabled.addEventListener("change", () => { updateNonlinearGainUIState(); syncParamsFromUI(); drawChart(); });
 // GAM-002: tunt, tillagt lyssnarpar enbart för aktivitetsloggning — rör inte
 // appens egen parameterhantering ovan/i syncParamsFromUI().
-[["k", fields.k], ["t", fields.t], ["l", fields.l], ["kp", fields.kp], ["ti", fields.ti], ["td", fields.td],
+[["k", fields.k], ["t", fields.t], ["l", fields.l], ["auxGain", fields.auxGain], ["kp", fields.kp], ["ti", fields.ti], ["td", fields.td], ["kff", fields.kff],
  ["sp", fields.sp], ["umin", fields.umin], ["umax", fields.umax], ["manualOutput", fields.manualOutput],
- ["noise", fields.noise], ["pulseMag", fields.pulseMag], ["pulseDuration", fields.pulseDuration]]
+ ["noise", fields.noise], ["pulseMag", fields.pulseMag], ["pulseDuration", fields.pulseDuration], ["auxMag", fields.auxMag]]
   .forEach(pair => {
     const name = pair[0], el = pair[1];
     el.addEventListener("change", () => {
@@ -1212,8 +1258,23 @@ document.getElementById("btnExtendSteps").addEventListener("click", () => {
   activityDispatch("steps_extended", { contextKey: activityContextKey(), newMax: sim.maxSteps });
 });
 document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); if (!sim.history.markers) sim.history.markers = []; sim.history.markers.push({ t: sim.history.t[sim.history.t.length - 1] ?? 0, label: "Puls" }); appendLog("Puls triggad."); activityDispatch("disturbance_triggered", { contextKey: activityContextKey() }); });
-document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
-document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
+// FEAT-045 — "Trigga last", samma interaktionsmönster som "Trigga puls" ovan
+// (STRAT-005 avsnitt 3), men markeringsetiketten visar det NYA lastvärdet
+// (t.ex. "Last → 20") istället för en enkel "Last"-etikett, eftersom
+// lastens exakta nivå är pedagogiskt relevant på ett sätt pulsens
+// magnitud inte är.
+document.getElementById("triggerAux").addEventListener("click", () => {
+  if (!sim) return;
+  syncParamsFromUI();
+  sim.triggerAuxSignal();
+  if (!sim.history.markers) sim.history.markers = [];
+  sim.history.markers.push({ t: sim.history.t[sim.history.t.length - 1] ?? 0, label: "Last → " + sim.auxValue });
+  appendLog("Last triggad (" + sim.auxValue + ").");
+  drawChart();
+  activityDispatch("disturbance_triggered", { contextKey: activityContextKey(), field: "auxSignal" });
+});
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);

@@ -1,0 +1,17 @@
+{
+  "id": "framkoppling-v1",
+  "version": "v1.0.0",
+  "title": "Framkoppling (Feedforward)",
+  "summary": "Återkoppling (PID) reagerar först EFTER att ett fel redan uppstått. Framkoppling mäter en störning INNAN den hinner påverka processen, och kompenserar direkt — men bara om den mätbara störningens effekt är känd tillräckligt väl.",
+  "bullets": [
+    "Hittills har regulatorn bara sett PV — den kan aldrig reagera på en störning förrän den redan syns som ett fel (SP−PV). Det är reaktiv reglering: alltid ett steg efter.",
+    "Om en störning kan MÄTAS innan den hinner påverka processen (t.ex. en lastgivare uppströms) kan regulatorn kompensera DIREKT, samtidigt som störningen inträffar — inte efter. Det kallas framkoppling.",
+    "Simulatorn modellerar detta som en mätbar last (auxSignal, FEAT-045): ett värde som triggas med knappen 'Trigga last' och sedan ligger kvar BESTÅENDE (till skillnad från Puls, som återgår till 0 av sig själv) tills systemet återställs eller en ny last triggas.",
+    "Lastens egen fysiska påverkan på processen styrs av 'Lastförstärkning' (auxGain) — en egenskap hos PROCESSEN, precis som K. Regulatorns kompensation styrs separat av 'Kff' (framkopplingsförstärkning) — en egenskap hos REGULATORN.",
+    "Kff kan vara NEGATIVT. Om lasten pressar PV i en riktning måste regulatorns utsignal ändras i motsatt riktning för att hålla PV vid SP — det motsatta tecknet är den vanligaste nybörjarfällan. Det teoretiskt korrekta värdet är Kff = −auxGain / K.",
+    "Framkopplingens styrka: den reagerar OMEDELBART — inget väntande på att ett fel ska byggas upp, ingen fördröjning från integratorn. Framkopplingens svaghet: den är bara så bra som sin egen modell. Är Kff fel kompenserar den fel — för lite, för mycket, eller åt helt fel håll — och INGET i själva framkopplingen rättar till det, eftersom den aldrig tittar på PV.",
+    "Ren framkoppling (utan återkoppling) lämnar därför ALLTID ett kvarstående fel om Kff inte är exakt rätt — felet försvinner aldrig av sig själv, till skillnad från en PID-regulators kvarstående fel (som integratorn med tiden alltid eliminerar, hur fel den än gissar i början).",
+    "Kombinationen PID + framkoppling utnyttjar båda styrkorna: framkopplingen tar den snabba, direkta delen av kompensationen; återkopplingen (PID) städar upp det som blir kvar OM Kff inte var helt perfekt — och gör det garanterat, förr eller senare, precis som PID alltid gör.",
+    "Framkoppling kompenserar bara den MÄTBARA störningen (auxSignal). En omätbar störning (brus/puls, disturbance) syns aldrig för framkopplingen — bara återkopplingen (PID) kan hantera den, precis som innan."
+  ]
+}

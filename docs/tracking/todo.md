@@ -50,6 +50,27 @@ framkoppling" internt realiseras via Kp≈0.1/Ti=Td=0 är en implementationsdeta
 inte lärstigens fokus. Öppen fråga (uttryckligen ingen utredning i detta
 uppdrag): var FEAT-046s blockschema-SVG:er (Framkoppling/PID+Framkoppling)
 bäst kan användas i denna lärstig/övningsdokument som nästa steg.
+**Genomförande (implementation, 2026-09-19):**
+Full implementation på feature-branchen enligt STRAT-005, se
+`docs/reports/FEAT-045_IMPLEMENTATION.md` för alla detaljer. Sammanfattning:
+`sim-core.js` (`Simulation.auxValue`/`triggerAuxSignal()`,
+`ProcessModel.step()`s auxGain-term genom processens tidskonstant,
+`PIDController.step()`s feedforward-parameter före klippning), tre UI-fält
++"Trigga last"-knapp, tredje graflinje (lila prickstreck), ny teorimodul,
+4-stegs lärstig, nytt övningsdokument (`docs/exercises/ovningar-framkoppling.md`,
+4 uppgifter), 21 nya testkontroller (`tests/feat-045-framkoppling.test.mjs`).
+Full regression grön (9 testfiler, 175 kontroller), DEV-/PROD-innehålls- och
+byggvalidering grön, PROD-katalogen OFÖRÄNDRAD (inget release-uppdrag).
+Två simuleringsverifierade avsteg från STRAT-005s arbetshypoteser (se
+rapportens avsnitt 3/5): (1) processen startar vid `normalValue=SP` med en
+NEGATIV last istället för `normalValue=0`+positiv last — STRAT-005s förslag
+gav ett fysiskt omöjligt korrigeringskrav (u<0); (2) mätmetod per lärstigssteg
+(crosshair för steg där PV återgår till samma SP, 2%-band där PV settlar på
+ett nytt värde) istället för enhetligt 2%-band överallt — verktyget kräver
+PV₀≠PV∞ för att rita bandet. Den resulterande pedagogiska poängen (framkoppling
+=snabb men aldrig självkorrigerande vid fel Kff; PID=långsam men garanterat
+självkorrigerande; kombinationen=båda) är simuleringsverifierad och enligt min
+bedömning rikare än utkastets ursprungliga skiss.
 **Genomförande (designspecifikation, STRAT-005):**
 Full designspecifikation: `docs/reports/STRAT-005_DESIGN-FRAMKOPPLING.md`.
 PO:s "permanent"-beslut förenklar designen väsentligt jämfört med STRAT-004s
@@ -71,8 +92,11 @@ riktvärden (K=1.3, auxGain=0.8, teoretiskt korrekt kff=-auxGain/K≈-0.62 —
 notera det NEGATIVA tecknet, en icke-uppenbar poäng) — flaggat som
 arbetshypoteser som måste simuleringsverifieras innan de låses fast, samma
 disciplin som PED-003E/FEAT-042.
-**Status:** Implementation pågår på feature-branchen enligt PO:s bygguppdrag
-(2026-09-19). Ingen merge till `develop` utan PO-granskning. Ingen release.
+**Status:** Implementation klar på feature-branchen, väntar på PO:s visuella
+och pedagogiska granskning (se leveransrapporten). Ingen webbläsare tillgänglig
+i denna miljö — UI:t är smoke-testat (HTTP 200 på alla nya innehållsfiler) men
+INTE visuellt verifierat. Ingen merge till `develop` utan PO-granskning. Ingen
+release.
 
 ---
 
