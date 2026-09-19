@@ -33,14 +33,24 @@ granskning (kan inte förhandsgranskas i denna miljö annars).
 avgör om filerna behålls, justeras eller görs om.
 
 ### FEAT-045 — Framkoppling (Feedforward)
-**Prioritet:** Medel — designspecifikation klar, väntar på bygguppdrag
+**Branch:** `feature/FEAT-045-framkoppling`
+**Prioritet:** Medel — bygguppdrag pågår (PO-uppdrag efter STRAT-005)
 **Beskrivning:**
 Uppdrag från PO efter STRAT-004: designspecifikation för Framkoppling, näst i
 STRAT-001s prioritetsordning efter Parameterstyrning (FEAT-042). PO:s beslut:
 `auxSignal` representerar en BESTÅENDE lastförändring — ligger kvar tills
-systemet återställs eller lasten ändras igen (inte en övergående puls). Ingen
-kod, ingen branch — rent designuppdrag.
-**Genomförande:**
+systemet återställs eller lasten ändras igen (inte en övergående puls).
+PO:s efterföljande bygguppdrag (2026-09-19): full implementation enligt
+STRAT-005 — sim-core, UI, teorimodul, lärstig, övningsdokument, tester,
+simuleringsverifiering. Avgränsat: ingen kvotreglering/kaskadreglering, ingen
+dynamisk profil (ramp/sine), endast EN auxSignal, ingen extra grafpanel,
+ingen generell signalmotor. Pedagogiskt krav: tre tydligt separata strategier
+i lärstigen (Återkoppling/Framkoppling/Återkoppling+Framkoppling) — att "ren
+framkoppling" internt realiseras via Kp≈0.1/Ti=Td=0 är en implementationsdetalj,
+inte lärstigens fokus. Öppen fråga (uttryckligen ingen utredning i detta
+uppdrag): var FEAT-046s blockschema-SVG:er (Framkoppling/PID+Framkoppling)
+bäst kan användas i denna lärstig/övningsdokument som nästa steg.
+**Genomförande (designspecifikation, STRAT-005):**
 Full designspecifikation: `docs/reports/STRAT-005_DESIGN-FRAMKOPPLING.md`.
 PO:s "permanent"-beslut förenklar designen väsentligt jämfört med STRAT-004s
 öppna skiss: `auxSignal` blir alltid ett steg (ramp/sine bortfaller), inget
@@ -61,8 +71,8 @@ riktvärden (K=1.3, auxGain=0.8, teoretiskt korrekt kff=-auxGain/K≈-0.62 —
 notera det NEGATIVA tecknet, en icke-uppenbar poäng) — flaggat som
 arbetshypoteser som måste simuleringsverifieras innan de låses fast, samma
 disciplin som PED-003E/FEAT-042.
-**Status:** Öppen — designspecifikation klar (mergad till `develop`), väntar
-på att PO/PM beslutar om och när ett bygguppdrag ska formuleras.
+**Status:** Implementation pågår på feature-branchen enligt PO:s bygguppdrag
+(2026-09-19). Ingen merge till `develop` utan PO-granskning. Ingen release.
 
 ---
 
