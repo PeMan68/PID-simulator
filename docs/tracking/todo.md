@@ -92,17 +92,22 @@ riktvärden (K=1.3, auxGain=0.8, teoretiskt korrekt kff=-auxGain/K≈-0.62 —
 notera det NEGATIVA tecknet, en icke-uppenbar poäng) — flaggat som
 arbetshypoteser som måste simuleringsverifieras innan de låses fast, samma
 disciplin som PED-003E/FEAT-042.
-**Status:** Efter PO:s användartest + nytt produktbeslut ("varje reglerstrategi
-ska förankras i ett konkret processexempel") krävs en andra implementations-
-omgång innan PO:s slutgranskning. Full genomgång + åtgärdsförslag:
-`docs/reports/FEAT-045_ANVANDARTEST-ATGARDER.md`. Två KONKRETA BUGGAR hittade
-(inte bara pedagogik): (1) lärstigens Mätläge-ordning är i praktiken omöjlig
-att utföra — `.measure-locked` (pointer-events:none) blockerar "Trigga
-last"-knappen; (2) lastens graflinje är osynlig för negativa värden (klipps
-bort av `drawChart()`s panel-clip, eftersom yMin=0). Väntar på PO:s beslut om
-(a) värmeväxlare som rekommenderat processexempel och (b) att ersätta
-graflinjen med en statusradsavläsning, innan nästa omgång påbörjas. Ingen
-merge till `develop` utan PO-granskning. Ingen release.
+**Status:** Andra implementationsomgången klar (2026-09-19), efter PO:s
+beslut: värmeväxlare som processexempel, graflinjen för lasten borttagen.
+Genomfört enligt `docs/reports/FEAT-045_ANVANDARTEST-ATGARDER.md`: (1) de två
+kodbuggarna fixade — Mätläge-ordningen rättad i alla lärstigssteg/
+övningsuppgifter (trigga FÖRST, Mätläge EFTERÅT), och lastens graflinje
+ersatt med en statusradsavläsning (`| Last: −20 (aktiv)`, samma mönster som
+Parameterstyrningens zoninfo) eftersom den klipptes bort/blev osynlig för
+negativa värden; (2) Δt-baserad mätinstruktion (t_last/t_slut/Δt) istället
+för absoluta stegnummer, med 2%-toleransbandet korrekt ankrat (PV₀=avläst
+dippvärde, PV∞=SP) för de steg där PV återgår till SP; (3) crosshair
+avrundad till 1 decimal (global ändring, påverkar alla lärstigar i Mätläge);
+(4) värmeväxlarexemplet vävt in i teorimodul, lärstig, övningsdokument och
+`help.json` (auxGain/kff/auxMag) — generiska fältnamn i UI:t oförändrade,
+bara den förklarande texten uppdaterad. Full regression fortsatt grön
+(175/175), DEV-/PROD-validering grön. Redo för PO:s förnyade granskning.
+Ingen merge till `develop` utan PO-granskning. Ingen release.
 
 ---
 

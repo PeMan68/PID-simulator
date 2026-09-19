@@ -136,13 +136,9 @@ let currentScenarioRef = null; // senast laddade scenariots FIL-referens (t.ex. 
 
 function appendLog(line) { logEl.textContent += line + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 function fitCanvas() { const w = Math.max(680, chartCanvas.clientWidth); if (chartCanvas.width !== w) chartCanvas.width = w; }
-// FEAT-045 — dashed accepterar nu antingen en boolean (befintligt beteende,
-// PV/u=solid, SP=enkel streckning) eller en array (t.ex. ett prick-streck-
-// mönster för lastlinjen), se anropet i drawChart().
 function drawSeries(ctx, points, color, dashed) {
   if (!points.length) return;
-  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
-  ctx.setLineDash(Array.isArray(dashed) ? dashed : (dashed ? [6, 4] : []));
+  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash(dashed ? [6, 4] : []);
   ctx.moveTo(points[0].x, points[0].y);
   for (let i = 1; i < points.length; i += 1) ctx.lineTo(points[i].x, points[i].y);
   ctx.stroke(); ctx.setLineDash([]);
@@ -247,23 +243,20 @@ function drawChart() {
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
   ctx.fillText("PV/SP", pad.left + 6, pad.top + 14);
   ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
-  if (sim.scenario.auxSignal) {
-    ctx.fillStyle = "#8e44ad";
-    ctx.fillText("Last", pad.left + 52, pad.top + 14);
-  }
   ctx.save();
   ctx.beginPath();
   ctx.rect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top);
   ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
-  // FEAT-045 — lastsignalen (auxSignal), tredje linjen i samma övre panel
-  // (STRAT-005 avsnitt 4). Ritas bara när scenariot faktiskt har ett
-  // auxSignal-fält (se syncParamsFromUI()) — annars osynlig, ingen flat
-  // 0-linje på scenarier som inte handlar om framkoppling.
-  if (sim.scenario.auxSignal && sim.history.aux) {
-    drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sim.history.aux[i] ?? 0) })), "#8e44ad", [2, 3, 8, 3]);
-  }
+  // FEAT-045 (användartest, punkt 5) — lastsignalen ritas INTE längre som en
+  // egen graflinje: den delar PV/SP-panelens 0–100-skala, och ett negativt
+  // lastvärde (t.ex. värmeväxlar-exemplets −20) hamnade då UTANFÖR panelens
+  // klippta yta och blev helt osynlig. Lastens nivå visas istället i
+  // statusraden (se updateStatus()) — en siffra är otvetydig oavsett tecken,
+  // till skillnad från en linjeposition på en skala den inte passar i.
+  // Markeringslinjen vid triggning (sim.history.markers, "Last → -20")
+  // fungerar oförändrat och är den huvudsakliga tidsreferensen i grafen.
   ctx.restore();
 
   ctx.save();
@@ -437,7 +430,7 @@ function drawChart() {
         }
         ctx.setLineDash([]);
 
-        const lines = ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(2), "u  = " + uH.toFixed(2)];
+        const lines = ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(1), "u  = " + uH.toFixed(1)];
         ctx.font = "11px Consolas, monospace";
         const lH = 15, pX = 7, pY = 5;
         const ttW = Math.max(...lines.map(s => ctx.measureText(s).width)) + pX * 2;
@@ -567,7 +560,11 @@ function updateStatus() {
   if (processZone !== null) {
     scheduleInfo += "  | K-zon " + (processZone + 1) + " (K=" + fmt1(currentScenario.process.nonlinearGain.zones[processZone]) + ")";
   }
-  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning + scheduleInfo;
+  // FEAT-045 (användartest, punkt 5) — lastens aktuella nivå, som en
+  // otvetydig siffra i statusraden istället för en graflinje (se drawChart()).
+  // Bara synlig när lasten faktiskt är triggad (auxValue skiljer sig från 0).
+  const auxInfo = sim.auxValue ? "  | Last: " + fmt1(sim.auxValue) + " (aktiv)" : "";
+  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning + scheduleInfo + auxInfo;
   updateZoneIndicators();
 }
 function hydrateFields(s) {

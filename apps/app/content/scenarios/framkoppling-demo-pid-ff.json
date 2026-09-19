@@ -1,9 +1,9 @@
 {
   "id": "framkoppling-demo-pid-ff",
   "version": "v1.0.0",
-  "title": "Framkoppling — demo: PID + korrekt Kff",
-  "description": "Samma process/last som de andra framkopplings-demona, nu med full PID återställd OCH Kff satt till (nära) det teoretiskt korrekta värdet (−auxGain/K ≈ −0.6154). Framkoppling tar första smällen nästan omedelbart, PID städar upp eventuell rest. Simuleringsverifierat: maxavvikelse <0.1, insvängd redan vid triggande steg.",
-  "tags": ["pid", "feedforward", "auxsignal"],
+  "title": "Framkoppling — demo: PID + korrekt Kff (värmeväxlare)",
+  "description": "Samma värmeväxlare/last som de andra framkopplings-demona, nu med full PID återställd OCH Kff satt till (nära) det teoretiskt korrekta värdet (−auxGain/K ≈ −0.6154). Framkoppling tar första smällen nästan omedelbart, PID städar upp eventuell rest. Simuleringsverifierat: maxavvikelse <0.1, insvängd redan vid triggande steg.",
+  "tags": ["pid", "feedforward", "varmevaxlare"],
   "process": {
     "type": "self_regulating",
     "K": 1.3,
