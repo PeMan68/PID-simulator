@@ -8,6 +8,40 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-045 — Framkoppling (Feedforward)
+**Prioritet:** Medel — designspecifikation klar, väntar på bygguppdrag
+**Beskrivning:**
+Uppdrag från PO efter STRAT-004: designspecifikation för Framkoppling, näst i
+STRAT-001s prioritetsordning efter Parameterstyrning (FEAT-042). PO:s beslut:
+`auxSignal` representerar en BESTÅENDE lastförändring — ligger kvar tills
+systemet återställs eller lasten ändras igen (inte en övergående puls). Ingen
+kod, ingen branch — rent designuppdrag.
+**Genomförande:**
+Full designspecifikation: `docs/reports/STRAT-005_DESIGN-FRAMKOPPLING.md`.
+PO:s "permanent"-beslut förenklar designen väsentligt jämfört med STRAT-004s
+öppna skiss: `auxSignal` blir alltid ett steg (ramp/sine bortfaller), inget
+`enabled`-fält behövs (bara ett triggat värde), och INGEN bumplös övergång
+krävs för framkopplingstermen (avsiktligt — ett omedelbart hopp i u är
+själva poängen med framkoppling, till skillnad från FEAT-042s zonbyten).
+Nytt scenariofält `auxSignal.magnitude`, `process.auxGain` (lastens egen
+processpåverkan), `controller.kff` (framkopplingsförstärkning, tillåtet
+negativ). Ny knapp "Trigga last" + fält i tre olika, redan existerande
+parametergrupper (Process/Regulator/Störningar) — ingen zontabell/gruppering
+behövs, till skillnad från FEAT-042 (tre fristående fält i tre olika grupper
+är inte samma situation som FEAT-042s samlade zonfält). Lastsignalen ritas
+som en tredje linje i den redan existerande övre grafpanelen. 3-stegs lärstig
+(PID ensam → ren framkoppling med fel Kff → PID+korrekt Kff) och 4
+övningsuppgifter föreslagna, med Mätläge+2%-toleransband inbyggt i
+instruktionerna FRÅN START (FEAT-042-lärdom). Simuleringsexempel med
+riktvärden (K=1.3, auxGain=0.8, teoretiskt korrekt kff=-auxGain/K≈-0.62 —
+notera det NEGATIVA tecknet, en icke-uppenbar poäng) — flaggat som
+arbetshypoteser som måste simuleringsverifieras innan de låses fast, samma
+disciplin som PED-003E/FEAT-042.
+**Status:** Öppen — designspecifikation klar (mergad till `develop`), väntar
+på att PO/PM beslutar om och när ett bygguppdrag ska formuleras.
+
+---
+
 ### FEAT-044 — Gruppera Parameterstyrningens/ventilkarakteristikens zonfält
 **Branch:** `feature/FEAT-044-zone-fields-table`
 **Prioritet:** Låg — kosmetisk UI-förbättring, upptäckt av PO under FEAT-042-testning
