@@ -130,6 +130,27 @@ avrundade till en decimal genomgående (scenariofiler, lärstig, teorimodul,
 övningsdokument, hjälptexter) — `-0.31`/`-0.6154`/`-0.92` → `-0.3`/`-0.6`/
 `-0.9`. Full regression fortsatt grön (175/175), DEV-/PROD-validering grön.
 
+**Tillägg (2026-09-19), auxGain/lastmagnitud justerade för HELT exakta
+Kff-värden (PO:s uppdrag, efter ett resonemangsvarv om alternativ):**
+`process.auxGain` 0.8→0.65 och `auxSignal.magnitude` −20→−40 i alla fyra
+scenariofiler. Vald KOMBINATION, inte auxGain ensamt: 0.65 valdes specifikt
+SKILT från K=1.3 (inte satt lika med K) för att undvika att återskapa
+förväxlingsrisken mellan auxGain/K som PO:s tidigare fråga redan retts ut;
+−40 valdes för större, tydligare marginal mot crosshairens 1-decimalsprecision
+i det (tidigare) näst intill osynliga sista steget. Resultat: `Kff = −auxGain/K
+= −0.5` EXAKT — ingen avrundning kvar någonstans i teorimodul, lärstig,
+övningsdokument eller hjälptexter. Fel-Kff/för-mycket-Kff blir därmed också
+exakta (−0.25/−0.75, halva/1.5× av −0.5). Bieffekt, simuleringsverifierad:
+med exakt Kff blir avvikelsen i lärstigens steg 3 nu LITERALT noll (inte
+bara mycket liten) — PV rör sig inte alls, `Δt`=0 — vilket gjorde
+"hovra och mät den lilla avvikelsen"-instruktionen obsolet; ersatt med
+"observera att kurvan inte rör sig alls". Nya A–F-mätvärden: A≈8.0/B=123
+(steg 1) → C=4.0/D=104 (steg 2, exakt hälften i avvikelse, måttlig
+Δt-förbättring) → E=0/F=0 (steg 3, fullständig). Checkpoints i steg 2/3
+uppdaterade i linje med detta. Uppgift 2:s över-/underkompensation blev
+samtidigt perfekt symmetrisk (±11.5 kring exakt SP). Full regression grön
+(175/175), DEV-/PROD-validering grön.
+
 Ingen merge till `develop` utan PO-granskning. Ingen release.
 
 ---

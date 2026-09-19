@@ -1,8 +1,8 @@
 {
   "id": "framkoppling-demo-pid-fel-kff",
-  "version": "v1.0.0",
+  "version": "v1.1.0",
   "title": "Framkoppling — demo: PID + fel Kff (värmeväxlare)",
-  "description": "Samma värmeväxlare/last som de andra framkopplings-demona, full PID (Kp=1.2, Ti=20 — oförändrat från 'PID ensam') men nu med ett MEDVETET FEL Kff=-0.3 (ungefär halva det teoretiskt korrekta -0.6). Visar att en delvis korrekt framkoppling minskar avvikelsens STORLEK, men inte lika mycket återhämtningstiden — den styrs fortsatt av samma PID-dynamik. Simuleringsverifierat.",
+  "description": "Samma värmeväxlare/last som de andra framkopplings-demona, full PID (Kp=1.2, Ti=20 — oförändrat från 'PID ensam') men nu med ett MEDVETET FEL Kff=-0.25 (exakt halva det teoretiskt korrekta -0.5). Visar att en delvis korrekt framkoppling minskar avvikelsens STORLEK, men inte lika mycket återhämtningstiden — den styrs fortsatt av samma PID-dynamik. Simuleringsverifierat.",
   "tags": ["pid", "feedforward", "varmevaxlare"],
   "process": {
     "type": "self_regulating",
@@ -11,18 +11,18 @@
     "L": 0.0,
     "normalValue": 50.0,
     "measurementRange": { "min": 0.0, "max": 100.0 },
-    "auxGain": 0.8
+    "auxGain": 0.65
   },
   "controller": {
     "mode": "pid",
     "kp": 1.2,
     "ti": 20.0,
     "td": 0.0,
-    "kff": -0.3,
+    "kff": -0.25,
     "antiWindup": true,
     "outputLimits": { "min": 0.0, "max": 100.0 }
   },
   "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
-  "auxSignal": { "magnitude": -20.0 },
+  "auxSignal": { "magnitude": -40.0 },
   "runtime": { "dt": 1.0, "maxSteps": 250, "setpoint": 50.0, "autopause": false }
 }
