@@ -36,7 +36,7 @@
       "comparisonGroup": "ventilkarakteristik-problem",
       "title": "Visa problemet — stark zon",
       "objective": "Jämföra med föregående steg: SAMMA Kp, men en driftpunkt där processens K är mycket starkare.",
-      "instruction": "Ändra SP till 90 (Kp=1.2 oförändrat). Klicka 'Återställ system' och kör minst 60 steg tills PV ser stabil ut.\n\nMät insvängningstiden på samma sätt som i steg 2: Mätläge, PV₀=0, PV∞=90, 2%-toleransband.\n\nAnteckna: SP=90, Kp=1.2, insvängningstid. Kalla insvängningstiden B.\n\nJämför A (steg 2) och B (det här steget) — vilket är störst? Titta gärna på den färgade ramen kring K-fältet i Process-gruppen (grönteal när Zon 2/3 är aktiv), som visar vilken K-zon u befinner sig i just nu.",
+      "instruction": "Ändra SP till 90 (Kp=1.2 oförändrat). Klicka 'Återställ system' och kör minst 60 steg tills PV ser stabil ut.\n\nMät insvängningstiden på samma sätt som i steg 2: Mätläge, PV₀=0, PV∞=90, 2%-toleransband.\n\nAnteckna: SP=90, Kp=1.2, insvängningstid. Kalla insvängningstiden B.\n\nJämför A (steg 2) och B (det här steget) — vilket är störst? Titta gärna på den färgade ramen kring K-fältet i Process-gruppen (grön när Zon 2/3 är aktiv), som visar vilken K-zon u befinner sig i just nu.",
       "checkpoint": {
         "question": "Med exakt samma Kp=1.2 blev B (steg 3, SP=90) betydligt mindre än A (steg 2, SP=10) — alltså snabbare insvängning. Varför?",
         "options": [

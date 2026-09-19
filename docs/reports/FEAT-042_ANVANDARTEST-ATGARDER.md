@@ -69,7 +69,7 @@ som förutsätter perfekt timing (se avsnitt 4).
 |---|---|
 | 1 | Namnge varje uppmätt värde (A–F) i instruktionstexten; ta bort onödiga mätningar; varje jämförelse refererar explicit vilka bokstäver/steg som jämförs. |
 | 2 | **PO:s föredragna lösning genomförd:** två nya, dedikerade scenariofiler (en med Kp=3 som eget standardvärde, en med Parameterstyrning redan aktiverad) — lärstigen aktiverar rätt inställning genom att bara LADDA rätt fil, ingen manuell åtgärd eller ihågkommen inställning krävs. |
-| 3 | Ny badge ("Aktiv: Zon N") bredvid respektive kryssruta + färgad ram runt den aktiva zonens egna fält — samma färgkodning som brytpunktslinjerna i grafen (orange=regulator, grönteal=process). |
+| 3 | Ny badge ("Aktiv: Zon N") bredvid respektive kryssruta + färgad ram runt den aktiva zonens egna fält — samma färgkodning som brytpunktslinjerna i grafen (orange=regulator, grön=process). |
 | 4 | Instruktionstext i steg 7 uppmanar till "Stega 1" för den som vill se badgen ändras live, men är ärlig om att bytena sker snabbt — och pekar på markeringslinjen (punkt 5) som den pålitliga metoden. |
 | 5 | Zonbyten (båda scheman, oberoende av varandra) markeras automatiskt med samma streckade linje som redan används för parameterändringar/puls — fungerar identiskt oavsett om man Stegar eller Kör 10 (se teknisk lösning nedan). |
 

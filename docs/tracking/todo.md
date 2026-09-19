@@ -68,11 +68,18 @@ bara tiden; (6) en mening tillagd i steg 2 om varför Zon 2/3 delar K-värde.
 Fullständig regression (15 testsviter) grön. `docs/exercises/ovningar-
 parameterstyrning.md` flaggat (inte åtgärdat, låg utanför uppdraget) som
 sannolikt drabbat av samma mätmetodsproblem.
-**Status:** Implementerad på feature-branchen, EJ mergad till `develop` (enligt
-uppdragets explicita instruktion). Ingen webbläsartest genomförd (ingen
-webbläsare tillgänglig i denna miljö) — PO bör slutligt verifiera visuellt
-(fälthighlight utan badge, Mätläge+2%-band-avläsning, steg 7:s zontexter) innan
-mergebeslut.
+**Produktionsaktivering:** PO godkände efter granskning. Lärstigen tillagd sist i
+`catalog.prod.json` (`v1.5.5-prod`), efter `storningar-robusthet.v1` — samma
+mönster som `PROD-enable-windup-antiwindup`. Dess tre scenarioberoenden
+(`valve-nonlinear-gain-demo`, `-kp3`, `-scheduled`) och teorimodulen tillagda i
+PROD-katalogen; de två hjälpscenarierna (`-kp3`/`-scheduled`) satta
+`standalone: false` (rena lärstigsstöd, inte meningsfulla fristående — samma
+princip som `pi-deadtime-comparison`). `tests/validate-prod.mjs`s
+`EXPECTED_LEARNING_PATHS`-facit uppdaterat. `node tests/build-preview.mjs prod`
++ `validate-prod.mjs` gröna: 8 lärstigar i rätt ordning, 17 scenarier (14
+fristående), inga läckor.
+**Status:** Mergad till `develop`. `main` oförändrat tills vidare — väntar på
+nästa ordinarie release för att nå produktion.
 
 ---
 
