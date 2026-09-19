@@ -8,6 +8,32 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-044 — Gruppera Parameterstyrningens/ventilkarakteristikens zonfält
+**Branch:** `feature/FEAT-044-zone-fields-table`
+**Prioritet:** Låg — kosmetisk UI-förbättring, upptäckt av PO under FEAT-042-testning
+**Beskrivning:**
+PO:s observation (skärmdump): FEAT-042s 11 regulatorschema-fält (2 brytpunkter + 3×3
+Kp/Ti/Td) och 5 processchema-fält låg utspridda som enskilda `.field`-rutor i
+parametergridet — upplevdes rörigt, svårt att se vilket fält som hör till vilken zon.
+Uppdrag: gruppera visuellt utan att öka vertikalt skärmutrymme nämnvärt.
+**Genomförande:**
+Zonfälten (Kp/Ti/Td × 3 zoner för Parameterstyrning, K × 3 zoner för
+ventilkarakteristik) omstrukturerade från utspridda `.field`-rutor till en kompakt
+tabell (`.zone-table`, en rad per zon, kolumner för respektive parameter) — samma
+antal rader som tidigare grid-rader gav, men nu tydligt grupperat. Brytpunktsfälten
+ligger kvar oförändrade utanför tabellen. Aktiv-zon-highlighten (FEAT-042, punkt 3)
+flyttad från per-fält-ram till helmarkerad tabellrad (`GS_ZONE_ROWS`/`NG_ZONE_ROWS` i
+`app.js`, ersätter de gamla `GS_ZONE_FIELD_GROUPS`/`NG_ZONE_FIELD_GROUPS`) — samma
+färgkodning (orange/grön) som tidigare. Ingen ändring i `sim-core.js`, inga nya
+fält-ID:n, inga ändrade `fields{}`-referenser i `syncParamsFromUI()`/`hydrateFields()`
+— rent HTML-/CSS-/highlight-omstrukturering.
+Fullständig regression grön, DEV-/PROD-byggnation kontrollerad.
+**Status:** Implementerad på feature-branchen. Ingen webbläsartest genomförd (ingen
+webbläsare tillgänglig i denna miljö) — PO bör visuellt verifiera layouten innan
+mergebeslut.
+
+---
+
 ### FEAT-040 — Filtrering av mätsignal (dämpning av brus) — long term förbättring
 **Prioritet:** Låg — PO:s explicita beslut: långsiktig backlog, inte närmast i kö.
 **Bakgrund:**
