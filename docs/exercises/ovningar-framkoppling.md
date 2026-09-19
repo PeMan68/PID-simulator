@@ -1,11 +1,11 @@
 # Övningsuppgifter: Framkoppling (Feedforward)
-*Dokumentversion 1.1. Kräver PID Simulator med stöd för Framkoppling (FEAT-045).*
+*Dokumentversion 1.2. Kräver PID Simulator med stöd för Framkoppling (FEAT-045).*
 
 > **⚠️ Viktigt**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
 ## Inledning
 
-Simulatorns lärstig "Framkoppling (Feedforward)" visar konceptet steg för steg med tre färdigbyggda demo-scenarier, alla baserade på samma processexempel: **en värmeväxlare** vars utgående temperatur (PV) hålls vid ett börvärde (SP) genom att styra en ångventil (u). En flödesgivare uppströms kan upptäcka en förändring i det inkommande flödet — INNAN den hunnit påverka utgående temperatur — och den mätningen är det som gör framkoppling möjlig.
+Simulatorns lärstig "Framkoppling (Feedforward)" visar konceptet steg för steg med tre färdigbyggda demo-scenarier, alla baserade på samma processexempel: **en värmeväxlare** vars utgående temperatur (PV) hålls vid ett börvärde (SP) genom att styra en ångventil (u). En temperaturgivare uppströms kan upptäcka en förändring i den inkommande temperaturen — INNAN den hunnit påverka utgående temperatur — och den mätningen är det som gör framkoppling möjlig.
 
 Det här dokumentet är fristående lösblad — samma mönster som `ovningar-parameterstyrning.md` — där du själv ställer in Kff och lasten enligt instruktionerna och antecknar vad du observerar.
 
@@ -15,7 +15,7 @@ Det här dokumentet är fristående lösblad — samma mönster som `ovningar-pa
 
 ## Termer och definitioner
 
-- **Last** — i det här dokumentet: en mätbar förändring i värmeväxlarens inkommande flöde (temperatur eller mängd), uppmätt av en flödesgivare uppströms. Triggas med knappen "Trigga last" (Störningar-gruppen) och ligger sedan kvar BESTÅENDE tills systemet återställs eller en ny last triggas — till skillnad från Puls, som återgår till 0 av sig själv.
+- **Last** — i det här dokumentet: en mätbar förändring i värmeväxlarens inkommande temperatur, uppmätt av en temperaturgivare uppströms. Anges på simulatorns gemensamma 0–100-skala, precis som PV/SP — inte i grader eller en annan fysisk enhet; en riktig givares egen kalibrering till den skalan ligger utanför vad simulatorn modellerar. Triggas med knappen "Trigga last" (Störningar-gruppen) och ligger sedan kvar BESTÅENDE tills systemet återställs eller en ny last triggas — till skillnad från Puls, som återgår till 0 av sig själv.
 - **Lastförstärkning** — hur starkt den triggade lasten fysiskt påverkar utgående temperatur. Processens egen egenskap, i Process-gruppen.
 - **Kff (framkopplingsförstärkning)** — regulatorns kompensation för lasten (hur mycket ångventilen förjusteras), adderad direkt till utsignalen. I Regulator-gruppen. Kan vara negativt.
 - **Teoretiskt korrekt Kff** — det värde som exakt kompensationerar lastens effekt: `Kff = −auxGain / K`.
@@ -113,7 +113,7 @@ Det här dokumentet är fristående lösblad — samma mönster som `ovningar-pa
 
 ## Uppgift 4: Framkoppling mot mätbar + omätbar störning samtidigt
 
-**Syfte:** Se att framkoppling bara kompenserar den störning den faktiskt MÄTER (flödesgivarens avläsning) — en annan, omätbar störning (t.ex. brus i temperaturmätningen) måste fortfarande hanteras av återkopplingen precis som vanligt.
+**Syfte:** Se att framkoppling bara kompenserar den störning den faktiskt MÄTER (temperaturgivarens avläsning) — en annan, omätbar störning (t.ex. brus i temperaturmätningen) måste fortfarande hanteras av återkopplingen precis som vanligt.
 
 **Process:** Ladda scenariot **"Framkoppling — demo: PID + korrekt Kff (värmeväxlare)"** (Kp=1.2, Ti=20, Kff=−0.6154 — redan korrekt inställt).
 

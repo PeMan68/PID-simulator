@@ -2,7 +2,7 @@
   "id": "framkoppling-demo-ren-ff",
   "version": "v1.0.0",
   "title": "Framkoppling — demo: ren framkoppling, fel Kff (värmeväxlare)",
-  "description": "Samma värmeväxlare/last som 'PID ensam'-demot, men regulatorn kör praktiskt taget utan återkoppling (Kp på UI-minimum, Ti=Td=0) och kompenserar flödesgivarens uppmätta störning enbart via ett MEDVETET FEL Kff (halva det teoretiskt korrekta värdet). Visar att framkoppling reagerar direkt men aldrig blir bättre än sin egen modell om ingen återkoppling städar upp resten. Simuleringsverifierat.",
+  "description": "Samma värmeväxlare/last som 'PID ensam'-demot, men regulatorn kör praktiskt taget utan återkoppling (Kp på UI-minimum, Ti=Td=0) och kompenserar temperaturgivarens uppmätta störning enbart via ett MEDVETET FEL Kff (halva det teoretiskt korrekta värdet). Visar att framkoppling reagerar direkt men aldrig blir bättre än sin egen modell om ingen återkoppling städar upp resten. Simuleringsverifierat.",
   "tags": ["feedforward", "varmevaxlare", "pure-feedforward"],
   "process": {
     "type": "self_regulating",

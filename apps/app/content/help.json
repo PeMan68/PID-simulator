@@ -129,7 +129,7 @@
   },
   "auxGain": {
     "title": "Lastförstärkning — auxGain",
-    "body": "Hur starkt en triggad last (se 'Last mag'/'Trigga last' i Störningar-gruppen) påverkar processen — processens EGEN egenskap, precis som K.\n\nExempel: i en värmeväxlare motsvarar det hur mycket en förändring i det inkommande flödet faktiskt slår igenom på den utgående temperaturen.\n\nTill skillnad från Puls/Brus (som adderas direkt till PV, odämpat) går lasten genom SAMMA tröghet/tidskonstant (T) som huvudprocessen — en triggad last ger alltså en mjuk, T-fördröjd förändring av PV, inte ett hopp.\n\nauxGain=0 → lasten har ingen effekt alls, oavsett triggat värde."
+    "body": "Hur starkt en triggad last (se 'Last mag'/'Trigga last' i Störningar-gruppen) påverkar processen — processens EGEN egenskap, precis som K.\n\nExempel: i en värmeväxlare motsvarar det hur mycket en förändring i den inkommande temperaturen faktiskt slår igenom på den utgående temperaturen.\n\nTill skillnad från Puls/Brus (som adderas direkt till PV, odämpat) går lasten genom SAMMA tröghet/tidskonstant (T) som huvudprocessen — en triggad last ger alltså en mjuk, T-fördröjd förändring av PV, inte ett hopp.\n\nauxGain=0 → lasten har ingen effekt alls, oavsett triggat värde."
   },
   "kff": {
     "title": "Kff — Framkopplingsförstärkning",
@@ -137,6 +137,6 @@
   },
   "auxMag": {
     "title": "Last mag — Mätbar laststörning",
-    "body": "Det värde lasten antar när den triggas med knappen 'Trigga last'.\n\nExempel: i en värmeväxlare motsvarar det en plötslig förändring i det inkommande flödets temperatur eller mängd, uppmätt av en givare uppströms — innan den hunnit påverka den utgående temperaturen (PV).\n\nTill skillnad från Puls (som återgår till 0 av sig själv) ligger lasten kvar BESTÅENDE tills du klickar 'Återställ system', eller triggar ett nytt lastvärde (t.ex. 0, för att ta bort lasten igen).\n\nKombinera med 'Lastförstärkning' (hur mycket lasten fysiskt påverkar processen) och 'Kff' (hur mycket regulatorn kompenserar för den i förväg)."
+    "body": "Det värde lasten antar när den triggas med knappen 'Trigga last'.\n\nExempel: i en värmeväxlare motsvarar det en plötslig förändring i den inkommande temperaturen, uppmätt av en temperaturgivare uppströms — innan den hunnit påverka den utgående temperaturen (PV).\n\nAnges på samma 0–100-skala som PV/SP/u, inte i grader eller en annan fysisk enhet — en riktig temperaturgivares egen kalibrering till den skalan ligger utanför vad simulatorn modellerar, precis som för PV.\n\nTill skillnad från Puls (som återgår till 0 av sig själv) ligger lasten kvar BESTÅENDE tills du klickar 'Återställ system', eller triggar ett nytt lastvärde (t.ex. 0, för att ta bort lasten igen).\n\nKombinera med 'Lastförstärkning' (hur mycket lasten fysiskt påverkar processen) och 'Kff' (hur mycket regulatorn kompenserar för den i förväg)."
   }
 }

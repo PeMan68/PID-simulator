@@ -2,7 +2,7 @@
   "id": "framkoppling-demo-pid",
   "version": "v1.0.0",
   "title": "Framkoppling — demo: PID ensam (värmeväxlare)",
-  "description": "En värmeväxlares utgående temperatur (PV), i stabilt läge vid SP. En plötslig temperaturminskning i det inkommande flödet kan triggas som en mätbar last — här utan framkoppling (Kff=0), regulatorn måste reagera reaktivt via återkoppling. Simuleringsverifierat (se docs/reports/FEAT-045-leveransrapporten).",
+  "description": "En värmeväxlares utgående temperatur (PV), i stabilt läge vid SP. En plötslig minskning i den inkommande temperaturen kan triggas som en mätbar last (uppmätt av en temperaturgivare uppströms) — här utan framkoppling (Kff=0), regulatorn måste reagera reaktivt via återkoppling. Simuleringsverifierat (se docs/reports/FEAT-045-leveransrapporten).",
   "tags": ["pid", "feedforward", "varmevaxlare"],
   "process": {
     "type": "self_regulating",
