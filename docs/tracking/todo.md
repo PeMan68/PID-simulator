@@ -8,6 +8,30 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-046 — Blockschema-SVG:er för reglerstrategier
+**Branch:** `feature/FEAT-046-blockschema-svg`
+**Prioritet:** Låg — sidospår/experiment, PO:s explicita "prova"-uppdrag
+**Beskrivning:**
+PO:s uppdrag: skapa återanvändbara SVG-blockschema för de reglerstrategier som
+redan är dokumenterade/planerade (Återkoppling/PID, Framkoppling, PID+Framkoppling,
+Kvotreglering, Kaskadreglering) — som fristående filer, inte inbyggda i appens
+rendering (det skulle vara en separat, större ändring av teori-/lärstigsschemat).
+PO relayerade en extern skiss/rekommendation (ASCII-diagram + två stilalternativ)
+och bad mig ta ställning och bygga vidare.
+**Genomförande:**
+5 fristående SVG-filer i `docs/assets/diagrams/`, konsekvent design (samma
+block-/färgkodning genomgående): PID-regulator=orange, Framkoppling/Kvotblock=
+grönteal (samma "beräkningsblock"-familj), Process/Ventil=mörkblågrå,
+mätbar störning=lila, omätbar störning=grå streckad, Givare=teal cirkel.
+Valde "Alternativ 2" (kursdiagram — SP/PV/u, mätbar/omätbar störning, givare,
+signalnamn) framför en minimalistisk variant, enligt den relayerade
+rekommendationen: samma SVG:er återanvändbara i lärstigar, övningsdokument och
+framtida presentationer, vilket sänker kostnaden för Kvotreglering/Kaskadreglering
+när de byggs (STRAT-001/004/005-kedjan). Publicerad som Artifact för visuell
+granskning (kan inte förhandsgranskas i denna miljö annars).
+**Status:** Öppen/experimentell — se leveransrapport, PO:s visuella godkännande
+avgör om filerna behålls, justeras eller görs om.
+
 ### FEAT-045 — Framkoppling (Feedforward)
 **Prioritet:** Medel — designspecifikation klar, väntar på bygguppdrag
 **Beskrivning:**
