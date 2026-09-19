@@ -107,6 +107,29 @@ avrundad till 1 decimal (global ändring, påverkar alla lärstigar i Mätläge)
 `help.json` (auxGain/kff/auxMag) — generiska fältnamn i UI:t oförändrade,
 bara den förklarande texten uppdaterad. Full regression fortsatt grön
 (175/175), DEV-/PROD-validering grön. Redo för PO:s förnyade granskning.
+
+**Tillägg (2026-09-19), PO:s justering av lärstigens progression:** bytt
+ut den gamla 3-stegsstrukturen (PID ensam → REN framkoppling/P-only med fel
+Kff, permanent fel → PID+korrekt Kff) mot en renare trimningsberättelse enligt
+PO:s uppdrag: PID ensam → PID+FEL Kff (≈−0.3) → PID+KORREKT Kff (≈−0.6), där
+alla tre steg kör FULL PID (Kp=1.2, Ti=20) — bara Kff ändras. Ny dedikerad
+scenariofil `framkoppling-demo-pid-fel-kff.json`. Simuleringsverifierat med
+en delad, återanvänd 2%-toleransram (satt i steg 1, medvetet oförändrad i
+steg 2/3 för rättvis jämförelse): avvikelse krymper monotont (≈4.9 → ≈2.5 →
+≈0.1), men insvängningstiden gör bara ett MÅTTLIGT hopp i steg 2 (123→105
+steg — samma PID-dynamik jagar en mindre avvikelse) och ett STORT hopp först
+i steg 3 (105→25 steg — knappt något kvar att jaga). Denna nyans (storlek
+och hastighet förbättras INTE proportionerligt) är en starkare, mer
+verifierad pedagogisk poäng än den tidigare "monotont bättre"-berättelsen,
+och checkpoints i steg 2/3 är skrivna kring den. Den gamla "ren
+framkoppling ger permanent fel"-demonstrationen är INTE borttagen — den
+lever kvar oförändrad i `docs/exercises/ovningar-framkoppling.md` (Uppgift
+2/3, som behöver Ti=0 för att en "stabilt PV-värde per Kff"-jämförelse ska
+vara meningsfull) men ingår inte längre i huvudlärstigen. Kff-värden
+avrundade till en decimal genomgående (scenariofiler, lärstig, teorimodul,
+övningsdokument, hjälptexter) — `-0.31`/`-0.6154`/`-0.92` → `-0.3`/`-0.6`/
+`-0.9`. Full regression fortsatt grön (175/175), DEV-/PROD-validering grön.
+
 Ingen merge till `develop` utan PO-granskning. Ingen release.
 
 ---

@@ -1,5 +1,5 @@
 # Övningsuppgifter: Framkoppling (Feedforward)
-*Dokumentversion 1.3. Kräver PID Simulator med stöd för Framkoppling (FEAT-045).*
+*Dokumentversion 1.4. Kräver PID Simulator med stöd för Framkoppling (FEAT-045).*
 
 > **⚠️ Viktigt**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
@@ -46,16 +46,16 @@ Det här dokumentet är fristående lösblad — samma mönster som `ovningar-pa
 4. Skriv in det avlästa värdet som PV₀ och SP=50 som PV∞, kryssa i "2%-toleransband". Hovra tills kurvan går in i och stannar kvar i bandet — läs av t-värdet där, det är `t_slut`. Räkna ut `Δt = t_slut − t_last`.
 
 ### Test B — PID + korrekt Kff
-1. Ladda scenariot **"Framkoppling — demo: PID + korrekt Kff (värmeväxlare)"**. Kontrollera Kp=1.2, Ti=20 (oförändrat), Kff=−0.6154.
+1. Ladda scenariot **"Framkoppling — demo: PID + korrekt Kff (värmeväxlare)"**. Kontrollera Kp=1.2, Ti=20 (oförändrat), Kff=−0.6 (avrundat, nära det teoretiskt korrekta värdet).
 2. Klicka "Trigga last" — notera nytt `t_last`. Kör samma antal steg.
-3. Aktivera Mätläge och notera samma mått som i Test A (avvikelsen är här mycket liten — `Δt` blir i praktiken ≈0).
+3. Aktivera Mätläge och notera samma mått som i Test A (avvikelsen är här mycket liten, men inte noll).
 
 **Mätprotokoll Uppgift 1:**
 
 | Test | Kff | Störst avvikelse från SP | Δt (insvängningstid efter last) |
 |---|---|---|---|
 | A (PID ensam) | 0 | | |
-| B (PID + Kff) | −0.6154 | | |
+| B (PID + Kff) | −0.6 | | |
 
 **Reflektion 1:**
 - Samma Kp, Ti, T, L, last — bara Kff skiljer. Hur stor är skillnaden i störst avvikelse mellan A och B?
@@ -67,19 +67,19 @@ Det här dokumentet är fristående lösblad — samma mönster som `ovningar-pa
 
 **Syfte:** Se att framkoppling kan överkompensera lika lätt som underkompensera — en "för aggressiv" framkoppling är inte bättre, bara fel åt andra hållet.
 
-**Process:** Samma värmeväxlare som Uppgift 1. Ladda scenariot **"Framkoppling — demo: ren framkoppling, fel Kff (värmeväxlare)"** (Kp=0.1, Ti=0, Td=0 — praktiskt taget ingen återkoppling, precis som lärstigens steg 2). Det teoretiskt korrekta Kff för den här processen är −0.6154 (−auxGain/K = −0.8/1.3).
+**Process:** Samma värmeväxlare som Uppgift 1. Ladda scenariot **"Framkoppling — demo: ren framkoppling, fel Kff (värmeväxlare)"** (Kp=0.1, Ti=0, Td=0 — praktiskt taget ingen återkoppling. Skiljer sig medvetet från lärstigens steg 2/3, som båda kör full PID — här utforskar du istället VARFÖR ren framkoppling, utan någon återkoppling som backup, kräver extra precision i Kff). Det teoretiskt korrekta Kff för den här processen är ≈ −0.6 (−auxGain/K = −0.8/1.3 ≈ −0.6154, avrundat).
 
-1. Sätt Kff=−0.31 (ungefär halva det korrekta värdet — scenariots startvärde). Klicka "Återställ system", klicka "Trigga last", kör minst 150 steg. Aktivera Mätläge och läs av det NYA, stabila PV-värdet kurvan lägger sig på (inte SP=50).
-2. Ändra Kff till −0.6154 (det korrekta värdet). Klicka "Återställ system", trigga last igen, kör lika många steg, läs av på samma sätt. (Här återgår PV till SP — vill du använda 2%-toleransbandet, sätt PV₀=det avlästa dippvärdet och PV∞=50, inte PV₀=50/PV∞=50, annars blir bandet noll brett och osynligt.)
-3. Ändra Kff till −0.92 (ungefär 1.5× det korrekta värdet — "för mycket" kompensation). Upprepa.
+1. Sätt Kff=−0.3 (ungefär halva det korrekta värdet — scenariots startvärde). Klicka "Återställ system", klicka "Trigga last", kör minst 150 steg. Aktivera Mätläge och läs av det NYA, stabila PV-värdet kurvan lägger sig på (inte SP=50).
+2. Ändra Kff till −0.6 (det (avrundade) korrekta värdet). Klicka "Återställ system", trigga last igen, kör lika många steg, läs av på samma sätt. (Här återgår PV nästan till SP, men inte exakt — vill du använda 2%-toleransbandet, sätt PV₀=det avlästa dippvärdet och PV∞=50, inte PV₀=50/PV∞=50, annars blir bandet noll brett och osynligt.)
+3. Ändra Kff till −0.9 (ungefär 1.5× det korrekta värdet — "för mycket" kompensation). Upprepa.
 
 **Mätprotokoll Uppgift 2:**
 
 | Kff | Stabilt PV-värde efter triggning | Avvikelse från SP (50 − PV), med tecken |
 |---|---|---|
-| −0.31 (för lågt) | | |
-| −0.6154 (korrekt) | | |
-| −0.92 (för högt) | | |
+| −0.3 (för lågt) | | |
+| −0.6 (korrekt) | | |
+| −0.9 (för högt) | | |
 
 **Reflektion 2:**
 - Vilket håll (över eller under SP) hamnar PV på vid för LÅGT Kff (dvs för svag kompensation)? Och vid för HÖGT Kff?
@@ -115,7 +115,7 @@ Det här dokumentet är fristående lösblad — samma mönster som `ovningar-pa
 
 **Syfte:** Se att framkoppling bara kompenserar den störning den faktiskt MÄTER (temperaturgivarens avläsning) — en annan, omätbar störning (t.ex. brus i temperaturmätningen) måste fortfarande hanteras av återkopplingen precis som vanligt.
 
-**Process:** Ladda scenariot **"Framkoppling — demo: PID + korrekt Kff (värmeväxlare)"** (Kp=1.2, Ti=20, Kff=−0.6154 — redan korrekt inställt).
+**Process:** Ladda scenariot **"Framkoppling — demo: PID + korrekt Kff (värmeväxlare)"** (Kp=1.2, Ti=20, Kff=−0.6 — redan (nära) korrekt inställt).
 
 ### Del A — bara den mätbara lasten (referens)
 1. Klicka "Trigga last". Kör 60 steg. Notera (t.ex. i statusraden eller via Mätläge efteråt) att PV knappt rör sig — du har redan sett detta i Uppgift 1/lärstigens steg 3.

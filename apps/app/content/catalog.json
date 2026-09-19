@@ -29,9 +29,10 @@
     { "id": "valve-nonlinear-gain-demo",   "file": "scenarios/valve-nonlinear-gain-demo.json" },
     { "id": "valve-nonlinear-gain-demo-kp3",       "file": "scenarios/valve-nonlinear-gain-demo-kp3.json" },
     { "id": "valve-nonlinear-gain-demo-scheduled", "file": "scenarios/valve-nonlinear-gain-demo-scheduled.json" },
-    { "id": "framkoppling-demo-pid",       "file": "scenarios/framkoppling-demo-pid.json" },
-    { "id": "framkoppling-demo-ren-ff",    "file": "scenarios/framkoppling-demo-ren-ff.json" },
-    { "id": "framkoppling-demo-pid-ff",    "file": "scenarios/framkoppling-demo-pid-ff.json" }
+    { "id": "framkoppling-demo-pid",         "file": "scenarios/framkoppling-demo-pid.json" },
+    { "id": "framkoppling-demo-ren-ff",      "file": "scenarios/framkoppling-demo-ren-ff.json" },
+    { "id": "framkoppling-demo-pid-fel-kff", "file": "scenarios/framkoppling-demo-pid-fel-kff.json" },
+    { "id": "framkoppling-demo-pid-ff",      "file": "scenarios/framkoppling-demo-pid-ff.json" }
   ],
   "theory": [
     { "id": "pid-intro",      "file": "theory/pid-intro.v1.json" },

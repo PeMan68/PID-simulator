@@ -1,8 +1,8 @@
 {
   "id": "framkoppling.v1",
-  "version": "v1.1.1",
+  "version": "v1.2.0",
   "title": "Framkoppling (Feedforward)",
-  "description": "En värmeväxlares utgående temperatur, med en mätbar förändring i den inkommande temperaturen. Se skillnaden mellan ren återkoppling, ren (men ofullständig) framkoppling, och kombinationen av båda.",
+  "description": "En värmeväxlares utgående temperatur, med en mätbar förändring i den inkommande temperaturen. Se hur en trimning från ingen framkoppling, via en ungefärlig framkoppling, till en korrekt framkoppling gradvis förbättrar regleringen.",
   "difficulty": "intermediate",
   "steps": [
     {
@@ -26,46 +26,46 @@
       "type": "scenario",
       "ref": "framkoppling-demo-pid.json",
       "comparisonGroup": "framkoppling-jamforelse",
-      "title": "Återkoppling ensam — reaktiv reglering",
-      "objective": "Se hur en vanlig PID-regulator (ingen framkoppling) hanterar en mätbar last helt reaktivt.",
-      "instruction": "Scenariot modellerar en värmeväxlare: PV är utgående temperatur, u är ångventilens öppning, SP=50 är börvärdet. Kff=0 i det här steget — ingen framkoppling, regulatorn ser bara PV precis som hittills i simulatorn. Kontrollera i Störningar-gruppen att 'Last mag' visar −20 — en plötslig temperaturminskning i det inkommande flödet, uppmätt av en temperaturgivare uppströms.\n\nKlicka 'Trigga last' i Störningar-gruppen — en markeringslinje ('Last → -20') dyker upp i grafen. Notera dess t-värde: det är t_last.\n\nKör minst 200 steg efter triggningen (klicka 'Kör 10 steg' upprepade gånger).\n\nAktivera Mätläge (knappen 'Mät K/T/L'). Hovra över grafens lägsta punkt (dippen) och läs av PV — det är den STÖRSTA avvikelsen från SP. Kalla avvikelsen (50 minus det avlästa värdet) A.\n\nSkriv in det avlästa värdet som PV₀ och SP=50 som PV∞ i mätpanelen, kryssa i '2%-toleransband (insvängning)'. Hovra längs kurvan tills den går in i och stannar kvar i det streckade bandet — läs av t-värdet där. Det är t_slut.\n\nRäkna ut Δt = t_slut − t_last (inte t_slut i sig — det är tiden FRÅN triggningen som är intressant). Kalla Δt för B.\n\nAnteckna: A (störst avvikelse) och B (Δt, insvängningstid efter lasten)."
+      "title": "PID ensam — reaktiv reglering",
+      "objective": "Se hur en vanlig PID-regulator (ingen framkoppling) hanterar en mätbar last helt reaktivt, och etablera ett gemensamt mätprotokoll för de kommande stegen.",
+      "instruction": "Scenariot modellerar en värmeväxlare: PV är utgående temperatur, u är ångventilens öppning, SP=50 är börvärdet. Kff=0 i det här steget — ingen framkoppling, regulatorn ser bara PV precis som hittills i simulatorn. Kontrollera i Störningar-gruppen att 'Last mag' visar −20 — en plötslig temperaturminskning i det inkommande flödet, uppmätt av en temperaturgivare uppströms.\n\nKlicka 'Trigga last' i Störningar-gruppen — en markeringslinje ('Last → -20') dyker upp i grafen. Notera dess t-värde: det är t_last.\n\nKör minst 200 steg efter triggningen (klicka 'Kör 10 steg' upprepade gånger).\n\nAktivera Mätläge (knappen 'Mät K/T/L'). Hovra över grafens lägsta punkt (dippen) och läs av PV, avrundat till en decimal — det är den STÖRSTA avvikelsen från SP. Kalla avvikelsen (50 minus det avlästa värdet) A.\n\nSkriv in det avlästa värdet som PV₀ och SP=50 som PV∞ i mätpanelen, kryssa i '2%-toleransband (insvängning)'. Hovra längs kurvan tills den går in i och stannar kvar i det streckade bandet — läs av t-värdet där. Det är t_slut.\n\nRäkna ut Δt = t_slut − t_last (inte t_slut i sig — det är tiden FRÅN triggningen som är intressant). Kalla Δt för B.\n\nVIKTIGT: ändra INTE PV₀/PV∞ när du går vidare till nästa steg — samma toleransband (satt HÄR) återanvänds i steg 2 och 3, så att Δt-värdena blir rättvist jämförbara med varandra. Fälten behåller sina värden automatiskt mellan scenarier.\n\nAnteckna: A (störst avvikelse) och B (Δt, insvängningstid efter lasten)."
     },
     {
       "type": "scenario",
-      "ref": "framkoppling-demo-ren-ff.json",
+      "ref": "framkoppling-demo-pid-fel-kff.json",
       "comparisonGroup": "framkoppling-jamforelse",
-      "title": "Ren framkoppling — snabb men bara så bra som sin modell",
-      "objective": "Se att framkoppling reagerar direkt, men att ett FEL Kff ger ett kvarstående fel som aldrig försvinner av sig själv.",
-      "instruction": "Nytt scenario, samma värmeväxlare: regulatorn kör nu praktiskt taget UTAN återkoppling (Kp=0.1 — simulatorns UI-minimum, Ti=Td=0). Kff är satt till −0.31 — ett MEDVETET FEL värde för temperaturgivarens uppmätta störning (ungefär halva det teoretiskt korrekta, se steg 3). Last mag fortfarande −20.\n\nKlicka 'Trigga last' — notera t_last (en ny triggpunkt för det här scenariot).\n\nKör minst 150 steg efter triggningen.\n\nObservera: till skillnad från föregående steg reagerar PV nästan OMEDELBART (framkopplingen kompenserar redan från första steget, ingen väntan på ett fel som byggs upp), MEN kurvan planar ut på ett HELT ANNAT värde än SP=50, och stannar där — den återgår ALDRIG till SP, hur många steg du än kör.\n\nAktivera Mätläge. Hovra för att läsa av det nya, stabila värdet kurvan lägger sig på. Skriv in PV₀=50 (värdet före triggning) och PV∞=det avlästa, felaktiga slutvärdet i mätpanelen — kryssa i '2%-toleransband'. Nu ritas ett band kring det FELAKTIGA slutvärdet (till skillnad från steg 1, där bandet låg kring det RÄTTA slutvärdet SP).\n\nAnteckna: det kvarstående felet, dvs |50 − PV∞|. Kalla det C.",
+      "title": "PID + framkoppling med fel Kff",
+      "objective": "Se att en ungefärlig framkoppling minskar avvikelsens storlek märkbart, men inte återhämtningstiden lika mycket.",
+      "instruction": "Nytt scenario, samma värmeväxlare: fortfarande full PID (Kp=1.2, Ti=20 — oförändrat från förra steget), men nu med Kff=−0.3 — ett MEDVETET FEL värde (ungefär halva det teoretiskt korrekta, se steg 3). Last mag fortfarande −20.\n\nKlicka 'Trigga last' — notera det nya t_last (scenariobytet nollställer tidsaxeln).\n\nKör minst 200 steg efter triggningen.\n\nAktivera Mätläge igen (det stängs av automatiskt vid varje scenariobyte — PV₀/PV∞ ska redan stå kvar som i förra steget). Kryssa i '2%-toleransband' på nytt om det behövs.\n\nHovra över dippen och läs av PV — kalla avvikelsen (50 minus avläst värde) C. Hovra längs kurvan tills den går in i och stannar kvar i (samma) band — läs av t-värdet, räkna ut Δt = t_slut − t_last. Kalla Δt för D.\n\nAnteckna: C och D.",
       "checkpoint": {
-        "question": "Med Kff=−0.31 (fel) reagerar regulatorn nästan direkt på lasten, men PV återgår ALDRIG till SP=50 — den kvarstannar vid ett nytt, felaktigt värde. Varför?",
+        "question": "C blev ungefär HÄLFTEN så stor som A (steg 1) — men D minskade bara måttligt jämfört med B, inte till hälften. Varför blir inte förbättringen i återhämtningstid lika stor som förbättringen i avvikelsens storlek?",
         "options": [
-          "Framkopplingen kompenserar bara delvis (fel Kff ger fel kompensationsnivå), och utan meningsfull återkoppling (Ti=0, i praktiken ingen I-verkan) finns inget som upptäcker och rättar till den kvarstående skillnaden mot SP",
-          "Kp=0.1 är för lågt för att regulatorn ska kunna nå SP överhuvudtaget, oavsett Kff",
-          "Framkoppling fungerar bara vid positiva laster, inte negativa som −20",
-          "Simulatorn saknar stöd för att kombinera Kff med P-läge"
+          "En mindre initial avvikelse (tack vare framkopplingens delvisa kompensation) ger PID mindre att arbeta med, men det är fortfarande SAMMA PID-dynamik (Kp, Ti) som avgör HUR SNABBT den återstående skillnaden krymper mot noll — förbättringen i återhämtningstid blir därför mindre påtaglig än förbättringen i avvikelsens storlek",
+          "Kff påverkar bara Ti, inte Kp, så integratorn arbetar långsammare med framkoppling aktiv",
+          "Simulatorn har en inbyggd fördröjning på ungefär 20 steg som är oberoende av Kff",
+          "Det är ett mätfel — Δt borde ha minskat till exakt hälften, precis som avvikelsen"
         ],
         "correct": 0,
-        "explanation": "Framkoppling är ett ÖPPET system — den räknar ut sin kompensation en gång (Kff × lastvärde) och litar blint på att modellen stämmer. Är Kff fel blir kompensationen fel, och eftersom det inte finns någon meningsfull I-verkan (Ti=0) som fortsätter jaga felet mot noll, fastnar PV permanent vid en felaktig nivå — som om ångventilen ställdes in en gång och sedan aldrig efterjusterades. Jämför med steg 1 (ren PID): där rättade integratorn TILL SLUT till exakt SP, trots att den startade lika 'okunnig' om lasten som framkopplingen här."
+        "explanation": "Framkopplingen justerar bara HUR STOR den initiala obalansen blir (proportionellt mot Kff) — men själva korrigeringstakten däreftersätts av SAMMA PID-parametrar (Kp, Ti) oavsett Kff. En mindre avvikelse tar därför inte proportionellt kortare tid att jaga bort, eftersom 'jakthastigheten' är oförändrad. Det är först när Kff är (nära) exakt rätt, som i nästa steg, som det knappt finns något kvar att jaga alls."
       }
     },
     {
       "type": "scenario",
       "ref": "framkoppling-demo-pid-ff.json",
       "comparisonGroup": "framkoppling-jamforelse",
-      "title": "PID + korrekt Kff — det bästa av båda",
-      "objective": "Se att kombinationen av framkoppling (snabb) och återkoppling (garanterat korrekt) nästan helt eliminerar avvikelsen.",
-      "instruction": "Nytt scenario, samma värmeväxlare: full PID återställd (Kp=1.2, Ti=20, som i steg 1), och Kff är nu satt till −0.6154 — (nära) det teoretiskt korrekta värdet för temperaturgivarens störning, se Kff-fältets hjälptext för formeln. Last mag fortfarande −20.\n\nKlicka 'Trigga last' — notera t_last.\n\nKör ett antal steg som vanligt.\n\nObservera redan utan Mätläge: kurvan knappt rör sig alls — avvikelsen är i praktiken försumbar redan vid triggande steget, och PV ligger kvar vid SP=50 hela tiden efteråt. Aktivera gärna Mätläge och hovra vid triggpunkten om du vill bekräfta exakt hur liten avvikelsen är.\n\nAnteckna: den (försumbara) största avvikelsen du kan se, om någon. Kalla den D. Δt är i praktiken 0 (ingen märkbar insvängningstid) — kalla det E.\n\nJämför nu alla tre stegen: D är mycket mindre än A (steg 1), och PV återgår OCH stannar exakt vid SP — till skillnad från C (steg 2), som aldrig gjorde det. Samtidigt reagerar den nästan lika snabbt som steg 2 (Δt≈E≈0), mycket snabbare än steg 1:s B.",
+      "title": "PID + framkoppling med korrekt Kff",
+      "objective": "Se att en (nära) korrekt framkoppling ger ett mycket större hopp i både avvikelse och återhämtningstid än en ungefärlig framkoppling gjorde.",
+      "instruction": "Nytt scenario, samma värmeväxlare: fortfarande full PID (Kp=1.2, Ti=20), nu med Kff=−0.6 — (nära) det teoretiskt korrekta värdet (−auxGain/K ≈ −0.6154, avrundat till en decimal — se Kff-fältets hjälptext för formeln). Last mag fortfarande −20.\n\nKlicka 'Trigga last' — notera det nya t_last.\n\nKör ett antal steg som vanligt.\n\nAktivera Mätläge, PV₀/PV∞ fortsatt oförändrade sedan steg 1. Hovra över den (mycket lilla) dippen och läs av PV — kalla avvikelsen E. Läs av när kurvan går in i (samma) band, räkna ut Δt = t_slut − t_last. Kalla det F.\n\nAnteckna: E och F.\n\nJämför nu alla tre stegen: avvikelsen krymper stadigt för varje steg (A > C > E). Men lägg märke till HUR MYCKET STÖRRE hoppet i återhämtningstid är HÄR (F, en bråkdel av B) jämfört med det modesta hoppet i steg 2 (D, bara något mindre än B).",
       "checkpoint": {
-        "question": "Varför ger PID + korrekt Kff ett bättre resultat än BÅDA de tidigare strategierna för sig — snabbare än steg 1, och mer korrekt än steg 2?",
+        "question": "Steg 2 gav bara en måttlig förbättring i återhämtningstid (D nära B). Steg 3 ger ett mycket större hopp (F, en bråkdel av B). Vad förklarar att bara steg 3 ger den stora förbättringen i återhämtningstid?",
         "options": [
-          "Framkopplingen tar hand om nästan hela kompensationen OMEDELBART (ingen väntan på att ett fel ska byggas upp, till skillnad från steg 1), och den lilla rest som blir kvar (om Kff inte är HELT perfekt) städas garanterat upp av PID:s återkoppling (till skillnad från steg 2, som saknade den städningen helt)",
-          "PID och framkoppling adderar sina Kp-värden till varandra, vilket gör regulatorn dubbelt så aggressiv",
-          "Kff=−0.6154 stänger av återkopplingen automatiskt, så resultatet beror bara på framkopplingen",
-          "Kombinationen fungerar bara för negativa laster, inte positiva"
+          "När Kff är nära exakt rätt blir den kvarvarande obalansen PID behöver rätta till FÖRSUMBAR redan från start — kurvan hamnar då inom toleransbandet nästan direkt, istället för att som i steg 1/2 behöva vänta på att en fortfarande ganska stor avvikelse gradvis krymper med samma, oförändrade PID-dynamik",
+          "Kff=−0.6 stänger av integratorn (Ti) helt, så det finns inget kvar att vänta på",
+          "Steg 3 använder ett bredare toleransband än steg 1/2, så det ser snabbare ut än det egentligen är",
+          "Kp ökar automatiskt när Kff är nära korrekt"
         ],
         "correct": 0,
-        "explanation": "De två strategierna kompletterar varandra istället för att konkurrera: framkoppling ger HASTIGHET (ingen väntan på ett synligt fel), återkoppling ger GARANTI (den rättar alltid till slut, oavsett hur bra eller dålig Kff-gissningen var). Ensam är framkoppling snabb men opålitlig om modellen är fel (steg 2); ensam är återkoppling pålitlig men reaktiv/långsam (steg 1). Tillsammans: snabbt OCH pålitligt — precis så en verklig värmeväxlare ofta regleras i praktiken."
+        "explanation": "Återhämtningstiden i steg 1/2 domineras av att en fortfarande relativt STOR avvikelse ska jagas ner av samma, oförändrade PID-dynamik (Kp, Ti) — och den jakten tar en viss tid oavsett hur stor avvikelsen råkar vara till att börja med (se steg 2:s förklaring). När Kff är nära exakt rätt (steg 3) finns det i praktiken nästan ingen avvikelse att jaga alls — kurvan hamnar inom toleransbandet nästan omedelbart, inte för att PID plötsligt blivit snabbare, utan för att den knappt har något kvar att göra."
       }
     }
   ]
