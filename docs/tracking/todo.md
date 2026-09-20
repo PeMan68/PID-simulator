@@ -138,8 +138,41 @@ Bumpless-fältet döljs nu när Läge=OnOff, i `updateControllerUIState()`
 Full regression grön (9 testfiler, 230 kontroller), DEV-/PROD-validering
 grön.
 
-PO fortsätter granskningen — nästa UX-granskningsrunda väntar på klartecken,
-per PO:s instruktion.
+**Systematisk synlighetsgranskning (2026-09-20), PO:s uppdrag — ANALYS,
+INGEN kod skriven ännu:** full genomgång:
+`docs/reports/UX-002_SYNLIGHETSGRANSKNING.md`. Sammanfattning:
+
+1. **Tvålägesreglering — rekommendation C (ta bort som egen tillämpning,
+   integrera i övriga).** PO:s invändning bekräftad i `sim-core.js`: on/off
+   är en REGULATORSTRATEGI (samma axel som Läge), inte en processkontext
+   (samma axel som Temperaturprocess/Nivåprocess) — fel axel. Dess
+   uteslutning av Integrerande processmodell saknar reglerteknisk grund
+   (on/off fungerar lika bra på integrerande processer). Endast ETT
+   lärstigssteg i hela innehållet (`oppen-slinga-onoff-p.v1` steg 4)
+   härleds till den idag — resten av den lärstigen härleds redan till Fri
+   utforskning.
+2. **Bekräftad bugg** (förklarar BÅDA PO:s exempel): Framkopplingens
+   `data-addon`-fält (Lastförstärkning/Kff/Last mag/Trigga last) saknar
+   Läges-villkor — visas oavsett Läge, trots att `sim-core.js` bekräftar att
+   Kff/framkoppling har NOLL effekt i Manuellt/OnOff-läge (bara nått i
+   P/PI/PID-grenen). Parameterstyrning har REDAN motsvarande skydd
+   (pre-existing FEAT-042, `noIntegral`-villkoret) — Framkoppling fick
+   aldrig samma skydd när FEAT-045 byggdes.
+3. Samtliga 12 lärstigars scenarioreferenser körda PROGRAMMATISKT genom
+   `deriveApplicationProfile()` (inte gissat) — härledningslogiken själv är
+   korrekt för alla lärstigar redan idag. Kff/Bumpless-exemplet PO såg
+   uppstår INTE av felaktig lärstigsladdning utan av MANUELLT
+   Läge-/Tillämpningsbyte EFTER att ett steg laddats (punkt 2 ovan) — kan
+   alltså uppstå efter vilket lärstigssteg som helst vid fri utforskning
+   efteråt, inte bara i `oppen-slinga-onoff-p.v1`.
+4. Fullständig rekommenderad synlighetsmatris i rapporten — inga
+   konflikter/tvetydigheter hittade mellan reglerna.
+5. **Rekommendation: inte redo för merge.** Två små, väl avgränsade
+   ändringar kvar (ta bort Tvålägesreglering, lägg till Läges-villkor på
+   Framkoppling) innan en fjärde granskningsrunda.
+
+**Status:** Analys levererad, väntar på PO:s klartecken innan implementation
+(explicit instruktion: "Ingen implementation innan analysen är gjord").
 
 
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
