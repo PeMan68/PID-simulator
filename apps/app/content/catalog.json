@@ -28,7 +28,11 @@
     { "id": "pi-deadtime-comparison",      "file": "scenarios/pi-deadtime-comparison.json" },
     { "id": "valve-nonlinear-gain-demo",   "file": "scenarios/valve-nonlinear-gain-demo.json" },
     { "id": "valve-nonlinear-gain-demo-kp3",       "file": "scenarios/valve-nonlinear-gain-demo-kp3.json" },
-    { "id": "valve-nonlinear-gain-demo-scheduled", "file": "scenarios/valve-nonlinear-gain-demo-scheduled.json" }
+    { "id": "valve-nonlinear-gain-demo-scheduled", "file": "scenarios/valve-nonlinear-gain-demo-scheduled.json" },
+    { "id": "framkoppling-demo-pid",         "file": "scenarios/framkoppling-demo-pid.json" },
+    { "id": "framkoppling-demo-ren-ff",      "file": "scenarios/framkoppling-demo-ren-ff.json" },
+    { "id": "framkoppling-demo-pid-fel-kff", "file": "scenarios/framkoppling-demo-pid-fel-kff.json" },
+    { "id": "framkoppling-demo-pid-ff",      "file": "scenarios/framkoppling-demo-pid-ff.json" }
   ],
   "theory": [
     { "id": "pid-intro",      "file": "theory/pid-intro.v1.json" },
@@ -40,7 +44,8 @@
     { "id": "tangentmetoden",          "file": "theory/tangentmetoden.v1.json" },
     { "id": "proportionalband",        "file": "theory/proportionalband.v1.json" },
     { "id": "disturbance-robustness",  "file": "theory/disturbance-robustness.v1.json" },
-    { "id": "parameterstyrning-ventilkarakteristik", "file": "theory/parameterstyrning-ventilkarakteristik.v1.json" }
+    { "id": "parameterstyrning-ventilkarakteristik", "file": "theory/parameterstyrning-ventilkarakteristik.v1.json" },
+    { "id": "framkoppling",            "file": "theory/framkoppling.v1.json" }
   ],
   "learning_paths": [
     { "id": "kom-igång.v1",                    "file": "exercises/kom-igång.v1.json" },
@@ -53,6 +58,7 @@
     { "id": "storningar-robusthet.v1",         "file": "exercises/storningar-robusthet.v1.json" },
     { "id": "integrerande-process-niva.v1",    "file": "exercises/integrerande-process-niva.v1.json" },
     { "id": "stegsvar-identifiering.v1",       "file": "exercises/stegsvar-identifiering.v1.json" },
-    { "id": "lambda-metoden.v1",               "file": "exercises/lambda-metoden.v1.json" }
+    { "id": "lambda-metoden.v1",               "file": "exercises/lambda-metoden.v1.json" },
+    { "id": "framkoppling.v1",                 "file": "exercises/framkoppling.v1.json" }
   ]
 }

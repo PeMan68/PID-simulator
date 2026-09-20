@@ -685,6 +685,10 @@
             <input id="l" type="number" step="0.1" min="0">
           </div>
           <div class="field">
+            <label for="auxGain">Lastförstärkning <button class="help-btn" data-help="auxGain">?</button></label>
+            <input id="auxGain" type="number" step="0.05">
+          </div>
+          <div class="field">
             <label for="normalValue">Normalvärde <button class="help-btn" data-help="normalValue">?</button></label>
             <input id="normalValue" type="number" step="0.1" min="0" max="100">
           </div>
@@ -746,6 +750,10 @@
           <div class="field">
             <label for="td">Td <button class="help-btn" data-help="td">?</button></label>
             <input id="td" type="number" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label for="kff">Kff <button class="help-btn" data-help="kff">?</button></label>
+            <input id="kff" type="number" step="0.05">
           </div>
           <div class="field" id="gainScheduleField">
             <label for="gainScheduleEnabled">Parameterstyrning <button class="help-btn" data-help="gainScheduleEnabled">?</button></label>
@@ -861,6 +869,13 @@
           </div>
           <div class="field" style="justify-content:flex-end;">
             <button id="pulse">Trigga puls</button>
+          </div>
+          <div class="field">
+            <label for="auxMag">Last mag <button class="help-btn" data-help="auxMag">?</button></label>
+            <input id="auxMag" type="number" step="0.5">
+          </div>
+          <div class="field" style="justify-content:flex-end;">
+            <button id="triggerAux">Trigga last</button>
           </div>
         </div>
       </div>

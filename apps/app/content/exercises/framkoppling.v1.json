@@ -1,0 +1,72 @@
+{
+  "id": "framkoppling.v1",
+  "version": "v1.3.0",
+  "title": "Framkoppling (Feedforward)",
+  "description": "En värmeväxlares utgående temperatur, med en mätbar förändring i den inkommande temperaturen. Se hur en trimning från ingen framkoppling, via en ungefärlig framkoppling, till en exakt framkoppling gradvis förbättrar regleringen.",
+  "difficulty": "intermediate",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "framkoppling.v1.json",
+      "title": "Vad är framkoppling?",
+      "objective": "Förstå skillnaden mellan reaktiv reglering (återkoppling) och direktkompenserande reglering (framkoppling), och varför Kff kan vara negativt.",
+      "checkpoint": {
+        "question": "En kallare inkommande temperatur (ett NEGATIVT lastvärde) drar ner den utgående temperaturen (PV). Varför blir Kff ändå NEGATIVT i det fallet — borde inte regulatorn 'räkna minus gånger minus' och landa på ett positivt Kff istället?",
+        "options": [
+          "Nej — Kff multipliceras med lastens EGET värde (som redan är negativt). Ett negativt Kff gånger ett negativt lastvärde ger ett POSITIVT bidrag till utsignalen (öppna ångventilen mer), precis den åtgärd som behövs. Kff:s tecken beror på hur lasten fysiskt påverkar processen, inte på lastens eget tecken",
+          "Kff är alltid negativt, oavsett hur lasten fysiskt påverkar processen",
+          "Ett negativt Kff är ett tecken på ett fel i simulatorn — Kff ska alltid vara positivt precis som Kp",
+          "Tecknet på Kff avgörs av om regulatorn är i P-, PI- eller PID-läge"
+        ],
+        "correct": 0,
+        "explanation": "u = ... + Kff × (lastens värde). Lastens värde är HÄR negativt (kallare inflödestemperatur), och önskad åtgärd är att ÖKA u (öppna ventilen mer) — ett negativt tal gånger ett negativt Kff ger det positiva bidraget som krävs. Hade lasten istället varit en varmare inflödestemperatur (positivt lastvärde, drar UPP PV) hade samma Kff-värde gett ett negativt bidrag — precis rätt, eftersom u då ska MINSKAS istället."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "framkoppling-demo-pid.json",
+      "comparisonGroup": "framkoppling-jamforelse",
+      "title": "PID ensam — reaktiv reglering",
+      "objective": "Se hur en vanlig PID-regulator (ingen framkoppling) hanterar en mätbar last helt reaktivt, och etablera ett gemensamt mätprotokoll för de kommande stegen.",
+      "instruction": "Scenariot modellerar en värmeväxlare: PV är utgående temperatur, u är ångventilens öppning, SP=50 är börvärdet. Kff=0 i det här steget — ingen framkoppling, regulatorn ser bara PV precis som hittills i simulatorn. Kontrollera i Störningar-gruppen att 'Last mag' visar −40 — en plötslig temperaturminskning i det inkommande flödet, uppmätt av en temperaturgivare uppströms.\n\nKlicka 'Trigga last' i Störningar-gruppen — en markeringslinje ('Last → -40') dyker upp i grafen. Notera dess t-värde: det är t_last.\n\nKör minst 200 steg efter triggningen (klicka 'Kör 10 steg' upprepade gånger).\n\nAktivera Mätläge (knappen 'Mät K/T/L'). Hovra över grafens lägsta punkt (dippen) och läs av PV, avrundat till en decimal — det är den STÖRSTA avvikelsen från SP. Kalla avvikelsen (50 minus det avlästa värdet) A.\n\nSkriv in det avlästa värdet som PV₀ och SP=50 som PV∞ i mätpanelen, kryssa i '2%-toleransband (insvängning)'. Hovra längs kurvan tills den går in i och stannar kvar i det streckade bandet — läs av t-värdet där. Det är t_slut.\n\nRäkna ut Δt = t_slut − t_last (inte t_slut i sig — det är tiden FRÅN triggningen som är intressant). Kalla Δt för B.\n\nVIKTIGT: ändra INTE PV₀/PV∞ när du går vidare till nästa steg — samma toleransband (satt HÄR) återanvänds i steg 2 och 3, så att Δt-värdena blir rättvist jämförbara med varandra. Fälten behåller sina värden automatiskt mellan scenarier.\n\nAnteckna: A (störst avvikelse) och B (Δt, insvängningstid efter lasten)."
+    },
+    {
+      "type": "scenario",
+      "ref": "framkoppling-demo-pid-fel-kff.json",
+      "comparisonGroup": "framkoppling-jamforelse",
+      "title": "PID + framkoppling med fel Kff",
+      "objective": "Se att en ungefärlig framkoppling minskar avvikelsens storlek märkbart, men inte återhämtningstiden lika mycket.",
+      "instruction": "Nytt scenario, samma värmeväxlare: fortfarande full PID (Kp=1.2, Ti=20 — oförändrat från förra steget), men nu med Kff=−0.25 — ett MEDVETET FEL värde (exakt halva det teoretiskt korrekta, se steg 3). Last mag fortfarande −40.\n\nKlicka 'Trigga last' — notera det nya t_last (scenariobytet nollställer tidsaxeln).\n\nKör minst 200 steg efter triggningen.\n\nAktivera Mätläge igen (det stängs av automatiskt vid varje scenariobyte — PV₀/PV∞ ska redan stå kvar som i förra steget). Kryssa i '2%-toleransband' på nytt om det behövs.\n\nHovra över dippen och läs av PV — kalla avvikelsen (50 minus avläst värde) C. Hovra längs kurvan tills den går in i och stannar kvar i (samma) band — läs av t-värdet, räkna ut Δt = t_slut − t_last. Kalla Δt för D.\n\nAnteckna: C och D.",
+      "checkpoint": {
+        "question": "C blev exakt HÄLFTEN så stor som A (steg 1) — men D minskade bara måttligt jämfört med B, inte till hälften. Varför blir inte förbättringen i återhämtningstid lika stor som förbättringen i avvikelsens storlek?",
+        "options": [
+          "En mindre initial avvikelse (tack vare framkopplingens delvisa kompensation) ger PID mindre att arbeta med, men det är fortfarande SAMMA PID-dynamik (Kp, Ti) som avgör HUR SNABBT den återstående skillnaden krymper mot noll — förbättringen i återhämtningstid blir därför mindre påtaglig än förbättringen i avvikelsens storlek",
+          "Kff påverkar bara Ti, inte Kp, så integratorn arbetar långsammare med framkoppling aktiv",
+          "Simulatorn har en inbyggd fördröjning på ungefär 20 steg som är oberoende av Kff",
+          "Det är ett mätfel — Δt borde ha minskat till exakt hälften, precis som avvikelsen"
+        ],
+        "correct": 0,
+        "explanation": "Framkopplingen justerar bara HUR STOR den initiala obalansen blir (proportionellt mot Kff) — men själva korrigeringstakten däreftersätts av SAMMA PID-parametrar (Kp, Ti) oavsett Kff. En mindre avvikelse tar därför inte proportionellt kortare tid att jaga bort, eftersom 'jakthastigheten' är oförändrad. Det är först när Kff är EXAKT rätt, som i nästa steg, som det inte finns något kvar att jaga alls."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "framkoppling-demo-pid-ff.json",
+      "comparisonGroup": "framkoppling-jamforelse",
+      "title": "PID + framkoppling med korrekt Kff",
+      "objective": "Se att en exakt korrekt framkoppling eliminerar avvikelsen helt — inte bara nästan.",
+      "instruction": "Nytt scenario, samma värmeväxlare: fortfarande full PID (Kp=1.2, Ti=20), nu med Kff=−0.5 — EXAKT det teoretiskt korrekta värdet (−auxGain/K = −0.65/1.3 = −0.5, ingen avrundning behövs). Last mag fortfarande −40.\n\nKlicka 'Trigga last'.\n\nObservera direkt, utan att behöva mäta: kurvan rör sig inte alls. PV ligger kvar exakt på 50 hela tiden — det finns ingen dipp att hovra över eller mäta den här gången.\n\nKalla avvikelsen E (=0) och Δt F (=0, ingen insvängning behövs eftersom PV aldrig lämnade SP).\n\nJämför nu alla tre stegen: avvikelsen krymper stegvis (A → hälften vid C → noll vid E). Men lägg märke till HUR MYCKET STÖRRE hoppet i återhämtningstid är HÄR (från D till F) jämfört med det modesta hoppet i steg 2 (från B till D).",
+      "checkpoint": {
+        "question": "Steg 2 gav bara en måttlig förbättring i återhämtningstid (D nära B). Steg 3 eliminerar avvikelsen helt (E=0) och återhämtningen är omedelbar (F=0). Vad förklarar att bara steg 3 ger den fullständiga förbättringen?",
+        "options": [
+          "När Kff är EXAKT rätt tar framkopplingen hand om HELA kompensationen redan i triggande ögonblicket — det finns inget fel kvar för PID att upptäcka och jaga. Med ett ungefärligt Kff (steg 2) finns det alltid en rest kvar som måste jagas av samma, oförändrade PID-dynamik, hur liten resten än är",
+          "Kff=−0.5 stänger av integratorn (Ti) helt, så det finns inget kvar att vänta på",
+          "Steg 3 använder ett bredare toleransband än steg 1/2, så det ser snabbare ut än det egentligen är",
+          "Kp ökar automatiskt när Kff är exakt korrekt"
+        ],
+        "correct": 0,
+        "explanation": "Återhämtningstiden i steg 1/2 domineras av att en (större eller mindre) avvikelse ska jagas ner av samma, oförändrade PID-dynamik (Kp, Ti) — den jakten tar en viss tid oavsett hur stor avvikelsen råkar vara till att börja med (se steg 2:s förklaring). När Kff är EXAKT rätt finns det ingen avvikelse alls att jaga — kompensationen är fullständig redan från första steget, inte för att PID blivit snabbare, utan för att den aldrig behöver göra något."
+      }
+    }
+  ]
+}
