@@ -8,6 +8,42 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
+**Prioritet:** Hög — PO:s explicita beslut (2026-09-20): pausa ny
+reglerstrategiutveckling (Kvotreglering, Kaskadreglering) tills detta spår är
+klart.
+**Beskrivning:**
+Efter FEAT-042 och FEAT-045 konstaterade PO ett större, återkommande
+UX-problem: parametergridet har vuxit till 45 kontroller, varav 19 hör till
+enskilda, avancerade lärstigar (16 FEAT-042, 3+1 FEAT-045) men visas för ALLA
+studenter oavsett vad de faktiskt övar på. PO:s riktning: ett
+"Processval"/tillämpningsval (t.ex. Temperaturprocess, Nivåprocess,
+Blandnings-/kvotprocess, Kaskadreglerad process) som samtidigt styr
+processmodell, relevanta parametrar, relevanta strategier och relevanta
+givare — inte bara enskild fält-visa/dölj.
+**Genomförande (förstudie):**
+Full analys: `docs/reports/UX-001_FORSTUDIE-PROCESSBASERAD-UX.md`. Fem
+kategorier föreslagna (Temperaturprocess, Nivåprocess, Blandnings-/
+kvotprocess*, Kaskadreglerad process*, Fri utforskning/Avancerat — *framtida).
+Nyckelrekommendation: Parameterstyrning/Ventilkarakteristik (FEAT-042) är INTE
+substansspecifika (gäller alla självreglerande processer) och bör vara en
+tillvalsflik INOM en kategori, inte en egen kategori — till skillnad från
+Framkoppling/Kvotreglering/Kaskadreglering som är strukturellt kopplade till
+en processform. Rekommenderad migreringsväg i tre faser: Fas 0 (additiv
+UI-filtrering, ingen ändring av sim-core/scenarioformat, "Avancerat" förblir
+default så alla 12 befintliga lärstigar är opåverkade), Fas 1 (koppla
+lärstigar till kategorier via ett nytt valfritt fält), Fas 2 (Kvotreglering/
+Kaskadreglering byggs DIREKT mot dedikerad UI istället för dagens platta
+fältlista, när de väl byggs). Tre öppna frågor till PO i rapportens slut
+(namnval, om FEAT-042 ska vara tillval eller egen kategori, komplett
+kategorilista).
+**Status:** Förstudie klar, väntar på PO:s svar på de öppna frågorna innan ett
+Fas 0-bygguppdrag formuleras. Ingen kod skriven, ingen branch. Ny
+reglerstrategiutveckling (Kvotreglering/Kaskadreglering) PAUSAD tills detta
+spår är klart, per PO:s beslut.
+
+---
+
 ### FEAT-046 — Blockschema-SVG:er för reglerstrategier
 **Branch:** `feature/FEAT-046-blockschema-svg`
 **Prioritet:** Låg — sidospår/experiment, PO:s explicita "prova"-uppdrag
