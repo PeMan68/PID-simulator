@@ -1675,3 +1675,22 @@ scenarioberoenden (`framkoppling-demo-pid`/`-pid-fel-kff`/`-pid-ff` samt
 verifierat att matcha exakt (`node tests/validate-prod.mjs`).
 
 ---
+
+### UX-001b — Namnbyte: processmodellernas etiketter
+**Branch:** `feature/UX-001b-processmodell-namn`
+**Prioritet:** Låg — trivial, men PO-godkänd att göra direkt (2026-09-20),
+oberoende av resten av UX-001.
+**Beskrivning:** PO:s svar på UX-001s öppna fråga 1: byt `processType`-väljarens
+etiketter "Självreglerande"/"Självreglerande 2:a ordn." till "Självreglerande
+(enkapacitiv)"/"Självreglerande (flerkapacitiv)" — tydligare, mer
+reglertekniskt korrekt terminologi, matchar UX-001-förstudiens föreslagna
+namngivning.
+**Genomförande:** Ren textändring i `apps/app/index.html`s `<option>`-element
+(`processType`-select). Inga andra ställen refererade den gamla texten
+("Självreglerande 2:a ordn.") — `help.json`s `processType`-hjälptext talar
+generiskt om "Självreglerande" utan ordningsdistinktion och behöver ingen
+ändring. Ingen kod i `sim-core.js`/`app.js` berörs (`self_regulating_2` som
+internt värde är oförändrat).
+**Status:** Mergad till `develop`.
+
+---
