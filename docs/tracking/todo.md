@@ -171,8 +171,40 @@ INGEN kod skriven ännu:** full genomgång:
    ändringar kvar (ta bort Tvålägesreglering, lägg till Läges-villkor på
    Framkoppling) innan en fjärde granskningsrunda.
 
-**Status:** Analys levererad, väntar på PO:s klartecken innan implementation
-(explicit instruktion: "Ingen implementation innan analysen är gjord").
+**Status:** Analys levererad. **PO gav klartecken (2026-09-20)** att
+implementera exakt de två rekommenderade ändringarna — genomfört:
+
+1. **Tvålägesreglering borttagen som egen tillämpning.**
+   `APPLICATION_PROFILES` går från fyra till TRE profiler (`fri`/
+   `temperatur`/`niva`) — `onoff`-profilen och dess `<option>` borttagna.
+   `"onoff"` tillagt i `temperatur.modes` och `niva.modes` (alla tre
+   profiler tillåter nu samtliga fem lägen). `deriveApplicationProfile()`s
+   `onoff`-specialfall borttaget — generiska on/off-scenarier
+   (`onoff-basic.json` m.fl.) härleds nu till Fri utforskning, konsekvent
+   med lärstigens övriga, redan generiska steg.
+2. **Läges-villkor tillagt för Framkoppling.** Ny funktion
+   `updateFramkopplingVisibility()`: Lastförstärkning/Kff/Last mag/Trigga
+   last kräver nu BÅDE att Tillämpningen tillåter tillägget OCH att Läge ∈
+   {P, PI, PID} (verifierat i `sim-core.js` att Kff/framkoppling har noll
+   effekt i Manuellt/OnOff-läge — de når aldrig den grenen). Anropas från
+   både `applyApplicationProfile()` (tillämpningsbyte) och
+   `updateControllerUIState()` (rent lägesbyte, utan tillämpningsbyte) —
+   båda vägarna in räknas om. Ingen nollställning av Kff/auxValue vid rent
+   lägesbyte (till skillnad från tillämpningsbyte) — motiverat i koden:
+   Kff blir död kod i sim-core.js för de lägena, och en redan triggad last
+   är en fysisk processegenskap som legitimt kvarstår oavsett regulatorläge.
+
+**Synlighetsmatrisen re-verifierad programmatiskt** (inte manuellt) mot
+samtliga 12 lärstigars scenarioreferenser: inga avvikelser — varje stegs
+`Läge` är tillåtet av dess härledda Tillämpning, och inget scenario har ett
+nollskilt Kff kombinerat med ett läge utanför P/PI/PID.
+
+20 nya/ändrade testkontroller (56 totalt i
+`ux-002-application-profile.test.mjs`). Full regression grön (9 testfiler,
+231 kontroller), DEV-/PROD-validering grön.
+
+Ingen webbläsare tillgänglig i denna miljö. Väntar på PO:s FJÄRDE
+(visuella) granskningsrunda innan mergebeslut, per uppdragets instruktion.
 
 
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)

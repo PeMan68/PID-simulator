@@ -3,11 +3,13 @@
 // Ren statisk källkodskontroll (ingen webbläsare/DOM tillgänglig här, samma
 // begränsning och samma mönster som tests/hotfix-v1.4.1-facit-env.test.mjs).
 // Verifierar: att APPLICATION_PROFILES-tabellen i app.js har exakt den
-// struktur UX-001 avsnitt 1.1 specificerar (extraherad och körd isolerat,
-// inte bara regex-matchad rad för rad), att index.html har de nya
-// kontrollerna/attributen applyApplicationProfile() förutsätter, och att
+// struktur UX-001/UX-002-rapporterna specificerar (extraherad och körd
+// isolerat, inte bara regex-matchad rad för rad), att index.html har de nya
+// kontrollerna/attributen applyApplicationProfile() förutsätter, att
 // Processmodell-väljaren ALDRIG döljs helt (bara dess alternativ filtreras —
-// PO:s uttryckliga pedagogiska krav).
+// PO:s uttryckliga pedagogiska krav), och (efter UX-002_SYNLIGHETSGRANSKNING)
+// att Tvålägesreglering INTE längre är en egen tillämpning samt att
+// Framkopplingens fält kräver BÅDE rätt Tillämpning OCH Läge ∈ {P,PI,PID}.
 //
 // Körs: node tests/ux-002-application-profile.test.mjs
 
@@ -32,9 +34,13 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
 {
   check("1a. #applicationProfile-select finns", html.includes('id="applicationProfile"'));
   check("1b. Alternativ: Fri utforskning", /<option value="fri">Fri utforskning<\/option>/.test(html));
-  check("1c. Alternativ: Tvålägesreglering (On\\/Off)", /<option value="onoff">Tvålägesreglering \(On\/Off\)<\/option>/.test(html));
   check("1d. Alternativ: Temperaturprocess", /<option value="temperatur">Temperaturprocess<\/option>/.test(html));
   check("1e. Alternativ: Nivåprocess", /<option value="niva">Nivåprocess<\/option>/.test(html));
+  // UX-002_SYNLIGHETSGRANSKNING.md avsnitt 1 (PO-godkänd 2026-09-20) —
+  // Tvålägesreglering är INTE längre en egen tillämpning (fel axel: on/off
+  // är en regulatorstrategi, inte en processkontext) — OnOff är istället
+  // ett giltigt Läge-val inom varje tillämpning, se avsnitt 5 nedan.
+  check("1c. Tvålägesreglering finns INTE längre som egen tillämpning", !html.includes("Tvålägesreglering") && !/<option value="onoff">Tvålägesreglering/.test(html));
   // Granskningsobservation 1 (PO): Tillämpning ska INTE vara en egen
   // parametergrupp — flyttad in i Process-gruppen, direkt före Processmodell.
   check("1f. Ingen egen \"groupTillampning\"-parametergrupp längre", !html.includes('id="groupTillampning"'));
@@ -70,7 +76,7 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   check("4a. [data-addon].addon-hidden { display: none !important; } finns", /\[data-addon\]\.addon-hidden\s*\{\s*display:\s*none\s*!important;\s*\}/.test(html));
 }
 
-// ── 5. app.js: APPLICATION_PROFILES-tabellen har exakt UX-001 avsnitt 1.1s struktur ──
+// ── 5. app.js: APPLICATION_PROFILES har exakt tre profiler, on/off inkluderat i varje ──
 {
   const match = appJs.match(/const APPLICATION_PROFILES = (\{[\s\S]*?\n\};)/);
   check("5a. APPLICATION_PROFILES hittades i app.js", !!match);
@@ -86,17 +92,15 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
       profiles = null;
     }
     if (profiles) {
-      check("5b. Exakt fyra profiler (fri/onoff/temperatur/niva)", Object.keys(profiles).sort().join(",") === "fri,niva,onoff,temperatur");
-      check("5c. fri tillåter alla tre processmodeller", JSON.stringify(profiles.fri.processModels.sort()) === JSON.stringify(["integrating", "self_regulating", "self_regulating_2"].sort()));
+      check("5b. Exakt TRE profiler (fri/temperatur/niva) — Tvålägesreglering borttagen", Object.keys(profiles).sort().join(",") === "fri,niva,temperatur");
+      check("5c. fri tillåter alla tre processmodeller och alla fem lägen", JSON.stringify(profiles.fri.processModels.sort()) === JSON.stringify(["integrating", "self_regulating", "self_regulating_2"].sort()) && JSON.stringify(profiles.fri.modes.sort()) === JSON.stringify(["manual", "onoff", "p", "pi", "pid"].sort()));
       check("5d. fri visar alla tre tillägg", JSON.stringify(profiles.fri.addons.sort()) === JSON.stringify(["framkoppling", "parameterstyrning", "ventilkarakteristik"].sort()));
-      check("5e. onoff tillåter bara de två självreglerande modellerna, inga tillägg", JSON.stringify(profiles.onoff.processModels.sort()) === JSON.stringify(["self_regulating", "self_regulating_2"].sort()) && profiles.onoff.addons.length === 0);
       check("5f. temperatur tillåter de två självreglerande modellerna och alla tre tillägg", JSON.stringify(profiles.temperatur.processModels.sort()) === JSON.stringify(["self_regulating", "self_regulating_2"].sort()) && JSON.stringify(profiles.temperatur.addons.sort()) === JSON.stringify(["framkoppling", "parameterstyrning", "ventilkarakteristik"].sort()));
       check("5g. niva tillåter ENDAST integrating, inga tillägg", JSON.stringify(profiles.niva.processModels) === JSON.stringify(["integrating"]) && profiles.niva.addons.length === 0);
-      // PO:s uppföljningsfråga (2026-09-20): ska Läge (mode) filtreras likadant?
-      check("5h. fri tillåter alla fem lägen", JSON.stringify(profiles.fri.modes.sort()) === JSON.stringify(["manual", "onoff", "p", "pi", "pid"].sort()));
-      check("5i. onoff tillåter ENDAST läget onoff (PID m.fl. blockerade)", JSON.stringify(profiles.onoff.modes) === JSON.stringify(["onoff"]));
-      check("5j. temperatur tillåter p/pi/pid/manual, INTE onoff", JSON.stringify(profiles.temperatur.modes.sort()) === JSON.stringify(["manual", "p", "pi", "pid"].sort()));
-      check("5k. niva tillåter p/pi/pid/manual, INTE onoff", JSON.stringify(profiles.niva.modes.sort()) === JSON.stringify(["manual", "p", "pi", "pid"].sort()));
+      // UX-002_SYNLIGHETSGRANSKNING.md avsnitt 1 — OnOff ska vara ett
+      // giltigt Läge-val i VARJE tillämpning (inte en egen tillämpning).
+      check("5j. temperatur tillåter onoff/p/pi/pid/manual (alla fem lägen)", JSON.stringify(profiles.temperatur.modes.sort()) === JSON.stringify(["manual", "onoff", "p", "pi", "pid"].sort()));
+      check("5k. niva tillåter onoff/p/pi/pid/manual (alla fem lägen)", JSON.stringify(profiles.niva.modes.sort()) === JSON.stringify(["manual", "onoff", "p", "pi", "pid"].sort()));
     }
   }
 }
@@ -108,8 +112,11 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   check("6b. filterSelectOptions() filtrerar <option>-alternativ via .hidden (inte hela selectEl)", /opt\.hidden = !allowed/.test(appJs));
   check("6c. filterSelectOptions() faller tillbaka till ett giltigt värde om nuvarande blir otillåtet", /if \(!currentValueAllowed\) selectEl\.value = allowedValues\[0\]/.test(appJs));
   check("6c2. applyApplicationProfile() filtrerar BÅDE Processmodell och Läge via filterSelectOptions()", /filterSelectOptions\(fields\.processType, profile\.processModels\)/.test(appJs) && /filterSelectOptions\(fields\.mode, profile\.modes\)/.test(appJs));
-  check("6d. Döljer/visar [data-addon]-element via addon-hidden-klassen (inte style.display direkt, undviker konflikt med lägesstyrd döljning)", /classList\.toggle\("addon-hidden", !profile\.addons\.includes\(el\.dataset\.addon\)\)/.test(appJs));
-  check("6e. Anropar updateProcessUIState() och updateControllerUIState() så beroende fält synkas om (inkl. Läge-tvingande)", /function applyApplicationProfile\(\) \{[\s\S]{0,2000}updateControllerUIState\(\);[\s\S]{0,200}updateProcessUIState\(\);\s*\n\}/.test(appJs));
+  check(
+    "6d. Döljer/visar Parameterstyrning/Ventilkarakteristik via addon-hidden-klassen, men hoppar över Framkoppling (hanteras separat, se 6u)",
+    /document\.querySelectorAll\("\[data-addon\]"\)\.forEach\(el => \{\s*\n\s*if \(el\.dataset\.addon === "framkoppling"\) return;\s*\n\s*el\.classList\.toggle\("addon-hidden", !profile\.addons\.includes\(el\.dataset\.addon\)\);/.test(appJs)
+  );
+  check("6e. Anropar updateProcessUIState() och updateControllerUIState() så beroende fält synkas om (inkl. Läge-tvingande)", /function applyApplicationProfile\(\) \{[\s\S]{0,4000}updateControllerUIState\(\);[\s\S]{0,200}updateProcessUIState\(\);\s*\n\}/.test(appJs));
   check("6f. #applicationProfile har en change-lyssnare kopplad till applyApplicationProfile()", /getElementById\("applicationProfile"\)\.addEventListener\("change", \(\) => \{\s*\n\s*applyApplicationProfile\(\);/.test(appJs));
   check("6h. Inget sparat tillämpningsläge i localStorage (Fri utforskning ska alltid vara default vid sidladdning)", !/localStorage\.[gs]etItem\("[^"]*[Aa]pplication[Pp]rofile/.test(appJs));
   // PO:s granskning (2026-09-20) — ett tillägg som blir dolt ska också stängas
@@ -117,11 +124,11 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   // simuleringen trots en osynlig, oåtkomlig kryssruta).
   check("6o. Stänger av Parameterstyrning (avmarkerar) när tillägget inte ingår i profilen", /if \(!profile\.addons\.includes\("parameterstyrning"\)\) fields\.gainScheduleEnabled\.checked = false;/.test(appJs));
   check("6p. Stänger av Ventilkarakteristik (avmarkerar) när tillägget inte ingår i profilen", /if \(!profile\.addons\.includes\("ventilkarakteristik"\)\) fields\.nonlinearGainEnabled\.checked = false;/.test(appJs));
-  check("6q. Nollställer Kff/Last mag OCH ett redan triggat sim.auxValue när Framkoppling inte ingår i profilen", /if \(!profile\.addons\.includes\("framkoppling"\)\) \{[\s\S]{0,200}fields\.kff\.value = 0;[\s\S]{0,100}fields\.auxMag\.value = 0;[\s\S]{0,100}if \(sim\) sim\.auxValue = 0;/.test(appJs));
+  check("6q. Nollställer Kff/Last mag OCH ett redan triggat sim.auxValue när Framkoppling inte ingår i profilen (tillämpningsstyrt, ej lägesstyrt — se motivering i koden)", /if \(!profile\.addons\.includes\("framkoppling"\)\) \{[\s\S]{0,200}fields\.kff\.value = 0;[\s\S]{0,100}fields\.auxMag\.value = 0;[\s\S]{0,100}if \(sim\) sim\.auxValue = 0;/.test(appJs));
   check("6r. Manuellt tillämpningsbyte synkar och ritar om direkt (till skillnad från scenarioladdning)", /getElementById\("applicationProfile"\)\.addEventListener\("change", \(\) => \{[\s\S]{0,600}if \(sim\) \{ syncParamsFromUI\(\); drawChart\(\); updateStatus\(\); \}/.test(appJs));
 }
 
-// ── 6s–6u. Bumpless har ingen effekt i OnOff-läge — ska döljas där ──
+// ── 6s–6t. Bumpless har ingen effekt i OnOff-läge — ska döljas där ──
 {
   check("6s. updateControllerUIState() döljer Bumpless-fältet när Läge=OnOff", /getElementById\("bumpless"\)\.parentElement\.style\.display = isOnOff \? "none" : "";/.test(appJs));
   check(
@@ -130,13 +137,26 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   );
 }
 
-// ── 6i–6m. Granskningsobservation 2: varje scenarioladdning sätter en
-// SAMMANHÄNGANDE Tillämpning+Processmodell-kombination (deriveApplicationProfile()) ──
+// ── 6u–6x. UX-002_SYNLIGHETSGRANSKNING.md avsnitt 2.1/3 — Framkoppling
+// kräver BÅDE rätt Tillämpning OCH Läge ∈ {P,PI,PID} ──
+{
+  check("6u. updateFramkopplingVisibility()-funktionen är definierad", /function updateFramkopplingVisibility\(\)/.test(appJs));
+  check(
+    "6v. Kräver isPidFamily (p/pi/pid) OCH att profilen tillåter framkoppling — inte bara ett av villkoren",
+    /const isPidFamily = mode === "p" \|\| mode === "pi" \|\| mode === "pid";\s*\n\s*const visible = profile\.addons\.includes\("framkoppling"\) && isPidFamily;/.test(appJs)
+  );
+  check("6w. Döljer via samma addon-hidden-klass (samma CSS-företräde som övriga tillägg)", /function updateFramkopplingVisibility\(\)[\s\S]{0,600}classList\.toggle\("addon-hidden", !visible\)/.test(appJs));
+  check("6x. Anropas BÅDE från applyApplicationProfile() OCH updateControllerUIState() (så ett rent lägesbyte utan tillämpningsbyte också räknas om)", (appJs.match(/updateFramkopplingVisibility\(\);/g) || []).length >= 2);
+}
+
+// ── 6i–6n. Granskningsobservation 2 (föregående runda): varje
+// scenarioladdning sätter en SAMMANHÄNGANDE Tillämpning+Processmodell-
+// kombination (deriveApplicationProfile()) ──
 {
   check("6i. deriveApplicationProfile()-funktionen är definierad", /function deriveApplicationProfile\(scenario\)/.test(appJs));
   check("6j. Framkoppling (auxSignal) → Temperaturprocess", /if \(scenario\.auxSignal\) return "temperatur";/.test(appJs));
   check("6k. Integrerande processtyp → Nivåprocess", /if \(scenario\.process\.type === "integrating"\) return "niva";/.test(appJs));
-  check("6l. OnOff-läge → Tvålägesreglering", /if \(scenario\.controller\.mode === "onoff"\) return "onoff";/.test(appJs));
+  check("6l. Inget separat onoff-härledningsfall längre (Tvålägesreglering borttagen) — generiska on/off-scenarier faller tillbaka på Fri utforskning", !/return "onoff";/.test(appJs));
   check(
     "6m. loadScenarioByName() sätter applicationProfile från deriveApplicationProfile() OCH tillämpar det, EFTER hydrateFields() (så det härleds från det nyss laddade scenariot)",
     /hydrateFields\(currentScenario\);\s*\n\s*fields\.applicationProfile\.value = deriveApplicationProfile\(currentScenario\);\s*\n\s*applyApplicationProfile\(\);/.test(appJs)

@@ -621,7 +621,11 @@ function deriveApplicationProfile(scenario) {
   if (scenario.auxSignal) return "temperatur"; // Framkoppling (FEAT-045) — bara byggt för Temperaturprocess hittills
   if (scenario.controller.gainSchedule?.enabled || scenario.process.nonlinearGain?.enabled) return "temperatur"; // Parameterstyrning/Ventilkarakteristik (FEAT-042) — samma
   if (scenario.process.type === "integrating") return "niva";
-  if (scenario.controller.mode === "onoff") return "onoff";
+  // UX-002_SYNLIGHETSGRANSKNING.md avsnitt 1 — on/off har ingen egen
+  // tillämpning längre (fel axel, se APPLICATION_PROFILES-kommentaren);
+  // ett generiskt on/off-scenario (t.ex. onoff-basic.json, ingen substans-
+  // berättelse) härleds därför till Fri utforskning precis som appens andra
+  // generiska scenarier.
   return "fri";
 }
 function loadScenarioByName(name) {
@@ -859,6 +863,10 @@ function updateControllerUIState() {
   document.getElementById("gainScheduleField").style.display = noIntegral ? "none" : "";
   if (noIntegral) fields.gainScheduleEnabled.checked = false;
   updateGainScheduleUIState();
+  // UX-002_SYNLIGHETSGRANSKNING.md avsnitt 2.1 — Framkoppling kräver P/PI/PID
+  // (se updateFramkopplingVisibility()); räknas om här så ett rent
+  // lägesbyte (utan tillämpningsbyte) också döljer/visar rätt.
+  updateFramkopplingVisibility();
 
   // Update controller parameters based on mode
   if (currentScenario && currentScenario.controller) {
@@ -916,14 +924,17 @@ function updateNonlinearGainUIState() {
 // erbjuds (PO:s uttryckliga pedagogiska krav, UX-001 avsnitt 1). "Fri
 // utforskning" = dagens fulla UI, helt ofiltrerad — och är alltid default
 // vid sidladdning (inget sparat läge mellan sessioner, se anropet i initUI()).
+// UX-002_SYNLIGHETSGRANSKNING.md avsnitt 1 (PO-godkänd 2026-09-20) —
+// "Tvålägesreglering (On/Off)" fanns tidigare som en egen tillämpning, men
+// on/off är en REGULATORSTRATEGI (samma axel som Läge), inte en
+// processkontext (samma axel som Temperaturprocess/Nivåprocess) — fel axel,
+// och dess uteslutning av Integrerande saknade reglerteknisk grund (on/off
+// fungerar lika bra på en integrerande process). OnOff är nu istället ett
+// giltigt Läge-val INOM varje tillämpning.
 const APPLICATION_PROFILES = {
   fri:        { processModels: ["self_regulating", "self_regulating_2", "integrating"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
-  // PO:s uppföljningsfråga (2026-09-20): ska PID vara blockerat vid
-  // Tvålägesreglering — ja, ENDAST OnOff är meningsfullt här, precis som
-  // bara de två självreglerande processmodellerna är det.
-  onoff:      { processModels: ["self_regulating", "self_regulating_2"], modes: ["onoff"], addons: [] },
-  temperatur: { processModels: ["self_regulating", "self_regulating_2"], modes: ["p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
-  niva:       { processModels: ["integrating"], modes: ["p", "pi", "pid", "manual"], addons: [] },
+  temperatur: { processModels: ["self_regulating", "self_regulating_2"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
+  niva:       { processModels: ["integrating"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: [] },
 };
 // Filtrerar ett <select>s <option>-ALTERNATIV till de tillåtna värdena —
 // väljaren själv döljs aldrig (samma princip för Processmodell som för
@@ -939,17 +950,42 @@ function filterSelectOptions(selectEl, allowedValues) {
   if (!currentValueAllowed) selectEl.value = allowedValues[0];
   return !currentValueAllowed;
 }
+// UX-002_SYNLIGHETSGRANSKNING.md avsnitt 2.1/3 (PO-godkänd 2026-09-20) —
+// Framkopplingens fält (Lastförstärkning/Kff/Last mag/Trigga last) kräver
+// BÅDE att Tillämpningen tillåter tillägget OCH att Läget faktiskt
+// använder Kff (P/PI/PID — sim-core.js applicerar feedforward bara i den
+// grenen, aldrig för Manuellt/OnOff, så fälten har noll effekt annars).
+// Egen funktion (inte bara den generiska [data-addon]-loopen) eftersom det
+// är det ENDA tillägget som behöver två villkor samtidigt — Parameter-
+// styrning har redan sitt lägesvillkor via updateControllerUIState()s
+// noIntegral, och Ventilkarakteristik är medvetet lägesoberoende (en
+// processegenskap, se rapporten avsnitt 2.5). Anropas både härifrån OCH
+// från updateControllerUIState(), så ett rent lägesbyte (utan
+// tillämpningsbyte) också räknas om.
+function updateFramkopplingVisibility() {
+  const profile = APPLICATION_PROFILES[fields.applicationProfile.value] || APPLICATION_PROFILES.fri;
+  const mode = fields.mode.value;
+  const isPidFamily = mode === "p" || mode === "pi" || mode === "pid";
+  const visible = profile.addons.includes("framkoppling") && isPidFamily;
+  document.querySelectorAll('[data-addon="framkoppling"]').forEach(el => {
+    el.classList.toggle("addon-hidden", !visible);
+  });
+}
 function applyApplicationProfile() {
   const profile = APPLICATION_PROFILES[fields.applicationProfile.value] || APPLICATION_PROFILES.fri;
   filterSelectOptions(fields.processType, profile.processModels);
   filterSelectOptions(fields.mode, profile.modes);
-  // Visa/dölj strategitilläggen. CSS-klassen (inte style.display direkt) så
-  // att den alltid vinner över lägesbaserad style.display på samma element
-  // (t.ex. updateProcessUIState()s nonlinearGainField-hantering) — se
-  // [data-addon].addon-hidden i index.html.
+  // Visa/dölj Parameterstyrning/Ventilkarakteristik. CSS-klassen (inte
+  // style.display direkt) så att den alltid vinner över lägesbaserad
+  // style.display på samma element (t.ex. updateProcessUIState()s
+  // nonlinearGainField-hantering) — se [data-addon].addon-hidden i
+  // index.html. Framkoppling hanteras separat, se
+  // updateFramkopplingVisibility() ovan (kräver även rätt Läge).
   document.querySelectorAll("[data-addon]").forEach(el => {
+    if (el.dataset.addon === "framkoppling") return;
     el.classList.toggle("addon-hidden", !profile.addons.includes(el.dataset.addon));
   });
+  updateFramkopplingVisibility();
   // PO:s granskning (2026-09-20) — att bara DÖLJA ett tillägg räcker inte:
   // dess effekt fortsatte gälla i simuleringen trots att kryssrutan/fältet
   // blivit osynligt och oåtkomligt. Samma princip som redan fanns för
@@ -962,6 +998,13 @@ function applyApplicationProfile() {
   // precis som lägesbyten redan gör. Vid ett MANUELLT tillämpningsbyte
   // (den enda situationen där kvarvarande tillstånd annars märks) synkas
   // och ritas om direkt i #applicationProfile-lyssnaren istället.
+  //
+  // Bara TILLÄMPNINGS-styrd döljning nollställer värden här — ett rent
+  // LÄGES-byte till Manuellt/OnOff behöver ingen nollställning: Kff blir
+  // redan död kod i sim-core.js (feedforward-raden nås aldrig för de
+  // lägena), och en redan triggad last (sim.auxValue) är en FYSISK
+  // processegenskap som legitimt ska fortsätta gälla oavsett regulatorläge
+  // — bara Kff är regulatorns eget bidrag.
   if (!profile.addons.includes("parameterstyrning")) fields.gainScheduleEnabled.checked = false;
   if (!profile.addons.includes("ventilkarakteristik")) fields.nonlinearGainEnabled.checked = false;
   if (!profile.addons.includes("framkoppling")) {
@@ -970,7 +1013,7 @@ function applyApplicationProfile() {
     if (sim) sim.auxValue = 0; // en redan triggad last är aktivt simuleringstillstånd, inte bara ett fältvärde
   }
   updateGainScheduleUIState();
-  updateControllerUIState(); // synkar Läge-beroende fält (inkl. Bumpless, se nedan) om Läge tvingades om
+  updateControllerUIState(); // synkar Läge-beroende fält (inkl. Bumpless och Framkoppling) om Läge tvingades om
   updateProcessUIState();
 }
 
