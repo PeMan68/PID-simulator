@@ -1,5 +1,5 @@
 {
-  "version": "v1.5.5-prod",
+  "version": "v1.6.0-prod",
   "help": "help.json",
   "scenarios": [
     { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json", "standalone": true },
@@ -18,7 +18,11 @@
     { "id": "pid-pulse-rejection",        "file": "scenarios/pid-pulse-rejection.json",         "standalone": true },
     { "id": "valve-nonlinear-gain-demo",           "file": "scenarios/valve-nonlinear-gain-demo.json",           "standalone": true },
     { "id": "valve-nonlinear-gain-demo-kp3",       "file": "scenarios/valve-nonlinear-gain-demo-kp3.json",       "standalone": false },
-    { "id": "valve-nonlinear-gain-demo-scheduled", "file": "scenarios/valve-nonlinear-gain-demo-scheduled.json", "standalone": false }
+    { "id": "valve-nonlinear-gain-demo-scheduled", "file": "scenarios/valve-nonlinear-gain-demo-scheduled.json", "standalone": false },
+    { "id": "framkoppling-demo-pid",         "file": "scenarios/framkoppling-demo-pid.json",         "standalone": true },
+    { "id": "framkoppling-demo-pid-fel-kff", "file": "scenarios/framkoppling-demo-pid-fel-kff.json", "standalone": false },
+    { "id": "framkoppling-demo-pid-ff",      "file": "scenarios/framkoppling-demo-pid-ff.json",      "standalone": false },
+    { "id": "framkoppling-demo-ren-ff",      "file": "scenarios/framkoppling-demo-ren-ff.json",      "standalone": true }
   ],
   "theory": [
     { "id": "pid-intro",         "file": "theory/pid-intro.v1.json" },
@@ -27,7 +31,8 @@
     { "id": "process-basics",    "file": "theory/process-basics.v1.json" },
     { "id": "integrator-windup", "file": "theory/integrator-windup.v1.json" },
     { "id": "disturbance-robustness", "file": "theory/disturbance-robustness.v1.json" },
-    { "id": "parameterstyrning-ventilkarakteristik", "file": "theory/parameterstyrning-ventilkarakteristik.v1.json" }
+    { "id": "parameterstyrning-ventilkarakteristik", "file": "theory/parameterstyrning-ventilkarakteristik.v1.json" },
+    { "id": "framkoppling", "file": "theory/framkoppling.v1.json" }
   ],
   "learning_paths": [
     { "id": "kom-igång.v1",                     "file": "exercises/kom-igång.v1.json" },
@@ -37,6 +42,7 @@
     { "id": "processbegransningar.v1",          "file": "exercises/processbegransningar.v1.json" },
     { "id": "windup-antiwindup.v1",             "file": "exercises/windup-antiwindup.v1.json" },
     { "id": "storningar-robusthet.v1",          "file": "exercises/storningar-robusthet.v1.json" },
-    { "id": "parameterstyrning-ventilkarakteristik.v1", "file": "exercises/parameterstyrning-ventilkarakteristik.v1.json" }
+    { "id": "parameterstyrning-ventilkarakteristik.v1", "file": "exercises/parameterstyrning-ventilkarakteristik.v1.json" },
+    { "id": "framkoppling.v1", "file": "exercises/framkoppling.v1.json" }
   ]
 }
