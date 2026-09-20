@@ -89,6 +89,8 @@ const learnBody = document.getElementById("learnBody");
 const btnExtendSteps = document.getElementById("btnExtendSteps");
 
 const fields = {
+  // UX-002 — Tillämpning (styr vilka processmodeller/strategitillägg som visas, se applyApplicationProfile())
+  applicationProfile: document.getElementById("applicationProfile"),
   processType: document.getElementById("processType"),
   k: document.getElementById("k"), t: document.getElementById("t"), l: document.getElementById("l"),
   normalValue: document.getElementById("normalValue"),
@@ -887,6 +889,40 @@ function updateNonlinearGainUIState() {
   updateZoneIndicators();
 }
 
+// UX-002 (UX-001 Fas 0) — Tillämpning: filtrerar vilka processmodeller som
+// erbjuds i Processmodell-väljaren (fields.processType) och vilka
+// strategitillägg (Framkoppling/Parameterstyrning/Ventilkarakteristik, se
+// data-addon-attribut i index.html) som visas. Döljer ALDRIG själva
+// Processmodell-väljaren eller dess begrepp — bara vilka ALTERNATIV som
+// erbjuds (PO:s uttryckliga pedagogiska krav, UX-001 avsnitt 1). "Fri
+// utforskning" = dagens fulla UI, helt ofiltrerad — och är alltid default
+// vid sidladdning (inget sparat läge mellan sessioner, se anropet i initUI()).
+const APPLICATION_PROFILES = {
+  fri:        { processModels: ["self_regulating", "self_regulating_2", "integrating"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
+  onoff:      { processModels: ["self_regulating", "self_regulating_2"], addons: [] },
+  temperatur: { processModels: ["self_regulating", "self_regulating_2"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
+  niva:       { processModels: ["integrating"], addons: [] },
+};
+function applyApplicationProfile() {
+  const profile = APPLICATION_PROFILES[fields.applicationProfile.value] || APPLICATION_PROFILES.fri;
+  // Filtrera Processmodell-väljarens ALTERNATIV — väljaren själv döljs aldrig.
+  let currentValueAllowed = false;
+  Array.from(fields.processType.options).forEach(opt => {
+    const allowed = profile.processModels.includes(opt.value);
+    opt.hidden = !allowed;
+    if (opt.value === fields.processType.value && allowed) currentValueAllowed = true;
+  });
+  if (!currentValueAllowed) fields.processType.value = profile.processModels[0];
+  // Visa/dölj strategitilläggen. CSS-klassen (inte style.display direkt) så
+  // att den alltid vinner över lägesbaserad style.display på samma element
+  // (t.ex. updateProcessUIState()s nonlinearGainField-hantering) — se
+  // [data-addon].addon-hidden i index.html.
+  document.querySelectorAll("[data-addon]").forEach(el => {
+    el.classList.toggle("addon-hidden", !profile.addons.includes(el.dataset.addon));
+  });
+  updateProcessUIState();
+}
+
 function updateScoreDisplay() {
   const el = document.getElementById("scoreDisplay");
   const txt = document.getElementById("scoreText");
@@ -1043,6 +1079,11 @@ function initUI() {
   Object.entries(SCENARIOS).forEach(([name, s]) => { if (!s._standalone) return; const o = document.createElement("option"); o.value = name; o.textContent = s.title || name; scenarioSelect.appendChild(o); });
   Object.entries(LEARNING_PATHS).forEach(([id, p]) => { const o = document.createElement("option"); o.value = id; o.textContent = p.title || id; learningPathSelect.appendChild(o); });
   loadScenarioByName("basic-step-self-regulating.json");
+  // UX-002 — "Fri utforskning" är alltid default vid sidladdning (inget
+  // sparat läge mellan sessioner) — se kommentar vid APPLICATION_PROFILES.
+  // Anropas efter loadScenarioByName() så den nyss laddade scenariofilens
+  // egen processType respekteras (profilen "fri" tillåter alla tre ändå).
+  applyApplicationProfile();
   if (!localStorage.getItem("pidSimWelcomed")) showWelcome();
   applyEnvironmentUI();
 }
@@ -1224,6 +1265,11 @@ document.getElementById("mode").addEventListener("change", () => {
 document.getElementById("processType").addEventListener("change", () => {
   updateProcessUIState();
   activityDispatch("process_type_changed", { field: "processType", value: fields.processType.value });
+});
+// UX-002 — Tillämpning: byte filtrerar processmodellerna + strategitilläggen, se applyApplicationProfile().
+document.getElementById("applicationProfile").addEventListener("change", () => {
+  applyApplicationProfile();
+  activityDispatch("application_profile_changed", { field: "applicationProfile", value: fields.applicationProfile.value });
 });
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad — scenariots maxantal steg är nått. Klicka “Fler steg →” för att fortsätta."); else { appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); markZoneChangeIfAny(); } updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("simulation_step", { contextKey: activityContextKey() }); });
 document.getElementById("run10").addEventListener("click", () => {

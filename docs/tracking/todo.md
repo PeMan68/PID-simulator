@@ -22,7 +22,38 @@ Ingen ändring i `sim-core.js`, inget nytt scenariofält, Fri utforskning är
 default (= dagens fulla UI, oförändrat för alla 12 befintliga lärstigar).
 Blandnings-/kvotprocess och Kaskadreglerad process byggs INTE nu (Fas 2,
 kräver egen strategikod som inte finns än).
-**Status:** Registrerad, implementation påbörjas.
+**Genomförande:**
+Ny "Tillämpning"-grupp överst i parametersidopanelen (`#groupTillampning`,
+samma `.param-group`-mönster som övriga grupper) med väljaren
+`#applicationProfile` (Fri utforskning/Tvålägesreglering/Temperaturprocess/
+Nivåprocess). Ny `APPLICATION_PROFILES`-tabell i `app.js` (fyra profiler,
+matchar UX-001 avsnitt 1.1 exakt) och `applyApplicationProfile()`: filtrerar
+`#processType`s `<option>`-alternativ via `.hidden` (väljaren SJÄLV döljs
+aldrig, bara alternativen — PO:s pedagogiska krav), faller tillbaka till ett
+giltigt värde om det aktuella blir otillåtet, och visar/döljer
+strategitilläggen via en ny `[data-addon]`-attributmarkering (auxGain/Kff/
+Last mag/Trigga last → `framkoppling`; `#gainScheduleField(s)` →
+`parameterstyrning`; `#nonlinearGainField(s)` → `ventilkarakteristik`) och en
+`.addon-hidden`-CSS-klass med `!important` (vinner medvetet över befintlig
+lägesbaserad `style.display` på samma element, t.ex.
+`updateProcessUIState()`s hantering av `nonlinearGainField` — annars hade de
+två skrivit över varandra). "Processtyp" omdöpt till "Processmodell"
+(fält-etikett + `help.json`). Inget sparat tillämpningsläge mellan
+sidladdningar — Fri utforskning är alltid startläget, per PO:s ord. Ingen
+ändring i `sim-core.js`, inget nytt scenariofält.
+**Tester:** `tests/ux-002-application-profile.test.mjs` (36 kontroller, ren
+statisk källkodsgranskning — samma mönster som
+`hotfix-v1.4.1-facit-env.test.mjs` — inklusive att `APPLICATION_PROFILES`
+extraheras och körs isolerat för att verifiera den faktiska datastrukturen,
+inte bara regexmatchas). Full regression grön (9 testfiler, 211
+kontroller), DEV-/PROD-innehålls- och byggvalidering grön.
+**Status:** Implementerad på feature-branchen. Ingen webbläsare tillgänglig i
+denna miljö — layouten/UI-flödet är INTE visuellt verifierat, bara
+källkodsgranskat och smoke-testat via HTTP. PO bör testa i webbläsaren innan
+mergebeslut, särskilt: (1) att fältgrupperna verkligen döljs/visas korrekt
+för samtliga fyra tillämpningar, (2) att bytet känns smidigt vid en redan
+pågående körning, (3) den visuella placeringen av den nya
+"Tillämpning"-gruppen överst.
 
 
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)

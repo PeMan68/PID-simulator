@@ -76,8 +76,8 @@
     "body": "Det värde som processen naturligt återgår till när utsignalen u=0.\n\nMaximalt uppnåeligt PV:\nPV_max = normalValue + K × u_max\n\nExempel: normalValue=20, K=0.5, u_max=100 → PV_max=70.\n\nOm SP > PV_max kan regulatorn aldrig nå börvärdet.\n\nGäller bara självreglerande processer — integrerande processer saknar naturlig vilopunkt."
   },
   "processType": {
-    "title": "Processtyp",
-    "body": "Självreglerande: Processen har en naturlig vilopunkt — vid u=0 återgår PV till normalValue. Exempel: rumstemperatur, flöde i ett rör.\n\nIntegrerande: Processen integrerar nettoflödet — ingen naturlig vilopunkt. Exempel: tanknivå, position.\n\nJämvikt kräver att inflöde = utflöde: u_jämvikt = utflöde / Kv\n\nTips: Byt typ och ladda om för att se skillnaden i beteende."
+    "title": "Processmodell",
+    "body": "Självreglerande: Processen har en naturlig vilopunkt — vid u=0 återgår PV till normalValue. Exempel: rumstemperatur, flöde i ett rör. Enkapacitiv = första ordningen; flerkapacitiv = flera trögheter i serie, tröggare, mer S-formad respons.\n\nIntegrerande: Processen integrerar nettoflödet — ingen naturlig vilopunkt. Exempel: tanknivå, position.\n\nJämvikt kräver att inflöde = utflöde: u_jämvikt = utflöde / Kv\n\nTips: Byt modell och ladda om för att se skillnaden i beteende. Vilka processmodeller som erbjuds styrs av vald Tillämpning (se dess hjälptext)."
   },
   "kv": {
     "title": "Kv — Hastighetsförstärkning (integrerande process)",
@@ -138,5 +138,9 @@
   "auxMag": {
     "title": "Last mag — Mätbar laststörning",
     "body": "Det värde lasten antar när den triggas med knappen 'Trigga last'.\n\nExempel: i en värmeväxlare motsvarar det en plötslig förändring i den inkommande temperaturen, uppmätt av en temperaturgivare uppströms — innan den hunnit påverka den utgående temperaturen (PV).\n\nAnges på samma 0–100-skala som PV/SP/u, inte i grader eller en annan fysisk enhet — en riktig temperaturgivares egen kalibrering till den skalan ligger utanför vad simulatorn modellerar, precis som för PV.\n\nTill skillnad från Puls (som återgår till 0 av sig själv) ligger lasten kvar BESTÅENDE tills du klickar 'Återställ system', eller triggar ett nytt lastvärde (t.ex. 0, för att ta bort lasten igen).\n\nKombinera med 'Lastförstärkning' (hur mycket lasten fysiskt påverkar processen) och 'Kff' (hur mycket regulatorn kompenserar för den i förväg)."
+  },
+  "applicationProfile": {
+    "title": "Tillämpning",
+    "body": "Väljer vilket sammanhang du utforskar — styr vilka Processmodeller som erbjuds nedan, och vilka strategitillägg (Framkoppling/Parameterstyrning/Olinjär ventilkarakteristik) som visas.\n\n'Fri utforskning' visar allt, precis som tidigare — inget döljs eller begränsas.\n\nDe andra tillämpningarna smalnar bara av VILKA ALTERNATIV som visas (t.ex. Nivåprocess visar bara Integrerande i Processmodell-väljaren) — själva Processmodell-begreppet är alltid synligt, oavsett tillämpning, eftersom det är en central reglerteknisk grundidé.\n\nByt tillämpning fritt när som helst — inget sparas mellan sidladdningar, och inga simuleringsvärden eller scenarier påverkas, bara vilka fält som visas."
   }
 }
