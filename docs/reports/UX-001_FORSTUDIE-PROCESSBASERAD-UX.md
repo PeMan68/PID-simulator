@@ -1,18 +1,22 @@
 # UX-001 — Förstudie: processbaserad användarmodell
 
-**Datum:** 2026-09-20 (rev. 2, samma dag — PO:s tvådimensionella korrigering)
+**Datum:** 2026-09-20 (rev. 3, samma dag — PO:s svar på öppna frågor + genomläsning av `oppen-slinga-onoff-p.v1`)
 **Uppdragsgivare:** PO (efter FEAT-042/FEAT-045, pausar ny reglerstrategiutveckling)
 **Typ:** Förstudie/rekommendation — INGEN kod, ingen branch
-**Underlag:** `apps/app/index.html`/`app.js` (dagens parametergrid), samtliga 12 DEV-lärstigar,
-`docs/reports/STRAT-001…005`, `docs/reports/FEAT-042_IMPLEMENTATION.md`,
+**Underlag:** `apps/app/index.html`/`app.js` (dagens parametergrid), samtliga 12 DEV-lärstigar
+(inkl. fullständig genomläsning av `oppen-slinga-onoff-p.v1.json` + dess tre
+scenarier), `docs/reports/STRAT-001…005`, `docs/reports/FEAT-042_IMPLEMENTATION.md`,
 `docs/reports/FEAT-045_IMPLEMENTATION.md`/`_ANVANDARTEST-ATGARDER.md`,
 `docs/assets/diagrams/` (FEAT-046, Kvot-/Kaskaddiagrammen)
 
 **Revisionsnotis:** Rev. 1 (samma dag) föreslog EN sammanslagen "kategori"-axel
 (processdynamik + tillämpning ihopblandat). PO korrigerade: det är TVÅ separata
-dimensioner, och processmodellen ska förbli ett tydligt, synligt begrepp för
-studenten — inte gömmas bakom tillämpningsvalet. Avsnitt 1–6 nedan är omskrivna
-i linje med det.
+dimensioner (rev. 2). Rev. 3: PO har svarat på samtliga fyra öppna frågor från
+rev. 2 (se avsnitt 6, nu markerade BESLUTADE) och bett om en separat
+genomläsning av `oppen-slinga-onoff-p.v1` (ny avsnitt 4.1) samt att
+kaskadreglering ska anta OBEROENDE processmodeller per slinga (avsnitt 1.1/2
+uppdaterade). Nästa steg är beslutat: **UX-002** (Fas 0-implementation), se
+separat registrering i `todo.md`.
 
 ---
 
@@ -73,7 +77,7 @@ alternativet ska stå tydligt märkt i UI:t, inte gömmas.
 | **Temperaturprocess** | Självreglerande (enkapacitiv), Självreglerande (flerkapacitiv) | Framkoppling, Parameterstyrning, Ventilkarakteristik | Temperaturgivare, ev. lastgivare |
 | **Nivåprocess** | Integrerande | *(framtida)* Konisk tank, Parameterstyrning | Nivågivare |
 | **Blandnings-/kvotprocess** *(framtida)* | Två självreglerande flöden (ett processmodellval PER flöde) | Kvotreglering | Två flödesgivare |
-| **Kaskadreglerad process** *(framtida)* | Fritt processmodellval PER slinga (inre slinga, yttre slinga) | Kaskadreglering, ev. Framkoppling på yttre slingan | Två givare (inre + yttre) |
+| **Kaskadreglerad process** *(framtida)* | Fritt, OBEROENDE processmodellval PER slinga (inre slinga, yttre slinga — kan skilja sig, t.ex. inre Självreglerande/yttre Integrerande, se avsnitt 6 punkt 3) | Kaskadreglering, ev. Framkoppling på yttre slingan | Två givare (inre + yttre) |
 | **Fri utforskning** | Alla tre, fritt val — exakt som idag | Allt, oskalat | — |
 
 Detta är PO:s egen struktur (relayerad i uppdraget), inte en omtolkning.
@@ -163,13 +167,44 @@ mekanismen finns:**
 | `parameterstyrning-ventilkarakteristik.v1` | Temperaturprocess (Tillägg: Parameterstyrning + Ventilkarakteristik) | Självreglerande (enkapacitiv) |
 | `framkoppling.v1` | Temperaturprocess (Tillägg: Framkoppling) | Självreglerande (enkapacitiv) |
 | `integrerande-process-niva.v1` | Nivåprocess | Integrerande |
-| `oppen-slinga-onoff-p.v1` | Delvis Tvålägesreglering — kräver genomläsning (se not nedan) |  |
+| `oppen-slinga-onoff-p.v1` | Blandad — se avsnitt 4.1, PER STEG, inte en enda tagg |  |
 
-**Not om `oppen-slinga-onoff-p.v1`:** lärstigens namn antyder både "öppen
-slinga" och "on/off, P" — den kan täcka MER än en tillämpning (t.ex. även
-inleda till Fri utforskning/grundläggande P-reglering). Kräver en faktisk
-genomläsning av dess steg innan en enda tillämpnings-tagg sätts — flaggas här,
-inte löst i denna förstudie.
+### 4.1 Genomläsning: `oppen-slinga-onoff-p.v1` (PO:s misstanke bekräftad)
+
+Lärstigen har 5 steg, alla `self_regulating` (enkapacitiv) — processmodellen är
+alltså konsekvent genom hela lärstigen, inget problem där. Men INNEHÅLLET
+blandar tre skilda pedagogiska teman, precis som PO misstänkte:
+
+| Steg | Typ | Tema | Passar tillämpning |
+|---|---|---|---|
+| 1 | Teori (`pid-intro`) | PV/SP/u/e — universella grundbegrepp | Ingen specifik (alla) |
+| 2 | Scenario (`manual-open-loop`) | Öppen slinga (manuellt läge, ingen återkoppling) | Ingen specifik (alla) — konceptet "öppen vs sluten slinga" gäller lika mycket i en temperatur- som en nivåprocess |
+| 3 | Teori (`onoff-theory`) | Hysteres | **Tvålägesreglering** |
+| 4 | Scenario (`onoff-basic`) | On/off-oscillation | **Tvålägesreglering** |
+| 5 | Scenario (`p-step-self-regulating`) | P-reglering, stationärt fel | Ingen specifik — grund för PID-tråden (se nedan) |
+
+**Viktigt fynd:** steg 5 (P-reglering) är INTE en del av Tvålägesreglering-temat
+alls — det är första länken i en separat kedja. `pi-pid.v1`s egen beskrivning
+säger uttryckligen "Bygger vidare på P/PI-jämförelsen i **föregående lärstig**"
+— dvs. steg 5 här är medvetet skrivet som förberedelse för `pi-pid.v1`s PI/PID-
+jämförelse, inte som en fortsättning på on/off-temat i steg 3–4. Lärstigen är
+alltså en sammanvävd "från ingenting till PID"-berättelse (öppen slinga → on/off
+→ P → [nästa lärstig] PI → PID), inte en enda sammanhållen tillämpning.
+
+**Rekommendation: DELA INTE UPP lärstigen nu.** Berättelsens ordning (öppen
+slinga → on/off → P) har ett eget pedagogiskt värde som en progression — att
+tvinga fram en uppdelning bara för att passa en UI-tagg vore att låta
+verktyget styra innehållet, inte tvärtom. Lös det istället på TAGGNINGSNIVÅN:
+
+**Design-implikation för Fas 1:** tillämpnings-taggen bör kunna sättas PER
+LÄRSTIGSSTEG, inte bara per lärstig som ursprungligen skissat i avsnitt 5. Det
+är billigare än det låter — appen växlar redan UI-tillstånd vid VARJE
+scenariobyte (`loadScenarioByName()` triggar om `updateProcessUIState()`/
+`updateControllerUIState()` för varje nytt steg), så att låta samma mekanism
+även sätta tillämpning är en förlängning av ett mönster som redan finns, inte
+en ny arkitektur. Konkret: steg 3–4 taggas `Tvålägesreglering`, steg 1/2/5
+taggas `null`/ospecificerad (vilket kan betyda "ärv föregående" eller "Fri
+utforskning" — ett designval för Fas 1, inte avgjort här).
 
 **Framtida lärstigar (Kvotreglering/Kaskadreglering) bör byggas DIREKT mot sina
 respektive tillämpningar**, inte mot dagens generiska UI följt av en
@@ -205,10 +240,13 @@ som idag. Ingen ändring i `sim-core.js`, inga nya scenario-fält, inga
 befintliga lärstigar påverkas. **Detta är den delen jag skulle rekommendera som
 ett första, avgränsat FEAT-uppdrag.**
 
-**Fas 1 — koppla lärstigar till tillämpning+processmodell:** nya, valfria fält
-i lärstigs-JSON:en (läses av `loadPath()`), enligt tabellen i avsnitt 4, så att
-rätt tillämpning/processmodell/tilläggsflik sätts automatiskt när en lärstig
-öppnas.
+**Fas 1 — koppla lärstigar till tillämpning+processmodell:** nya, valfria fält,
+enligt tabellen i avsnitt 4. Genomläsningen av `oppen-slinga-onoff-p.v1`
+(avsnitt 4.1) visar att taggen behöver kunna sättas PER STEG (`steps[].ref`-
+nivå), inte bara per lärstig som i den första skissen — annars tvingas en
+blandad lärstig in i en enda, felaktig tillämpning. Detta är en förlängning av
+det UI-tillstånd som redan växlas om vid varje scenariobyte
+(`loadScenarioByName()`), inte en ny mekanism.
 
 **Fas 2 — Kvotreglering/Kaskadreglering som egna tillämpningar från start:**
 designas DIREKT mot dedikerad layout (två regulatorer/kvotblock, kaskadens
@@ -223,19 +261,29 @@ redan PO-godkända lärstigarna.
 
 ---
 
-## 6. Öppna frågor till PO
+## 6. Öppna frågor — PO:s svar (2026-09-20)
 
-1. Namnbyte "Självreglerande 2:a ordn." → "Självreglerande (flerkapacitiv)"
-   (avsnitt 1.2) — kan det göras som en egen, liten, omedelbar textändring
-   redan nu, oberoende av resten av UX-001? Låg risk, ingen strukturändring.
-2. `oppen-slinga-onoff-p.v1` behöver läsas igenom för att avgöra om den hör
-   till Tvålägesreglering, Fri utforskning, eller båda (delad lärstig) —
-   ska jag göra den genomläsningen som en del av nästa steg?
-3. Kaskadreglerings "processmodell per slinga" (avsnitt 1.1/2) — ska INRE och
-   YTTRE slinga kunna ha OLIKA processmodeller samtidigt (t.ex. inre
-   integrerande, yttre självreglerande), eller är det i praktiken alltid samma
-   modell i båda men separata K/T/L-värden? Påverkar hur mycket UI som krävs
-   i Fas 2.
-4. Är tillämpningslistan i avsnitt 1.1 komplett, eller finns fler du vill se?
+1. **BESLUTAT — gjort.** Namnbyte "Självreglerande 2:a ordn." →
+   "Självreglerande (flerkapacitiv)" (och "Självreglerande" →
+   "Självreglerande (enkapacitiv)" för konsekvens) genomfört direkt, oberoende
+   av resten av UX-001. Se `todo-done.md` (UX-001b).
+2. **BESLUTAT — gjort.** Genomläsning av `oppen-slinga-onoff-p.v1` klar, se
+   avsnitt 4.1. PO:s misstanke bekräftad: lärstigen blandar tre teman
+   (öppen slinga, Tvålägesreglering, P-reglerings-grund för `pi-pid.v1`).
+   Rekommendation: dela INTE upp lärstigen, men Fas 1:s taggningsmekanism
+   måste stödja per-steg-taggar, inte bara per lärstig.
+3. **BESLUTAT.** Kaskadreglerings inre/yttre slinga ska kunna ha OLIKA,
+   OBEROENDE processmodeller (PO: "kostar i princip inget i förstudiefasen att
+   utgå från att de är oberoende"). Avsnitt 1.1/2 uppdaterade. Ingen
+   implementation krävs nu — Fas 2:s design ska bara vara KOMPATIBEL med
+   antagandet, inte begränsa det i förväg.
+4. **BESLUTAT.** Tillämpningslistan (avsnitt 1.1: Tvålägesreglering,
+   Temperaturprocess, Nivåprocess, Blandnings-/kvotprocess, Kaskadreglerad
+   process, Fri utforskning) är komplett. Inga fler läggs till förrän ett
+   verkligt behov uppstår.
 
-Inget av ovanstående är implementerat. Ingen branch skapad.
+**PO:s rekommenderade nästa steg (beslutat):** inte STRAT-006, inte
+Kvotreglering, inte Kaskadreglering — utan **UX-002**, Fas 0 från avsnitt 5:
+tillämpningsväljare + processmodellsväljare + visa/dölj-logik, inga ändringar
+i `sim-core.js`, ingen ändring av scenarioformat, Fri utforskning som
+standard. Se registrering i `todo.md`.
