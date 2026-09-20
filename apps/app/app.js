@@ -611,6 +611,19 @@ function activityContextKey() {
   if (currentPath && currentPathStep >= 0) return currentPathId + "#" + currentPathStep;
   return currentScenario ? currentScenario.id : null;
 }
+// UX-002 (PO:s granskningsobservation 2) — härleder vilken Tillämpning som
+// matchar ett scenario, rent utifrån data som redan finns i scenariot (inget
+// nytt scenariofält). Körs vid VARJE scenarioladdning (lärstig OCH manuellt
+// val i scenario-listan, se loadScenarioByName()) — garanterar att
+// Tillämpning + Processmodell + strategitillägg alltid är en sammanhängande
+// kombination, aldrig kvarlämnad från ett tidigare, orelaterat scenario.
+function deriveApplicationProfile(scenario) {
+  if (scenario.auxSignal) return "temperatur"; // Framkoppling (FEAT-045) — bara byggt för Temperaturprocess hittills
+  if (scenario.controller.gainSchedule?.enabled || scenario.process.nonlinearGain?.enabled) return "temperatur"; // Parameterstyrning/Ventilkarakteristik (FEAT-042) — samma
+  if (scenario.process.type === "integrating") return "niva";
+  if (scenario.controller.mode === "onoff") return "onoff";
+  return "fri";
+}
 function loadScenarioByName(name) {
   if (measureMode) exitMeasureMode();
   zoomView = null; pvZoomView = null;
@@ -619,10 +632,11 @@ function loadScenarioByName(name) {
   sim = new Simulation(currentScenario, 42);
   sim.history.markers = [];
   hydrateFields(currentScenario);
+  fields.applicationProfile.value = deriveApplicationProfile(currentScenario);
+  applyApplicationProfile(); // filtrerar Processmodell-alternativen/tilläggen åt den härledda Tillämpningen, och synkar om processType-beroende fält
   captureMarkerBaseline();
   appendLog("Laddat scenario: " + currentScenario.id);
   updateControllerUIState();
-  updateProcessUIState();
   updateStatus(); updateStepLimitUI(); drawChart();
   activityDispatch("scenario_loaded", { scenarioId: currentScenario.id, contextKey: activityContextKey() });
 }
@@ -1078,12 +1092,11 @@ function showWelcome() {
 function initUI() {
   Object.entries(SCENARIOS).forEach(([name, s]) => { if (!s._standalone) return; const o = document.createElement("option"); o.value = name; o.textContent = s.title || name; scenarioSelect.appendChild(o); });
   Object.entries(LEARNING_PATHS).forEach(([id, p]) => { const o = document.createElement("option"); o.value = id; o.textContent = p.title || id; learningPathSelect.appendChild(o); });
+  // UX-002 — loadScenarioByName() sätter redan rätt Tillämpning (se
+  // deriveApplicationProfile()); för startscenariot ger det "Fri
+  // utforskning", som ändå alltid är default (inget sparas mellan
+  // sidladdningar, se kommentaren vid APPLICATION_PROFILES).
   loadScenarioByName("basic-step-self-regulating.json");
-  // UX-002 — "Fri utforskning" är alltid default vid sidladdning (inget
-  // sparat läge mellan sessioner) — se kommentar vid APPLICATION_PROFILES.
-  // Anropas efter loadScenarioByName() så den nyss laddade scenariofilens
-  // egen processType respekteras (profilen "fri" tillåter alla tre ändå).
-  applyApplicationProfile();
   if (!localStorage.getItem("pidSimWelcomed")) showWelcome();
   applyEnvironmentUI();
 }

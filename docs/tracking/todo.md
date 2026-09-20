@@ -41,19 +41,39 @@ två skrivit över varandra). "Processtyp" omdöpt till "Processmodell"
 (fält-etikett + `help.json`). Inget sparat tillämpningsläge mellan
 sidladdningar — Fri utforskning är alltid startläget, per PO:s ord. Ingen
 ändring i `sim-core.js`, inget nytt scenariofält.
-**Tester:** `tests/ux-002-application-profile.test.mjs` (36 kontroller, ren
+**Tester:** `tests/ux-002-application-profile.test.mjs` (43 kontroller, ren
 statisk källkodsgranskning — samma mönster som
 `hotfix-v1.4.1-facit-env.test.mjs` — inklusive att `APPLICATION_PROFILES`
 extraheras och körs isolerat för att verifiera den faktiska datastrukturen,
-inte bara regexmatchas). Full regression grön (9 testfiler, 211
+inte bara regexmatchas). Full regression grön (9 testfiler, 218
 kontroller), DEV-/PROD-innehålls- och byggvalidering grön.
-**Status:** Implementerad på feature-branchen. Ingen webbläsare tillgänglig i
-denna miljö — layouten/UI-flödet är INTE visuellt verifierat, bara
-källkodsgranskat och smoke-testat via HTTP. PO bör testa i webbläsaren innan
-mergebeslut, särskilt: (1) att fältgrupperna verkligen döljs/visas korrekt
-för samtliga fyra tillämpningar, (2) att bytet känns smidigt vid en redan
-pågående körning, (3) den visuella placeringen av den nya
-"Tillämpning"-gruppen överst.
+
+**Åtgärder efter PO:s första visuella granskning (2026-09-20):**
+1. **Observation 1 (egen grupp tog för mycket plats):** "Tillämpning"-fältet
+   flyttat ur sin egen `#groupTillampning`-grupp (borttagen) och in i
+   Process-gruppen, direkt FÖRE Processmodell — synliggör sambandet
+   Tillämpning → Processmodell → processparametrar utan extra vertikalt
+   utrymme.
+2. **Observation 2 (lärstig satte bara Processmodell, inte Tillämpning —
+   kunde visa "Nivåprocess" + ett självreglerande scenario samtidigt):** ny
+   `deriveApplicationProfile(scenario)` i `app.js`, körd vid VARJE
+   scenarioladdning (`loadScenarioByName()`, både via lärstig och manuellt
+   scenarioval) — härleder Tillämpning från data som redan finns i
+   scenariot (inget nytt scenariofält): `auxSignal`/aktiv
+   `gainSchedule`/`nonlinearGain` → Temperaturprocess, `process.type ===
+   "integrating"` → Nivåprocess, `mode === "onoff"` → Tvålägesreglering,
+   annars → Fri utforskning. Sätts INNAN `applyApplicationProfile()`
+   filtrerar Processmodell-alternativen, så de två alltid är en
+   sammanhängande kombination — aldrig kvarlämnad från ett tidigare,
+   orelaterat scenario. Verifierat mot verkliga scenariofiler
+   (`integrating-pi.json`→niva, `onoff-basic.json`→onoff,
+   `valve-nonlinear-gain-demo.json`/`framkoppling-demo-pid.json`→temperatur,
+   generiska PID-scenarier→fri).
+**Status:** Båda granskningsobservationerna åtgärdade på feature-branchen.
+Ingen webbläsare tillgänglig i denna miljö — fortfarande INTE visuellt
+verifierat, bara källkodsgranskat, logiskt verifierat mot verkliga
+scenariofiler, och smoke-testat via HTTP. PO fortsätter granskningen —
+nästa UX-granskningsrunda väntar på klartecken, per PO:s instruktion.
 
 
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)

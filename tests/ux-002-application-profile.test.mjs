@@ -35,6 +35,10 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   check("1c. Alternativ: Tvålägesreglering (On\\/Off)", /<option value="onoff">Tvålägesreglering \(On\/Off\)<\/option>/.test(html));
   check("1d. Alternativ: Temperaturprocess", /<option value="temperatur">Temperaturprocess<\/option>/.test(html));
   check("1e. Alternativ: Nivåprocess", /<option value="niva">Nivåprocess<\/option>/.test(html));
+  // Granskningsobservation 1 (PO): Tillämpning ska INTE vara en egen
+  // parametergrupp — flyttad in i Process-gruppen, direkt före Processmodell.
+  check("1f. Ingen egen \"groupTillampning\"-parametergrupp längre", !html.includes('id="groupTillampning"'));
+  check("1g. Tillämpning-fältet ligger i Process-gruppen, DIREKT FÖRE Processmodell", /id="groupProcess">[\s\S]{0,600}<label for="applicationProfile"[\s\S]{0,650}<label for="processType"/.test(html));
 }
 
 // ── 2. index.html: Processmodell-väljaren är omdöpt, ALDRIG helt dold ──
@@ -100,8 +104,21 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   check("6d. Döljer/visar [data-addon]-element via addon-hidden-klassen (inte style.display direkt, undviker konflikt med lägesstyrd döljning)", /classList\.toggle\("addon-hidden", !profile\.addons\.includes\(el\.dataset\.addon\)\)/.test(appJs));
   check("6e. Anropar updateProcessUIState() så Processmodell-beroende fält synkas om", /function applyApplicationProfile\(\) \{[\s\S]{0,1200}updateProcessUIState\(\);\s*\n\}/.test(appJs));
   check("6f. #applicationProfile har en change-lyssnare kopplad till applyApplicationProfile()", /getElementById\("applicationProfile"\)\.addEventListener\("change", \(\) => \{\s*\n\s*applyApplicationProfile\(\);/.test(appJs));
-  check("6g. initUI() anropar applyApplicationProfile() (etablerar \"Fri utforskning\" som startläge)", /function initUI\(\) \{[\s\S]{0,900}applyApplicationProfile\(\);/.test(appJs));
   check("6h. Inget sparat tillämpningsläge i localStorage (Fri utforskning ska alltid vara default vid sidladdning)", !/localStorage\.[gs]etItem\("[^"]*[Aa]pplication[Pp]rofile/.test(appJs));
+}
+
+// ── 6i–6m. Granskningsobservation 2: varje scenarioladdning sätter en
+// SAMMANHÄNGANDE Tillämpning+Processmodell-kombination (deriveApplicationProfile()) ──
+{
+  check("6i. deriveApplicationProfile()-funktionen är definierad", /function deriveApplicationProfile\(scenario\)/.test(appJs));
+  check("6j. Framkoppling (auxSignal) → Temperaturprocess", /if \(scenario\.auxSignal\) return "temperatur";/.test(appJs));
+  check("6k. Integrerande processtyp → Nivåprocess", /if \(scenario\.process\.type === "integrating"\) return "niva";/.test(appJs));
+  check("6l. OnOff-läge → Tvålägesreglering", /if \(scenario\.controller\.mode === "onoff"\) return "onoff";/.test(appJs));
+  check(
+    "6m. loadScenarioByName() sätter applicationProfile från deriveApplicationProfile() OCH tillämpar det, EFTER hydrateFields() (så det härleds från det nyss laddade scenariot)",
+    /hydrateFields\(currentScenario\);\s*\n\s*fields\.applicationProfile\.value = deriveApplicationProfile\(currentScenario\);\s*\n\s*applyApplicationProfile\(\);/.test(appJs)
+  );
+  check("6n. initUI() laddar startscenariot via loadScenarioByName() (som i sin tur härleder Tillämpning — ingen separat väg kvar)", /function initUI\(\) \{[\s\S]{0,700}loadScenarioByName\("basic-step-self-regulating\.json"\);/.test(appJs));
 }
 
 // ── 7. help.json: hjälptext för den nya väljaren finns ──

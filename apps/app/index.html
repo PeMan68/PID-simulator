@@ -665,10 +665,13 @@
   <main class="main-content">
     <div class="params-container">
 
-      <!-- Tillämpning (UX-002/UX-001 Fas 0) -->
-      <div class="param-group" id="groupTillampning">
-        <span class="param-group-label" onclick="toggleParamGroup('groupTillampning')"><button class="group-toggle">▼</button> Tillämpning</span>
+      <!-- Process -->
+      <div class="param-group" id="groupProcess">
+        <span class="param-group-label" onclick="toggleParamGroup('groupProcess')"><button class="group-toggle">▼</button> Process</span>
         <div class="param-group-body">
+          <!-- Tillämpning (UX-002/UX-001 Fas 0) — placerad direkt före Processmodell
+               för att synliggöra sambandet Tillämpning → Processmodell → processparametrar
+               (PO:s granskningsobservation 1: egen grupp tog för mycket plats för ett fält). -->
           <div class="field">
             <label for="applicationProfile">Tillämpning <button class="help-btn" data-help="applicationProfile">?</button></label>
             <select id="applicationProfile">
@@ -678,13 +681,6 @@
               <option value="niva">Nivåprocess</option>
             </select>
           </div>
-        </div>
-      </div>
-
-      <!-- Process -->
-      <div class="param-group" id="groupProcess">
-        <span class="param-group-label" onclick="toggleParamGroup('groupProcess')"><button class="group-toggle">▼</button> Process</span>
-        <div class="param-group-body">
           <div class="field">
             <label for="processType">Processmodell <button class="help-btn" data-help="processType">?</button></label>
             <select id="processType">
