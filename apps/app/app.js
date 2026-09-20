@@ -846,6 +846,11 @@ function updateControllerUIState() {
   fields.td.parentElement.style.display = (isP || isPI || isManual || isOnOff) ? "none" : "";
   fields.manualOutput.parentElement.style.display = isManual ? "" : "none";
   fields.antiWindup.parentElement.style.display = noIntegral ? "none" : "";
+  // PO:s granskning (2026-09-20) — Bumpless styr bara mjuk övergång VID
+  // BYTE till p/pi/pid/manuell (se syncParamsFromUI()/mode-lyssnaren) — den
+  // har INGEN effekt för OnOff (ingen bias/Kp att fasa in), så kryssrutan är
+  // missvisande att visa (och lämna ikryssad) i det läget.
+  document.getElementById("bumpless").parentElement.style.display = isOnOff ? "none" : "";
   fields.hysteresLower.parentElement.style.display = isOnOff ? "" : "none";
   fields.hysteresUpper.parentElement.style.display = isOnOff ? "" : "none";
   fields.showPB.parentElement.style.display = (isOnOff || isManual) ? "none" : "";
@@ -912,21 +917,32 @@ function updateNonlinearGainUIState() {
 // utforskning" = dagens fulla UI, helt ofiltrerad — och är alltid default
 // vid sidladdning (inget sparat läge mellan sessioner, se anropet i initUI()).
 const APPLICATION_PROFILES = {
-  fri:        { processModels: ["self_regulating", "self_regulating_2", "integrating"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
-  onoff:      { processModels: ["self_regulating", "self_regulating_2"], addons: [] },
-  temperatur: { processModels: ["self_regulating", "self_regulating_2"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
-  niva:       { processModels: ["integrating"], addons: [] },
+  fri:        { processModels: ["self_regulating", "self_regulating_2", "integrating"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
+  // PO:s uppföljningsfråga (2026-09-20): ska PID vara blockerat vid
+  // Tvålägesreglering — ja, ENDAST OnOff är meningsfullt här, precis som
+  // bara de två självreglerande processmodellerna är det.
+  onoff:      { processModels: ["self_regulating", "self_regulating_2"], modes: ["onoff"], addons: [] },
+  temperatur: { processModels: ["self_regulating", "self_regulating_2"], modes: ["p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
+  niva:       { processModels: ["integrating"], modes: ["p", "pi", "pid", "manual"], addons: [] },
 };
+// Filtrerar ett <select>s <option>-ALTERNATIV till de tillåtna värdena —
+// väljaren själv döljs aldrig (samma princip för Processmodell som för
+// Läge). Returnerar true om nuvarande värde behövde bytas (inte längre
+// tillåtet), så anroparen kan trigga rätt uppföljande UI-uppdatering.
+function filterSelectOptions(selectEl, allowedValues) {
+  let currentValueAllowed = false;
+  Array.from(selectEl.options).forEach(opt => {
+    const allowed = allowedValues.includes(opt.value);
+    opt.hidden = !allowed;
+    if (opt.value === selectEl.value && allowed) currentValueAllowed = true;
+  });
+  if (!currentValueAllowed) selectEl.value = allowedValues[0];
+  return !currentValueAllowed;
+}
 function applyApplicationProfile() {
   const profile = APPLICATION_PROFILES[fields.applicationProfile.value] || APPLICATION_PROFILES.fri;
-  // Filtrera Processmodell-väljarens ALTERNATIV — väljaren själv döljs aldrig.
-  let currentValueAllowed = false;
-  Array.from(fields.processType.options).forEach(opt => {
-    const allowed = profile.processModels.includes(opt.value);
-    opt.hidden = !allowed;
-    if (opt.value === fields.processType.value && allowed) currentValueAllowed = true;
-  });
-  if (!currentValueAllowed) fields.processType.value = profile.processModels[0];
+  filterSelectOptions(fields.processType, profile.processModels);
+  filterSelectOptions(fields.mode, profile.modes);
   // Visa/dölj strategitilläggen. CSS-klassen (inte style.display direkt) så
   // att den alltid vinner över lägesbaserad style.display på samma element
   // (t.ex. updateProcessUIState()s nonlinearGainField-hantering) — se
@@ -934,6 +950,27 @@ function applyApplicationProfile() {
   document.querySelectorAll("[data-addon]").forEach(el => {
     el.classList.toggle("addon-hidden", !profile.addons.includes(el.dataset.addon));
   });
+  // PO:s granskning (2026-09-20) — att bara DÖLJA ett tillägg räcker inte:
+  // dess effekt fortsatte gälla i simuleringen trots att kryssrutan/fältet
+  // blivit osynligt och oåtkomligt. Samma princip som redan fanns för
+  // lägesstyrd döljning (se updateControllerUIState()s
+  // "if (noIntegral) fields.gainScheduleEnabled.checked = false;") —
+  // tillämpad här också. Ingen omedelbar syncParamsFromUI()/omritning här
+  // (skulle kunna skapa en missvisande ändringsmarkering om detta körs
+  // precis efter en scenarioladdning, INNAN captureMarkerBaseline() hunnit
+  // sätta en ny baslinje) — nästa Stega/Kör-klick synkar bort det ändå,
+  // precis som lägesbyten redan gör. Vid ett MANUELLT tillämpningsbyte
+  // (den enda situationen där kvarvarande tillstånd annars märks) synkas
+  // och ritas om direkt i #applicationProfile-lyssnaren istället.
+  if (!profile.addons.includes("parameterstyrning")) fields.gainScheduleEnabled.checked = false;
+  if (!profile.addons.includes("ventilkarakteristik")) fields.nonlinearGainEnabled.checked = false;
+  if (!profile.addons.includes("framkoppling")) {
+    fields.kff.value = 0;
+    fields.auxMag.value = 0;
+    if (sim) sim.auxValue = 0; // en redan triggad last är aktivt simuleringstillstånd, inte bara ett fältvärde
+  }
+  updateGainScheduleUIState();
+  updateControllerUIState(); // synkar Läge-beroende fält (inkl. Bumpless, se nedan) om Läge tvingades om
   updateProcessUIState();
 }
 
@@ -1282,6 +1319,14 @@ document.getElementById("processType").addEventListener("change", () => {
 // UX-002 — Tillämpning: byte filtrerar processmodellerna + strategitilläggen, se applyApplicationProfile().
 document.getElementById("applicationProfile").addEventListener("change", () => {
   applyApplicationProfile();
+  // PO:s granskning (2026-09-20) — till skillnad från anropet inifrån
+  // loadScenarioByName() (där en omedelbar synk skulle kunna skapa en
+  // missvisande ändringsmarkering innan captureMarkerBaseline() hunnit sätta
+  // en ny baslinje) är ett MANUELLT tillämpningsbyte den enda situationen
+  // där kvarvarande, nu dolt tillstånd (Parameterstyrning/Ventilkarakteristik/
+  // Framkoppling/Läge) annars skulle fortsätta påverka en redan igångsatt
+  // körning osynligt. Synka och rita om direkt här.
+  if (sim) { syncParamsFromUI(); drawChart(); updateStatus(); }
   activityDispatch("application_profile_changed", { field: "applicationProfile", value: fields.applicationProfile.value });
 });
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad — scenariots maxantal steg är nått. Klicka “Fler steg →” för att fortsätta."); else { appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); markZoneChangeIfAny(); } updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("simulation_step", { contextKey: activityContextKey() }); });

@@ -106,6 +106,38 @@ det som faktiskt är bredast: den 90px breda inputen, ELLER en lång etikett
 Selects lämnade oförändrade (redan rimligt sizade). Full regression fortsatt
 grön (218 kontroller).
 
+**Funktionell bugg + två uppföljningsfrågor, åtgärdade tillsammans
+(2026-09-20):** PO:s skärmdumpar visade att Parameterstyrning förblev AKTIV
+i simuleringen efter byte till Tvålägesreglering, trots att kryssrutan blivit
+osynlig och oåtkomlig — att bara DÖLJA ett tillägg räckte inte, dess EFFEKT
+måste stängas av. Löst i `applyApplicationProfile()`: Parameterstyrning/
+Ventilkarakteristik avmarkeras, Framkoppling nollställs (Kff, Last mag, OCH
+ett redan triggat `sim.auxValue` — det senare är aktivt simuleringstillstånd,
+inte bara ett fältvärde, och måste nollställas explicit). Ingen omedelbar
+synk/omritning i själva `applyApplicationProfile()` (skulle kunna skapa en
+missvisande ändringsmarkering om det körs precis efter en scenarioladdning,
+innan `captureMarkerBaseline()` satt en ny baslinje) — istället synkas och
+ritas om direkt i `#applicationProfile`s change-lyssnare, den enda platsen
+där kvarvarande tillstånd annars märks (ett manuellt tillämpningsbyte mitt i
+en redan igångsatt körning).
+
+PO:s uppföljningsfråga 1: ska Läge (PID m.fl.) blockeras vid
+Tvålägesreglering? Ja — samma princip som Processmodell-filtreringen.
+`APPLICATION_PROFILES` utökad med `modes` per profil (onoff: `["onoff"]`
+ENDAST; temperatur/niva: p/pi/pid/manual, INTE onoff; fri: alla fem).
+Filtreringslogiken för Processmodell och Läge delar nu en gemensam
+hjälpfunktion `filterSelectOptions()` istället för duplicerad kod.
+
+PO:s uppföljningsfråga 2: ska Bumpless vara giltigt vid on/off? Nej —
+verifierat i koden att Bumpless bara har effekt VID BYTE till p/pi/pid/
+manuellt läge (`syncParamsFromUI()`s mode-bytes-logik), aldrig för OnOff.
+Bumpless-fältet döljs nu när Läge=OnOff, i `updateControllerUIState()`
+(samma mönster som redan fanns för Anti-windup/Hyst.-fälten).
+
+12 nya testkontroller (55 totalt i `ux-002-application-profile.test.mjs`).
+Full regression grön (9 testfiler, 230 kontroller), DEV-/PROD-validering
+grön.
+
 PO fortsätter granskningen — nästa UX-granskningsrunda väntar på klartecken,
 per PO:s instruktion.
 

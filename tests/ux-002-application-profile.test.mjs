@@ -92,19 +92,42 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
       check("5e. onoff tillåter bara de två självreglerande modellerna, inga tillägg", JSON.stringify(profiles.onoff.processModels.sort()) === JSON.stringify(["self_regulating", "self_regulating_2"].sort()) && profiles.onoff.addons.length === 0);
       check("5f. temperatur tillåter de två självreglerande modellerna och alla tre tillägg", JSON.stringify(profiles.temperatur.processModels.sort()) === JSON.stringify(["self_regulating", "self_regulating_2"].sort()) && JSON.stringify(profiles.temperatur.addons.sort()) === JSON.stringify(["framkoppling", "parameterstyrning", "ventilkarakteristik"].sort()));
       check("5g. niva tillåter ENDAST integrating, inga tillägg", JSON.stringify(profiles.niva.processModels) === JSON.stringify(["integrating"]) && profiles.niva.addons.length === 0);
+      // PO:s uppföljningsfråga (2026-09-20): ska Läge (mode) filtreras likadant?
+      check("5h. fri tillåter alla fem lägen", JSON.stringify(profiles.fri.modes.sort()) === JSON.stringify(["manual", "onoff", "p", "pi", "pid"].sort()));
+      check("5i. onoff tillåter ENDAST läget onoff (PID m.fl. blockerade)", JSON.stringify(profiles.onoff.modes) === JSON.stringify(["onoff"]));
+      check("5j. temperatur tillåter p/pi/pid/manual, INTE onoff", JSON.stringify(profiles.temperatur.modes.sort()) === JSON.stringify(["manual", "p", "pi", "pid"].sort()));
+      check("5k. niva tillåter p/pi/pid/manual, INTE onoff", JSON.stringify(profiles.niva.modes.sort()) === JSON.stringify(["manual", "p", "pi", "pid"].sort()));
     }
   }
 }
 
-// ── 6. app.js: applyApplicationProfile() finns, döljer aldrig väljaren, är kopplad ──
+// ── 6. app.js: applyApplicationProfile() finns, döljer aldrig väljarna, är kopplad ──
 {
   check("6a. applyApplicationProfile()-funktionen är definierad", /function applyApplicationProfile\(\)/.test(appJs));
-  check("6b. Filtrerar <option>-alternativ via .hidden (inte hela fields.processType)", /opt\.hidden = !allowed/.test(appJs));
-  check("6c. Faller tillbaka till ett giltigt värde om nuvarande blir otillåtet", /if \(!currentValueAllowed\) fields\.processType\.value = profile\.processModels\[0\]/.test(appJs));
+  check("6a2. filterSelectOptions()-hjälpfunktionen är definierad (delad av Processmodell och Läge)", /function filterSelectOptions\(selectEl, allowedValues\)/.test(appJs));
+  check("6b. filterSelectOptions() filtrerar <option>-alternativ via .hidden (inte hela selectEl)", /opt\.hidden = !allowed/.test(appJs));
+  check("6c. filterSelectOptions() faller tillbaka till ett giltigt värde om nuvarande blir otillåtet", /if \(!currentValueAllowed\) selectEl\.value = allowedValues\[0\]/.test(appJs));
+  check("6c2. applyApplicationProfile() filtrerar BÅDE Processmodell och Läge via filterSelectOptions()", /filterSelectOptions\(fields\.processType, profile\.processModels\)/.test(appJs) && /filterSelectOptions\(fields\.mode, profile\.modes\)/.test(appJs));
   check("6d. Döljer/visar [data-addon]-element via addon-hidden-klassen (inte style.display direkt, undviker konflikt med lägesstyrd döljning)", /classList\.toggle\("addon-hidden", !profile\.addons\.includes\(el\.dataset\.addon\)\)/.test(appJs));
-  check("6e. Anropar updateProcessUIState() så Processmodell-beroende fält synkas om", /function applyApplicationProfile\(\) \{[\s\S]{0,1200}updateProcessUIState\(\);\s*\n\}/.test(appJs));
+  check("6e. Anropar updateProcessUIState() och updateControllerUIState() så beroende fält synkas om (inkl. Läge-tvingande)", /function applyApplicationProfile\(\) \{[\s\S]{0,2000}updateControllerUIState\(\);[\s\S]{0,200}updateProcessUIState\(\);\s*\n\}/.test(appJs));
   check("6f. #applicationProfile har en change-lyssnare kopplad till applyApplicationProfile()", /getElementById\("applicationProfile"\)\.addEventListener\("change", \(\) => \{\s*\n\s*applyApplicationProfile\(\);/.test(appJs));
   check("6h. Inget sparat tillämpningsläge i localStorage (Fri utforskning ska alltid vara default vid sidladdning)", !/localStorage\.[gs]etItem\("[^"]*[Aa]pplication[Pp]rofile/.test(appJs));
+  // PO:s granskning (2026-09-20) — ett tillägg som blir dolt ska också stängas
+  // AV, inte bara döljas (annars fortsätter t.ex. Parameterstyrning påverka
+  // simuleringen trots en osynlig, oåtkomlig kryssruta).
+  check("6o. Stänger av Parameterstyrning (avmarkerar) när tillägget inte ingår i profilen", /if \(!profile\.addons\.includes\("parameterstyrning"\)\) fields\.gainScheduleEnabled\.checked = false;/.test(appJs));
+  check("6p. Stänger av Ventilkarakteristik (avmarkerar) när tillägget inte ingår i profilen", /if \(!profile\.addons\.includes\("ventilkarakteristik"\)\) fields\.nonlinearGainEnabled\.checked = false;/.test(appJs));
+  check("6q. Nollställer Kff/Last mag OCH ett redan triggat sim.auxValue när Framkoppling inte ingår i profilen", /if \(!profile\.addons\.includes\("framkoppling"\)\) \{[\s\S]{0,200}fields\.kff\.value = 0;[\s\S]{0,100}fields\.auxMag\.value = 0;[\s\S]{0,100}if \(sim\) sim\.auxValue = 0;/.test(appJs));
+  check("6r. Manuellt tillämpningsbyte synkar och ritar om direkt (till skillnad från scenarioladdning)", /getElementById\("applicationProfile"\)\.addEventListener\("change", \(\) => \{[\s\S]{0,600}if \(sim\) \{ syncParamsFromUI\(\); drawChart\(\); updateStatus\(\); \}/.test(appJs));
+}
+
+// ── 6s–6u. Bumpless har ingen effekt i OnOff-läge — ska döljas där ──
+{
+  check("6s. updateControllerUIState() döljer Bumpless-fältet när Läge=OnOff", /getElementById\("bumpless"\)\.parentElement\.style\.display = isOnOff \? "none" : "";/.test(appJs));
+  check(
+    "6t. Bumpless-döljningen ligger i updateControllerUIState() (körs både vid manuellt lägesbyte och via applyApplicationProfile())",
+    /function updateControllerUIState\(\) \{[\s\S]{0,1500}getElementById\("bumpless"\)\.parentElement\.style\.display/.test(appJs)
+  );
 }
 
 // ── 6i–6m. Granskningsobservation 2: varje scenarioladdning sätter en
