@@ -336,9 +336,15 @@
        samma element ofta även styrs av lägesbaserad style.display (t.ex.
        updateGainScheduleUIState()) — addon-döljningen ska alltid vinna. */
     [data-addon].addon-hidden { display: none !important; }
+    /* UX-002 (PO:s UX-granskning) — flexbox med radbrytning istället för ett
+       fast 6-kolumners rutnät: varje fält får bredden dess EGET innehåll
+       (etikett eller select/input) faktiskt behöver, istället för att alla
+       fält tvingas till samma kolumnbredd. Löser att långa värden (t.ex.
+       "Självreglerande (flerkapacitiv)") klipptes av medan korta fält (K, T,
+       L) slösade utrymme i onödan. */
     .param-group {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(110px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       padding: 6px 10px 10px;
       border: 1px solid var(--line);
@@ -347,7 +353,7 @@
     }
     .param-group.collapsed { padding-bottom: 6px; }
     .param-group-label {
-      grid-column: 1 / -1;
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: flex-start;
@@ -388,7 +394,10 @@
     .field.zone-active-process select {
       background: #e6f5f2; border-color: #16a085; box-shadow: 0 0 0 1px #16a085;
     }
-    .field { display: flex; flex-direction: column; gap: 4px; transition: opacity 120ms ease; }
+    /* flex: 0 0 auto — bredden styrs av innehållet (etiketten eller
+       select/input:s egen naturliga bredd), inte av en delad rutnätskolumn.
+       min-width är en golvnivå, inte ett tvingat mått. */
+    .field { display: flex; flex-direction: column; gap: 4px; transition: opacity 120ms ease; flex: 0 0 auto; min-width: 90px; }
     .field label {
       font-size: 12px;
       color: var(--muted);
@@ -580,17 +589,15 @@
       .present-step-num { font-size: 14px; }
     }
 
-    @media (max-width: 1200px) {
-      .param-group { grid-template-columns: repeat(4, minmax(110px, 1fr)); }
-    }
     @media (max-width: 860px) {
       :root { --sb-left-w: 200px; --sb-right-w: 220px; }
-      .param-group { grid-template-columns: repeat(3, minmax(100px, 1fr)); }
     }
     @media (max-width: 640px) {
       .sidebar-left, .sidebar-right { width: var(--sb-toggle-w) !important; }
       .sidebar-left .sidebar-inner, .sidebar-right .sidebar-inner { opacity: 0; pointer-events: none; width: 0; padding: 0; }
-      .param-group { grid-template-columns: repeat(2, minmax(100px, 1fr)); }
+      /* Ett fält per rad på smala skärmar — samma avsikt som tidigare
+         grid-template-columns-övermappningarna, anpassad till flexbox. */
+      .field { width: 100%; }
       button, select, input[type="number"] { width: 100%; }
     }
   </style>

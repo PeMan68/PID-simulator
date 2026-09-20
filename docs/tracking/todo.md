@@ -70,10 +70,29 @@ kontroller), DEV-/PROD-innehålls- och byggvalidering grön.
    `valve-nonlinear-gain-demo.json`/`framkoppling-demo-pid.json`→temperatur,
    generiska PID-scenarier→fri).
 **Status:** Båda granskningsobservationerna åtgärdade på feature-branchen.
-Ingen webbläsare tillgänglig i denna miljö — fortfarande INTE visuellt
-verifierat, bara källkodsgranskat, logiskt verifierat mot verkliga
-scenariofiler, och smoke-testat via HTTP. PO fortsätter granskningen —
-nästa UX-granskningsrunda väntar på klartecken, per PO:s instruktion.
+
+**Åtgärd efter PO:s andra visuella granskning (skärmdump, 2026-09-20):** fält
+i parametergrupperna satt i ett FAST 6-kolumners CSS-rutnät
+(`grid-template-columns: repeat(6, minmax(110px, 1fr))`) — alla fält tvingades
+till samma kolumnbredd oavsett innehåll. Konkret symptom i skärmdumpen:
+Processmodell-väljaren klippte av lång text ("Självreglerande" utan att visa
+"(enkapacitiv)"/"(flerkapacitiv)"), medan korta fält som K/T/L slösade
+utrymme. Löst genom att byta `.param-group` från `display: grid` till
+`display: flex; flex-wrap: wrap` — varje `.field` får nu bredden dess EGET
+innehåll (etikett eller select/input) faktiskt behöver (`flex: 0 0 auto` +
+`min-width: 90px` som golv, inte tvingat mått), istället för en delad
+rutnätskolumn. De tre breakpoint-specifika `grid-template-columns`-
+övermappningarna (1200px/860px/640px) är onödiga med flexbox (radbrytning
+sker naturligt) och borttagna; 640px-brytpunkten har istället `.field {
+width: 100%; }` tillagd för att bevara ett-fält-per-rad på smala skärmar,
+samma avsikt som tidigare. Ren CSS-ändring, ingen JS/HTML-struktur berörd
+utöver `.param-group-label`s `grid-column: 1 / -1` → `width: 100%`. Full
+regression fortsatt grön (218 kontroller).
+
+Ingen webbläsare tillgänglig i denna miljö — layoutändringen är källkods-
+resonerad utifrån CSS flexbox-semantik, inte visuellt bekräftad här. PO
+fortsätter granskningen — nästa UX-granskningsrunda väntar på klartecken,
+per PO:s instruktion.
 
 
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
