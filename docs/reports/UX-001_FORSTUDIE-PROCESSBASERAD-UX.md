@@ -1,12 +1,18 @@
 # UX-001 — Förstudie: processbaserad användarmodell
 
-**Datum:** 2026-09-20
+**Datum:** 2026-09-20 (rev. 2, samma dag — PO:s tvådimensionella korrigering)
 **Uppdragsgivare:** PO (efter FEAT-042/FEAT-045, pausar ny reglerstrategiutveckling)
 **Typ:** Förstudie/rekommendation — INGEN kod, ingen branch
 **Underlag:** `apps/app/index.html`/`app.js` (dagens parametergrid), samtliga 12 DEV-lärstigar,
 `docs/reports/STRAT-001…005`, `docs/reports/FEAT-042_IMPLEMENTATION.md`,
 `docs/reports/FEAT-045_IMPLEMENTATION.md`/`_ANVANDARTEST-ATGARDER.md`,
 `docs/assets/diagrams/` (FEAT-046, Kvot-/Kaskaddiagrammen)
+
+**Revisionsnotis:** Rev. 1 (samma dag) föreslog EN sammanslagen "kategori"-axel
+(processdynamik + tillämpning ihopblandat). PO korrigerade: det är TVÅ separata
+dimensioner, och processmodellen ska förbli ett tydligt, synligt begrepp för
+studenten — inte gömmas bakom tillämpningsvalet. Avsnitt 1–6 nedan är omskrivna
+i linje med det.
 
 ---
 
@@ -39,169 +45,197 @@ nytta av dem.
 
 ---
 
-## 1. Förslag på process-/tillämpningskategorier
+## 1. Två separata dimensioner, inte en
 
-Jag utgår från PO:s fyra exempel men föreslår en justering: **Parameterstyrning
-och Ventilkarakteristik (FEAT-042) är inte substansspecifika** — de handlar om att
-processens egen förstärkning varierar med driftpunkt/utsignal, vilket kan hända i
-en temperaturprocess LIKA GÄRNA som i en nivå- eller flödesprocess. De passar
-därför bättre som en **avancerad tilläggsmodul** som kan slås på INOM en kategori,
-inte som en egen kategori. Framkoppling, Kvotreglering och Kaskadreglering är
-däremot strukturellt kopplade till en viss processform (en mätbar störning, två
-flöden, två nästlade slingor) och blir naturliga EGNA kategorier.
+PO:s korrigering av rev. 1: **Tillämpning** och **Processmodell** är olika
+begrepp som ska väljas var för sig, inte en sammanslagen "kategori".
 
-| Kategori | Processdynamik | Kärnstrategi(er) | Avancerat (valbart) | Givare |
-|---|---|---|---|---|
-| **Temperaturprocess** | Självreglerande | PID | + Framkoppling, + Parameterstyrning/Ventilkarakteristik | Temperaturgivare (PV), ev. lastgivare |
-| **Nivåprocess** | Integrerande (+ konisk tank, framtida STRAT-002-uppföljning) | PID/PI | + Parameterstyrning/Ventilkarakteristik (konisk tank = K beroende av PV) | Nivågivare |
-| **Blandnings-/kvotprocess** *(framtida)* | Två parallella självreglerande/flödesprocesser | Kvotreglering + PID | — | Två flödesgivare |
-| **Kaskadreglerad process** *(framtida)* | Två nästlade slingor (valfri inre/yttre dynamik) | Kaskadreglering (yttre+inre PID) | + Framkoppling på yttre slinga | Två givare (inre + yttre) |
-| **Fri utforskning / Avancerat** | Alla, fritt val | Allt, oskalat (dagens UI) | — | — |
+- **Processmodellen avgör DYNAMIKEN** — det är matematiken i `sim-core.js`
+  (`ProcessModel.step()`s tre grenar: `self_regulating`, `self_regulating_2`,
+  `integrating`). Motsvarar EXAKT dagens `processType`-fält, bara med tydligare
+  namn (se avsnitt 1.2).
+- **Tillämpningen avgör KONTEXTEN** — vilka parametrar som visas, vilka givare
+  som finns, vilka reglerstrategier som är relevanta, och vilka lärstigar som
+  hör hemma där. Detta är en HELT NY, ännu icke existerande dimension.
 
-**Varför en femte kategori ("Fri utforskning") är nödvändig:** åtta av de tolv
-befintliga lärstigarna (`kom-igång`, `oppen-slinga-onoff-p`,
+**Viktig pedagogisk princip (PO:s explicita krav):** de tre grundläggande
+processmodellerna är centrala reglertekniska begrepp och ska förbli SYNLIGA och
+BEGRIPLIGA för studenten — processmodellen får alltså inte tystas ner till en
+dold, automatisk bakgrundsinställning. En tillämpning får FÖRVAL/BEGRÄNSA vilka
+processmodeller som är meningsfulla att visa (se tabellen nedan), men det valda
+alternativet ska stå tydligt märkt i UI:t, inte gömmas.
+
+### 1.1 Tillämpning × giltiga processmodeller × tillägg
+
+| Tillämpning | Giltiga processmodeller | Tillägg (reglerstrategier) | Givare |
+|---|---|---|---|
+| **Tvålägesreglering (On/Off)** | Självreglerande (enkapacitiv), Självreglerande (flerkapacitiv) | — | PV-givare |
+| **Temperaturprocess** | Självreglerande (enkapacitiv), Självreglerande (flerkapacitiv) | Framkoppling, Parameterstyrning, Ventilkarakteristik | Temperaturgivare, ev. lastgivare |
+| **Nivåprocess** | Integrerande | *(framtida)* Konisk tank, Parameterstyrning | Nivågivare |
+| **Blandnings-/kvotprocess** *(framtida)* | Två självreglerande flöden (ett processmodellval PER flöde) | Kvotreglering | Två flödesgivare |
+| **Kaskadreglerad process** *(framtida)* | Fritt processmodellval PER slinga (inre slinga, yttre slinga) | Kaskadreglering, ev. Framkoppling på yttre slingan | Två givare (inre + yttre) |
+| **Fri utforskning** | Alla tre, fritt val — exakt som idag | Allt, oskalat | — |
+
+Detta är PO:s egen struktur (relayerad i uppdraget), inte en omtolkning.
+
+### 1.2 Namnförslag: förtydliga processmodellernas namn
+
+Dagens `processType`-väljare heter "Självreglerande" / "Självreglerande 2:a
+ordn." / "Integrerande". PO:s skiss använder "Självreglerande (enkapacitiv)" /
+"Självreglerande (flerkapacitiv)" / "Integrerande" — tydligare reglerteknisk
+terminologi (enkapacitiv/flerkapacitiv beskriver VARFÖR ordningen skiljer sig,
+inte bara ATT den gör det). Rekommenderar att byta etiketterna i UI:t oavsett
+om/när tillämpningsdimensionen byggs — en billig, fristående textändring som
+inte kräver att vänta på resten av UX-001.
+
+### 1.3 Varför "Fri utforskning" fortfarande krävs
+
+Åtta av de tolv befintliga lärstigarna (`kom-igång`, `oppen-slinga-onoff-p`*,
 `proportionalband-forstarkning`, `pi-pid`, `processbegransningar`,
 `windup-antiwindup`, `storningar-robusthet`, `stegsvar-identifiering`,
-`lambda-metoden`) undervisar grundläggande PID-begrepp (P/PI/PID, windup,
-störningar, identifiering) utan någon substansberättelse — de är MEDVETET
-generiska (se `ovningar-reglerstrategier.md`s egen ram: "processer i allmänhet",
-inte ett specifikt exempel). Att tvinga in dem i "Temperaturprocess" skulle vara
-en konstlad omskrivning utan pedagogiskt värde. De hör hemma i ett neutralt,
-"tekniskt" läge — precis dagens UI, oförändrat.
+`lambda-metoden`) undervisar grundläggande PID-begrepp utan någon
+substansberättelse — de är MEDVETET generiska. (*`oppen-slinga-onoff-p.v1`
+täcks numera delvis av den nya "Tvålägesreglering"-tillämpningen, se avsnitt 4
+— men delar av den lärstigen är ren P-reglering utan on/off-koppling och passar
+bättre som Fri utforskning.) Att tvinga alla in i en tillämpning vore en
+konstlad omskrivning. De hör hemma i "Fri utforskning" — dagens UI, oförändrat.
 
 ---
 
-## 2. Parametrar som bör visas per kategori
+## 2. Parametrar som bör visas
 
-**Alltid synliga, oavsett kategori (5 fält):** Kp, Ti, Td, SP, Läge (mode) — samt
-Umin/Umax (säkerhetsgränser, alltid relevanta).
+Uppdelat efter vilken DIMENSION som styr vad:
 
-**Temperaturprocess:** K, T, L, Normalvärde (processtyp låst till Självreglerande,
-fältet självt dolt — kategorin ÄR valet). "Avancerat"-flik: Lastförstärkning, Kff,
-Last mag, Trigga last (Framkoppling) + Parameterstyrnings/Ventilkarakteristiks 16
-fält, samlade under en TYDLIGT separat, hopfällbar "Avancerad reglering"-sektion
-(byggd på FEAT-044s redan etablerade `.zone-table`-mönster) — INTE blandade med
-grundfälten.
+**Processmodellen styr (oförändrat mot idag, bara flyttad/omdöpt):**
+- Självreglerande (enkapacitiv/flerkapacitiv): K, T, L, Normalvärde.
+- Integrerande: Kv, Utflöde.
 
-**Nivåprocess:** Kv, Utflöde (processtyp låst till Integrerande). Samma
-"Avancerat"-flik-princip om/när en konisk tank-variant (STRAT-002s öppna fråga)
-byggs.
+**Tillämpningen styr (den nya delen):**
+- **Tvålägesreglering:** Hysteres låg/hög (redan lägesstyrda idag — flyttas
+  konceptuellt hit). Inga strategitillägg.
+- **Temperaturprocess:** "Tillägg"-flik (hopfällbar, FEAT-044s
+  `.zone-table`-mönster) innehåller Framkopplingens 3 fält + Trigga last-knapp,
+  OCH Parameterstyrnings/Ventilkarakteristiks 16 fält — samlade, INTE blandade
+  med grundfälten.
+- **Nivåprocess:** samma tilläggsprincip för en framtida konisk tank/
+  Parameterstyrning-på-nivå.
+- **Blandnings-/kvotprocess** *(framtida)*: två K/T/L-uppsättningar (en PER
+  flöde, eftersom processmodellen väljs per flöde), kvotens brytpunkter.
+- **Kaskadreglerad process** *(framtida)*: två fulla Kp/Ti/Td-uppsättningar
+  (inre/yttre) OCH två separata processmodell-väljare (en per slinga) — detta
+  är den enda tillämpningen där processmodell-valet i sig upprepas.
+- **Fri utforskning:** allt, exakt som idag.
 
-**Blandnings-/kvotprocess** *(när den byggs)*: två uppsättningar K/T/L (Flöde A,
-Flöde B), kvotens brytpunkter/förhållande — INGA Parameterstyrnings-/
-Framkopplingsfält alls (skulle inte vara meningsfullt i denna kategori, se STRAT-001
-om varför Kvotreglering är strukturellt fristående).
-
-**Kaskadreglerad process** *(när den byggs)*: två fulla Kp/Ti/Td-uppsättningar
-(inre/yttre), två SP-relaterade fält (yttre SP, inre SP beräknas), separata
-Umin/Umax per slinga om det behövs.
-
-**Fri utforskning/Avancerat:** allt, exakt som idag — ingen ändring.
+**Alltid synliga, oavsett tillämpning:** Kp, Ti, Td, SP, Läge (mode), Umin/Umax.
 
 ---
 
-## 3. Funktioner som bör döljas per kategori
+## 3. Funktioner som bör döljas
 
+- **Tvålägesreglering:** döljer Ti/Td (on/off har ingen I/D-del), döljer alla
+  strategitillägg (Framkoppling/Parameterstyrning ger inte mening i on/off-läge).
 - **Temperaturprocess:** döljer Kv/Utflöde (integrerande-specifika), döljer
-  Hysteres-fälten (OnOff-specifika, redan dolda via läge — oförändrat), döljer
-  Kvot-/Kaskad-relaterade fält (finns inte än, men reserverar principen).
-- **Nivåprocess:** döljer L (dötid sällan relevant pedagogisk poäng för nivå i
-  nuvarande lärstigar), döljer Framkopplings-/Parameterstyrningsfälten som
-  DEFAULT (kan slås på i Avancerat-fliken om en konisk tank-lärstig byggs).
-- **Blandnings-/kvotprocess, Kaskadreglerad process:** döljer i princip HELA
-  dagens Regulator-grupp i sin nuvarande platta form — ersätts av
-  kategorispecifik layout (två regulatorer, eller en regulator + ett kvotblock).
-  Detta är den STÖRSTA avvikelsen från dagens UI-struktur och kräver egen
-  design (se avsnitt 5, Fas 2).
-- **Alla kategorier utom Avancerat:** döljer processtyp-väljaren själv (låst av
-  kategorivalet) — en student som valt "Temperaturprocess" ska inte kunna råka
-  ställa om till Integrerande och få ett inkonsekvent UI.
+  Hysteres (on/off-specifik).
+- **Nivåprocess:** döljer L som default (sällan pedagogisk poäng för nivå i
+  nuvarande lärstigar), döljer Temperaturprocessens tillägg tills en
+  nivåspecifik motsvarighet (konisk tank) byggs.
+- **Blandnings-/kvotprocess, Kaskadreglerad process** *(framtida)*: döljer HELA
+  dagens Regulator-grupp i sin nuvarande platta form — kräver egen layout, se
+  Fas 2 nedan. Störst avvikelse från dagens UI-struktur.
+- **INGEN tillämpning döljer själva processmodell-väljaren** — se den
+  pedagogiska principen i avsnitt 1. Det som döljs/begränsas är vilka
+  ALTERNATIV som visas i den (t.ex. Temperaturprocess visar bara de två
+  självreglerande varianterna, inte Integrerande), inte väljaren själv.
 
 ---
 
 ## 4. Påverkan på lärstigar och övningar
 
-**Ingen brytande ändring krävs för befintligt innehåll om kategorivalet byggs
-ADDITIVT** (se migreringsväg, avsnitt 5): åtta generiska lärstigar körs i
-"Avancerat"-läge precis som idag, oförändrade.
+**Ingen brytande ändring krävs för befintligt innehåll om detta byggs
+ADDITIVT** (se migreringsväg, avsnitt 5): lärstigar som inte taggas körs i "Fri
+utforskning" precis som idag, oförändrade.
 
-**Två lärstigar bör TAGGAS mot en kategori direkt när mekanismen finns:**
-- `parameterstyrning-ventilkarakteristik.v1` → **Temperaturprocess (Avancerat
-  på)** — den använder redan `self_regulating` genomgående (ventil-exemplen).
-  Att öppna lärstigen skulle då automatiskt sätta rätt kategori OCH expandera
-  "Avancerad reglering"-fliken åt studenten, istället för att de möter alla 45
-  fält direkt.
-- `framkoppling.v1` → **Temperaturprocess (Avancerat på, Framkoppling)** —
-  redan byggd kring en värmeväxlare (FEAT-045-beslutet om konkret
-  processexempel), passar exakt.
+**Lärstigar som bör TAGGAS mot en tillämpning + processmodell direkt när
+mekanismen finns:**
 
-**`integrerande-process-niva.v1`** → **Nivåprocess** — redan en nivålärstig
-till namnet, naturlig kandidat, kräver ingen innehållsändring, bara en
-kategori-tagg.
+| Lärstig | Tillämpning | Processmodell |
+|---|---|---|
+| `parameterstyrning-ventilkarakteristik.v1` | Temperaturprocess (Tillägg: Parameterstyrning + Ventilkarakteristik) | Självreglerande (enkapacitiv) |
+| `framkoppling.v1` | Temperaturprocess (Tillägg: Framkoppling) | Självreglerande (enkapacitiv) |
+| `integrerande-process-niva.v1` | Nivåprocess | Integrerande |
+| `oppen-slinga-onoff-p.v1` | Delvis Tvålägesreglering — kräver genomläsning (se not nedan) |  |
+
+**Not om `oppen-slinga-onoff-p.v1`:** lärstigens namn antyder både "öppen
+slinga" och "on/off, P" — den kan täcka MER än en tillämpning (t.ex. även
+inleda till Fri utforskning/grundläggande P-reglering). Kräver en faktisk
+genomläsning av dess steg innan en enda tillämpnings-tagg sätts — flaggas här,
+inte löst i denna förstudie.
 
 **Framtida lärstigar (Kvotreglering/Kaskadreglering) bör byggas DIREKT mot sina
-respektive kategorier**, inte mot dagens generiska UI följt av en efterhandskon-
-vertering — det undviker att upprepa exakt det tekniska underhållsproblem PO
-identifierat nu.
+respektive tillämpningar**, inte mot dagens generiska UI följt av en
+efterhandskonvertering.
 
-**Övningsdokument** (`ovningar-*.md`) påverkas inte strukturellt — de är redan
-fristående lösblad med egna processbeskrivningar i klartext. Möjlig framtida
-förbättring (inte del av detta uppdrag): nämna vilken UI-kategori ett
-övningsdokument förutsätter, i dess inledning.
+**Övningsdokument** (`ovningar-*.md`) påverkas inte strukturellt — redan
+fristående lösblad med egna processbeskrivningar i klartext.
 
 ---
 
 ## 5. Rekommenderad migreringsväg
 
 **Fas 0 — additiv, låg risk, ingen ändring av scenarioformat eller sim-core:**
-Ny rullgardin högst upp i sidopanelen: "Tillämpning" (default: **Avancerat** —
-dagens fulla UI, exakt som nu). Ett val av t.ex. "Temperaturprocess" gör TVÅ
-saker, rent i UI-lagret (`app.js`):
-1. Sätter `processType`-fältet (dolt) och triggar `updateProcessUIState()` som
-   idag.
-2. Filtrerar vilka `.param-group`/fält som visas, via en ny, liten
-   `applicationProfiles`-tabell (fält→kategorier den hör hemma i) — samma
-   `.style.display`-mönster som redan används för läges-/processtyp-styrning,
-   bara en tredje dimension.
+Två nya, kopplade väljare högst upp i sidopanelen:
 
-Ingen ändring i `sim-core.js`, inga nya scenario-fält, inga befintliga lärstigar
-påverkas (de fortsätter köra i "Avancerat"). **Detta är den delen jag skulle
-rekommendera som ett första, avgränsat FEAT-uppdrag**, eftersom den ensam redan
-löser huvudklagomålet (för många synliga kontroller) utan att röra något som
-redan fungerar.
+1. **"Tillämpning"** (rullgardin, default: **Fri utforskning** — dagens fulla
+   UI, exakt som nu).
+2. **"Processmodell"** (radioknappar/rullgardin DIREKT under, filtrerad till
+   de alternativ som är giltiga för vald tillämpning enligt tabellen i
+   avsnitt 1.1) — detta ÄR dagens `processType`-fält, bara flyttat överst och
+   med tydligare etiketter (avsnitt 1.2) och en begränsad, kontextuell
+   alternativlista istället för alltid alla tre.
 
-**Fas 1 — koppla lärstigar till kategorier:** nytt, valfritt fält
-`applicationCategory` i lärstigs-JSON:en (läses av `loadPath()`), så att
-`parameterstyrning-ventilkarakteristik.v1`/`framkoppling.v1`/
-`integrerande-process-niva.v1` automatiskt sätter rätt kategori + expanderar
-rätt "Avancerat"-flik när studenten öppnar dem — ingen manuell
-kategoriväljning krävs mitt i en guidad lärstig.
+Ett val av tillämpning:
+- Filtrerar `processType`-alternativen (steg 2 ovan) och väljer ett förval.
+- Visar/döljer "Tillägg"-flikarna (Framkoppling/Parameterstyrning/
+  Ventilkarakteristik), enligt tabellen i avsnitt 1.1 — samma
+  `.style.display`-mönster som redan används för läges-/processtypsstyrning,
+  bara ytterligare en dimension.
 
-**Fas 2 — Kvotreglering/Kaskadreglering som egna kategorier från start:** när
-dessa strategier faktiskt byggs (separata STRAT-/FEAT-uppdrag, se STRAT-001),
-designas deras UI DIREKT mot en dedikerad layout (två regulatorer/kvotblock,
-inte återanvända Regulator-gruppens platta fältlista) — det är den delen av
-Fas 0/1:s modell som inte är en ren visa/dölj-filtrering, utan kräver ny HTML-
-struktur. Motiverar varför PO:s paus av ny reglerstrategiutveckling till dess
-är rätt ordning: bygger man Kvot/Kaskad FÖRE denna UX-grund finns, riskerar man
-att behöva göra om deras UI en andra gång.
+Processmodell-valet i sig fortsätter trigga EXAKT samma `updateProcessUIState()`
+som idag. Ingen ändring i `sim-core.js`, inga nya scenario-fält, inga
+befintliga lärstigar påverkas. **Detta är den delen jag skulle rekommendera som
+ett första, avgränsat FEAT-uppdrag.**
 
-**Explicit ICKE rekommenderat:** att börja med en genomgripande omskrivning av
-HELA parametergridets HTML-struktur i ett steg. Risken för regressioner i de
-tolv befintliga, redan PO-godkända lärstigarna är för hög för nyttan — additiv,
-opt-in filtrering (Fas 0) ger nästan hela UX-vinsten till en bråkdel av risken.
+**Fas 1 — koppla lärstigar till tillämpning+processmodell:** nya, valfria fält
+i lärstigs-JSON:en (läses av `loadPath()`), enligt tabellen i avsnitt 4, så att
+rätt tillämpning/processmodell/tilläggsflik sätts automatiskt när en lärstig
+öppnas.
+
+**Fas 2 — Kvotreglering/Kaskadreglering som egna tillämpningar från start:**
+designas DIREKT mot dedikerad layout (två regulatorer/kvotblock, kaskadens
+per-slinga-processmodellval) — inte återanvänd platt fältlista. Motiverar
+paus-beslutet: bygger man dem FÖRE denna grund finns, riskerar man att göra om
+deras UI en andra gång.
+
+**Explicit ICKE rekommenderat:** en genomgripande omskrivning av HELA
+parametergridets HTML-struktur i ett steg. Additiv, opt-in filtrering (Fas 0)
+ger nästan hela UX-vinsten till en bråkdel av risken mot de tolv befintliga,
+redan PO-godkända lärstigarna.
 
 ---
 
 ## 6. Öppna frågor till PO
 
-1. Ska "Avancerat" vara namnet, eller föredrar du något annat (t.ex. "Fri
-   utforskning", "Alla parametrar")?
-2. Ska Parameterstyrning/Ventilkarakteristik verkligen vara en TILLVALS-flik
-   inom Temperaturprocess/Nivåprocess (min rekommendation, avsnitt 1), eller
-   ska de förbli en egen, fristående kategori/lärstig som idag?
-3. Är kategorilistan i avsnitt 1 komplett, eller finns fler tillämpningar du
-   vill se (t.ex. en renodlad "OnOff-process", som idag inte har någon
-   substansberättelse alls)?
+1. Namnbyte "Självreglerande 2:a ordn." → "Självreglerande (flerkapacitiv)"
+   (avsnitt 1.2) — kan det göras som en egen, liten, omedelbar textändring
+   redan nu, oberoende av resten av UX-001? Låg risk, ingen strukturändring.
+2. `oppen-slinga-onoff-p.v1` behöver läsas igenom för att avgöra om den hör
+   till Tvålägesreglering, Fri utforskning, eller båda (delad lärstig) —
+   ska jag göra den genomläsningen som en del av nästa steg?
+3. Kaskadreglerings "processmodell per slinga" (avsnitt 1.1/2) — ska INRE och
+   YTTRE slinga kunna ha OLIKA processmodeller samtidigt (t.ex. inre
+   integrerande, yttre självreglerande), eller är det i praktiken alltid samma
+   modell i båda men separata K/T/L-värden? Påverkar hur mycket UI som krävs
+   i Fas 2.
+4. Är tillämpningslistan i avsnitt 1.1 komplett, eller finns fler du vill se?
 
 Inget av ovanstående är implementerat. Ingen branch skapad.

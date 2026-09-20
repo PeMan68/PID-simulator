@@ -21,24 +21,30 @@ studenter oavsett vad de faktiskt övar på. PO:s riktning: ett
 Blandnings-/kvotprocess, Kaskadreglerad process) som samtidigt styr
 processmodell, relevanta parametrar, relevanta strategier och relevanta
 givare — inte bara enskild fält-visa/dölj.
-**Genomförande (förstudie):**
-Full analys: `docs/reports/UX-001_FORSTUDIE-PROCESSBASERAD-UX.md`. Fem
-kategorier föreslagna (Temperaturprocess, Nivåprocess, Blandnings-/
-kvotprocess*, Kaskadreglerad process*, Fri utforskning/Avancerat — *framtida).
-Nyckelrekommendation: Parameterstyrning/Ventilkarakteristik (FEAT-042) är INTE
-substansspecifika (gäller alla självreglerande processer) och bör vara en
-tillvalsflik INOM en kategori, inte en egen kategori — till skillnad från
-Framkoppling/Kvotreglering/Kaskadreglering som är strukturellt kopplade till
-en processform. Rekommenderad migreringsväg i tre faser: Fas 0 (additiv
-UI-filtrering, ingen ändring av sim-core/scenarioformat, "Avancerat" förblir
-default så alla 12 befintliga lärstigar är opåverkade), Fas 1 (koppla
-lärstigar till kategorier via ett nytt valfritt fält), Fas 2 (Kvotreglering/
-Kaskadreglering byggs DIREKT mot dedikerad UI istället för dagens platta
-fältlista, när de väl byggs). Tre öppna frågor till PO i rapportens slut
-(namnval, om FEAT-042 ska vara tillval eller egen kategori, komplett
-kategorilista).
-**Status:** Förstudie klar, väntar på PO:s svar på de öppna frågorna innan ett
-Fas 0-bygguppdrag formuleras. Ingen kod skriven, ingen branch. Ny
+**Genomförande (förstudie, rev. 2 efter PO:s tvådimensionella korrigering):**
+Full analys: `docs/reports/UX-001_FORSTUDIE-PROCESSBASERAD-UX.md`. Rev. 1
+slog ihop processdynamik och tillämpning till EN axel — PO korrigerade:
+det är TVÅ separata dimensioner. **Processmodell** (Självreglerande
+enkapacitiv/flerkapacitiv, Integrerande — motsvarar dagens `processType`,
+bara tydligare namngivet) avgör dynamiken och ska förbli synlig/begriplig
+för studenten (centralt reglertekniskt begrepp, får INTE gömmas). **Tillämpning**
+(Tvålägesreglering, Temperaturprocess, Nivåprocess, Blandnings-/kvotprocess*,
+Kaskadreglerad process*, Fri utforskning — *framtida) avgör vilka
+processmodeller som ERBJUDS, vilka parametrar/givare/strategitillägg som
+visas, och vilka lärstigar som hör hemma där. Parameterstyrning/
+Ventilkarakteristik/Framkoppling blir "Tillägg" inom Temperaturprocess (inte
+egna tillämpningar). Migreringsväg i tre faser oförändrad i sak: Fas 0 (två
+kopplade väljare — Tillämpning + en filtrerad Processmodell-väljare direkt
+under — additiv UI-filtrering, "Fri utforskning" förblir default, ingen
+ändring av sim-core/scenarioformat, alla 12 befintliga lärstigar opåverkade),
+Fas 1 (koppla lärstigar till tillämpning+processmodell via nya valfria fält),
+Fas 2 (Kvotreglering/Kaskadreglering byggs DIREKT mot dedikerad UI, inklusive
+kaskadens per-slinga-processmodellval). Fyra öppna frågor till PO i
+rapportens slut (namnbyte som egen snabb åtgärd redan nu, genomläsning av
+`oppen-slinga-onoff-p.v1` för korrekt tillämpnings-tagg, om kaskadens
+inre/yttre slinga kan ha OLIKA processmodeller, komplett tillämpningslista).
+**Status:** Förstudie (rev. 2) klar, väntar på PO:s svar på de öppna frågorna
+innan ett Fas 0-bygguppdrag formuleras. Ingen kod skriven, ingen branch. Ny
 reglerstrategiutveckling (Kvotreglering/Kaskadreglering) PAUSAD tills detta
 spår är klart, per PO:s beslut.
 
