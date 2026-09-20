@@ -8,6 +8,23 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### UX-002 — Tillämpnings-/processmodellsväljare (Fas 0 av UX-001)
+**Branch:** `feature/UX-002-tillampningsval`
+**Prioritet:** Hög — PO:s beslutade nästa steg (2026-09-20), efter UX-001.
+**Beskrivning:**
+Fas 0 från `docs/reports/UX-001_FORSTUDIE-PROCESSBASERAD-UX.md` avsnitt 5:
+ny "Tillämpning"-väljare (Fri utforskning/Tvålägesreglering/Temperaturprocess/
+Nivåprocess) som filtrerar vilka processmodeller (`processType`) som erbjuds
+och vilka strategitillägg (Framkoppling/Parameterstyrning/Ventilkarakteristik)
+som visas. Processmodellen ("Processtyp" döpt om till "Processmodell") förblir
+alltid synlig och väljbar — bara ALTERNATIVEN filtreras, inte begreppet.
+Ingen ändring i `sim-core.js`, inget nytt scenariofält, Fri utforskning är
+default (= dagens fulla UI, oförändrat för alla 12 befintliga lärstigar).
+Blandnings-/kvotprocess och Kaskadreglerad process byggs INTE nu (Fas 2,
+kräver egen strategikod som inte finns än).
+**Status:** Registrerad, implementation påbörjas.
+
+
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
 **Prioritet:** Hög — PO:s explicita beslut (2026-09-20): pausa ny
 reglerstrategiutveckling (Kvotreglering, Kaskadreglering) tills detta spår är
