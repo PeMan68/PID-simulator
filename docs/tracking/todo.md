@@ -90,8 +90,23 @@ utöver `.param-group-label`s `grid-column: 1 / -1` → `width: 100%`. Full
 regression fortsatt grön (218 kontroller).
 
 Ingen webbläsare tillgänglig i denna miljö — layoutändringen är källkods-
-resonerad utifrån CSS flexbox-semantik, inte visuellt bekräftad här. PO
-fortsätter granskningen — nästa UX-granskningsrunda väntar på klartecken,
+resonerad utifrån CSS flexbox-semantik, inte visuellt bekräftad här.
+
+**Uppföljning efter PO:s tredje skärmdump (2026-09-20):** flex-fixet ovan
+gjorde `.field` innehållsstyrd, men `<input type="number">` (K/T/L m.fl.)
+saknar SJÄLV en innehållsstyrd bredd — till skillnad från `<select>` (som
+webbläsaren automatiskt sizear efter det valda alternativets text) använder
+en `<input>` webbläsarens breda standardbredd (~170–220px) oavsett hur kort
+värdet är. Det var alltså inputens EGEN bredd, inte `.field`-omslaget, som
+gjorde K/T/L onödigt breda. Löst med en ny regel `input[type="number"] {
+width: 90px; }` — ett fast, kompakt mått som räcker för alla tal i appen
+(längsta värdet är runt "-0,6154"). `.field`s bredd blir därefter styrd av
+det som faktiskt är bredast: den 90px breda inputen, ELLER en lång etikett
+(t.ex. "Lastförstärkning", "Olinjär ventilkarakteristik") om den är bredare.
+Selects lämnade oförändrade (redan rimligt sizade). Full regression fortsatt
+grön (218 kontroller).
+
+PO fortsätter granskningen — nästa UX-granskningsrunda väntar på klartecken,
 per PO:s instruktion.
 
 

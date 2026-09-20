@@ -290,6 +290,15 @@
       font-family: inherit;
       font-size: 13px;
     }
+    /* PO:s UX-granskning (2026-09-20, uppföljning) — <input type="number">
+       saknar en egen innehållsstyrd bredd (till skillnad från <select>, som
+       webbläsaren själv sizear efter det valda alternativets text): utan
+       denna rad tar varje talfält webbläsarens breda standardbredd
+       (~170-220px), oavsett hur kort värdet är (K/T/L visade sig fortfarande
+       vara mycket bredare än nödvändigt trots att .field själv nu är
+       innehållsstyrd, se föregående fix). Ett fast, kompakt mått räcker gott
+       för alla tal i appen (längsta värdet är runt "-0,6154"). */
+    input[type="number"] { width: 90px; }
     button {
       cursor: pointer;
       border-color: #919eac;
