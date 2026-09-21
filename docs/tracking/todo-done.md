@@ -35,6 +35,190 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande features 
 
 ## Webbapp (`apps/app/`)
 
+### UX-002 — Tillämpnings-/processmodellsväljare (Fas 0 av UX-001)
+**Prioritet:** Hög — PO:s beslutade nästa steg (2026-09-20), efter UX-001.
+**Beskrivning:**
+Fas 0 från `docs/reports/UX-001_FORSTUDIE-PROCESSBASERAD-UX.md` avsnitt 5:
+ny "Tillämpning"-väljare (Fri utforskning/Tvålägesreglering/Temperaturprocess/
+Nivåprocess) som filtrerar vilka processmodeller (`processType`) som erbjuds
+och vilka strategitillägg (Framkoppling/Parameterstyrning/Ventilkarakteristik)
+som visas. Processmodellen ("Processtyp" döpt om till "Processmodell") förblir
+alltid synlig och väljbar — bara ALTERNATIVEN filtreras, inte begreppet.
+Ingen ändring i `sim-core.js`, inget nytt scenariofält, Fri utforskning är
+default (= dagens fulla UI, oförändrat för alla 12 befintliga lärstigar).
+Blandnings-/kvotprocess och Kaskadreglerad process byggs INTE nu (Fas 2,
+kräver egen strategikod som inte finns än).
+**Genomförande:**
+Ny "Tillämpning"-grupp överst i parametersidopanelen (`#groupTillampning`,
+samma `.param-group`-mönster som övriga grupper) med väljaren
+`#applicationProfile` (Fri utforskning/Tvålägesreglering/Temperaturprocess/
+Nivåprocess). Ny `APPLICATION_PROFILES`-tabell i `app.js` (fyra profiler,
+matchar UX-001 avsnitt 1.1 exakt) och `applyApplicationProfile()`: filtrerar
+`#processType`s `<option>`-alternativ via `.hidden` (väljaren SJÄLV döljs
+aldrig, bara alternativen — PO:s pedagogiska krav), faller tillbaka till ett
+giltigt värde om det aktuella blir otillåtet, och visar/döljer
+strategitilläggen via en ny `[data-addon]`-attributmarkering (auxGain/Kff/
+Last mag/Trigga last → `framkoppling`; `#gainScheduleField(s)` →
+`parameterstyrning`; `#nonlinearGainField(s)` → `ventilkarakteristik`) och en
+`.addon-hidden`-CSS-klass med `!important` (vinner medvetet över befintlig
+lägesbaserad `style.display` på samma element, t.ex.
+`updateProcessUIState()`s hantering av `nonlinearGainField` — annars hade de
+två skrivit över varandra). "Processtyp" omdöpt till "Processmodell"
+(fält-etikett + `help.json`). Inget sparat tillämpningsläge mellan
+sidladdningar — Fri utforskning är alltid startläget, per PO:s ord. Ingen
+ändring i `sim-core.js`, inget nytt scenariofält.
+**Tester:** `tests/ux-002-application-profile.test.mjs` (43 kontroller, ren
+statisk källkodsgranskning — samma mönster som
+`hotfix-v1.4.1-facit-env.test.mjs` — inklusive att `APPLICATION_PROFILES`
+extraheras och körs isolerat för att verifiera den faktiska datastrukturen,
+inte bara regexmatchas). Full regression grön (9 testfiler, 218
+kontroller), DEV-/PROD-innehålls- och byggvalidering grön.
+
+**Åtgärder efter PO:s första visuella granskning (2026-09-20):**
+1. **Observation 1 (egen grupp tog för mycket plats):** "Tillämpning"-fältet
+   flyttat ur sin egen `#groupTillampning`-grupp (borttagen) och in i
+   Process-gruppen, direkt FÖRE Processmodell — synliggör sambandet
+   Tillämpning → Processmodell → processparametrar utan extra vertikalt
+   utrymme.
+2. **Observation 2 (lärstig satte bara Processmodell, inte Tillämpning —
+   kunde visa "Nivåprocess" + ett självreglerande scenario samtidigt):** ny
+   `deriveApplicationProfile(scenario)` i `app.js`, körd vid VARJE
+   scenarioladdning (`loadScenarioByName()`, både via lärstig och manuellt
+   scenarioval) — härleder Tillämpning från data som redan finns i
+   scenariot (inget nytt scenariofält): `auxSignal`/aktiv
+   `gainSchedule`/`nonlinearGain` → Temperaturprocess, `process.type ===
+   "integrating"` → Nivåprocess, `mode === "onoff"` → Tvålägesreglering,
+   annars → Fri utforskning. Sätts INNAN `applyApplicationProfile()`
+   filtrerar Processmodell-alternativen, så de två alltid är en
+   sammanhängande kombination — aldrig kvarlämnad från ett tidigare,
+   orelaterat scenario. Verifierat mot verkliga scenariofiler
+   (`integrating-pi.json`→niva, `onoff-basic.json`→onoff,
+   `valve-nonlinear-gain-demo.json`/`framkoppling-demo-pid.json`→temperatur,
+   generiska PID-scenarier→fri).
+
+**Åtgärd efter PO:s andra visuella granskning (skärmdump, 2026-09-20):** fält
+i parametergrupperna satt i ett FAST 6-kolumners CSS-rutnät
+(`grid-template-columns: repeat(6, minmax(110px, 1fr))`) — alla fält tvingades
+till samma kolumnbredd oavsett innehåll. Konkret symptom i skärmdumpen:
+Processmodell-väljaren klippte av lång text ("Självreglerande" utan att visa
+"(enkapacitiv)"/"(flerkapacitiv)"), medan korta fält som K/T/L slösade
+utrymme. Löst genom att byta `.param-group` från `display: grid` till
+`display: flex; flex-wrap: wrap` — varje `.field` får nu bredden dess EGET
+innehåll (etikett eller select/input) faktiskt behöver (`flex: 0 0 auto` +
+`min-width: 90px` som golv, inte tvingat mått), istället för en delad
+rutnätskolumn. De tre breakpoint-specifika `grid-template-columns`-
+övermappningarna (1200px/860px/640px) är onödiga med flexbox (radbrytning
+sker naturligt) och borttagna; 640px-brytpunkten har istället `.field {
+width: 100%; }` tillagd för att bevara ett-fält-per-rad på smala skärmar,
+samma avsikt som tidigare. Ren CSS-ändring, ingen JS/HTML-struktur berörd
+utöver `.param-group-label`s `grid-column: 1 / -1` → `width: 100%`. Full
+regression fortsatt grön (218 kontroller).
+
+**Uppföljning efter PO:s tredje skärmdump (2026-09-20):** flex-fixet ovan
+gjorde `.field` innehållsstyrd, men `<input type="number">` (K/T/L m.fl.)
+saknar SJÄLV en innehållsstyrd bredd — till skillnad från `<select>` (som
+webbläsaren automatiskt sizear efter det valda alternativets text) använder
+en `<input>` webbläsarens breda standardbredd (~170–220px) oavsett hur kort
+värdet är. Löst med en ny regel `input[type="number"] { width: 90px; }`.
+Full regression fortsatt grön (218 kontroller).
+
+**Funktionell bugg + två uppföljningsfrågor, åtgärdade tillsammans
+(2026-09-20):** PO:s skärmdumpar visade att Parameterstyrning förblev AKTIV
+i simuleringen efter byte till Tvålägesreglering, trots att kryssrutan blivit
+osynlig och oåtkomlig — att bara DÖLJA ett tillägg räckte inte, dess EFFEKT
+måste stängas av. Löst i `applyApplicationProfile()`: Parameterstyrning/
+Ventilkarakteristik avmarkeras, Framkoppling nollställs (Kff, Last mag, OCH
+ett redan triggat `sim.auxValue`). PO:s uppföljningsfråga 1 (ska Läge
+blockeras vid Tvålägesreglering?): ja — `APPLICATION_PROFILES` utökad med
+`modes` per profil. PO:s uppföljningsfråga 2 (Bumpless giltigt vid on/off?):
+nej — verifierat att Bumpless bara har effekt vid byte till p/pi/pid/
+manuellt läge; fältet döljs nu vid Läge=OnOff.
+
+12 nya testkontroller (55 totalt). Full regression grön (9 testfiler, 230
+kontroller), DEV-/PROD-validering grön.
+
+**Systematisk synlighetsgranskning (2026-09-20), PO:s uppdrag:** full
+genomgång i `docs/reports/UX-002_SYNLIGHETSGRANSKNING.md`. Rekommendation:
+(1) ta bort Tvålägesreglering som egen tillämpning (fel axel — on/off är en
+regulatorstrategi, samma axel som Läge, inte en processkontext; dess
+uteslutning av Integrerande saknar reglerteknisk grund); (2) lägg till
+Läges-villkor på Framkopplingens fält (bekräftad bugg — de saknade
+Läges-villkor helt, till skillnad från Parameterstyrning som redan hade
+motsvarande skydd sedan FEAT-042). Samtliga 12 lärstigars scenarioreferenser
+körda programmatiskt genom `deriveApplicationProfile()` — härledningslogiken
+själv korrekt för alla redan idag.
+
+**PO gav klartecken (2026-09-20)** att implementera exakt de två
+rekommenderade ändringarna:
+1. **Tvålägesreglering borttagen som egen tillämpning.**
+   `APPLICATION_PROFILES` går från fyra till TRE profiler (`fri`/
+   `temperatur`/`niva`); `"onoff"` tillagt i `temperatur.modes`/
+   `niva.modes`; `deriveApplicationProfile()`s `onoff`-specialfall borttaget.
+2. **Läges-villkor tillagt för Framkoppling.** Ny funktion
+   `updateFramkopplingVisibility()`: Lastförstärkning/Kff/Last mag/Trigga
+   last kräver nu BÅDE att Tillämpningen tillåter tillägget OCH att Läge ∈
+   {P, PI, PID}. Anropas från både `applyApplicationProfile()` och
+   `updateControllerUIState()`.
+
+Synlighetsmatrisen re-verifierad programmatiskt mot samtliga 12 lärstigar
+efter ändringen: inga avvikelser. 20 nya/ändrade testkontroller (56 totalt).
+Full regression grön (9 testfiler, 231 kontroller), DEV-/PROD-validering
+grön.
+
+**Uppföljningsanalys innan merge (UX-003, 2026-09-21):** PO observerade att
+Fri utforskning och Temperaturprocess i praktiken nästan är identiska och
+bad om en analys av att ta bort Fri utforskning till förmån för en
+"Avancerat"-sektion per tillämpning. Se `docs/reports/UX-003_BEHOVS-FRI-UTFORSKNING.md`
+— rekommendation: behåll Fri utforskning (Alternativ A), ingen konsekvens
+för UX-002. Se egen UX-003-post i `todo.md` för fortsatt beslutsstatus
+(Fri utforskning kvar; ingen ytterligare analys planerad just nu).
+
+**Status:** Mergad till `develop` (2026-09-21), PO:s klartecken. Branch
+`feature/UX-002-tillampningsval` borttagen.
+
+### UX-003 — Behövs Fri utforskning?
+**Prioritet:** Hög — utreds innan UX-002:s mergebeslut, på PO:s begäran
+(2026-09-21).
+**Beskrivning:**
+Efter UX-002:s tredje kodrunda observerade PO att Fri utforskning och
+Temperaturprocess i praktiken skiljer sig väldigt lite. Uppdrag: analysera
+Alternativ A (behåll Fri utforskning) mot Alternativ B (ta bort den, inför en
+hopfällbar "Avancerat"-sektion per tillämpning som visar allt kompatibelt med
+vald Processmodell). Ren analys, ingen kod, ingen branch.
+**Leverans:** `docs/reports/UX-003_BEHOVS-FRI-UTFORSKNING.md`. Sammanfattning:
+
+1. **Nulägesbekräftelse:** med dagens `APPLICATION_PROFILES` är `modes` och
+   `addons` identiska mellan `fri` och `temperatur` — enda skillnaden är att
+   `fri` även tillåter Integrerande som Processmodell. Ingen av de 12
+   lärstigarna använder faktiskt den kombinationen (Integrerande + tillägg)
+   idag.
+2. **Fri utforskning fyller TVÅ separata roller**, inte en: (1) en
+   processmodell-fråga (obegränsad kombination, oanvänd av dagens innehåll)
+   och (2) semantiskt hem för åtta MEDVETET kontextlösa lärstigar
+   (`kom-igång` m.fl., se UX-001 avsnitt 1.3) — Roll 2 försvinner inte bara
+   för att Roll 1 byggs om.
+3. **Alternativ B:s definition ("Avancerat" = allt kompatibelt med aktuell
+   Processmodell) förutsätter en redan vald Tillämpning** — löser alltså
+   inte var de åtta kontextlösa lärstigarna ska höra hemma utan att antingen
+   (a) tvinga in dem under en tillämpning de inte handlar om, i strid med
+   UX-001 avsnitt 1.3, eller (b) återinföra ett neutralt "allt olåst"-läge
+   ändå, fast under annat namn/annan form — dvs. Fri utforskning omdöpt, inte
+   borttaget.
+4. Alternativ B skulle dessutom göra `framkoppling.v1`s och
+   `parameterstyrning-ventilkarakteristik.v1`s EGNA ämnesfält gömda bakom
+   ett extra klick i sina egna dedikerade lärstigar — motsatt effekt av
+   UX-001s syfte.
+5. Alternativ B:s enda tydliga vinst (slipper manuell synk mot `fri.addons`
+   när Kvotreglering/Kaskadreglering tillkommer) koncentreras till
+   Kvotreglering — Kaskadreglering behöver enligt STRAT-001 ändå en egen
+   layout.
+6. **Rekommendation: Alternativ A** (behåll Fri utforskning).
+
+**Status:** **PO antog rekommendationen (2026-09-21)** — Alternativ A,
+Fri utforskning behålls oförändrad. Ingen implementation krävs (dagens kod
+matchade redan rekommendationen). Ingen ytterligare analys av frågan
+planerad. Stängt.
+
 ### STRAT-004 — Förstudie: Framkoppling (Feedforward)
 **Prioritet:** Medel — analysuppdrag, ingen implementation
 **Beskrivning:**
