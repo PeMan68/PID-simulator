@@ -206,6 +206,65 @@ nollskilt Kff kombinerat med ett läge utanför P/PI/PID.
 Ingen webbläsare tillgänglig i denna miljö. Väntar på PO:s FJÄRDE
 (visuella) granskningsrunda innan mergebeslut, per uppdragets instruktion.
 
+**UX-003-uppdrag inskjutet innan fjärde granskningsrundan (2026-09-21):** PO
+observerade att Fri utforskning och Temperaturprocess i praktiken är nästan
+identiska efter tredje kodrundan (endast Integrerande-alternativet skiljer)
+och bad om en analys av om Fri utforskning ska tas bort till förmån för en
+"Avancerat"-sektion per tillämpning. Se egen post nedan — svaret påverkar
+INTE UX-002s mergebarhet i sig (rekommendationen är att behålla dagens
+`APPLICATION_PROFILES` oförändrad), men hålls här eftersom det utreddes
+innan PO:s fjärde granskningsrunda.
+
+
+### UX-003 — Behövs Fri utforskning? (analys klar, väntar på PO:s beslut)
+**Prioritet:** Hög — utreds innan UX-002:s mergebeslut, på PO:s begäran
+(2026-09-21).
+**Beskrivning:**
+Efter UX-002:s tredje kodrunda observerade PO att Fri utforskning och
+Temperaturprocess i praktiken skiljer sig väldigt lite. Uppdrag: analysera
+Alternativ A (behåll Fri utforskning) mot Alternativ B (ta bort den, inför en
+hopfällbar "Avancerat"-sektion per tillämpning som visar allt kompatibelt med
+vald Processmodell). Ren analys, ingen kod, ingen branch.
+**Leverans:** `docs/reports/UX-003_BEHOVS-FRI-UTFORSKNING.md`.
+Sammanfattning:
+
+1. **Nulägesbekräftelse:** med dagens `APPLICATION_PROFILES` är `modes` och
+   `addons` identiska mellan `fri` och `temperatur` — enda skillnaden är att
+   `fri` även tillåter Integrerande som Processmodell. Ingen av de 12
+   lärstigarna använder faktiskt den kombinationen (Integrerande + tillägg)
+   idag.
+2. **Fri utforskning fyller TVÅ separata roller**, inte en: (1) en
+   processmodell-fråga (obegränsad kombination, oanvänd av dagens innehåll)
+   och (2) semantiskt hem för åtta MEDVETET kontextlösa lärstigar
+   (`kom-igång` m.fl., se UX-001 avsnitt 1.3) — Roll 2 försvinner inte bara
+   för att Roll 1 byggs om.
+3. **Alternativ B:s definition ("Avancerat" = allt kompatibelt med aktuell
+   Processmodell) förutsätter en redan vald Tillämpning** — löser alltså
+   inte var de åtta kontextlösa lärstigarna ska höra hemma utan att antingen
+   (a) tvinga in dem under en tillämpning de inte handlar om, i strid med
+   UX-001 avsnitt 1.3, eller (b) återinföra ett neutralt "allt olåst"-läge
+   ändå, fast under annat namn/annan form — dvs. Fri utforskning omdöpt, inte
+   borttaget.
+4. Alternativ B skulle dessutom göra `framkoppling.v1`s och
+   `parameterstyrning-ventilkarakteristik.v1`s EGNA ämnesfält gömda bakom
+   ett extra klick i sina egna dedikerade lärstigar (om inte ett nytt,
+   valfritt lärstigsfält för "Avancerat = förvalt öppet" byggs) — motsatt
+   effekt av UX-001s syfte.
+5. Alternativ B:s enda tydliga vinst: slipper den manuella
+   synk-plikten mot `fri.addons` när nya tillägg (Kvotreglering,
+   Kaskadreglering) tillkommer. Värdet koncentreras till Kvotreglering —
+   Kaskadreglering behöver enligt STRAT-001 ändå en egen layout.
+6. **Rekommendation: Alternativ A** (behåll Fri utforskning). Ingen
+   kodändring krävs; en valfri, billig uppföljning (UX-003b, ej beslutad) är
+   att bara skärpa hjälptexten till "ingen specifik tillämpning" istället för
+   att implicit rama in den som "mest kompletta tillämpningen".
+7. **Konsekvens för UX-002:** ingen — dagens implementation matchar redan
+   rekommendationen. UX-002 väntar fortsatt bara på PO:s fjärde
+   granskningsrunda.
+
+**Status:** Analys levererad. Väntar på PO:s beslut (A eller B) innan något
+implementeras.
+
 
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
 **Prioritet:** Hög — PO:s explicita beslut (2026-09-20): pausa ny
