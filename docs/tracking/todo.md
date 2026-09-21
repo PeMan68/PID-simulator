@@ -8,6 +8,54 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### UX-004 — Omstrukturering av huvudyta och progressiv exponering (analys klar, väntar på PO:s beslut)
+**Prioritet:** Hög — PO+PM:s designbeslut (2026-09-21), direkt efter UX-002:s
+merge.
+**Beskrivning:**
+PO+PM har fattat ett redan beslutat designbeslut (ej del av denna analys):
+huvudytan ska omorganiseras kring tre grupper — Processinställning,
+Regulatorkonfiguration, Processpåverkan (Styrning+Störningar slås ihop) —
+med avancerade fält separerade från grundparametrarna för att minska visuell
+komplexitet. Uppdrag: analysera slutlig informationsarkitektur, vad som
+alltid ska synas, vad som ska bakom "Avancerat", hur lärstigar ska styra
+synligheten, samspelet Tillämpning/Processmodell/lärsteg, risker, och ett
+konkret layoutförslag. Ren analys, ingen kod, ingen branch.
+**Leverans:** `docs/reports/UX-004_OMSTRUKTURERING-HUVUDYTA.md`. Sammanfattning:
+
+1. **Viktig avgränsning:** detta "Avancerat" är INTE UX-003:s avfärdade
+   förslag (som skulle ERSÄTTA Tillämpning/Fri utforskning) — det är ett
+   disklosyr-lager som verkar INOM det redan mergade UX-002-systemet.
+   Tillämpning avgör fortfarande vilka fält som är MÖJLIGA; Avancerat avgör
+   bara om ett redan tillåtet fält visas direkt eller bakom en klickning.
+2. **Informationsarkitektur:** U min/U max flyttas till
+   Regulatorkonfigurations grundnivå (konfiguration, ändras sällan under
+   körning); SP och Manuell u till Processpåverkan (ändras under körning,
+   per PO:s egen definition av gruppen). 23 av dagens 45 kontroller blir
+   grundnivå, 22 blir Avancerat (exakt lista i rapporten avsnitt 3).
+   Processpåverkan föreslås förbli FLACK (ingen egen Avancerat-nivå) — redan
+   smal och redan addon-filtrerad.
+3. **Lärstigsstyrning (kärnlösning):** Avancerat-sektionens öppen/stängd-
+   status härleds AUTOMATISKT från scenariots egna aktiva värden
+   (`kff !== 0`, `gainSchedule.enabled`, etc.) — återanvänder samma
+   signalkälla som UX-002:s `deriveApplicationProfile()`, ingen ny
+   lärstigstaggning krävs i normalfallet. Undantag: Bumpless/Anti-windup är
+   `true` i nästan alla scenarier (default, inte ett ämnessignal) — löses
+   med ett nytt, valfritt `forceAdvancedOpen`-fält per lärstigssteg, bara
+   för de fåtal lärstigar (idag: `windup-antiwindup.v1`) där ämnet är en
+   fält-EXISTENS snarare än ett avvikande värde.
+4. **Störst risk:** discoverability-regression för Anti-windup/Bumpless
+   (flyttas till Avancerat trots att de inte är addon-gated idag) —
+   `windup-antiwindup.v1` måste verifieras manuellt efter implementation,
+   inte bara programmatiskt. Näst störst: två disklosyr-mekanismer
+   (addon-hidden från UX-002 + ny Avancerat-kollaps) verkar på samma fält
+   (t.ex. Kff) — måste kombineras med AND, inte skriva över varandra.
+5. **Layoutförslag:** nästlad kollapsbar "Avancerat"-rad per grupp,
+   återanvänder FEAT-044s redan etablerade `.zone-table`-hopfällningsmönster
+   — ingen ny komponenttyp att lära ut.
+
+**Status:** Analys levererad. Väntar på PO:s beslut/justeringar innan något
+implementeras.
+
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
 **Prioritet:** Hög — PO:s explicita beslut (2026-09-20): pausa ny
 reglerstrategiutveckling (Kvotreglering, Kaskadreglering) tills detta spår är
