@@ -290,6 +290,15 @@
       font-family: inherit;
       font-size: 13px;
     }
+    /* PO:s UX-granskning (2026-09-20, uppföljning) — <input type="number">
+       saknar en egen innehållsstyrd bredd (till skillnad från <select>, som
+       webbläsaren själv sizear efter det valda alternativets text): utan
+       denna rad tar varje talfält webbläsarens breda standardbredd
+       (~170-220px), oavsett hur kort värdet är (K/T/L visade sig fortfarande
+       vara mycket bredare än nödvändigt trots att .field själv nu är
+       innehållsstyrd, se föregående fix). Ett fast, kompakt mått räcker gott
+       för alla tal i appen (längsta värdet är runt "-0,6154"). */
+    input[type="number"] { width: 90px; }
     button {
       cursor: pointer;
       border-color: #919eac;
@@ -331,9 +340,20 @@
 
     /* ── Parameter groups ── */
     .params-container { display: flex; flex-direction: column; gap: 6px; }
+    /* UX-002 — tillämpningsstyrd döljning av strategitillägg (Framkoppling/
+       Parameterstyrning/Ventilkarakteristik). !important krävs eftersom
+       samma element ofta även styrs av lägesbaserad style.display (t.ex.
+       updateGainScheduleUIState()) — addon-döljningen ska alltid vinna. */
+    [data-addon].addon-hidden { display: none !important; }
+    /* UX-002 (PO:s UX-granskning) — flexbox med radbrytning istället för ett
+       fast 6-kolumners rutnät: varje fält får bredden dess EGET innehåll
+       (etikett eller select/input) faktiskt behöver, istället för att alla
+       fält tvingas till samma kolumnbredd. Löser att långa värden (t.ex.
+       "Självreglerande (flerkapacitiv)") klipptes av medan korta fält (K, T,
+       L) slösade utrymme i onödan. */
     .param-group {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(110px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       padding: 6px 10px 10px;
       border: 1px solid var(--line);
@@ -342,7 +362,7 @@
     }
     .param-group.collapsed { padding-bottom: 6px; }
     .param-group-label {
-      grid-column: 1 / -1;
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: flex-start;
@@ -383,7 +403,10 @@
     .field.zone-active-process select {
       background: #e6f5f2; border-color: #16a085; box-shadow: 0 0 0 1px #16a085;
     }
-    .field { display: flex; flex-direction: column; gap: 4px; transition: opacity 120ms ease; }
+    /* flex: 0 0 auto — bredden styrs av innehållet (etiketten eller
+       select/input:s egen naturliga bredd), inte av en delad rutnätskolumn.
+       min-width är en golvnivå, inte ett tvingat mått. */
+    .field { display: flex; flex-direction: column; gap: 4px; transition: opacity 120ms ease; flex: 0 0 auto; min-width: 90px; }
     .field label {
       font-size: 12px;
       color: var(--muted);
@@ -575,17 +598,15 @@
       .present-step-num { font-size: 14px; }
     }
 
-    @media (max-width: 1200px) {
-      .param-group { grid-template-columns: repeat(4, minmax(110px, 1fr)); }
-    }
     @media (max-width: 860px) {
       :root { --sb-left-w: 200px; --sb-right-w: 220px; }
-      .param-group { grid-template-columns: repeat(3, minmax(100px, 1fr)); }
     }
     @media (max-width: 640px) {
       .sidebar-left, .sidebar-right { width: var(--sb-toggle-w) !important; }
       .sidebar-left .sidebar-inner, .sidebar-right .sidebar-inner { opacity: 0; pointer-events: none; width: 0; padding: 0; }
-      .param-group { grid-template-columns: repeat(2, minmax(100px, 1fr)); }
+      /* Ett fält per rad på smala skärmar — samma avsikt som tidigare
+         grid-template-columns-övermappningarna, anpassad till flexbox. */
+      .field { width: 100%; }
       button, select, input[type="number"] { width: 100%; }
     }
   </style>
@@ -664,8 +685,19 @@
       <div class="param-group" id="groupProcess">
         <span class="param-group-label" onclick="toggleParamGroup('groupProcess')"><button class="group-toggle">▼</button> Process</span>
         <div class="param-group-body">
+          <!-- Tillämpning (UX-002/UX-001 Fas 0) — placerad direkt före Processmodell
+               för att synliggöra sambandet Tillämpning → Processmodell → processparametrar
+               (PO:s granskningsobservation 1: egen grupp tog för mycket plats för ett fält). -->
           <div class="field">
-            <label for="processType">Processtyp <button class="help-btn" data-help="processType">?</button></label>
+            <label for="applicationProfile">Tillämpning <button class="help-btn" data-help="applicationProfile">?</button></label>
+            <select id="applicationProfile">
+              <option value="fri">Fri utforskning</option>
+              <option value="temperatur">Temperaturprocess</option>
+              <option value="niva">Nivåprocess</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="processType">Processmodell <button class="help-btn" data-help="processType">?</button></label>
             <select id="processType">
               <option value="self_regulating">Självreglerande (enkapacitiv)</option>
               <option value="self_regulating_2">Självreglerande (flerkapacitiv)</option>
@@ -684,7 +716,7 @@
             <label for="l">L <button class="help-btn" data-help="l">?</button></label>
             <input id="l" type="number" step="0.1" min="0">
           </div>
-          <div class="field">
+          <div class="field" data-addon="framkoppling">
             <label for="auxGain">Lastförstärkning <button class="help-btn" data-help="auxGain">?</button></label>
             <input id="auxGain" type="number" step="0.05">
           </div>
@@ -696,11 +728,11 @@
             <label for="outflow">Utflöde <button class="help-btn" data-help="outflow">?</button></label>
             <input id="outflow" type="number" step="0.1" min="0">
           </div>
-          <div class="field" id="nonlinearGainField">
+          <div class="field" id="nonlinearGainField" data-addon="ventilkarakteristik">
             <label for="nonlinearGainEnabled">Olinjär ventilkarakteristik <button class="help-btn" data-help="nonlinearGainEnabled">?</button></label>
             <input id="nonlinearGainEnabled" type="checkbox" title="Processens K varierar med utsignalen i tre fasta zoner">
           </div>
-          <div class="schedule-fields" id="nonlinearGainFields" hidden>
+          <div class="schedule-fields" id="nonlinearGainFields" data-addon="ventilkarakteristik" hidden>
             <div class="field">
               <label for="ngBreak1">Brytpunkt 1 (u) <button class="help-btn" data-help="ngBreak">?</button></label>
               <input id="ngBreak1" type="number" step="1" min="0" max="100">
@@ -751,15 +783,15 @@
             <label for="td">Td <button class="help-btn" data-help="td">?</button></label>
             <input id="td" type="number" step="0.1" min="0">
           </div>
-          <div class="field">
+          <div class="field" data-addon="framkoppling">
             <label for="kff">Kff <button class="help-btn" data-help="kff">?</button></label>
             <input id="kff" type="number" step="0.05">
           </div>
-          <div class="field" id="gainScheduleField">
+          <div class="field" id="gainScheduleField" data-addon="parameterstyrning">
             <label for="gainScheduleEnabled">Parameterstyrning <button class="help-btn" data-help="gainScheduleEnabled">?</button></label>
             <input id="gainScheduleEnabled" type="checkbox" title="Kp/Ti/Td väljs utifrån PV i tre fasta zoner">
           </div>
-          <div class="schedule-fields" id="gainScheduleFields" hidden>
+          <div class="schedule-fields" id="gainScheduleFields" data-addon="parameterstyrning" hidden>
             <div class="field">
               <label for="gsBreak1">Brytpunkt 1 (PV) <button class="help-btn" data-help="gsBreak">?</button></label>
               <input id="gsBreak1" type="number" step="1" min="0" max="100">
@@ -870,11 +902,11 @@
           <div class="field" style="justify-content:flex-end;">
             <button id="pulse">Trigga puls</button>
           </div>
-          <div class="field">
+          <div class="field" data-addon="framkoppling">
             <label for="auxMag">Last mag <button class="help-btn" data-help="auxMag">?</button></label>
             <input id="auxMag" type="number" step="0.5">
           </div>
-          <div class="field" style="justify-content:flex-end;">
+          <div class="field" style="justify-content:flex-end;" data-addon="framkoppling">
             <button id="triggerAux">Trigga last</button>
           </div>
         </div>
