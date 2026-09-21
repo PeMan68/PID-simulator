@@ -1,4 +1,4 @@
-# Övningsuppgifter: Reglerstrategier
+git # Övningsuppgifter: Reglerstrategier
 *Dokumentversion 1.0, Övningsuppgifter för PID-simulator 1.5.3 eller högre*
 
 > **⚠️ Viktigt**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
