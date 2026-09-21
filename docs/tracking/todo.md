@@ -8,7 +8,8 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
-### UX-004 — Omstrukturering av huvudyta och progressiv exponering (analys klar, väntar på PO:s beslut)
+### UX-004 — Omstrukturering av huvudyta och progressiv exponering
+**Branch:** `feature/UX-004-huvudyta-omstrukturering`
 **Prioritet:** Hög — PO+PM:s designbeslut (2026-09-21), direkt efter UX-002:s
 merge.
 **Beskrivning:**
@@ -53,8 +54,70 @@ konkret layoutförslag. Ren analys, ingen kod, ingen branch.
    återanvänder FEAT-044s redan etablerade `.zone-table`-hopfällningsmönster
    — ingen ny komponenttyp att lära ut.
 
-**Status:** Analys levererad. Väntar på PO:s beslut/justeringar innan något
-implementeras.
+**PO:s fyra justeringsbeslut (2026-09-21) och genomförande:**
+
+1. **Justering 1 — "Fri utforskning" → "Avancerat".** Kortare, mer
+   etablerat begrepp, samma expertlägesroll ("visar allt"). Genomfört:
+   `APPLICATION_PROFILES`-nyckeln `fri` → `avancerat`, UI-alternativet döpt
+   om. Att välja Avancerat tvingar nu ÄVEN alla Avancerat-disklosyrsektioner
+   öppna (kopplar ihop UX-002:s Tillämpningsbegrepp med UX-004:s nya
+   disklosyrmekanism till EN sammanhängande "expertläge"-betydelse, istället
+   för två delvis överlappande begrepp).
+2. **Justering 3 — Last är generell processpåverkan, inte exklusiv för
+   Framkoppling.** Motivering: laststeg är användbart för ren
+   regulatorprovning även utan Kff, och hittills har bara SP-steg funnits
+   som generellt utvärderingsverktyg. Genomfört: `data-addon="framkoppling"`
+   borttaget från Lastförstärkning/Last mag/Trigga last (kvar bara på Kff);
+   `updateFramkopplingVisibility()` → `updateKffVisibility()`; inget
+   nollställs längre vid tillämpningsbyte för Last. **Upptäckt och åtgärdad
+   regression under implementationen:** `deriveApplicationProfile()` hade
+   ändrats att bara härleda Temperaturprocess från Kff — men
+   `framkoppling.v1`s FÖRSTA steg har `kff=0` ("PID ensam", innan Kff
+   introduceras), vilket hade härlett det steget till en ANNAN Tillämpning
+   än lärstigens övriga två steg. Löst genom att behålla `auxSignal` som
+   signal TILLSAMMANS MED `kff` — verifierat programmatiskt att `auxSignal`
+   idag ENDAST förekommer i `framkoppling.v1`s fyra scenarier, så det bredare
+   villkoret är riskfritt. Samtliga 12 lärstigar re-verifierade
+   programmatiskt efter fixen: inga avvikelser.
+3. **Justering 4 — Auto/Manuell som togglefunktion.** Läge-väljaren ersatt
+   av Regulatortyp (OnOff/P/PI/PID) + en separat Auto/Manuell-toggle, som
+   verklig driftväxling. `#mode` (5 alternativ) kvar som DOLD intern
+   sanningskälla — all befintlig logik (`syncParamsFromUI`,
+   `updateControllerUIState`, Tillämpnings-filtrering) rör den ALDRIG, bara
+   HUR värdet sätts är nytt. Byte till Manuellt seedar nu `manualOutput`
+   OVILLKORLIGT med aktuellt u (tidigare gated på Bumpless-kryssrutan, som
+   styr en annan, separat sak — regulatorns egen bias-fasning vid övergång
+   TILL p/pi/pid). Ingen ändring i `sim-core.js`.
+4. **Justering 5 — Visa PB flyttat till grafen.** PB är en härledd
+   graf-visning (av aktuell Kp), inte något användaren konfigurerar — hör
+   hemma vid grafen den analyseras i. Genomfört: ny rad `#chartControls`
+   direkt ovanför `#chartWrap`, samma `#showPB`-id (bara ny DOM-plats).
+
+**Genomförande i övrigt (full IA från analysen, se rapporten):** tre grupper
+(`groupProcessinstallning`/`groupRegulatorkonfiguration`/
+`groupProcesspaverkan`) ersätter de fyra gamla. Nästlad, kollapsbar
+"Avancerat"-sektion per grupp (Processinställning: Lastförstärkning +
+Ventilkarakteristik; Regulatorkonfiguration: Kff + Parameterstyrning +
+Bumpless + Anti-windup) — öppen/stängd härleds automatiskt
+(`deriveAdvancedOpen()`) från: Tillämpning="avancerat" (allt uppackat) ELLER
+scenariots aktiva värden (samma signal som `deriveApplicationProfile()`)
+ELLER ett nytt, valfritt scenariofält `forceAdvancedOpen` (satt på
+`pi-windup-demo.json`, eftersom Anti-windup/Bumpless är `true` i nästan alla
+scenarier och alltså inte fångas av "aktivt värde"-heuristiken).
+Processpåverkan hålls flack (ingen egen Avancerat-nivå, per analysens
+rekommendation 2.2).
+
+99 nya/ändrade testkontroller (60 i `ux-002-application-profile.test.mjs`,
+43 i ny `ux-004-huvudyta.test.mjs`). Full regression grön (10 testfiler, 265
+kontroller), DEV-/PROD-innehålls- och byggvalidering grön, Tillämpnings-/
+Avancerat-härledning re-verifierad programmatiskt mot samtliga 12 lärstigar.
+
+Ingen webbläsare tillgänglig i denna miljö — källkods-verifierat, inte
+visuellt bekräftat.
+
+**Status:** Implementerat på feature-branchen enligt PO:s fyra
+justeringsbeslut. Väntar på PO:s granskning innan merge till develop/PROD,
+per uppdragets uttryckliga instruktion.
 
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
 **Prioritet:** Hög — PO:s explicita beslut (2026-09-20): pausa ny
