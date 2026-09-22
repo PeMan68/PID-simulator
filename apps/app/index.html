@@ -756,12 +756,8 @@
             <label for="outflow">Utflöde <button class="help-btn" data-help="outflow">?</button></label>
             <input id="outflow" type="number" step="0.1" min="0">
           </div>
-          <div class="advanced-toggle" id="advancedToggleProcess" onclick="toggleAdvanced('process')"><button class="group-toggle">▸</button> Avancerat <span id="advancedCountProcess" class="advanced-count"></span></div>
+          <div class="advanced-toggle" id="advancedToggleProcess" onclick="toggleAdvanced('process')"><button class="group-toggle">▸</button> Avancerat</div>
           <div class="advanced-fields" id="advancedFieldsProcess" hidden>
-            <div class="field">
-              <label for="auxGain">Lastförstärkning <button class="help-btn" data-help="auxGain">?</button></label>
-              <input id="auxGain" type="number" step="0.05">
-            </div>
             <div class="field" id="nonlinearGainField" data-addon="ventilkarakteristik">
               <label for="nonlinearGainEnabled">Olinjär ventilkarakteristik <button class="help-btn" data-help="nonlinearGainEnabled">?</button></label>
               <input id="nonlinearGainEnabled" type="checkbox" title="Processens K varierar med utsignalen i tre fasta zoner">
@@ -852,7 +848,7 @@
             <label for="hysteresUpper">Hyst. hög <button class="help-btn" data-help="hysteresUpper">?</button></label>
             <input id="hysteresUpper" type="number" step="0.1" min="0">
           </div>
-          <div class="advanced-toggle" id="advancedToggleRegulator" onclick="toggleAdvanced('regulator')"><button class="group-toggle">▸</button> Avancerat <span id="advancedCountRegulator" class="advanced-count"></span></div>
+          <div class="advanced-toggle" id="advancedToggleRegulator" onclick="toggleAdvanced('regulator')"><button class="group-toggle">▸</button> Avancerat</div>
           <div class="advanced-fields" id="advancedFieldsRegulator" hidden>
             <div class="field" data-addon="framkoppling">
               <label for="kff">Kff <button class="help-btn" data-help="kff">?</button></label>
@@ -955,7 +951,15 @@
                updateKffVisibility() i app.js): laststeg är en generell
                processpåverkan, lika användbar för ren regulatorprovning som
                ett SP-steg. Inget data-addon-attribut längre — alltid synliga,
-               som Puls/Brus. -->
+               som Puls/Brus. UX-004 Implementering, punkt 4 (PO-test
+               2026-09-22) — Lastförstärkning flyttad hit från
+               Processinställnings Avancerat-sektion: den, Last mag och
+               Trigga last hör till samma användningsfall och visas nu
+               tillsammans. -->
+          <div class="field">
+            <label for="auxGain">Lastförstärkning <button class="help-btn" data-help="auxGain">?</button></label>
+            <input id="auxGain" type="number" step="0.05">
+          </div>
           <div class="field">
             <label for="auxMag">Last mag <button class="help-btn" data-help="auxMag">?</button></label>
             <input id="auxMag" type="number" step="0.5">

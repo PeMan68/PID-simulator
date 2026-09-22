@@ -1095,7 +1095,15 @@ function deriveAdvancedOpen(scenario, group) {
   if (scenario?.forceAdvancedOpen?.includes(group)) return true;
   if (!scenario) return false;
   if (group === "process") {
-    return !!(scenario.process.nonlinearGain?.enabled) || !!(scenario.process.auxGain);
+    // UX-004 Implementering, punkt 4 (PO-test 2026-09-22) — Lastförstärkning
+    // (auxGain) flyttades ut till Processpåverkans grundnivå (alltid synlig
+    // där nu, precis som Last mag/Trigga last) och ligger inte längre i
+    // advancedFieldsProcess. Den enda kvarvarande, faktiskt dolda funktionen
+    // i Processinställningens Avancerat-sektion är Olinjär ventilkarakteristik
+    // — auxGain ska alltså inte längre tvinga sektionen öppen (ett scenario
+    // med bara ett Lastförstärknings-värde men UTAN ventilkarakteristik har
+    // inget skäl att visa den tomma sektionen uppackad).
+    return !!(scenario.process.nonlinearGain?.enabled);
   }
   if (group === "regulator") {
     return !!(scenario.controller.gainSchedule?.enabled) || !!(scenario.controller.kff);
@@ -1130,6 +1138,15 @@ function applyAdvancedState() {
 const ADDON_TO_ADVANCED_GROUP = { framkoppling: "regulator", parameterstyrning: "regulator", ventilkarakteristik: "process" };
 function applyPathVisibilityOverride() {
   if (!currentPath || currentPathStep < 0) return;
+  // UX-004 Implementering, punkt 2 (PO-test 2026-09-22) — Tillämpning
+  // "Avancerat" ska vara en KOMPLETT sandlåda (allt synligt, inget filter),
+  // även mitt i en aktiv lärstig med en egen visibilityOverride. Utan denna
+  // spärr skulle t.ex. framkoppling.v1s "dölj Parameterstyrning" fortsätta
+  // gälla efter att användaren manuellt bytt till Avancerat — precis
+  // motsatsen till vad Justering 1 (2026-09-21) redan etablerat för
+  // Avancerat-disklosyren (deriveAdvancedOpen() tvingar den öppen), nu
+  // konsekvent genomfört även för lärstigens EGEN, mer specifika override.
+  if (fields.applicationProfile.value === "avancerat") return;
   const override = currentPath.visibilityOverride;
   if (!override) return;
   (override.hide || []).forEach(addon => {
@@ -1306,13 +1323,6 @@ function showWelcome() {
 function initUI() {
   Object.entries(SCENARIOS).forEach(([name, s]) => { if (!s._standalone) return; const o = document.createElement("option"); o.value = name; o.textContent = s.title || name; scenarioSelect.appendChild(o); });
   Object.entries(LEARNING_PATHS).forEach(([id, p]) => { const o = document.createElement("option"); o.value = id; o.textContent = p.title || id; learningPathSelect.appendChild(o); });
-  // UX-004 — statisk räkning av antal fält bakom respektive Avancerat-
-  // sektion (inte live-omräknad — mängden fält där ändras aldrig under en
-  // session, bara deras egen synlighet, se applyAdvancedState()).
-  ["Process", "Regulator"].forEach(cap => {
-    const count = document.getElementById("advancedFields" + cap).querySelectorAll(".field").length;
-    document.getElementById("advancedCount" + cap).textContent = "(" + count + " dolda)";
-  });
   // UX-002 — loadScenarioByName() sätter redan rätt Tillämpning (se
   // deriveApplicationProfile()); för startscenariot ger det "Avancerat"
   // (basic-step-self-regulating.json har inga aktiva tillägg, faller igenom
@@ -1466,7 +1476,19 @@ function toggleParamGroup(id) {
 ["groupProcessinstallning","groupRegulatorkonfiguration","groupProcesspaverkan"].forEach(id => {
   if (localStorage.getItem("pg-" + id) === "1") document.getElementById(id).classList.add("collapsed");
 });
-document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
+document.getElementById("load").addEventListener("click", () => {
+  // UX-004 Implementering, punkt 3 (PO-test 2026-09-22) — currentPath
+  // nollställs ALDRIG av sig själv (bara currentPathStep, se loadPath()/
+  // testMode-togglen), så ett manuellt scenarioval mitt i en aktiv lärstig
+  // lämnade tidigare kvar lärstigens visibilityOverride (och aktiverade
+  // Föregående-knappen tillbaka in i lärstigen) på det nya, orelaterade
+  // scenariot. currentPathStep = -1 är samma "har lämnat den aktiva
+  // guidade stegvyn"-signal som redan används överallt annanstans
+  // (updateNavButtons(), activityContextKey(), applyPathVisibilityOverride()).
+  currentPathStep = -1;
+  updateNavButtons();
+  loadScenarioByName(scenarioSelect.value);
+});
 fields.pulseDuration.addEventListener("input", () => { if (Number(fields.pulseDuration.value) < 0) fields.pulseDuration.value = 0; });
 fields.showPB.addEventListener("change", drawChart);
 // Kp, SP och hysteresgränserna ritas i grafen (PB-band, SP-linje,

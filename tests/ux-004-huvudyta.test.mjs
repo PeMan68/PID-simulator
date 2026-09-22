@@ -48,13 +48,16 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   check("2c. SP ligger i Processpåverkan (inte Regulatorkonfiguration)", /id="groupProcesspaverkan">[\s\S]{0,300}<label for="sp"/.test(html));
   check("2d. Manuell u ligger i Processpåverkan", /id="groupProcesspaverkan">[\s\S]{0,700}<label for="manualOutput"/.test(html));
   check("2e. Last mag/Trigga last ligger i Processpåverkan", /id="groupProcesspaverkan">[\s\S]{0,3000}<label for="auxMag"/.test(html) && /id="groupProcesspaverkan">[\s\S]{0,3000}<button id="triggerAux">/.test(html));
+  // UX-004 Implementering, punkt 4 (PO-test 2026-09-22) — flyttad hit FRÅN
+  // Processinställningens Avancerat-sektion, se avsnitt 3c/3m nedan.
+  check("2f. Lastförstärkning (auxGain) ligger nu i Processpåverkans grundnivå, tillsammans med Last mag/Trigga last", /id="groupProcesspaverkan">[\s\S]{0,3000}<label for="auxGain"/.test(html));
 }
 
 // ── 3. index.html + app.js: "Avancerat"-disklosyr per grupp ──
 {
   check("3a. advancedToggleProcess/advancedFieldsProcess finns i Processinställning", html.includes('id="advancedToggleProcess"') && html.includes('id="advancedFieldsProcess"'));
   check("3b. advancedToggleRegulator/advancedFieldsRegulator finns i Regulatorkonfiguration", html.includes('id="advancedToggleRegulator"') && html.includes('id="advancedFieldsRegulator"'));
-  check("3c. Lastförstärkning (auxGain) ligger i advancedFieldsProcess", /id="advancedFieldsProcess"[\s\S]{0,300}<label for="auxGain"/.test(html));
+  check("3c. Lastförstärkning (auxGain) ligger INTE längre i advancedFieldsProcess (flyttad till Processpåverkan, punkt 4)", !/id="advancedFieldsProcess"[\s\S]{0,300}<label for="auxGain"/.test(html));
   check("3d. Olinjär ventilkarakteristik ligger i advancedFieldsProcess", /id="advancedFieldsProcess"[\s\S]{0,2000}nonlinearGainEnabled/.test(html));
   check("3e. Kff ligger i advancedFieldsRegulator", /id="advancedFieldsRegulator"[\s\S]{0,300}<label for="kff"/.test(html));
   check("3f. Parameterstyrning ligger i advancedFieldsRegulator", /id="advancedFieldsRegulator"[\s\S]{0,2000}gainScheduleEnabled/.test(html));
@@ -65,11 +68,18 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   check("3j. deriveAdvancedOpen()-funktionen är definierad", /function deriveAdvancedOpen\(scenario, group\)/.test(appJs));
   check("3k. Tillämpning=\"avancerat\" (Justering 1) tvingar Avancerat öppet oavsett scenario", /if \(fields\.applicationProfile\.value === "avancerat"\) return true;/.test(appJs));
   check("3l. forceAdvancedOpen på scenariot tvingar gruppen öppen", /scenario\?\.forceAdvancedOpen\?\.includes\(group\)/.test(appJs));
-  check("3m. Process-gruppen öppnas av aktivt nonlinearGain ELLER auxGain", /nonlinearGain\?\.enabled[\s\S]{0,60}auxGain/.test(appJs));
+  check(
+    "3m. Process-gruppen öppnas ENDAST av aktivt nonlinearGain (auxGain borttaget ur villkoret, punkt 4 — fältet ligger inte längre i sektionen)",
+    /if \(group === "process"\) \{[\s\S]{0,700}return !!\(scenario\.process\.nonlinearGain\?\.enabled\);/.test(appJs)
+  );
   check("3n. Regulator-gruppen öppnas av aktivt gainSchedule ELLER kff", /gainSchedule\?\.enabled[\s\S]{0,60}controller\.kff/.test(appJs));
   check("3o. setAdvancedOpen()/toggleAdvanced()/applyAdvancedState() är definierade", /function setAdvancedOpen\(group, open\)/.test(appJs) && /function toggleAdvanced\(group\)/.test(appJs) && /function applyAdvancedState\(\)/.test(appJs));
   check("3p. applyAdvancedState() anropas från applyApplicationProfile() (räknas om vid varje Tillämpnings-/scenariobyte)", /applyAdvancedState\(\); \/\/ UX-004/.test(appJs));
-  check("3q. initUI() räknar antal dolda fält per Avancerat-sektion (statiskt, en gång)", /advancedCount/.test(appJs) && /querySelectorAll\("\.field"\)\.length/.test(appJs));
+  // UX-004 Implementering, punkt 1 (PO-test 2026-09-22) — "(N dolda)"-
+  // räknaren (från den ursprungliga analysens layoutförslag) togs bort helt
+  // efter PO:s manuella granskning: bara "Avancerat", inget antal.
+  check("3q. Ingen \"(N dolda)\"-räknare kvar — varken i markupen eller i JS", !/advancedCount/.test(appJs) && !/advanced-count/.test(html) && !/\d+ dolda/.test(html));
+  check("3r. Avancerat-etiketten är exakt \"Avancerat\", ingen efterföljande <span>/räknare", /<button class="group-toggle">▸<\/button> Avancerat<\/div>/.test(html));
 }
 
 // ── 4. Justering 4 — Auto/Manuell-toggle ersätter Manuell som mode-alternativ ──
@@ -134,6 +144,18 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
 
   const ffLearningPath = JSON.parse(readFileSync(path.join(APP_DIR, "content", "exercises", "framkoppling.v1.json"), "utf8"));
   check("8h. framkoppling.v1 visar Kff/Framkoppling och döljer Parameterstyrning", Array.isArray(ffLearningPath.visibilityOverride?.show) && ffLearningPath.visibilityOverride.show.includes("framkoppling") && Array.isArray(ffLearningPath.visibilityOverride?.hide) && ffLearningPath.visibilityOverride.hide.includes("parameterstyrning"));
+}
+
+// ── 9. UX-004 Implementering efter PO-test (2026-09-22) — punkt 2/3 ──
+{
+  check(
+    "9a. Tillämpning=\"avancerat\" är en KOMPLETT sandlåda — applyPathVisibilityOverride() returnerar tidigt, ingen aktiv lärstigsfiltrering kvarstår (PO-fynd: filter satt kvar trots Avancerat)",
+    /function applyPathVisibilityOverride\(\) \{\s*\n\s*if \(!currentPath \|\| currentPathStep < 0\) return;[\s\S]{0,700}if \(fields\.applicationProfile\.value === "avancerat"\) return;/.test(appJs)
+  );
+  check(
+    "9b. Manuellt scenarioval (#load-knappen) nollställer currentPathStep — en aktiv lärstigs visibilityOverride läcker annars kvar på ett orelaterat, manuellt valt scenario (PO-fynd, t.ex. växling till 'Fri utforskning')",
+    /getElementById\("load"\)\.addEventListener\("click", \(\) => \{\s*\n[\s\S]{0,700}currentPathStep = -1;[\s\S]{0,200}loadScenarioByName\(scenarioSelect\.value\);/.test(appJs)
+  );
 }
 
 console.log(`\n${passed} OK, ${failed} FAIL`);

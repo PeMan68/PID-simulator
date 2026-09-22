@@ -188,3 +188,12 @@ Reflektionsfrågor i .md-filerna omvandlas till `quiz`-steg med MCQ. Simulerings
 ### Konsekvens: Risk för kognitiv överbelastning och otydlighet om vilka fält som är relevanta för den aktuella uppgiften, särskilt när fler reglerstrategier (Kvotreglering, Kaskadreglering) läggs till framöver.
 ### Förslag / nästa tanke: PO föreslog processpecifika vyer/tillämpningar (t.ex. Temperaturprocess, Nivåprocess, Flödesprocess, Framkopplingsprocess, Kvotregleringsprocess, Kaskadprocess) som styr vilka parametergrupper som visas — en betydligt större arkitekturfråga (troligen ett nytt "processtyp"/"tillämpnings"-val, utöver dagens lägesstyrda visning) än en enskild feature. Inte moget för ett FEAT-nummer ännu — kräver egen designspecifikation (STRAT-nivå) den dag det blir aktuellt.
 ### Status: Noterad — se docs/reports/FEAT-045_ANVANDARTEST-ATGARDER.md punkt 7 för full kontext.
+
+---
+
+### Datum: 2026-09-22
+### Del av webbappen: Regulatorkonfiguration → Avancerat → Parameterstyrningens zontabell
+### Iakttagelse: PO:s observation vid manuell granskning av UX-004: när flera parametergrupper visas samtidigt i Avancerat-sektionen (t.ex. Parameterstyrningens 9 zonfält tillsammans med Kff/Bumpless/Anti-windup) flyter zonparametrarna visuellt ihop — otillräcklig visuell avgränsning mellan Zon 1/2/3:s Kp/Ti/Td-grupper.
+### Konsekvens: Rent kosmetiskt/läsbarhetsmässigt — påverkar inte funktionen, bara hur lätt det är att snabbt särskilja vilken zon ett fält tillhör.
+### Förslag / nästa tanke: Möjlig framtida finputsning, t.ex. tydligare gruppramar/bakgrundsfärg per zon eller samma `.zone-table`-mönster som FEAT-044 redan etablerat för andra zontabeller. Medvetet INTE åtgärdat i UX-004 — PO bad uttryckligen att detta INTE skulle inkluderas i den ändringen för att undvika att försena releasen.
+### Status: Noterad

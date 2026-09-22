@@ -172,6 +172,70 @@ websocket-implementation behövdes).
 granskning innan merge till develop/PROD, per uppdragets uttryckliga
 instruktion.
 
+**UX-004 kompletteringar efter PO-test (samma dag, 2026-09-22)** — PO
+genomförde egen manuell testning och rapporterade sex punkter, samtliga
+åtgärdade/verifierade på samma branch:
+
+1. **"Avancerat (N dolda)"-räknaren borttagen helt** — PO ville bara ha
+   "Avancerat", ingen räknare. Räknar-logiken i `initUI()` och
+   `<span id="advancedCount...">` i `index.html` togs bort helt (inte bara
+   dold), eftersom PO uttryckligen beslutat bort funktionen.
+2. **Bugg hittad och fixad: Tillämpning="Avancerat" var INTE en komplett
+   sandlåda** — en aktiv lärstigs `visibilityOverride` (t.ex.
+   parameterstyrning-ventilkarakteristik.v1s "dölj Kff") fortsatte gälla
+   även efter att användaren manuellt växlat till Avancerat, tvärtemot
+   Justering 1:s etablerade princip att Avancerat visar allt. Fixat:
+   `applyPathVisibilityOverride()` returnerar nu tidigt om
+   `fields.applicationProfile.value === "avancerat"`. Visuellt verifierat.
+3. **Bugg hittad och fixad: en aktiv lärstigs filter kunde läcka till ett
+   senare, manuellt valt scenario** — `currentPath`/`currentPathStep`
+   nollställs bara av `loadPath()`/testMode-togglen, INTE av
+   #load-knappen (manuellt "Ladda scenario"). En students filter från t.ex.
+   framkoppling.v1 (döljer Parameterstyrning) satt alltså kvar även efter
+   att hen lämnat lärstigen och laddat ett fristående scenario (t.ex. "Fri
+   utforskning"). Fixat: #load-knappens click-handler nollställer nu
+   `currentPathStep = -1` innan `loadScenarioByName()`. Visuellt verifierat
+   (framkoppling.v1 → manuellt scenarioval → filtret är borta).
+4. **Lastförstärkning flyttad** från Processinställningens Avancerat-sektion
+   till Processpåverkans grundnivå, bredvid Last mag/Trigga last (PO:s
+   motivering: samma användningsfall, ska visas tillsammans). Som en följd
+   fixades även `deriveAdvancedOpen()`s "process"-villkor — det körde
+   tidigare `nonlinearGain?.enabled || auxGain`, men eftersom auxGain inte
+   längre ligger i sektionen ska bara `nonlinearGain?.enabled` styra om den
+   öppnas automatiskt (annars tvingas en tom sektion upp för scenarier med
+   bara ett Lastförstärknings-värde).
+5. **Samtliga 12 aktiva lärstigar granskade rad för rad** (inte bara
+   grep-mönster) för kvarvarande referenser till de fyra gamla gruppnamnen
+   (Process/Regulator/Styrning/Störningar). Sex filer hade stale text,
+   samtliga fixade: `kom-igång.v1.json` (introduktionslärstigen, granskad
+   extra noggrant per PO:s instruktion — två ställen: "Process- och
+   Regulator-grupperna" → "Processinställning- och
+   Regulatorkonfigurations-grupperna", samt uppräkningen "(Process,
+   Regulator, Styrning, Störningar)" → de tre nya gruppnamnen),
+   `framkoppling.v1.json` (två "Störningar-gruppen" → "Processpåverkan"),
+   `lambda-metoden.v1.json` och `parameterstyrning-ventilkarakteristik.v1.json`
+   ("Process-gruppen"/"Regulator-gruppen" → nya namn),
+   `proportionalband-forstarkning.v1.json` (dubbelt fel: gammalt gruppnamn
+   OCH fel plats — "Visa PB" ligger sedan Justering 5 vid grafen, inte i
+   Regulatorkonfiguration alls), samt `theory/framkoppling.v1.json` och
+   `help.json` (två ställen, Kff/auxGain-hjälptexterna). De tre gamla,
+   ej-katalogiserade filerna (`basic-learning-path.v1.json`,
+   `grundlaggande.v1.json`, `windup.v1.json`) laddas inte av `catalog.json`
+   och är alltså inte del av det levande innehållet — orörda, utanför
+   uppdraget.
+6. **Zonparametrarnas visuella sammanflytning i Parameterstyrning** —
+   registrerad i `docs/planning/WEB-IAKTTAGELSER.md` (2026-09-22) som
+   framtida finputsning, INTE åtgärdad nu (PO:s uttryckliga instruktion:
+   inkludera inte om det riskerar att försena UX-004).
+
+369 automatiska kontroller gröna (16 testfiler + DEV/PROD-validering, inkl.
+4 nya/ändrade kontroller för punkt 2/3). Samtliga sex punkter dessutom
+visuellt/programmatiskt verifierade i headless Chrome (se motiveringen för
+respektive punkt ovan) — inte bara källkodsverifierat.
+
+**Status:** Samtliga sex PO-testfynd åtgärdade och verifierade. Fortfarande
+INTE mergad till develop/PROD.
+
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
 **Prioritet:** Hög — PO:s explicita beslut (2026-09-20): pausa ny
 reglerstrategiutveckling (Kvotreglering, Kaskadreglering) tills detta spår är

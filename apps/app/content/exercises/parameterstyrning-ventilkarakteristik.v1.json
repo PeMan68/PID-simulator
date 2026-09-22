@@ -37,7 +37,7 @@
       "comparisonGroup": "ventilkarakteristik-problem",
       "title": "Visa problemet — stark zon",
       "objective": "Jämföra med föregående steg: SAMMA Kp, men en driftpunkt där processens K är mycket starkare.",
-      "instruction": "Ändra SP till 90 (Kp=1.2 oförändrat). Klicka 'Återställ system' och kör minst 60 steg tills PV ser stabil ut.\n\nMät insvängningstiden på samma sätt som i steg 2: Mätläge, PV₀=0, PV∞=90, 2%-toleransband.\n\nAnteckna: SP=90, Kp=1.2, insvängningstid. Kalla insvängningstiden B.\n\nJämför A (steg 2) och B (det här steget) — vilket är störst? Titta gärna på den färgade ramen kring K-fältet i Process-gruppen (grön när Zon 2/3 är aktiv), som visar vilken K-zon u befinner sig i just nu.",
+      "instruction": "Ändra SP till 90 (Kp=1.2 oförändrat). Klicka 'Återställ system' och kör minst 60 steg tills PV ser stabil ut.\n\nMät insvängningstiden på samma sätt som i steg 2: Mätläge, PV₀=0, PV∞=90, 2%-toleransband.\n\nAnteckna: SP=90, Kp=1.2, insvängningstid. Kalla insvängningstiden B.\n\nJämför A (steg 2) och B (det här steget) — vilket är störst? Titta gärna på den färgade ramen kring K-fältet i Processinställning (grön när Zon 2/3 är aktiv), som visar vilken K-zon u befinner sig i just nu.",
       "checkpoint": {
         "question": "Med exakt samma Kp=1.2 blev B (steg 3, SP=90) betydligt mindre än A (steg 2, SP=10) — alltså snabbare insvängning. Varför?",
         "options": [
@@ -83,7 +83,7 @@
       "comparisonGroup": "ventilkarakteristik-losning",
       "title": "Lösningen — försök 1: Parameterstyrning i svag zon",
       "objective": "Låta regulatorn själv välja rätt Kp för den svaga zonen, istället för en manuellt vald kompromiss.",
-      "instruction": "Ladda scenariot 'Olinjär ventilkarakteristik — Parameterstyrning aktiv'. Kontrollera att SP=10 och att kryssrutan 'Parameterstyrning' i Regulator-gruppen redan är ikryssad — scenariot aktiverar den automatiskt, ingen manuell åtgärd behövs. Lägg märke till den orange ramen kring Zon 1:s Kp/Ti/Td-fält (Kp=5) — det är regulatorns aktiva uppsättning just nu.\n\nKör minst 90 steg tills PV ser stabil ut.\n\nMät insvängningstiden: Mätläge, PV₀=0, PV∞=10, 2%-toleransband.\n\nAnteckna: SP=10, aktiv uppsättning=Zon 1 (Kp=5), insvängningstid. Kalla insvängningstiden E.\n\nUnder hela det här steget stannar PV under Brytpunkt 1 (25) — den orange ramen ligger kvar på Zon 1 hela tiden. Nästa steg är där det faktiska zonbytet sker."
+      "instruction": "Ladda scenariot 'Olinjär ventilkarakteristik — Parameterstyrning aktiv'. Kontrollera att SP=10 och att kryssrutan 'Parameterstyrning' i Regulatorkonfiguration redan är ikryssad — scenariot aktiverar den automatiskt, ingen manuell åtgärd behövs. Lägg märke till den orange ramen kring Zon 1:s Kp/Ti/Td-fält (Kp=5) — det är regulatorns aktiva uppsättning just nu.\n\nKör minst 90 steg tills PV ser stabil ut.\n\nMät insvängningstiden: Mätläge, PV₀=0, PV∞=10, 2%-toleransband.\n\nAnteckna: SP=10, aktiv uppsättning=Zon 1 (Kp=5), insvängningstid. Kalla insvängningstiden E.\n\nUnder hela det här steget stannar PV under Brytpunkt 1 (25) — den orange ramen ligger kvar på Zon 1 hela tiden. Nästa steg är där det faktiska zonbytet sker."
     },
     {
       "type": "scenario",
