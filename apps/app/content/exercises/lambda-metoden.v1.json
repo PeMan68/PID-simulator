@@ -21,8 +21,8 @@
       "type": "scenario",
       "ref": "lambda-open-loop.json",
       "title": "Identifiera processparametrarna",
-      "objective": "Läsa av K, T och L från Process-gruppen och beräkna Lambda-parametrarna.",
-      "instruction": "Titta i Process-gruppen: K=1.5, T=20, L=5. Vi väljer λ = T = 20 (måttlig inställning).\n\nBeräkna: Kp = T / (K × (λ + L)) = 20 / (1.5 × (20 + 5)) = 20 / 37.5 ≈ 0.53\nTi = T = 20\n\nKör 100 steg med den nuvarande P-regulatorn (Kp=0.2) för att se processens tröghet — notera dötiden L=5 och hur långsamt PV rör sig.",
+      "objective": "Läsa av K, T och L från Processinställning och beräkna Lambda-parametrarna.",
+      "instruction": "Titta i Processinställning: K=1.5, T=20, L=5. Vi väljer λ = T = 20 (måttlig inställning).\n\nBeräkna: Kp = T / (K × (λ + L)) = 20 / (1.5 × (20 + 5)) = 20 / 37.5 ≈ 0.53\nTi = T = 20\n\nKör 100 steg med den nuvarande P-regulatorn (Kp=0.2) för att se processens tröghet — notera dötiden L=5 och hur långsamt PV rör sig.",
       "checkpoint": {
         "question": "Du väljer λ = T = 20 för processen K=1.5, T=20, L=5. Vad blir Kp?",
         "options": ["Kp = 0.13", "Kp = 0.53", "Kp = 1.33", "Kp = 2.00"],

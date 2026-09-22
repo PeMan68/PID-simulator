@@ -8,7 +8,8 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
-### UX-004 — Omstrukturering av huvudyta och progressiv exponering (analys klar, väntar på PO:s beslut)
+### UX-004 — Omstrukturering av huvudyta och progressiv exponering
+**Branch:** `feature/UX-004-huvudyta-omstrukturering`
 **Prioritet:** Hög — PO+PM:s designbeslut (2026-09-21), direkt efter UX-002:s
 merge.
 **Beskrivning:**
@@ -53,8 +54,203 @@ konkret layoutförslag. Ren analys, ingen kod, ingen branch.
    återanvänder FEAT-044s redan etablerade `.zone-table`-hopfällningsmönster
    — ingen ny komponenttyp att lära ut.
 
-**Status:** Analys levererad. Väntar på PO:s beslut/justeringar innan något
-implementeras.
+**PO:s fyra justeringsbeslut (2026-09-21) och genomförande:**
+
+1. **Justering 1 — "Fri utforskning" → "Avancerat".** Kortare, mer
+   etablerat begrepp, samma expertlägesroll ("visar allt"). Genomfört:
+   `APPLICATION_PROFILES`-nyckeln `fri` → `avancerat`, UI-alternativet döpt
+   om. Att välja Avancerat tvingar nu ÄVEN alla Avancerat-disklosyrsektioner
+   öppna (kopplar ihop UX-002:s Tillämpningsbegrepp med UX-004:s nya
+   disklosyrmekanism till EN sammanhängande "expertläge"-betydelse, istället
+   för två delvis överlappande begrepp).
+2. **Justering 3 — Last är generell processpåverkan, inte exklusiv för
+   Framkoppling.** Motivering: laststeg är användbart för ren
+   regulatorprovning även utan Kff, och hittills har bara SP-steg funnits
+   som generellt utvärderingsverktyg. Genomfört: `data-addon="framkoppling"`
+   borttaget från Lastförstärkning/Last mag/Trigga last (kvar bara på Kff);
+   `updateFramkopplingVisibility()` → `updateKffVisibility()`; inget
+   nollställs längre vid tillämpningsbyte för Last. **Upptäckt och åtgärdad
+   regression under implementationen:** `deriveApplicationProfile()` hade
+   ändrats att bara härleda Temperaturprocess från Kff — men
+   `framkoppling.v1`s FÖRSTA steg har `kff=0` ("PID ensam", innan Kff
+   introduceras), vilket hade härlett det steget till en ANNAN Tillämpning
+   än lärstigens övriga två steg. Löst genom att behålla `auxSignal` som
+   signal TILLSAMMANS MED `kff` — verifierat programmatiskt att `auxSignal`
+   idag ENDAST förekommer i `framkoppling.v1`s fyra scenarier, så det bredare
+   villkoret är riskfritt. Samtliga 12 lärstigar re-verifierade
+   programmatiskt efter fixen: inga avvikelser.
+3. **Justering 4 — Auto/Manuell som togglefunktion.** Läge-väljaren ersatt
+   av Regulatortyp (OnOff/P/PI/PID) + en separat Auto/Manuell-toggle, som
+   verklig driftväxling. `#mode` (5 alternativ) kvar som DOLD intern
+   sanningskälla — all befintlig logik (`syncParamsFromUI`,
+   `updateControllerUIState`, Tillämpnings-filtrering) rör den ALDRIG, bara
+   HUR värdet sätts är nytt. Byte till Manuellt seedar nu `manualOutput`
+   OVILLKORLIGT med aktuellt u (tidigare gated på Bumpless-kryssrutan, som
+   styr en annan, separat sak — regulatorns egen bias-fasning vid övergång
+   TILL p/pi/pid). Ingen ändring i `sim-core.js`.
+4. **Justering 5 — Visa PB flyttat till grafen.** PB är en härledd
+   graf-visning (av aktuell Kp), inte något användaren konfigurerar — hör
+   hemma vid grafen den analyseras i. Genomfört: ny rad `#chartControls`
+   direkt ovanför `#chartWrap`, samma `#showPB`-id (bara ny DOM-plats).
+
+**Genomförande i övrigt (full IA från analysen, se rapporten):** tre grupper
+(`groupProcessinstallning`/`groupRegulatorkonfiguration`/
+`groupProcesspaverkan`) ersätter de fyra gamla. Nästlad, kollapsbar
+"Avancerat"-sektion per grupp (Processinställning: Lastförstärkning +
+Ventilkarakteristik; Regulatorkonfiguration: Kff + Parameterstyrning +
+Bumpless + Anti-windup) — öppen/stängd härleds automatiskt
+(`deriveAdvancedOpen()`) från: Tillämpning="avancerat" (allt uppackat) ELLER
+scenariots aktiva värden (samma signal som `deriveApplicationProfile()`)
+ELLER ett nytt, valfritt scenariofält `forceAdvancedOpen` (satt på
+`pi-windup-demo.json`, eftersom Anti-windup/Bumpless är `true` i nästan alla
+scenarier och alltså inte fångas av "aktivt värde"-heuristiken).
+Processpåverkan hålls flack (ingen egen Avancerat-nivå, per analysens
+rekommendation 2.2).
+
+99 nya/ändrade testkontroller (60 i `ux-002-application-profile.test.mjs`,
+43 i ny `ux-004-huvudyta.test.mjs`). Full regression grön (10 testfiler, 265
+kontroller), DEV-/PROD-innehålls- och byggvalidering grön, Tillämpnings-/
+Avancerat-härledning re-verifierad programmatiskt mot samtliga 12 lärstigar.
+
+Ingen webbläsare tillgänglig i denna miljö — källkods-verifierat, inte
+visuellt bekräftat.
+
+**UX-004 Implementering (uppföljande PO-uppdrag, 2026-09-22)** — samma
+branch, formaliserade två punkter från analysen som ovan-avsnittet lämnade
+öppna/avfärdade, plus regressionstestade FEAT-042/FEAT-045 och visuellt
+verifierade hela branchen i en riktig (headless, isolerad) webbläsare för
+första gången:
+
+1. **Tillämpning sparas nu i `localStorage`** (`APPLICATION_PROFILE_STORAGE_KEY`,
+   `pidSimApplicationProfile`) — motsatsen till förra sessionens beslut ("aldrig
+   sparat"), ett uttryckligt nytt PO-krav ("lärare/studerande återkommer ofta
+   till samma scenario"). Sparas bara vid ett MANUELLT val i
+   `#applicationProfile`, inte vid varje scenario-/lärstigsstyrd
+   omhärledning. **Visuellt verifierat** i headless Chrome: val av Nivåprocess
+   → reload → återställs korrekt.
+2. **Infrastruktur för lärstigsstyrd synlighet** — ett nytt, valfritt fält
+   `visibilityOverride: { show: [...], hide: [...] }` (addon-namn) på en
+   lärstigs JSON, applicerat sist av tre lager (Tillämpning → Avancerat →
+   lärstig) via ny `applyPathVisibilityOverride()`. Wired in i de två exempel
+   PO gav: `parameterstyrning-ventilkarakteristik.v1` (visar Parameterstyrning,
+   döljer Kff) och `framkoppling.v1` (visar Kff, döljer Parameterstyrning) —
+   **visuellt verifierat**, båda riktningarna, i headless Chrome.
+3. **Bugg hittad och fixad UNDER webbläsarverifieringen, fanns inte i den
+   källkods-verifierade versionen ovan:** en helt ny sidladdning (tom
+   `localStorage`) lämnade Tillämpning på det härledda "Avancerat", vilket per
+   Justering 1:s egen regel tvingar ALLA Avancerat-sektioner öppna — rakt
+   emot detta uppdragets "Initialt öppet läge"-krav. Fixat: `initUI()`
+   använder nu `"temperatur"` som förvalt startläge när inget är sparat
+   (matchar startscenariots egen processtyp, tvingar inte öppet).
+4. **Andra buggen hittad och fixad UNDER samma verifiering:**
+   `loadScenarioByName()` anropar `updateControllerUIState()` en andra gång
+   EFTER `applyApplicationProfile()` returnerat — dess interna
+   `updateKffVisibility()` skrev tyst över en aktiv `hide`-override av Kff.
+   `applyPathVisibilityOverride()` måste därför anropas EN GÅNG TILL, sist i
+   `loadScenarioByName()` också.
+5. **Full regression grön** (267 kontroller, 10+2 testfiler — inkl. två
+   uppdaterade äldre kontroller i `ux-002-application-profile.test.mjs` som
+   uttryckligen kodade det GAMLA "aldrig sparat"-beslutet, nu medvetet
+   ändrade, inte bara gjorda gröna), DEV-/PROD-byggvalidering grön.
+6. **`windup-antiwindup.v1` (den högst rankade discoverability-risken från
+   ursprungsanalysen) visuellt verifierad** — Bumpless/Anti-windup faktiskt
+   synliga och Avancerat-sektionen faktiskt öppen i en riktig renderad sida,
+   inte bara källkods-antaget.
+
+Verifieringsmetod (ingen `node`/`python` på PATH i denna sessions miljö
+initialt, se HANDOFF_2026-09-17 avsnitt 10 för samma återkommande
+tooling-gap): `winget install OpenJS.NodeJS.LTS` (PO-godkänt) löste
+`node`-testsviten helt. Visuell verifiering: en isolerad headless
+Chrome-instans (`--user-data-dir` eget temp-konto) styrd via Chrome DevTools
+Protocol med Node 24:s inbyggda `WebSocket`-klient (`cdp-drive.mjs`, sparad
+bara i scratchpad) — samma princip som HANDOFF_2026-09-17 avsnitt 10 använde,
+men enklare tack vare den inbyggda WebSocket-klienten (ingen manuell
+websocket-implementation behövdes).
+
+**Status:** Implementerat och nu ÄVEN visuellt verifierat i webbläsare
+(headless), inte bara källkodsverifierat. Väntar fortfarande på PO:s egen
+granskning innan merge till develop/PROD, per uppdragets uttryckliga
+instruktion.
+
+**UX-004 kompletteringar efter PO-test (samma dag, 2026-09-22)** — PO
+genomförde egen manuell testning och rapporterade sex punkter, samtliga
+åtgärdade/verifierade på samma branch:
+
+1. **"Avancerat (N dolda)"-räknaren borttagen helt** — PO ville bara ha
+   "Avancerat", ingen räknare. Räknar-logiken i `initUI()` och
+   `<span id="advancedCount...">` i `index.html` togs bort helt (inte bara
+   dold), eftersom PO uttryckligen beslutat bort funktionen.
+2. **Bugg hittad och fixad: Tillämpning="Avancerat" var INTE en komplett
+   sandlåda** — en aktiv lärstigs `visibilityOverride` (t.ex.
+   parameterstyrning-ventilkarakteristik.v1s "dölj Kff") fortsatte gälla
+   även efter att användaren manuellt växlat till Avancerat, tvärtemot
+   Justering 1:s etablerade princip att Avancerat visar allt. Fixat:
+   `applyPathVisibilityOverride()` returnerar nu tidigt om
+   `fields.applicationProfile.value === "avancerat"`. Visuellt verifierat.
+3. **Bugg hittad och fixad: en aktiv lärstigs filter kunde läcka till ett
+   senare, manuellt valt scenario** — `currentPath`/`currentPathStep`
+   nollställs bara av `loadPath()`/testMode-togglen, INTE av
+   #load-knappen (manuellt "Ladda scenario"). En students filter från t.ex.
+   framkoppling.v1 (döljer Parameterstyrning) satt alltså kvar även efter
+   att hen lämnat lärstigen och laddat ett fristående scenario (t.ex. "Fri
+   utforskning"). Fixat: #load-knappens click-handler nollställer nu
+   `currentPathStep = -1` innan `loadScenarioByName()`. Visuellt verifierat
+   (framkoppling.v1 → manuellt scenarioval → filtret är borta).
+4. **Lastförstärkning flyttad** från Processinställningens Avancerat-sektion
+   till Processpåverkans grundnivå, bredvid Last mag/Trigga last (PO:s
+   motivering: samma användningsfall, ska visas tillsammans). Som en följd
+   fixades även `deriveAdvancedOpen()`s "process"-villkor — det körde
+   tidigare `nonlinearGain?.enabled || auxGain`, men eftersom auxGain inte
+   längre ligger i sektionen ska bara `nonlinearGain?.enabled` styra om den
+   öppnas automatiskt (annars tvingas en tom sektion upp för scenarier med
+   bara ett Lastförstärknings-värde).
+5. **Samtliga 12 aktiva lärstigar granskade rad för rad** (inte bara
+   grep-mönster) för kvarvarande referenser till de fyra gamla gruppnamnen
+   (Process/Regulator/Styrning/Störningar). Sex filer hade stale text,
+   samtliga fixade: `kom-igång.v1.json` (introduktionslärstigen, granskad
+   extra noggrant per PO:s instruktion — två ställen: "Process- och
+   Regulator-grupperna" → "Processinställning- och
+   Regulatorkonfigurations-grupperna", samt uppräkningen "(Process,
+   Regulator, Styrning, Störningar)" → de tre nya gruppnamnen),
+   `framkoppling.v1.json` (två "Störningar-gruppen" → "Processpåverkan"),
+   `lambda-metoden.v1.json` och `parameterstyrning-ventilkarakteristik.v1.json`
+   ("Process-gruppen"/"Regulator-gruppen" → nya namn),
+   `proportionalband-forstarkning.v1.json` (dubbelt fel: gammalt gruppnamn
+   OCH fel plats — "Visa PB" ligger sedan Justering 5 vid grafen, inte i
+   Regulatorkonfiguration alls), samt `theory/framkoppling.v1.json` och
+   `help.json` (två ställen, Kff/auxGain-hjälptexterna). De tre gamla,
+   ej-katalogiserade filerna (`basic-learning-path.v1.json`,
+   `grundlaggande.v1.json`, `windup.v1.json`) laddas inte av `catalog.json`
+   och är alltså inte del av det levande innehållet — orörda, utanför
+   uppdraget.
+6. **Zonparametrarnas visuella sammanflytning i Parameterstyrning** —
+   registrerad i `docs/planning/WEB-IAKTTAGELSER.md` (2026-09-22) som
+   framtida finputsning, INTE åtgärdad nu (PO:s uttryckliga instruktion:
+   inkludera inte om det riskerar att försena UX-004).
+
+369 automatiska kontroller gröna (16 testfiler + DEV/PROD-validering, inkl.
+4 nya/ändrade kontroller för punkt 2/3). Samtliga sex punkter dessutom
+visuellt/programmatiskt verifierade i headless Chrome (se motiveringen för
+respektive punkt ovan) — inte bara källkodsverifierat.
+
+**Status:** Samtliga sex PO-testfynd åtgärdade och verifierade. Fortfarande
+INTE mergad till develop/PROD.
+
+**kom-igång.v1 — PO-beslut (samma dag, 2026-09-22):** introduktionslärstigen
+härledde till Tillämpning="Avancerat" (dess generiska scenarier saknar
+särskiljande signaler, se `deriveApplicationProfile()`), vilket tvingade alla
+Avancerat-sektioner öppna för en helt ny användares FÖRSTA lärstig — en risk
+jag själv flaggade i `docs/reports/FEAT-044_STATUSRAPPORT.md` avsnitt 7.
+PO beslutade: kom-igång.v1 ska konsekvent starta i Temperaturprocess. Ny,
+generell infrastruktur tillagd: ett valfritt lärstigsfält
+`forceApplicationProfile` (samma mönster och stalenessvakt som
+`visibilityOverride`), applicerat i `loadScenarioByName()` direkt efter
+`deriveApplicationProfile()`. `kom-igång.v1.json` fick
+`forceApplicationProfile: "temperatur"`. Visuellt verifierat i headless
+Chrome, hela vägen genom välkomstskärmen och samtliga 5 steg: Tillämpning
+förblir "Temperaturprocess" genomgående, båda Avancerat-sektionerna förblir
+stängda, lärstigen slutförs korrekt ("✓ Lärstigen klar!"). 372 automatiska
+kontroller gröna (3 nya kontroller för `forceApplicationProfile`).
 
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
 **Prioritet:** Hög — PO:s explicita beslut (2026-09-20): pausa ny

@@ -4,6 +4,7 @@
   "title": "Kom igång med PID Simulator",
   "description": "En snabb genomgång av appens funktioner — hur du laddar scenarier, kör simuleringar, ändrar parametrar och hittar hjälp.",
   "difficulty": "intro",
+  "forceApplicationProfile": "temperatur",
   "steps": [
     {
       "type": "scenario",
@@ -17,7 +18,7 @@
       "ref": "pid-step-self-regulating.json",
       "title": "Ladda ett scenario",
       "objective": "Förstå vad ett scenario är och hur du byter mellan dem.",
-      "instruction": "Scenarier är färdiga experimentuppsättningar med förinställda processer och regulatorer — en startpunkt för olika situationer.\n\nI vänster sidebar: välj ett scenario i listan och klicka 'Ladda scenario'.\n\nProva olika scenarier — se i Process- och Regulator-grupperna att parametrarna uppdaterades."
+      "instruction": "Scenarier är färdiga experimentuppsättningar med förinställda processer och regulatorer — en startpunkt för olika situationer.\n\nI vänster sidebar: välj ett scenario i listan och klicka 'Ladda scenario'.\n\nProva olika scenarier — se i Processinställning- och Regulatorkonfigurations-grupperna att parametrarna uppdaterades."
     },
     {
       "type": "scenario",
@@ -31,7 +32,7 @@
       "ref": "basic-step-self-regulating.json",
       "title": "Ändra parametrar och få hjälp",
       "objective": "Förstå parametergrupperna och hur ?-knapparna ger förklaringar.",
-      "instruction": "Scenarier är till för att ändra många parametrar på en gång. Du kan alltid justera vilka parametrar som helst när som helst för att fritt utforska reglersystemet.\n\nProva: ändra SP till 70 i Styrning-gruppen och kör 20 steg — börvärdeslinjen i grafen ska flytta sig uppåt.\n\nKlicka '?' bredvid vilket fält som helst för en detaljerad förklaring i höger sidebar.\n\nParametergrupperna (Process, Regulator, Styrning, Störningar) kan fällas ihop med ▼ för att frigöra grafyta."
+      "instruction": "Scenarier är till för att ändra många parametrar på en gång. Du kan alltid justera vilka parametrar som helst när som helst för att fritt utforska reglersystemet.\n\nProva: ändra SP till 70 i Processpåverkan och kör 20 steg — börvärdeslinjen i grafen ska flytta sig uppåt.\n\nKlicka '?' bredvid vilket fält som helst för en detaljerad förklaring i höger sidebar.\n\nParametergrupperna (Processinställning, Regulatorkonfiguration, Processpåverkan) kan fällas ihop med ▼ för att frigöra grafyta."
     },
     {
       "type": "scenario",
