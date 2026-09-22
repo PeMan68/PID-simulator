@@ -2,6 +2,65 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.6.0] — 2026-09-22
+
+### Nytt i denna release
+
+Samlad release av allt utvecklingsarbete sedan v1.5.5 — UX-huvudspåret
+(progressiv exponering) plus två nya reglerstrategier:
+
+- **Tillämpning och Processmodell** (UX-002). En ny väljare, "Tillämpning"
+  (Temperaturprocess/Nivåprocess/Avancerat), styr vilka processmodeller,
+  regulatorlägen och strategitillägg som visas — utan att någonsin dölja
+  själva Processmodell-begreppet. "Avancerat" fungerar som ett fullt,
+  ofiltrerat expertläge.
+- **Parameterstyrning och olinjär ventilkarakteristik** (FEAT-042). Ny
+  lärstig: Kp/Ti/Td kan väljas automatiskt utifrån PV i tre zoner
+  (Parameterstyrning), och processens egen förstärkning K kan variera med
+  utsignalen i tre zoner (olinjär ventilkarakteristik) — med tydlig
+  visuell zon-highlight i både fält och graf.
+- **Framkoppling (Feedforward)** (FEAT-045). Ny lärstig: en mätbar last
+  kompenseras direkt via Kff, innan felet ens uppstår — jämfört med ren
+  återkoppling.
+- **Knapp för fler steg vid maxSteps-taket** (FEAT-043).
+- **Omstrukturerad huvudyta och progressiv exponering** (UX-004). De
+  tidigare fyra parametergrupperna (Process/Regulator/Styrning/Störningar)
+  är ersatta av tre: Processinställning, Regulatorkonfiguration,
+  Processpåverkan. Avancerade fält (Parameterstyrning, Kff, olinjär
+  ventilkarakteristik, Bumpless, Anti-windup m.fl.) ligger nu bakom en
+  "Avancerat"-disklosyr per grupp, som öppnas automatiskt när en lärstig
+  eller ett scenario faktiskt handlar om dem. Senast valda Tillämpning
+  sparas mellan sidladdningar.
+
+### Produktionsurval i v1.6.0
+
+Nio lärstigar publicerade, i denna ordning:
+
+1. Kom igång med PID Simulator
+2. Öppen slinga, On/Off och P-reglering
+3. Proportionalband och regulatorförstärkning
+4. PI- och PID-reglering
+5. Processens begränsningar
+6. Windup och anti-windup
+7. Störningar och robusthet
+8. Parameterstyrning och olinjär ventilkarakteristik
+9. Framkoppling (Feedforward)
+
+### Kända förhållanden
+
+- Test-läge (kontrollfrågor med poängräkning) ingår fortfarande inte i den
+  publicerade undervisningsversionen.
+- Tre lärstigar (Integrerande process och nivåreglering, Stegsvar och
+  processidentifiering, Lambda-metoden) ligger kvar i utvecklingsversionen
+  för fortsatt pedagogisk granskning innan de publiceras.
+- Zonparametrarnas fält i Parameterstyrning flyter visuellt ihop när flera
+  parametergrupper visas samtidigt — registrerad UX-finputsning, se
+  `docs/planning/WEB-IAKTTAGELSER.md`.
+
+### Version
+
+`APP_VERSION` = 1.6.0.
+
 ## [v1.5.5] — 2026-09-16
 
 ### Nytt
