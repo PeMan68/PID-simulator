@@ -107,5 +107,34 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   check("6a. pi-windup-demo.json har forceAdvancedOpen: [\"regulator\"]", Array.isArray(windupScenario.forceAdvancedOpen) && windupScenario.forceAdvancedOpen.includes("regulator"));
 }
 
+// ── 7. UX-004 Implementering (PO-uppdrag 2026-09-22) — Tillämpning sparas ──
+{
+  check("7a. APPLICATION_PROFILE_STORAGE_KEY är definierad", /const APPLICATION_PROFILE_STORAGE_KEY = "pidSimApplicationProfile";/.test(appJs));
+  check("7b. #applicationProfile-lyssnaren sparar värdet vid manuellt val", /getElementById\("applicationProfile"\)\.addEventListener\("change", \(\) => \{[\s\S]{0,300}localStorage\.setItem\(APPLICATION_PROFILE_STORAGE_KEY, fields\.applicationProfile\.value\);/.test(appJs));
+  check("7c. initUI() beräknar startvärdet EFTER startscenariots härledning, inte tvärtom", /loadScenarioByName\("basic-step-self-regulating\.json"\);[\s\S]{0,1500}localStorage\.getItem\(APPLICATION_PROFILE_STORAGE_KEY\)/.test(appJs));
+  check("7d. Ett sparat värde valideras mot APPLICATION_PROFILES innan det används (skyddar mot ogiltigt/korrupt värde)", /const initialProfile = \(savedProfile && APPLICATION_PROFILES\[savedProfile\]\) \? savedProfile : "temperatur";/.test(appJs));
+  check("7e. Saknas ett giltigt sparat värde (första besöket) blir starten \"temperatur\", INTE \"avancerat\" — annars tvingas Avancerat-sektionerna öppna vid en helt ny sidladdning (Justering 1), tvärtemot uppdragets \"Initialt öppet läge\"-krav", /: "temperatur";/.test(appJs));
+}
+
+// ── 8. UX-004 Implementering — infrastruktur för lärstigsstyrd synlighet ──
+{
+  check("8a. ADDON_TO_ADVANCED_GROUP-mappningen finns (framkoppling/parameterstyrning → regulator, ventilkarakteristik → process)", /const ADDON_TO_ADVANCED_GROUP = \{ framkoppling: "regulator", parameterstyrning: "regulator", ventilkarakteristik: "process" \};/.test(appJs));
+  check("8b. applyPathVisibilityOverride() är definierad", /function applyPathVisibilityOverride\(\)/.test(appJs));
+  check("8c. Gated på currentPath OCH currentPathStep >= 0 (läcker inte till ett senare, orelaterat manuellt scenarioval)", /if \(!currentPath \|\| currentPathStep < 0\) return;/.test(appJs));
+  check("8d. hide-listan tvingar addon-hidden PÅ (döljer trots att Tillämpning annars skulle tillåtit det)", /\(override\.hide \|\| \[\]\)\.forEach\(addon => \{\s*\n\s*document\.querySelectorAll\('\[data-addon="' \+ addon \+ '"\]'\)\.forEach\(el => el\.classList\.add\("addon-hidden"\)\);/.test(appJs));
+  check("8e. show-listan tvingar addon-hidden AV och öppnar addonens Avancerat-grupp", /\(override\.show \|\| \[\]\)\.forEach\(addon => \{\s*\n\s*document\.querySelectorAll\('\[data-addon="' \+ addon \+ '"\]'\)\.forEach\(el => el\.classList\.remove\("addon-hidden"\)\);\s*\n\s*const group = ADDON_TO_ADVANCED_GROUP\[addon\];\s*\n\s*if \(group\) setAdvancedOpen\(group, true\);/.test(appJs));
+  check("8f. Anropas sist i applyApplicationProfile() (mest specifika lagret, efter applyAdvancedState())", /applyAdvancedState\(\); \/\/ UX-004[^\n]*\n\s*applyPathVisibilityOverride\(\);/.test(appJs));
+  check(
+    "8f2. Anropas ÄVEN sist i loadScenarioByName(), efter dess EGET (andra) updateControllerUIState()-anrop — annars återställer det anropets interna updateKffVisibility() en aktiv hide-override av Kff (upptäckt vid webbläsarverifiering)",
+    /function loadScenarioByName\(name\) \{[\s\S]{0,900}updateControllerUIState\(\);[\s\S]{0,600}applyPathVisibilityOverride\(\);/.test(appJs)
+  );
+
+  const paramLearningPath = JSON.parse(readFileSync(path.join(APP_DIR, "content", "exercises", "parameterstyrning-ventilkarakteristik.v1.json"), "utf8"));
+  check("8g. parameterstyrning-ventilkarakteristik.v1 visar Parameterstyrning och döljer Kff/Framkoppling", Array.isArray(paramLearningPath.visibilityOverride?.show) && paramLearningPath.visibilityOverride.show.includes("parameterstyrning") && Array.isArray(paramLearningPath.visibilityOverride?.hide) && paramLearningPath.visibilityOverride.hide.includes("framkoppling"));
+
+  const ffLearningPath = JSON.parse(readFileSync(path.join(APP_DIR, "content", "exercises", "framkoppling.v1.json"), "utf8"));
+  check("8h. framkoppling.v1 visar Kff/Framkoppling och döljer Parameterstyrning", Array.isArray(ffLearningPath.visibilityOverride?.show) && ffLearningPath.visibilityOverride.show.includes("framkoppling") && Array.isArray(ffLearningPath.visibilityOverride?.hide) && ffLearningPath.visibilityOverride.hide.includes("parameterstyrning"));
+}
+
 console.log(`\n${passed} OK, ${failed} FAIL`);
 if (failed > 0) process.exit(1);

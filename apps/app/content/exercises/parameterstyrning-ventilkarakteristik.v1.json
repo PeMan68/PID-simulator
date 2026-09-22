@@ -4,6 +4,7 @@
   "title": "Parameterstyrning och olinjär ventilkarakteristik",
   "description": "En fast Kp räcker inte alltid — se varför en olinjär process kräver olika regulatorinställningar i olika driftpunkter, och hur Parameterstyrning löser det utan manuell kompromiss.",
   "difficulty": "intro",
+  "visibilityOverride": { "show": ["parameterstyrning"], "hide": ["framkoppling"] },
   "steps": [
     {
       "type": "theory",

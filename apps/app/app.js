@@ -657,6 +657,14 @@ function loadScenarioByName(name) {
   captureMarkerBaseline();
   appendLog("Laddat scenario: " + currentScenario.id);
   updateControllerUIState();
+  // UX-004 — updateControllerUIState() ovan anropar internt
+  // updateKffVisibility(), som härleder Kff-synlighet ENBART från Tillämpning
+  // + Läge och därför skriver över (upptäckt vid webbläsarverifiering, se
+  // UX-004 Implementering) en aktiv lärstigs visibilityOverride satt av det
+  // TIDIGARE anropet till applyApplicationProfile() ovan. Måste därför
+  // upprepas HÄR, som allra sista steget, precis som i
+  // applyApplicationProfile() självt.
+  applyPathVisibilityOverride();
   updateStatus(); updateStepLimitUI(); drawChart();
   activityDispatch("scenario_loaded", { scenarioId: currentScenario.id, contextKey: activityContextKey() });
 }
@@ -953,8 +961,15 @@ function updateNonlinearGainUIState() {
 // (expertläge, dagens fulla UI, helt ofiltrerad) men namnet gör även
 // kopplingen till UX-004s Avancerat-disklosyr tydlig — att välja denna
 // Tillämpning öppnar automatiskt ALLA Avancerat-sektioner också (se
-// deriveAdvancedOpen()). Alltid default vid sidladdning (inget sparat läge
-// mellan sessioner, se anropet i initUI()).
+// deriveAdvancedOpen()). Senast MANUELLT valda Tillämpning sparas i
+// localStorage (APPLICATION_PROFILE_STORAGE_KEY, PO-uppdrag "UX-004
+// Implementering" 2026-09-22 — lärare/studerande återkommer ofta till samma
+// scenario över flera sessioner) och återställs vid nästa sidladdning INNAN
+// startscenariot annars skulle härlett "Avancerat" (se initUI()). Sparas
+// bara vid ett manuellt val (#applicationProfile-lyssnaren), INTE vid varje
+// scenario-/lärstigsstyrd omhärledning (deriveApplicationProfile() körs vid
+// varje scenarioladdning) — annars skulle nästa uppstart återspegla vilken
+// lärstig som råkade laddas sist, inte användarens egna, avsiktliga val.
 // UX-002_SYNLIGHETSGRANSKNING.md avsnitt 1 (PO-godkänd 2026-09-20) —
 // "Tvålägesreglering (On/Off)" fanns tidigare som en egen tillämpning, men
 // on/off är en REGULATORSTRATEGI (samma axel som Läge), inte en
@@ -967,6 +982,7 @@ const APPLICATION_PROFILES = {
   temperatur: { processModels: ["self_regulating", "self_regulating_2"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
   niva:       { processModels: ["integrating"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: [] },
 };
+const APPLICATION_PROFILE_STORAGE_KEY = "pidSimApplicationProfile"; // UX-004 — se kommentaren ovanför APPLICATION_PROFILES
 // Filtrerar ett <select>s <option>-ALTERNATIV till de tillåtna värdena —
 // väljaren själv döljs aldrig (samma princip för Processmodell som för
 // Läge). Returnerar true om nuvarande värde behövde bytas (inte längre
@@ -1057,6 +1073,7 @@ function applyApplicationProfile() {
   updateControllerUIState(); // synkar Läge-beroende fält (inkl. Bumpless och Kff) om Läge tvingades om
   updateProcessUIState();
   applyAdvancedState(); // UX-004 — härled Avancerat-status åt båda grupperna från (nya) currentScenario + Tillämpning
+  applyPathVisibilityOverride(); // UX-004 — lärstigsstyrd synlighet, sista och mest specifika lagret (se funktionens kommentar)
 }
 
 // UX-004 (PO-beslut 2026-09-21, docs/reports/UX-004_OMSTRUKTURERING-HUVUDYTA.md
@@ -1092,6 +1109,37 @@ function setAdvancedOpen(group, open) {
 }
 function applyAdvancedState() {
   ["process", "regulator"].forEach(group => setAdvancedOpen(group, deriveAdvancedOpen(currentScenario, group)));
+}
+// UX-004 (PO-uppdrag "UX-004 Implementering", 2026-09-22) — infrastruktur för
+// lärstigsstyrd synlighet: en lärstig kan deklarera ett eget, valfritt
+// toppnivåfält `visibilityOverride: { show: [...], hide: [...] }` (samma
+// addon-vokabulär som data-addon/APPLICATION_PROFILES.addons — idag
+// "framkoppling"/"parameterstyrning"/"ventilkarakteristik") för att fokusera
+// UI:t på exakt de funktioner lärstigen handlar om, t.ex. döljer en
+// parameterstyrningslärstig Kff/Framkoppling även om vald Tillämpning
+// (härledd av deriveApplicationProfile()) annars skulle tillåtit det, eller
+// tvärtom för en framkopplingslärstig. Körs sist i applyApplicationProfile()
+// — mest specifika lagret av de tre (Tillämpning → Avancerat → lärstig),
+// så en lärstigs egen deklaration alltid vinner. Gated på
+// `currentPathStep >= 0` (samma villkor som activityContextKey()) så att en
+// override inte "läcker kvar" efter att lärstigen avslutats och användaren
+// manuellt laddar ett orelaterat scenario (currentPath nollställs annars
+// aldrig, bara currentPathStep). Inget krav att sätta detta fält — helt
+// bakåtkompatibelt, tomt/odefinierat = ingen effekt (dagens 12 lärstigar
+// fortsätter fungera oförändrat om de inte sätter det).
+const ADDON_TO_ADVANCED_GROUP = { framkoppling: "regulator", parameterstyrning: "regulator", ventilkarakteristik: "process" };
+function applyPathVisibilityOverride() {
+  if (!currentPath || currentPathStep < 0) return;
+  const override = currentPath.visibilityOverride;
+  if (!override) return;
+  (override.hide || []).forEach(addon => {
+    document.querySelectorAll('[data-addon="' + addon + '"]').forEach(el => el.classList.add("addon-hidden"));
+  });
+  (override.show || []).forEach(addon => {
+    document.querySelectorAll('[data-addon="' + addon + '"]').forEach(el => el.classList.remove("addon-hidden"));
+    const group = ADDON_TO_ADVANCED_GROUP[addon];
+    if (group) setAdvancedOpen(group, true);
+  });
 }
 // Manuellt klick — fristående sessionstillstånd, precis som ett manuellt
 // Tillämpningsbyte: gäller tills nästa scenarioladdning/Tillämpningsbyte
@@ -1266,10 +1314,31 @@ function initUI() {
     document.getElementById("advancedCount" + cap).textContent = "(" + count + " dolda)";
   });
   // UX-002 — loadScenarioByName() sätter redan rätt Tillämpning (se
-  // deriveApplicationProfile()); för startscenariot ger det "Avancerat",
-  // som ändå alltid är default (inget sparas mellan sidladdningar, se
-  // kommentaren vid APPLICATION_PROFILES).
+  // deriveApplicationProfile()); för startscenariot ger det "Avancerat"
+  // (basic-step-self-regulating.json har inga aktiva tillägg, faller igenom
+  // till den generiska fallbacken).
   loadScenarioByName("basic-step-self-regulating.json");
+  // UX-004 Implementering (PO-uppdrag 2026-09-22) — INTE lämna "Avancerat"
+  // stå kvar som förvalt startläge: "Avancerat" tvingar per definition ALLA
+  // Avancerat-disklosyrsektioner öppna (Justering 1, se deriveAdvancedOpen()),
+  // vilket direkt bryter mot detta uppdragets uttryckliga krav ("Initialt
+  // öppet läge" — endast grundnivå ska synas vid en helt ny sidladdning).
+  // Ett återkommande besök återställer i stället senast MANUELLT valda
+  // Tillämpning (se kommentaren vid APPLICATION_PROFILES); saknas ett sparat
+  // val (första besöket, eller en tömd localStorage) används "temperatur"
+  // som neutral grundnivå-standard — den enda av de tre tillämpningarna som
+  // faktiskt matchar startscenariots egen processtyp (self_regulating) och
+  // vars Avancerat-sektioner INTE tvingas öppna. Efter, inte in i,
+  // loadScenarioByName() ovan — samma mönster som ett manuellt
+  // tillämpningsbyte (syncParamsFromUI + omritning), eftersom sim redan
+  // finns vid det här laget.
+  const savedProfile = localStorage.getItem(APPLICATION_PROFILE_STORAGE_KEY);
+  const initialProfile = (savedProfile && APPLICATION_PROFILES[savedProfile]) ? savedProfile : "temperatur";
+  if (initialProfile !== fields.applicationProfile.value) {
+    fields.applicationProfile.value = initialProfile;
+    applyApplicationProfile();
+    if (sim) { syncParamsFromUI(); drawChart(); updateStatus(); }
+  }
   if (!localStorage.getItem("pidSimWelcomed")) showWelcome();
   applyEnvironmentUI();
 }
@@ -1472,6 +1541,10 @@ document.getElementById("processType").addEventListener("change", () => {
 // UX-002 — Tillämpning: byte filtrerar processmodellerna + strategitilläggen, se applyApplicationProfile().
 document.getElementById("applicationProfile").addEventListener("change", () => {
   applyApplicationProfile();
+  // UX-004 — spara bara MANUELLA val (se kommentaren vid APPLICATION_PROFILES);
+  // deriveApplicationProfile() sätter samma fält vid varje scenario-/
+  // lärstigsladdning, men det ska inte skriva över användarens sparade val.
+  localStorage.setItem(APPLICATION_PROFILE_STORAGE_KEY, fields.applicationProfile.value);
   // PO:s granskning (2026-09-20) — till skillnad från anropet inifrån
   // loadScenarioByName() (där en omedelbar synk skulle kunna skapa en
   // missvisande ändringsmarkering innan captureMarkerBaseline() hunnit sätta

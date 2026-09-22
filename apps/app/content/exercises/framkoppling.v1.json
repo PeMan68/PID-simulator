@@ -4,6 +4,7 @@
   "title": "Framkoppling (Feedforward)",
   "description": "En värmeväxlares utgående temperatur, med en mätbar förändring i den inkommande temperaturen. Se hur en trimning från ingen framkoppling, via en ungefärlig framkoppling, till en exakt framkoppling gradvis förbättrar regleringen.",
   "difficulty": "intermediate",
+  "visibilityOverride": { "show": ["framkoppling"], "hide": ["parameterstyrning"] },
   "steps": [
     {
       "type": "theory",

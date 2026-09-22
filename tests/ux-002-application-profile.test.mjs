@@ -123,9 +123,14 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
     "6d. Döljer/visar Parameterstyrning/Ventilkarakteristik via addon-hidden-klassen, men hoppar över Framkoppling (hanteras separat, se 6u)",
     /document\.querySelectorAll\("\[data-addon\]"\)\.forEach\(el => \{\s*\n\s*if \(el\.dataset\.addon === "framkoppling"\) return;\s*\n\s*el\.classList\.toggle\("addon-hidden", !profile\.addons\.includes\(el\.dataset\.addon\)\);/.test(appJs)
   );
-  check("6e. Anropar updateProcessUIState() och updateControllerUIState() så beroende fält synkas om (inkl. Läge-tvingande)", /function applyApplicationProfile\(\) \{[\s\S]{0,4000}updateControllerUIState\(\);[\s\S]{0,200}updateProcessUIState\(\);[\s\S]{0,200}applyAdvancedState\(\);[^\n]*\n\}/.test(appJs));
+  check("6e. Anropar updateProcessUIState() och updateControllerUIState() så beroende fält synkas om (inkl. Läge-tvingande)", /function applyApplicationProfile\(\) \{[\s\S]{0,4000}updateControllerUIState\(\);[\s\S]{0,200}updateProcessUIState\(\);[\s\S]{0,200}applyAdvancedState\(\);[^\n]*\n\s*applyPathVisibilityOverride\(\);[^\n]*\n\}/.test(appJs));
   check("6f. #applicationProfile har en change-lyssnare kopplad till applyApplicationProfile()", /getElementById\("applicationProfile"\)\.addEventListener\("change", \(\) => \{\s*\n\s*applyApplicationProfile\(\);/.test(appJs));
-  check("6h. Inget sparat tillämpningsläge i localStorage (Avancerat ska alltid vara default vid sidladdning)", !/localStorage\.[gs]etItem\("[^"]*[Aa]pplication[Pp]rofile/.test(appJs));
+  // UX-004 Implementering (PO-uppdrag 2026-09-22) — ändrar PRECIS det denna
+  // check tidigare hette: Tillämpning SKA nu sparas mellan sidladdningar
+  // (lärare/studerande återkommer ofta till samma scenario). Se
+  // tests/ux-004-huvudyta.test.mjs avsnitt 7 för den fullständiga
+  // verifieringen av persistens-mekanismen.
+  check("6h. Senast MANUELLT valda tillämpning sparas i localStorage (UX-004 Implementering, 2026-09-22 — ersätter tidigare \"aldrig sparat\"-beslut)", /localStorage\.setItem\(APPLICATION_PROFILE_STORAGE_KEY, fields\.applicationProfile\.value\);/.test(appJs));
   // PO:s granskning (2026-09-20) — ett tillägg som blir dolt ska också stängas
   // AV, inte bara döljas (annars fortsätter t.ex. Parameterstyrning påverka
   // simuleringen trots en osynlig, oåtkomlig kryssruta).
@@ -136,7 +141,7 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   // bara Kff (regulatorns eget, addon-specifika bidrag) nollställs.
   check("6q. Nollställer Kff (ENDAST) när Framkoppling inte ingår i profilen", /if \(!profile\.addons\.includes\("framkoppling"\)\) fields\.kff\.value = 0;/.test(appJs));
   check("6q2. Nollställer INTE längre auxMag/sim.auxValue vid tillämpningsbyte (Justering 3 — Last är generell processpåverkan)", !/fields\.auxMag\.value = 0;/.test(appJs) && !/sim\.auxValue = 0;/.test(appJs));
-  check("6r. Manuellt tillämpningsbyte synkar och ritar om direkt (till skillnad från scenarioladdning)", /getElementById\("applicationProfile"\)\.addEventListener\("change", \(\) => \{[\s\S]{0,600}if \(sim\) \{ syncParamsFromUI\(\); drawChart\(\); updateStatus\(\); \}/.test(appJs));
+  check("6r. Manuellt tillämpningsbyte synkar och ritar om direkt (till skillnad från scenarioladdning)", /getElementById\("applicationProfile"\)\.addEventListener\("change", \(\) => \{[\s\S]{0,1200}if \(sim\) \{ syncParamsFromUI\(\); drawChart\(\); updateStatus\(\); \}/.test(appJs));
 }
 
 // ── 6s–6t. Bumpless har ingen effekt i OnOff-läge — ska döljas där ──

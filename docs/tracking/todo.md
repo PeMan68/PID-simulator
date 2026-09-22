@@ -115,9 +115,62 @@ Avancerat-härledning re-verifierad programmatiskt mot samtliga 12 lärstigar.
 Ingen webbläsare tillgänglig i denna miljö — källkods-verifierat, inte
 visuellt bekräftat.
 
-**Status:** Implementerat på feature-branchen enligt PO:s fyra
-justeringsbeslut. Väntar på PO:s granskning innan merge till develop/PROD,
-per uppdragets uttryckliga instruktion.
+**UX-004 Implementering (uppföljande PO-uppdrag, 2026-09-22)** — samma
+branch, formaliserade två punkter från analysen som ovan-avsnittet lämnade
+öppna/avfärdade, plus regressionstestade FEAT-042/FEAT-045 och visuellt
+verifierade hela branchen i en riktig (headless, isolerad) webbläsare för
+första gången:
+
+1. **Tillämpning sparas nu i `localStorage`** (`APPLICATION_PROFILE_STORAGE_KEY`,
+   `pidSimApplicationProfile`) — motsatsen till förra sessionens beslut ("aldrig
+   sparat"), ett uttryckligt nytt PO-krav ("lärare/studerande återkommer ofta
+   till samma scenario"). Sparas bara vid ett MANUELLT val i
+   `#applicationProfile`, inte vid varje scenario-/lärstigsstyrd
+   omhärledning. **Visuellt verifierat** i headless Chrome: val av Nivåprocess
+   → reload → återställs korrekt.
+2. **Infrastruktur för lärstigsstyrd synlighet** — ett nytt, valfritt fält
+   `visibilityOverride: { show: [...], hide: [...] }` (addon-namn) på en
+   lärstigs JSON, applicerat sist av tre lager (Tillämpning → Avancerat →
+   lärstig) via ny `applyPathVisibilityOverride()`. Wired in i de två exempel
+   PO gav: `parameterstyrning-ventilkarakteristik.v1` (visar Parameterstyrning,
+   döljer Kff) och `framkoppling.v1` (visar Kff, döljer Parameterstyrning) —
+   **visuellt verifierat**, båda riktningarna, i headless Chrome.
+3. **Bugg hittad och fixad UNDER webbläsarverifieringen, fanns inte i den
+   källkods-verifierade versionen ovan:** en helt ny sidladdning (tom
+   `localStorage`) lämnade Tillämpning på det härledda "Avancerat", vilket per
+   Justering 1:s egen regel tvingar ALLA Avancerat-sektioner öppna — rakt
+   emot detta uppdragets "Initialt öppet läge"-krav. Fixat: `initUI()`
+   använder nu `"temperatur"` som förvalt startläge när inget är sparat
+   (matchar startscenariots egen processtyp, tvingar inte öppet).
+4. **Andra buggen hittad och fixad UNDER samma verifiering:**
+   `loadScenarioByName()` anropar `updateControllerUIState()` en andra gång
+   EFTER `applyApplicationProfile()` returnerat — dess interna
+   `updateKffVisibility()` skrev tyst över en aktiv `hide`-override av Kff.
+   `applyPathVisibilityOverride()` måste därför anropas EN GÅNG TILL, sist i
+   `loadScenarioByName()` också.
+5. **Full regression grön** (267 kontroller, 10+2 testfiler — inkl. två
+   uppdaterade äldre kontroller i `ux-002-application-profile.test.mjs` som
+   uttryckligen kodade det GAMLA "aldrig sparat"-beslutet, nu medvetet
+   ändrade, inte bara gjorda gröna), DEV-/PROD-byggvalidering grön.
+6. **`windup-antiwindup.v1` (den högst rankade discoverability-risken från
+   ursprungsanalysen) visuellt verifierad** — Bumpless/Anti-windup faktiskt
+   synliga och Avancerat-sektionen faktiskt öppen i en riktig renderad sida,
+   inte bara källkods-antaget.
+
+Verifieringsmetod (ingen `node`/`python` på PATH i denna sessions miljö
+initialt, se HANDOFF_2026-09-17 avsnitt 10 för samma återkommande
+tooling-gap): `winget install OpenJS.NodeJS.LTS` (PO-godkänt) löste
+`node`-testsviten helt. Visuell verifiering: en isolerad headless
+Chrome-instans (`--user-data-dir` eget temp-konto) styrd via Chrome DevTools
+Protocol med Node 24:s inbyggda `WebSocket`-klient (`cdp-drive.mjs`, sparad
+bara i scratchpad) — samma princip som HANDOFF_2026-09-17 avsnitt 10 använde,
+men enklare tack vare den inbyggda WebSocket-klienten (ingen manuell
+websocket-implementation behövdes).
+
+**Status:** Implementerat och nu ÄVEN visuellt verifierat i webbläsare
+(headless), inte bara källkodsverifierat. Väntar fortfarande på PO:s egen
+granskning innan merge till develop/PROD, per uppdragets uttryckliga
+instruktion.
 
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
 **Prioritet:** Hög — PO:s explicita beslut (2026-09-20): pausa ny
