@@ -219,6 +219,180 @@ Fri utforskning behålls oförändrad. Ingen implementation krävs (dagens kod
 matchade redan rekommendationen). Ingen ytterligare analys av frågan
 planerad. Stängt.
 
+### UX-004 — Omstrukturering av huvudyta och progressiv exponering
+**Branch:** `feature/UX-004-huvudyta-omstrukturering` (raderad efter merge)
+**Prioritet:** Hög — PO+PM:s designbeslut (2026-09-21), direkt efter UX-002:s
+merge.
+**Beskrivning:**
+PO+PM har fattat ett redan beslutat designbeslut (ej del av denna analys):
+huvudytan ska omorganiseras kring tre grupper — Processinställning,
+Regulatorkonfiguration, Processpåverkan (Styrning+Störningar slås ihop) —
+med avancerade fält separerade från grundparametrarna för att minska visuell
+komplexitet. Uppdrag: analysera slutlig informationsarkitektur, vad som
+alltid ska synas, vad som ska bakom "Avancerat", hur lärstigar ska styra
+synligheten, samspelet Tillämpning/Processmodell/lärsteg, risker, och ett
+konkret layoutförslag. Ren analys, ingen kod, ingen branch.
+**Leverans:** `docs/reports/UX-004_OMSTRUKTURERING-HUVUDYTA.md`. Sammanfattning:
+
+1. **Viktig avgränsning:** detta "Avancerat" är INTE UX-003:s avfärdade
+   förslag (som skulle ERSÄTTA Tillämpning/Fri utforskning) — det är ett
+   disklosyr-lager som verkar INOM det redan mergade UX-002-systemet.
+   Tillämpning avgör fortfarande vilka fält som är MÖJLIGA; Avancerat avgör
+   bara om ett redan tillåtet fält visas direkt eller bakom en klickning.
+2. **Informationsarkitektur:** U min/U max flyttas till
+   Regulatorkonfigurations grundnivå (konfiguration, ändras sällan under
+   körning); SP och Manuell u till Processpåverkan (ändras under körning,
+   per PO:s egen definition av gruppen). 23 av dagens 45 kontroller blir
+   grundnivå, 22 blir Avancerat (exakt lista i rapporten avsnitt 3).
+   Processpåverkan föreslås förbli FLACK (ingen egen Avancerat-nivå) — redan
+   smal och redan addon-filtrerad.
+3. **Lärstigsstyrning (kärnlösning):** Avancerat-sektionens öppen/stängd-
+   status härleds AUTOMATISKT från scenariots egna aktiva värden
+   (`kff !== 0`, `gainSchedule.enabled`, etc.) — återanvänder samma
+   signalkälla som UX-002:s `deriveApplicationProfile()`, ingen ny
+   lärstigstaggning krävs i normalfallet. Undantag: Bumpless/Anti-windup är
+   `true` i nästan alla scenarier (default, inte ett ämnessignal) — löses
+   med ett nytt, valfritt `forceAdvancedOpen`-fält per lärstigssteg, bara
+   för de fåtal lärstigar (idag: `windup-antiwindup.v1`) där ämnet är en
+   fält-EXISTENS snarare än ett avvikande värde.
+4. **Störst risk:** discoverability-regression för Anti-windup/Bumpless
+   (flyttas till Avancerat trots att de inte är addon-gated idag) —
+   `windup-antiwindup.v1` måste verifieras manuellt efter implementation,
+   inte bara programmatiskt. Näst störst: två disklosyr-mekanismer
+   (addon-hidden från UX-002 + ny Avancerat-kollaps) verkar på samma fält
+   (t.ex. Kff) — måste kombineras med AND, inte skriva över varandra.
+5. **Layoutförslag:** nästlad kollapsbar "Avancerat"-rad per grupp,
+   återanvänder FEAT-044s redan etablerade `.zone-table`-hopfällningsmönster
+   — ingen ny komponenttyp att lära ut.
+
+**PO:s fyra justeringsbeslut (2026-09-21) och genomförande:**
+
+1. **Justering 1 — "Fri utforskning" → "Avancerat".** Kortare, mer
+   etablerat begrepp, samma expertlägesroll ("visar allt"). Genomfört:
+   `APPLICATION_PROFILES`-nyckeln `fri` → `avancerat`, UI-alternativet döpt
+   om. Att välja Avancerat tvingar nu ÄVEN alla Avancerat-disklosyrsektioner
+   öppna (kopplar ihop UX-002:s Tillämpningsbegrepp med UX-004:s nya
+   disklosyrmekanism till EN sammanhängande "expertläge"-betydelse, istället
+   för två delvis överlappande begrepp).
+2. **Justering 3 — Last är generell processpåverkan, inte exklusiv för
+   Framkoppling.** Motivering: laststeg är användbart för ren
+   regulatorprovning även utan Kff, och hittills har bara SP-steg funnits
+   som generellt utvärderingsverktyg. Genomfört: `data-addon="framkoppling"`
+   borttaget från Lastförstärkning/Last mag/Trigga last (kvar bara på Kff);
+   `updateFramkopplingVisibility()` → `updateKffVisibility()`; inget
+   nollställs längre vid tillämpningsbyte för Last. **Upptäckt och åtgärdad
+   regression under implementationen:** `deriveApplicationProfile()` hade
+   ändrats att bara härleda Temperaturprocess från Kff — men
+   `framkoppling.v1`s FÖRSTA steg har `kff=0` ("PID ensam", innan Kff
+   introduceras), vilket hade härlett det steget till en ANNAN Tillämpning
+   än lärstigens övriga två steg. Löst genom att behålla `auxSignal` som
+   signal TILLSAMMANS MED `kff` — verifierat programmatiskt att `auxSignal`
+   idag ENDAST förekommer i `framkoppling.v1`s fyra scenarier, så det bredare
+   villkoret är riskfritt. Samtliga 12 lärstigar re-verifierade
+   programmatiskt efter fixen: inga avvikelser.
+3. **Justering 4 — Auto/Manuell som togglefunktion.** Läge-väljaren ersatt
+   av Regulatortyp (OnOff/P/PI/PID) + en separat Auto/Manuell-toggle, som
+   verklig driftväxling. `#mode` (5 alternativ) kvar som DOLD intern
+   sanningskälla — all befintlig logik (`syncParamsFromUI`,
+   `updateControllerUIState`, Tillämpnings-filtrering) rör den ALDRIG, bara
+   HUR värdet sätts är nytt. Byte till Manuellt seedar nu `manualOutput`
+   OVILLKORLIGT med aktuellt u (tidigare gated på Bumpless-kryssrutan, som
+   styr en annan, separat sak — regulatorns egen bias-fasning vid övergång
+   TILL p/pi/pid). Ingen ändring i `sim-core.js`.
+4. **Justering 5 — Visa PB flyttat till grafen.** PB är en härledd
+   graf-visning (av aktuell Kp), inte något användaren konfigurerar — hör
+   hemma vid grafen den analyseras i. Genomfört: ny rad `#chartControls`
+   direkt ovanför `#chartWrap`, samma `#showPB`-id (bara ny DOM-plats).
+
+**Genomförande i övrigt (full IA från analysen, se rapporten):** tre grupper
+(`groupProcessinstallning`/`groupRegulatorkonfiguration`/
+`groupProcesspaverkan`) ersätter de fyra gamla. Nästlad, kollapsbar
+"Avancerat"-sektion per grupp (Processinställning: Lastförstärkning +
+Ventilkarakteristik; Regulatorkonfiguration: Kff + Parameterstyrning +
+Bumpless + Anti-windup) — öppen/stängd härleds automatiskt
+(`deriveAdvancedOpen()`) från: Tillämpning="avancerat" (allt uppackat) ELLER
+scenariots aktiva värden (samma signal som `deriveApplicationProfile()`)
+ELLER ett nytt, valfritt scenariofält `forceAdvancedOpen` (satt på
+`pi-windup-demo.json`, eftersom Anti-windup/Bumpless är `true` i nästan alla
+scenarier och alltså inte fångas av "aktivt värde"-heuristiken).
+Processpåverkan hålls flack (ingen egen Avancerat-nivå, per analysens
+rekommendation 2.2).
+
+**UX-004 Implementering (uppföljande PO-uppdrag, 2026-09-22):**
+
+1. **Tillämpning sparas nu i `localStorage`** (`APPLICATION_PROFILE_STORAGE_KEY`,
+   `pidSimApplicationProfile`) — motsatsen till förra sessionens beslut ("aldrig
+   sparat"), ett uttryckligt nytt PO-krav ("lärare/studerande återkommer ofta
+   till samma scenario"). Sparas bara vid ett MANUELLT val i
+   `#applicationProfile`, inte vid varje scenario-/lärstigsstyrd omhärledning.
+2. **Infrastruktur för lärstigsstyrd synlighet** — ett nytt, valfritt fält
+   `visibilityOverride: { show: [...], hide: [...] }` (addon-namn) på en
+   lärstigs JSON, applicerat sist av tre lager (Tillämpning → Avancerat →
+   lärstig) via ny `applyPathVisibilityOverride()`. Wired in i
+   `parameterstyrning-ventilkarakteristik.v1` (visar Parameterstyrning,
+   döljer Kff) och `framkoppling.v1` (visar Kff, döljer Parameterstyrning).
+3. Bugg hittad och fixad under webbläsarverifiering: en helt ny sidladdning
+   (tom `localStorage`) lämnade Tillämpning på det härledda "Avancerat",
+   vilket tvingade ALLA Avancerat-sektioner öppna — emot "Initialt öppet
+   läge"-kravet. Fixat: `initUI()` använder `"temperatur"` som förvalt
+   startläge när inget är sparat.
+4. Bugg hittad och fixad: `loadScenarioByName()` anropar
+   `updateControllerUIState()` en andra gång EFTER `applyApplicationProfile()`
+   returnerat — dess interna `updateKffVisibility()` skrev tyst över en aktiv
+   `hide`-override av Kff. `applyPathVisibilityOverride()` anropas därför en
+   gång till, sist i `loadScenarioByName()` också.
+5. `windup-antiwindup.v1` (högsta discoverability-risken) visuellt
+   verifierad — Bumpless/Anti-windup faktiskt synliga, Avancerat-sektionen
+   faktiskt öppen.
+
+**UX-004 kompletteringar efter PO-test (samma dag, 2026-09-22) — sex punkter:**
+
+1. **"Avancerat (N dolda)"-räknaren borttagen helt** — PO ville bara ha
+   "Avancerat", ingen räknare.
+2. Bugg fixad: Tillämpning="Avancerat" var inte en komplett sandlåda — en
+   aktiv lärstigs `visibilityOverride` fortsatte gälla efter manuellt byte
+   till Avancerat. `applyPathVisibilityOverride()` returnerar nu tidigt om
+   `fields.applicationProfile.value === "avancerat"`.
+3. Bugg fixad: en aktiv lärstigs filter kunde läcka till ett senare,
+   manuellt valt scenario (`currentPath`/`currentPathStep` nollställdes
+   bara av `loadPath()`/testMode, inte av "Ladda scenario"-knappen). Fixat.
+4. **Lastförstärkning flyttad** från Processinställningens Avancerat-sektion
+   till Processpåverkans grundnivå, bredvid Last mag/Trigga last.
+   `deriveAdvancedOpen()`s "process"-villkor justerat i samma veva (bara
+   `nonlinearGain?.enabled`, inte längre `auxGain`).
+5. Samtliga 12 aktiva lärstigar granskade rad för rad för kvarvarande
+   referenser till de fyra gamla gruppnamnen (Process/Regulator/Styrning/
+   Störningar) — sex filer hade stale text, samtliga fixade (inkl.
+   introduktionslärstigen `kom-igång.v1`, granskad extra noggrant).
+6. Zonparametrarnas visuella sammanflytning i Parameterstyrning registrerad
+   i `docs/planning/WEB-IAKTTAGELSER.md` som framtida finputsning, INTE
+   åtgärdad (PO:s uttryckliga instruktion).
+
+**kom-igång.v1 — separat PO-beslut (samma dag, 2026-09-22):**
+introduktionslärstigen härledde till Tillämpning="Avancerat" (dess
+generiska scenarier saknar särskiljande signaler) — tvingade alla
+Avancerat-sektioner öppna för en helt ny användares FÖRSTA lärstig. PO
+beslutade: kom-igång.v1 ska konsekvent starta i Temperaturprocess. Ny,
+generell infrastruktur: ett valfritt lärstigsfält `forceApplicationProfile`
+(samma mönster/stalenessvakt som `visibilityOverride`), applicerat i
+`loadScenarioByName()` efter `deriveApplicationProfile()`.
+`kom-igång.v1.json` fick `forceApplicationProfile: "temperatur"`.
+
+**Verifiering:** 372 automatiska kontroller gröna (16 testfiler),
+DEV-/PROD-innehålls- och byggvalidering grön. Fullständigt visuellt
+verifierat i isolerad headless Chrome (Chrome DevTools Protocol, Node 24:s
+inbyggda `WebSocket`-klient) — fräsch sidladdning, Tillämpnings-persistens,
+lärstigsstyrd synlighet i båda riktningarna, sandlådebeteende för
+Tillämpning="Avancerat", stalenessvakt vid manuellt scenariobyte,
+`kom-igång.v1` hela vägen genom samtliga 5 steg, samt en explicit kontroll
+att FEAT-044 (`.zone-table`) INTE följt med. Se
+`docs/tests/test-ux-004-huvudyta.md` för fullständig testmatris.
+
+**Status:** PO godkände UX-004 (2026-09-22) och gav uppdrag att genomföra
+merge enligt projektets normala Gitflow. Mergad
+`feature/UX-004-huvudyta-omstrukturering` → `test/ux-004-huvudyta` → `develop`
+(2026-09-22). Branchen raderad efter merge.
+
 ### STRAT-004 — Förstudie: Framkoppling (Feedforward)
 **Prioritet:** Medel — analysuppdrag, ingen implementation
 **Beskrivning:**
