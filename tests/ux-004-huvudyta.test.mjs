@@ -136,7 +136,7 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   check("8f. Anropas sist i applyApplicationProfile() (mest specifika lagret, efter applyAdvancedState())", /applyAdvancedState\(\); \/\/ UX-004[^\n]*\n\s*applyPathVisibilityOverride\(\);/.test(appJs));
   check(
     "8f2. Anropas ÄVEN sist i loadScenarioByName(), efter dess EGET (andra) updateControllerUIState()-anrop — annars återställer det anropets interna updateKffVisibility() en aktiv hide-override av Kff (upptäckt vid webbläsarverifiering)",
-    /function loadScenarioByName\(name\) \{[\s\S]{0,900}updateControllerUIState\(\);[\s\S]{0,600}applyPathVisibilityOverride\(\);/.test(appJs)
+    /function loadScenarioByName\(name\) \{[\s\S]{0,1500}updateControllerUIState\(\);[\s\S]{0,600}applyPathVisibilityOverride\(\);/.test(appJs)
   );
 
   const paramLearningPath = JSON.parse(readFileSync(path.join(APP_DIR, "content", "exercises", "parameterstyrning-ventilkarakteristik.v1.json"), "utf8"));
@@ -156,6 +156,22 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
     "9b. Manuellt scenarioval (#load-knappen) nollställer currentPathStep — en aktiv lärstigs visibilityOverride läcker annars kvar på ett orelaterat, manuellt valt scenario (PO-fynd, t.ex. växling till 'Fri utforskning')",
     /getElementById\("load"\)\.addEventListener\("click", \(\) => \{\s*\n[\s\S]{0,700}currentPathStep = -1;[\s\S]{0,200}loadScenarioByName\(scenarioSelect\.value\);/.test(appJs)
   );
+}
+
+// ── 10. PO-beslut 2026-09-22 — kom-igång.v1 ska konsekvent starta i
+// Temperaturprocess, inte det härledda "Avancerat" ──
+{
+  check(
+    "10a. loadScenarioByName() stödjer ett lärstigsfält forceApplicationProfile som tvingar Tillämpningen efter härledningen",
+    /fields\.applicationProfile\.value = deriveApplicationProfile\(currentScenario\);[\s\S]{0,700}if \(currentPath && currentPathStep >= 0 && currentPath\.forceApplicationProfile\) \{\s*\n\s*fields\.applicationProfile\.value = currentPath\.forceApplicationProfile;/.test(appJs)
+  );
+  check(
+    "10b. Gated på samma currentPath/currentPathStep-vakt som visibilityOverride (läcker inte till ett senare, orelaterat scenario)",
+    /currentPath && currentPathStep >= 0 && currentPath\.forceApplicationProfile/.test(appJs)
+  );
+
+  const komIgangPath = JSON.parse(readFileSync(path.join(APP_DIR, "content", "exercises", "kom-igång.v1.json"), "utf8"));
+  check("10c. kom-igång.v1.json har forceApplicationProfile: \"temperatur\"", komIgangPath.forceApplicationProfile === "temperatur");
 }
 
 console.log(`\n${passed} OK, ${failed} FAIL`);

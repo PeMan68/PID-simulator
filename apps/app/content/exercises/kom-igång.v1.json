@@ -4,6 +4,7 @@
   "title": "Kom igång med PID Simulator",
   "description": "En snabb genomgång av appens funktioner — hur du laddar scenarier, kör simuleringar, ändrar parametrar och hittar hjälp.",
   "difficulty": "intro",
+  "forceApplicationProfile": "temperatur",
   "steps": [
     {
       "type": "scenario",

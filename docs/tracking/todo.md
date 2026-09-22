@@ -236,6 +236,22 @@ respektive punkt ovan) — inte bara källkodsverifierat.
 **Status:** Samtliga sex PO-testfynd åtgärdade och verifierade. Fortfarande
 INTE mergad till develop/PROD.
 
+**kom-igång.v1 — PO-beslut (samma dag, 2026-09-22):** introduktionslärstigen
+härledde till Tillämpning="Avancerat" (dess generiska scenarier saknar
+särskiljande signaler, se `deriveApplicationProfile()`), vilket tvingade alla
+Avancerat-sektioner öppna för en helt ny användares FÖRSTA lärstig — en risk
+jag själv flaggade i `docs/reports/FEAT-044_STATUSRAPPORT.md` avsnitt 7.
+PO beslutade: kom-igång.v1 ska konsekvent starta i Temperaturprocess. Ny,
+generell infrastruktur tillagd: ett valfritt lärstigsfält
+`forceApplicationProfile` (samma mönster och stalenessvakt som
+`visibilityOverride`), applicerat i `loadScenarioByName()` direkt efter
+`deriveApplicationProfile()`. `kom-igång.v1.json` fick
+`forceApplicationProfile: "temperatur"`. Visuellt verifierat i headless
+Chrome, hela vägen genom välkomstskärmen och samtliga 5 steg: Tillämpning
+förblir "Temperaturprocess" genomgående, båda Avancerat-sektionerna förblir
+stängda, lärstigen slutförs korrekt ("✓ Lärstigen klar!"). 372 automatiska
+kontroller gröna (3 nya kontroller för `forceApplicationProfile`).
+
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
 **Prioritet:** Hög — PO:s explicita beslut (2026-09-20): pausa ny
 reglerstrategiutveckling (Kvotreglering, Kaskadreglering) tills detta spår är

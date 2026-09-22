@@ -653,7 +653,19 @@ function loadScenarioByName(name) {
   sim.history.markers = [];
   hydrateFields(currentScenario);
   fields.applicationProfile.value = deriveApplicationProfile(currentScenario);
-  applyApplicationProfile(); // filtrerar Processmodell-alternativen/tilläggen åt den härledda Tillämpningen, och synkar om processType-beroende fält
+  // PO-beslut 2026-09-22 — kom-igång.v1 ska konsekvent starta i
+  // Temperaturprocess, inte i det härledda "Avancerat" (dess generiska
+  // scenarier saknar särskiljande signaler, se deriveApplicationProfile()),
+  // eftersom Avancerat annars tvingar alla Avancerat-sektioner öppna för en
+  // helt ny användares FÖRSTA lärstig — direkt emot UX-004:s mål om
+  // progressiv exponering. Samma infrastruktur och samma stalenessvakt
+  // (currentPath && currentPathStep >= 0) som visibilityOverride — se dess
+  // kommentar för varför vakten behövs (annars läcker en lärstigs override
+  // till ett senare, manuellt valt scenario).
+  if (currentPath && currentPathStep >= 0 && currentPath.forceApplicationProfile) {
+    fields.applicationProfile.value = currentPath.forceApplicationProfile;
+  }
+  applyApplicationProfile(); // filtrerar Processmodell-alternativen/tilläggen åt den härledda (eller lärstigs-tvingade) Tillämpningen, och synkar om processType-beroende fält
   captureMarkerBaseline();
   appendLog("Laddat scenario: " + currentScenario.id);
   updateControllerUIState();

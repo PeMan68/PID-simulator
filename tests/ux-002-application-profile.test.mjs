@@ -182,7 +182,7 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   check("6l. Inget separat onoff-härledningsfall längre (Tvålägesreglering borttagen) — generiska on/off-scenarier faller tillbaka på Avancerat", !/return "onoff";/.test(appJs));
   check(
     "6m. loadScenarioByName() sätter applicationProfile från deriveApplicationProfile() OCH tillämpar det, EFTER hydrateFields() (så det härleds från det nyss laddade scenariot)",
-    /hydrateFields\(currentScenario\);\s*\n\s*fields\.applicationProfile\.value = deriveApplicationProfile\(currentScenario\);\s*\n\s*applyApplicationProfile\(\);/.test(appJs)
+    /hydrateFields\(currentScenario\);\s*\n\s*fields\.applicationProfile\.value = deriveApplicationProfile\(currentScenario\);[\s\S]{0,1000}applyApplicationProfile\(\);/.test(appJs)
   );
   check("6n. initUI() laddar startscenariot via loadScenarioByName() (som i sin tur härleder Tillämpning — ingen separat väg kvar)", /function initUI\(\) \{[\s\S]{0,1400}loadScenarioByName\("basic-step-self-regulating\.json"\);/.test(appJs));
 }
