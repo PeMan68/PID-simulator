@@ -570,9 +570,25 @@ guidade lärstigen "Parameterstyrning och olinjär ventilkarakteristik" end-to-e
 syfte... Några nya UX-problem har inte identifierats." Fullständig testmatris:
 `docs/tests/test-feat-044-zone-fields-table.md`.
 
-**Status:** Mergad till `develop` (2026-09-23) via `test/feat-044-zone-fields-table`.
-`main` oförändrat tills vidare — ingår i nästa PROD-kandidat, inte i den redan
-publicerade v1.6.0.
+**Status:** Mergad till `develop` (2026-09-23) via `test/feat-044-zone-fields-table`,
+sedan släppt till `main`/PROD som v1.6.1 (2026-09-23).
+
+**Uppföljning — pedagogisk layoutjustering (2026-09-23):** PO:s vidare granskning
+efter v1.6.1 (skärmdump): sambandet mellan en brytpunkt och de två zoner den
+avgränsar framgick inte visuellt (brytpunkterna låg som två separata fält FÖRE
+tabellen). Löst på `feature/FEAT-044-brytpunkt-layout`: varje brytpunkt flyttad
+till en egen, visuellt distinkt rad (streckad kant, mindre text) MELLAN de två
+zoner den avgränsar — Brytpunkt 1 mellan Zon 1/Zon 2, Brytpunkt 2 mellan Zon 2/
+Zon 3. Samma fält-/zonrad-ID:n som all befintlig logik redan adresserar via
+`getElementById` (verifierat genom genomläsning av samtliga `app.js`-referenser)
+— ren presentationsändring, ingen ändring i `app.js`/`sim-core.js`. Full
+regression grön (9 testfiler, 266 kontroller). PO:s visuella granskning
+(skärmdump) godkänd: "det ser bättre ut nu" — kvarvarande horisontellt tomrum i
+korten bedömt som en rimlig avvägning (zon-tabellerna är innehållsstyrt smala;
+att sträcka ut dem skulle försämra läsbarheten av siffrorna, inte förbättra
+den), ingen ytterligare ändring begärd. **Mergad till `develop` (2026-09-23),
+branch raderad. Inte släppt till main/PROD** — väntar på nästa planerade
+PROD-kandidat, som FEAT-047.
 
 ---
 
