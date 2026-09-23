@@ -120,7 +120,13 @@ const fields = {
   // FEAT-042 — Olinjär ventilkarakteristik (processens K-schema, keyed på u)
   nonlinearGainEnabled: document.getElementById("nonlinearGainEnabled"),
   ngBreak1: document.getElementById("ngBreak1"), ngBreak2: document.getElementById("ngBreak2"),
-  ngZ1K: document.getElementById("ngZ1K"), ngZ2K: document.getElementById("ngZ2K"), ngZ3K: document.getElementById("ngZ3K")
+  ngZ1K: document.getElementById("ngZ1K"), ngZ2K: document.getElementById("ngZ2K"), ngZ3K: document.getElementById("ngZ3K"),
+  // FEAT-048 — Kvotreglering: SP_B = Kvot × Flöde A (Flöde A = "vilt", varierar
+  // kontinuerligt, se sim-core.js). ratioControlEnabled/ratio i Regulator-
+  // konfiguration; wildFlowBase/wildFlowVolatility (processens egenskaper hos
+  // det vilda flödet, inte regulatorn) i Processinställning.
+  ratioControlEnabled: document.getElementById("ratioControlEnabled"), ratio: document.getElementById("ratio"),
+  wildFlowBase: document.getElementById("wildFlowBase"), wildFlowVolatility: document.getElementById("wildFlowVolatility")
 };
 
 let currentScenario = null;
@@ -460,6 +466,12 @@ function fmt1(v) {
   const s = v.toFixed(1);
   return s === "-0.0" ? "0.0" : s;
 }
+// FEAT-048 — kvoter (t.ex. 0,5) behöver mer precision än fmt1 ger (0,5 vs
+// t.ex. 0,48) för att skillnaden mellan avsedd och faktisk kvot ska synas.
+function fmt2(v) {
+  const s = v.toFixed(2);
+  return s === "-0.00" ? "0.00" : s;
+}
 // FEAT-043 — visar knappen "Fler steg" bara när scenariots aktiva tak faktiskt
 // är nått. Anropas efter varje händelse som kan ändra stepNo/maxSteps (steg,
 // kör, rensa, återställ, scenario-/lärstigsbyte) — se respektive lyssnare.
@@ -573,7 +585,15 @@ function updateStatus() {
   // otvetydig siffra i statusraden istället för en graflinje (se drawChart()).
   // Bara synlig när lasten faktiskt är triggad (auxValue skiljer sig från 0).
   const auxInfo = sim.auxValue ? "  | Last: " + fmt1(sim.auxValue) + " (aktiv)" : "";
-  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning + scheduleInfo + auxInfo;
+  // FEAT-048 — samma "läsbar siffra i statusraden, ingen graflinje"-princip
+  // som Framkopplingens Last ovan (PO:s uttryckliga krav: studenten ska
+  // kunna observera kvoten direkt, inte behöva räkna ut den själv). Synlig
+  // så fort flöde A vandrar (sim.wildFlow är nollskilt bara då, se
+  // sim-core.js:s `base > 0`-väktare) — även när kvotregleringen inte är
+  // AKTIVERAD, eftersom lärstigens "utan kvotreglering"-steg specifikt
+  // behöver kunna visa flöde A och den glidande kvoten trots att SP är fast.
+  const ratioInfo = sim.wildFlow ? "  | Flöde A=" + fmt1(sim.wildFlow) + ", Flöde B=" + fmt1(s.y) + ", Kvot (faktisk)=" + fmt2(s.y / sim.wildFlow) : "";
+  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning + scheduleInfo + auxInfo + ratioInfo;
   updateZoneIndicators();
 }
 function hydrateFields(s) {
@@ -611,6 +631,15 @@ function hydrateFields(s) {
   fields.ngBreak2.value = ng?.breakpoint2 ?? 66;
   const ngZones = ng?.zones || [];
   [fields.ngZ1K, fields.ngZ2K, fields.ngZ3K].forEach((f, i) => { f.value = ngZones[i] ?? s.process.K; });
+  // FEAT-048 — Kvotreglering. wildFlowBase defaultar till 0 (INTE en
+  // "vänlig" siffra som ratio/volatility nedan) — se sim-core.js:s
+  // `rc.wildFlow?.base > 0`-väktare: 0 är den avsiktliga no-op-nivån som
+  // håller scenarier utan kvotreglering fria från all RNG-påverkan.
+  const rc = s.ratioControl;
+  fields.ratioControlEnabled.checked = !!(rc && rc.enabled);
+  fields.ratio.value = rc?.ratio ?? 0.5;
+  fields.wildFlowBase.value = rc?.wildFlow?.base ?? 0;
+  fields.wildFlowVolatility.value = rc?.wildFlow?.volatility ?? 2;
 }
 // GAM-002: kontext för aktivitetsprototypens försöks-/konfigurationsspårning —
 // lärstigssteg om en lärstig är aktiv, annars scenariot självt.
@@ -639,6 +668,12 @@ function deriveApplicationProfile(scenario) {
   // scenarier, så detta bredare villkor är riskfritt mot allt annat innehåll.
   if (scenario.auxSignal || scenario.controller.kff) return "temperatur"; // Framkoppling (FEAT-045) — bara byggt för Temperaturprocess hittills
   if (scenario.controller.gainSchedule?.enabled || scenario.process.nonlinearGain?.enabled) return "temperatur"; // Parameterstyrning/Ventilkarakteristik (FEAT-042) — samma
+  // FEAT-048 — Kvotreglering. Samma "base > 0"-gate som sim-core.js: derivera
+  // till Temperaturprocess så snart flöde A är KONFIGURERAT (inte bara när
+  // enabled=true) — annars skulle lärstigens eget "Steg 2 — utan
+  // kvotreglering" (enabled=false, base=50, avsiktligt för att visa flöde A
+  // variera fritt) dölja precis de fält studenten ska kunna inspektera.
+  if (scenario.ratioControl?.wildFlow?.base > 0) return "temperatur";
   if (scenario.process.type === "integrating") return "niva";
   // UX-002_SYNLIGHETSGRANSKNING.md avsnitt 1 — on/off har ingen egen
   // tillämpning längre (fel axel, se APPLICATION_PROFILES-kommentaren);
@@ -700,6 +735,12 @@ function markerSnapshot(scenario) {
     // ingen ändring behöver detekteras, inte VAD som ändrades i detalj).
     gainSchedule: JSON.stringify(scenario.controller.gainSchedule || null),
     nonlinearGain: JSON.stringify(scenario.process.nonlinearGain || null),
+    // FEAT-048 — samma jämförbarhetsprincip som gainSchedule/nonlinearGain.
+    // Fångar bara KONFIGURATIONEN (enabled/ratio/wildFlow-inställningar), INTE
+    // det löpande beräknade SP-värdet självt (det hör redan hemma i `sp` ovan)
+    // — annars skulle kvotregleringens egen, AVSEDDA SP-rörelse varje steg
+    // felaktigt synas som en "ändring" här också.
+    ratioControl: JSON.stringify(scenario.ratioControl ? { enabled: scenario.ratioControl.enabled, ratio: scenario.ratioControl.ratio, wildFlow: scenario.ratioControl.wildFlow } : null),
   };
 }
 function modeLabel(modeValue) {
@@ -715,6 +756,7 @@ function describeMarkerChange(a, b) {
   if (a.gainSchedule !== b.gainSchedule) return "Parameterstyrning ändrad";
   if (a.nonlinearGain !== b.nonlinearGain) return "Ventilkarakteristik ändrad";
   if (a.kff !== b.kff || a.auxGain !== b.auxGain) return "Framkoppling ändrad";
+  if (a.ratioControl !== b.ratioControl) return "Kvotreglering ändrad";
   return null;
 }
 function captureMarkerBaseline() {
@@ -817,6 +859,17 @@ function syncParamsFromUI() {
       zones: [readClamped(fields.ngZ1K, 0.001), readClamped(fields.ngZ2K, 0.001), readClamped(fields.ngZ3K, 0.001)],
     };
   }
+  // FEAT-048 — Kvotreglering. Alltid synkad (som gainSchedule/nonlinearGain
+  // ovan) — sim-core.js:s egen `wildFlow?.base > 0`-väktare (inte denna kod)
+  // håller scenarier som aldrig konfigurerat kvotreglering fria från
+  // RNG-påverkan, se motivering i sim-core.js. Kvot medvetet OKLIPPT
+  // (samma skäl som Kff) — en negativ kvot är fysikaliskt meningslös här,
+  // men inte appens sak att förhindra i fältet.
+  currentScenario.ratioControl = {
+    enabled: fields.ratioControlEnabled.checked,
+    ratio: Number(fields.ratio.value),
+    wildFlow: { base: readClamped(fields.wildFlowBase, 0), volatility: readClamped(fields.wildFlowVolatility, 0) },
+  };
 
   if (prevMode !== nextMode) {
     const bumplessOn = document.getElementById("bumpless").checked;
@@ -993,8 +1046,14 @@ function updateNonlinearGainUIState() {
 // fungerar lika bra på en integrerande process). OnOff är nu istället ett
 // giltigt Läge-val INOM varje tillämpning.
 const APPLICATION_PROFILES = {
-  avancerat:  { processModels: ["self_regulating", "self_regulating_2", "integrating"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
-  temperatur: { processModels: ["self_regulating", "self_regulating_2"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
+  // FEAT-048 (STRAT-006, PO-beslut 2026-09-24) — Kvotreglering är ett NYTT
+  // ADDON, inte en egen Tillämpning, samma princip som Framkoppling/
+  // Parameterstyrning/Ventilkarakteristik. Tillagt i samma profiler som
+  // framkoppling (Flöde B:s dynamik är en vanlig självreglerande process,
+  // exakt samma motivering STRAT-006 avsnitt 6 gav) — inte i niva, som
+  // idag saknar tillägg helt.
+  avancerat:  { processModels: ["self_regulating", "self_regulating_2", "integrating"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik", "kvotreglering"] },
+  temperatur: { processModels: ["self_regulating", "self_regulating_2"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik", "kvotreglering"] },
   niva:       { processModels: ["integrating"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: [] },
 };
 const APPLICATION_PROFILE_STORAGE_KEY = "pidSimApplicationProfile"; // UX-004 — se kommentaren ovanför APPLICATION_PROFILES
@@ -1038,6 +1097,16 @@ function updateKffVisibility() {
   document.querySelectorAll('[data-addon="framkoppling"]').forEach(el => {
     el.classList.toggle("addon-hidden", !visible);
   });
+}
+// FEAT-048 — SP-fältet är verkningslöst när kvotreglering är aktiverad
+// (sim-core.js skriver över scenario.runtime.setpoint varje steg, se
+// Simulation.step()) — inaktiverat (INTE dolt, till skillnad från addon-
+// döljningen ovan) så studenten fortfarande kan SE senaste SP-värdet, bara
+// inte redigera ett fält som ändå ignoreras. Till skillnad från Kff är
+// detta INTE lägesberoende — SP läses av samtliga regulatorlägen
+// (onoff:s hysteresgränser, manuellts felvisning), se STRAT-006 avsnitt 3.
+function updateRatioControlUIState() {
+  fields.sp.disabled = fields.ratioControlEnabled.checked;
 }
 function applyApplicationProfile() {
   const profile = APPLICATION_PROFILES[fields.applicationProfile.value] || APPLICATION_PROFILES.avancerat;
@@ -1084,6 +1153,14 @@ function applyApplicationProfile() {
   if (!profile.addons.includes("parameterstyrning")) fields.gainScheduleEnabled.checked = false;
   if (!profile.addons.includes("ventilkarakteristik")) fields.nonlinearGainEnabled.checked = false;
   if (!profile.addons.includes("framkoppling")) fields.kff.value = 0;
+  // FEAT-048 — wildFlowBase (INTE bara checkboxen) måste nollställas: det är
+  // `base > 0`, inte `enabled`, som avgör om flöde A vandrar i sim-core.js
+  // (se den funktionens kommentar) — annars skulle kvotregleringen fortsätta
+  // konsumera slumptal osynligt i bakgrunden efter ett tillämpningsbyte,
+  // exakt den typen av "dolt men fortfarande aktivt"-bugg PO:s FEAT-042-
+  // granskning redan en gång fällde för Parameterstyrning.
+  if (!profile.addons.includes("kvotreglering")) { fields.ratioControlEnabled.checked = false; fields.wildFlowBase.value = 0; }
+  updateRatioControlUIState();
   updateGainScheduleUIState();
   updateControllerUIState(); // synkar Läge-beroende fält (inkl. Bumpless och Kff) om Läge tvingades om
   updateProcessUIState();
@@ -1516,16 +1593,19 @@ fields.showPB.addEventListener("change", drawChart);
 // innan ett steg körts, samma motivering som kp/sp/hysteres ovan.
 [fields.gsBreak1, fields.gsBreak2, fields.gsZ1Kp, fields.gsZ1Ti, fields.gsZ1Td,
  fields.gsZ2Kp, fields.gsZ2Ti, fields.gsZ2Td, fields.gsZ3Kp, fields.gsZ3Ti, fields.gsZ3Td,
- fields.ngBreak1, fields.ngBreak2, fields.ngZ1K, fields.ngZ2K, fields.ngZ3K].forEach(f => {
+ fields.ngBreak1, fields.ngBreak2, fields.ngZ1K, fields.ngZ2K, fields.ngZ3K,
+ fields.ratio, fields.wildFlowBase, fields.wildFlowVolatility].forEach(f => {
   f.addEventListener("change", () => { syncParamsFromUI(); drawChart(); });
 });
 fields.gainScheduleEnabled.addEventListener("change", () => { updateGainScheduleUIState(); syncParamsFromUI(); drawChart(); });
 fields.nonlinearGainEnabled.addEventListener("change", () => { updateNonlinearGainUIState(); syncParamsFromUI(); drawChart(); });
+fields.ratioControlEnabled.addEventListener("change", () => { updateRatioControlUIState(); syncParamsFromUI(); drawChart(); });
 // GAM-002: tunt, tillagt lyssnarpar enbart för aktivitetsloggning — rör inte
 // appens egen parameterhantering ovan/i syncParamsFromUI().
 [["k", fields.k], ["t", fields.t], ["l", fields.l], ["auxGain", fields.auxGain], ["kp", fields.kp], ["ti", fields.ti], ["td", fields.td], ["kff", fields.kff],
  ["sp", fields.sp], ["umin", fields.umin], ["umax", fields.umax], ["manualOutput", fields.manualOutput],
- ["noise", fields.noise], ["pulseMag", fields.pulseMag], ["pulseDuration", fields.pulseDuration], ["auxMag", fields.auxMag]]
+ ["noise", fields.noise], ["pulseMag", fields.pulseMag], ["pulseDuration", fields.pulseDuration], ["auxMag", fields.auxMag],
+ ["ratio", fields.ratio], ["wildFlowBase", fields.wildFlowBase], ["wildFlowVolatility", fields.wildFlowVolatility]]
   .forEach(pair => {
     const name = pair[0], el = pair[1];
     el.addEventListener("change", () => {

@@ -8,6 +8,63 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-048 — Kvotreglering (Ratio Control)
+**Branch:** `feature/FEAT-048-kvotreglering`
+**Prioritet:** Hög — PO:s produktbeslut efter godkänd förstudie (STRAT-006, 2026-09-24).
+**Beskrivning:**
+Implementera Kvotreglering som ett NYTT ADDON (inte en egen Tillämpning),
+enligt STRAT-006: SP_B = Kvot × Flöde A, där Flöde A ("vilt" vattenflöde)
+varierar kontinuerligt och Flöde B (doseringsflöde) regleras av en helt
+vanlig PID-regulator. Processexempel: kemikaliedosering proportionell mot
+vattenflöde (inte bränsle/luft). Följer UX-002/UX-004s redan etablerade
+UI-arkitektur rakt av.
+**Genomförande:**
+1. `sim-core.js`: `Simulation.wildFlow` (kontinuerlig slumpvandring via
+   samma RNG som brusmodellen, klippt till ±50% av bas-nivån) + en ny gren
+   i `step()` som skriver SP = Kvot × Flöde A till `scenario.runtime.setpoint`
+   INNAN sp läses, oberoende av regulatorläge. Två separata villkor,
+   avsiktligt: flöde A vandrar när `wildFlow.base > 0` (oavsett om
+   kvotreglering är AKTIVERAD — krävs för lärstigens "utan kvotreglering"-
+   steg), men SP skrivs bara över när `.enabled` också är sant.
+   `base > 0`-väktaren (inte bara `ratioControl` truthy) är avsiktlig:
+   `syncParamsFromUI()` skriver `ratioControl` till VARJE scenario (samma
+   mönster som gainSchedule/nonlinearGain redan gör) — utan väktaren skulle
+   `gaussian(this.rng)` konsumera slumptal på varje steg i ALLA scenarier
+   så fort UI:t synkats en gång, vilket hade rubbat brusmodellens
+   (noiseStd) reproducerbarhet i helt orelaterade scenarier. Verifierat
+   (test 5a): bit-identisk brusbana med/utan en närvarande men okonfigurerad
+   (base=0) ratioControl-post.
+2. `app.js`: nya fält (`ratioControlEnabled`/`ratio`/`wildFlowBase`/
+   `wildFlowVolatility`), `deriveApplicationProfile()` härleder
+   Temperaturprocess när flöde A är konfigurerat, `APPLICATION_PROFILES`
+   utökad med addonet "kvotreglering" (temperatur/avancerat, samma profiler
+   som framkoppling — INGEN ny Tillämpning, INGEN ny fjärde profil).
+   SP-fältet inaktiveras (inte döljs) när kvotreglering är aktiv, eftersom
+   det annars ändå skrivs över varje steg. Statusraden visar Flöde A/
+   Flöde B/faktisk kvot (`fmt2`, ny 2-decimalers hjälpfunktion) — ingen ny
+   graflinje. `markerSnapshot()`/`describeMarkerChange()` utökad med
+   "Kvotreglering ändrad", fångar bara KONFIGURATIONEN, inte den löpande
+   SP-rörelsen (annars en falsk markering varje steg).
+3. `index.html`: fyra nya fält, `data-addon="kvotreglering"` på samtliga,
+   Regulatorkonfiguration→Avancerat (Kvotreglering aktiv, Kvot),
+   Processinställning→Avancerat (Flöde A basnivå, Flöde A volatilitet) —
+   exakt PO:s specificerade placering.
+4. Ny lärstig `kvotreglering.v1` (4 steg: Teori → Utan kvotreglering → Med
+   korrekt kvotreglering → Felaktigt satt kvot), 3 nya scenariofiler, 1 ny
+   teorifil. DEV-only (catalog.prod.json orört). Tuning (Kp=3/Ti=5, flöde A
+   bas=50/volatilitet=2) vald efter ett verifierat sökning över flera
+   Kp/Ti-kombinationer för tightast kvot-spårning.
+5. Samtliga instruktionstal i lärstigen verifierade genom en fullständig
+   end-to-end-körning mot de FAKTISKA, sparade scenariofilerna (inte
+   uppskattade eller gissade).
+**Tester:** Ny `tests/feat-048-kvotreglering.test.mjs` (27 kontroller: 17
+beteendetester direkt mot `sim-core.js` via bridgen, 10 statiska UI-
+strukturtester). Full regression grön (11 testfiler, 320 kontroller totalt),
+`tests/simulation/analyze.test.mjs` grön, DEV-/PROD-innehålls- och
+byggvalidering grön, `catalog.prod.json` verifierat oförändrat.
+**Status:** Implementerat, väntar på PO:s granskning. **Ingen merge, ingen
+release** — per uppdragets uttryckliga instruktion.
+
 ### STRAT-006 — Förstudie: Kvotreglering (Ratio Control)
 **Prioritet:** Medel — analysuppdrag, ingen implementation, PO:s explicita beställning
 (2026-09-23).

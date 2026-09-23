@@ -1,0 +1,15 @@
+{
+  "id": "kvotreglering-v1",
+  "version": "v1.0.0",
+  "title": "Kvotreglering (Ratio Control)",
+  "summary": "En vanlig regulator håller ett FAST börvärde. Kvotreglering låter börvärdet istället FÖLJA en annan, okontrollerad processignal automatiskt — så att förhållandet (kvoten) mellan de två hålls konstant, oavsett hur den okontrollerade signalen ändras.",
+  "bullets": [
+    "Tänk dig kemikaliedosering vid vattenrening: ett doseringsmedel (t.ex. ett koaguleringsmedel) ska tillsättas i proportion till det inkommande vattenflödet. Vattenflödet (Flöde A) bestäms av produktion/efterfrågan — det är en 'vild', okontrollerad signal ur doseringsregulatorns perspektiv. Doseringsflödet (Flöde B) styrs av en helt vanlig PID-regulator.",
+    "Om doseringsregulatorns börvärde (SP) är FAST håller den sitt jobb perfekt — Flöde B hamnar exakt på SP. Men om vattenflödet (Flöde A) ändras utan att SP följer med, glider den FAKTISKA kvoten (Flöde B / Flöde A) iväg, trots att regulatorn inte gjort något fel alls.",
+    "En operatör skulle kunna räkna om och skriva in ett nytt börvärde för hand varje gång vattenflödet ändras — opraktiskt i en process där flödet varierar kontinuerligt, och om det glöms bort upptäcks felet inte förrän kvaliteten redan påverkats.",
+    "Kvotreglering löser detta genom att låta börvärdet beräknas automatiskt, varje steg: SP_B = Kvot × Flöde A. Regulatorn som styr Flöde B är i övrigt HELT OFÖRÄNDRAD — den vet inte ens att dess börvärde kommer från en beräkning istället för ett fast värde.",
+    "Flöde A i den här simulatorn är en tänkt, 'vild' processignal som varierar fritt och kontinuerligt (en långsam slumpvandring) — precis som ett verkligt inkommande flöde aldrig står helt stilla. Du kan följa både Flöde A, Flöde B och den faktiska kvoten (Flöde B / Flöde A) direkt i statusraden.",
+    "Kvotreglering är bara så bra som kvotvärdet den ges — precis som Framkopplings Kff. Är kvoten felaktigt satt hålls fortfarande EN kvot stabilt av regleringen, men det är fel kvot, inte den avsedda.",
+    "Skillnad mot Framkoppling: Framkoppling kompenserar UTSIGNALEN direkt för en mätbar störning. Kvotreglering räknar istället om BÖRVÄRDET. Båda är exempel på att en regulator kan byggas ut med mer än bara återkoppling mot ett fast, manuellt satt mål — men de löser olika problem."
+  ]
+}

@@ -61,7 +61,7 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   check("3d. Olinjär ventilkarakteristik ligger i advancedFieldsProcess", /id="advancedFieldsProcess"[\s\S]{0,2000}nonlinearGainEnabled/.test(html));
   check("3e. Kff ligger i advancedFieldsRegulator", /id="advancedFieldsRegulator"[\s\S]{0,300}<label for="kff"/.test(html));
   check("3f. Parameterstyrning ligger i advancedFieldsRegulator", /id="advancedFieldsRegulator"[\s\S]{0,2000}gainScheduleEnabled/.test(html));
-  check("3g. Bumpless/Anti-windup ligger i advancedFieldsRegulator (PO-beslut, inte längre grundnivå)", /id="advancedFieldsRegulator"[\s\S]{0,3800}<label for="bumpless"/.test(html) && /id="advancedFieldsRegulator"[\s\S]{0,4000}<label for="antiWindup"/.test(html));
+  check("3g. Bumpless/Anti-windup ligger i advancedFieldsRegulator (PO-beslut, inte längre grundnivå)", /id="advancedFieldsRegulator"[\s\S]{0,5000}<label for="bumpless"/.test(html) && /id="advancedFieldsRegulator"[\s\S]{0,5300}<label for="antiWindup"/.test(html));
   check("3h. .advanced-fields[hidden]-CSS finns (döljer sektionen som grupp)", /\.advanced-fields\[hidden\]\s*\{\s*display:\s*none;\s*\}/.test(html));
   check("3i. Avancerat-sektionerna startar dolda (hidden-attribut i markupen)", /id="advancedFieldsProcess" hidden/.test(html) && /id="advancedFieldsRegulator" hidden/.test(html));
 

@@ -1,0 +1,26 @@
+{
+  "id": "kvotreglering-demo-fast-sp",
+  "version": "v1.0.0",
+  "title": "Kvotreglering – utan (fast börvärde)",
+  "description": "Kemikaliedosering (Flöde B) med FAST börvärde medan vattenflödet (Flöde A) varierar fritt — visar hur den faktiska kvoten glider iväg trots att regulatorn håller sitt börvärde perfekt.",
+  "tags": ["kvotreglering", "pi", "ratio"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.0,
+    "T": 8.0,
+    "L": 0.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "pi",
+    "kp": 3.0,
+    "ti": 5.0,
+    "td": 0.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 400, "setpoint": 25.0, "autopause": false },
+  "ratioControl": { "enabled": false, "ratio": 0.5, "wildFlow": { "base": 50.0, "volatility": 2.0 } }
+}
