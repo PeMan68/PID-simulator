@@ -2,6 +2,20 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.6.1] — 2026-09-23
+
+### Nytt i denna release
+
+- **Grupperade zonfält för Parameterstyrning och olinjär ventilkarakteristik**
+  (FEAT-044). De 16 zonfälten (2 brytpunkter + 3×3 Kp/Ti/Td för
+  Parameterstyrning, 2 brytpunkter + 3×K för ventilkarakteristik) visas nu
+  som kompakta tabeller (en rad per zon) istället för utspridda enskilda
+  fält — samma vertikala utrymme, tydligare vilket fält som hör till vilken
+  zon. Aktiv zon markeras nu som en helmarkerad tabellrad.
+
+Ingen ny lärstig, inget nytt scenario, inga ändrade fält-ID:n eller
+scenarioformat.
+
 ## [v1.6.0] — 2026-09-22
 
 ### Nytt i denna release
