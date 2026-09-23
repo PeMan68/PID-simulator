@@ -98,6 +98,43 @@ visualisering i trendgrafen.
    graflinjen/legenden) — totalt 37. Full regression grön (11 testfiler,
    330 kontroller), DEV-/PROD-validering grön, `catalog.prod.json` oförändrat.
 
+**PO:s komplettering (2026-09-24):** kvotregleringen och trendgrafs-
+visualiseringen bedömdes fungera korrekt, men Mätläget (crosshair) saknade
+stöd för kvotreglering — studerande kunde inte läsa av Flöde A eller SP_B
+punktvis, bara PV/u/t. Uppdrag: utöka crosshair-avläsningen med Flöde A och
+SP_B när kvotreglering är aktiv, oförändrat för övriga reglerstrategier.
+
+**Genomfört (komplettering):**
+1. `app.js` `drawChart()`: `wildFlow`/`hasWildFlow` lyfta från blockscope
+   (tidigare bara synliga för grafens topppanel) till funktionsnivå, så
+   samma härledning återanvänds av både graflinjen och crosshairen utan
+   duplicerad logik.
+2. Crosshair-blocket (Mätläge) läser nu `spH`/`wildH` från
+   `sim.history.sp[iNear]`/`wildFlow[iNear]` — SAMMA index (`iNear`) som
+   `pvH`/`uH` redan använder, så alla fyra värden är tidsmässigt synkade.
+   Läggs till i tooltipen ENDAST när `hasWildFlow` (samma villkor som
+   styr graflinjen) — för alla andra reglerstrategier är `lines`-arrayen
+   (och därmed hela tooltipen) byte-identisk med innan.
+3. `tests/feat-048-kvotreglering.test.mjs` utökad med avsnitt 12 (4 nya
+   kontroller: PV/u-raderna oförändrade, SP_B/Flöde A läggs till exakt vid
+   `hasWildFlow`, samma `iNear`-index som PV/u, ingen duplicerad
+   `hasWildFlow`-deklaration) — totalt 41.
+4. Verifierat numeriskt via engångsskript mot `kvotreglering-demo-korrekt.json`:
+   vid `iNear=50` (t=50) gav `sim.history.sp[50]`/`wildFlow[50]` SP_B=33,2/
+   Flöde A=66,4, och `SP_B === ratio × FlödeA[iNear]` exakt (33,180) —
+   bekräftar att crosshairens avlästa värden är korrekta, inte bara att
+   koden kör utan fel. Ett scenario utan `ratioControl`-fält gav
+   `hasWildFlow=false`, dvs. crosshairen förblir opåverkad.
+5. Lärstigen körd om end-to-end (150 steg/scenario): steg 2 (utan
+   kvotreglering) faktisk kvot glider till 0,353–0,504 efter transient
+   (matchar instruktionstextens "ibland ner mot 0,35–0,40"); steg 3 (korrekt,
+   kvot 0,5) håller 0,482–0,522; steg 4 (fel kvot 0,3) håller stabilt
+   0,289–0,313. Identiskt med tidigare rundors verifiering — ren UI-ändring,
+   ingen ändring av `sim-core.js` eller beräkningslogik.
+6. Full regression grön (11 testfiler, 307 kontroller), DEV-/PROD-
+   innehålls- och byggvalidering grön, `catalog.prod.json` bekräftat
+   oförändrat.
+
 **Status:** Implementerat, väntar på PO:s förnyade granskning. **Ingen
 merge, ingen release** — per uppdragets uttryckliga instruktion.
 

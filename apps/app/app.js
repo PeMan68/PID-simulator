@@ -165,6 +165,12 @@ function drawChart() {
   const w = chartCanvas.width, h = chartCanvas.height;
   const pad = { left: 52, right: 16, top: 14, bottom: 28 };
   const t = sim.history.t, y = sim.history.y, sp = sim.history.sp, u = sim.history.u;
+  // FEAT-048 (komplettering, PO 2026-09-24) — lyft till funktionsnivå (var
+  // tidigare lokal för linjeritningsblocket) så BÅDE grafens Flöde A-linje
+  // OCH Mätlägets crosshair kan återanvända samma "är kvotreglering aktiv
+  // och relevant just nu"-villkor, istället för att duplicera det.
+  const wildFlow = sim.history.wildFlow;
+  const hasWildFlow = sim.scenario.ratioControl?.wildFlow?.base > 0 && wildFlow && wildFlow.length === t.length;
   const tFull = Math.max(1, t[t.length - 1] || 1);
   const tStart = zoomView ? zoomView.start : 0;
   const tMax   = zoomView ? zoomView.end   : tFull;
@@ -284,8 +290,6 @@ function drawChart() {
   // med PV/SP om uppmärksamheten. Ritas BARA när flöde A faktiskt är
   // konfigurerat (samma bas>0-villkor som styr om det vandrar alls i
   // sim-core.js) — annars en flat, meningslös linje på alla andra scenarier.
-  const wildFlow = sim.history.wildFlow;
-  const hasWildFlow = sim.scenario.ratioControl?.wildFlow?.base > 0 && wildFlow && wildFlow.length === t.length;
   if (hasWildFlow) {
     drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(wildFlow[i]) })), "#c2185b", true, 1);
   }
@@ -466,6 +470,18 @@ function drawChart() {
         const pvH = y[iNear] != null ? y[iNear] : 0;
         const uH = u[iNear] != null ? u[iNear] : 0;
 
+        // FEAT-048 komplettering (PO, 2026-09-24) — Mätlägets crosshair
+        // visar SP_B/Flöde A ENDAST när kvotreglering är aktiv (samma
+        // `hasWildFlow`-villkor som redan styr grafens Flöde A-linje) — för
+        // alla ÖVRIGA reglerstrategier är crosshairen medvetet oförändrad
+        // (samma tre rader, samma format, som innan denna komplettering).
+        // Målet (PO:s ord): studerande ska kunna avläsa reglerfel, jämföra
+        // SP_B mot PV_B, och analysera kvotregleringens noggrannhet — allt
+        // kräver SP_B punktvis vid en given tidpunkt, inte bara grafens
+        // visuella intryck.
+        const spH = hasWildFlow ? (sp[iNear] != null ? sp[iNear] : 0) : null;
+        const wildH = hasWildFlow ? (wildFlow[iNear] != null ? wildFlow[iNear] : 0) : null;
+
         ctx.save();
         ctx.strokeStyle = "rgba(30,30,30,0.38)"; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
         ctx.beginPath(); ctx.moveTo(mx, pad.top); ctx.lineTo(mx, h * 0.62); ctx.stroke();
@@ -475,6 +491,10 @@ function drawChart() {
         ctx.setLineDash([]);
 
         const lines = ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(1), "u  = " + uH.toFixed(1)];
+        if (hasWildFlow) {
+          lines.push("SP_B    = " + spH.toFixed(1));
+          lines.push("Flöde A = " + wildH.toFixed(1));
+        }
         ctx.font = "11px Consolas, monospace";
         const lH = 15, pX = 7, pY = 5;
         const ttW = Math.max(...lines.map(s => ctx.measureText(s).width)) + pX * 2;
