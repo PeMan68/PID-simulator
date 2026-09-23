@@ -1,0 +1,80 @@
+{
+  "id": "kvotreglering.v1",
+  "version": "v1.0.0",
+  "title": "Kvotreglering (Ratio Control)",
+  "description": "Kemikaliedosering proportionell mot vattenflöde — hur ett automatiskt beräknat börvärde håller en kvot konstant, till skillnad från ett fast börvärde.",
+  "difficulty": "intermediate",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "kvotreglering.v1.json",
+      "title": "Kvotreglering (Ratio Control)",
+      "objective": "Förstå varför ett fast börvärde inte räcker när en relaterad processignal varierar fritt.",
+      "checkpoint": {
+        "question": "Varför räcker inte ett vanligt, fast börvärde (SP) när vattenflödet (Flöde A) hela tiden ändras?",
+        "options": [
+          "Det räcker faktiskt bra — PID-regulatorn justerar automatiskt kvoten själv",
+          "Den FAKTISKA kvoten mellan kemikalieflöde och vattenflöde glider iväg när vattenflödet ändras, eftersom börvärdet för kemikalieflödet inte följer med",
+          "Ett fast börvärde fungerar bara för integrerande processer",
+          "Vattenflödet påverkar inte kemikaliedoseringen alls"
+        ],
+        "correct": 1,
+        "explanation": "PID-regulatorn håller kemikalieflödet (Flöde B) vid VAD SP ÄN ÄR — men om SP är fast medan vattenflödet (Flöde A) ändras, håller regulatorn en FEL kvot lika troget som en rätt. Kvotreglering löser detta genom att räkna om SP = Kvot × Flöde A varje steg, så regulatorns mål alltid matchar den önskade kvoten."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "kvotreglering-demo-fast-sp.json",
+      "title": "Utan kvotreglering — kvoten glider",
+      "objective": "Observera att ett fast börvärde ger en drivande, felaktig kvot när vattenflödet varierar.",
+      "instruction": "Kör cirka 150 steg. Notera:\n• PV (kemikalieflöde, Flöde B) följer sitt FASTA börvärde perfekt — regulatorn gör sitt jobb\n• Flöde A (vattenflödet) i statusraden varierar hela tiden på egen hand\n• Den FAKTISKA kvoten (Flöde B / Flöde A, visas i statusraden) glider märkbart bort från det avsedda värdet 0,5 — ibland ner mot 0,35–0,40\n\nRegulatorn har inte gjort något fel — problemet är att börvärdet aldrig fick reda på att Flöde A ändrats.",
+      "checkpoint": {
+        "question": "Varför glider den faktiska kvoten trots att PV (Flöde B) ligger stabilt exakt på sitt börvärde?",
+        "options": [
+          "PID-regulatorn är fel inställd",
+          "Börvärdet är fast — det räknas inte om när Flöde A ändras, så kvoten (Flöde B/Flöde A) rör sig med Flöde A",
+          "Mätbrus stör avläsningen av Flöde A",
+          "Flöde B och Flöde A mäts inte på samma skala"
+        ],
+        "correct": 1,
+        "explanation": "PV=SP betyder bara att REGULATORN gjort sitt jobb — den håller Flöde B exakt vid det värde den blivit tillsagd. Men eftersom det värdet (SP) är fast och Flöde A inte är det, är det bara vid en specifik nivå på Flöde A som kvoten faktiskt stämmer. Så fort Flöde A rör sig därifrån blir kvoten fel, utan att regulatorn signalerar något problem alls."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "kvotreglering-demo-korrekt.json",
+      "title": "Med kvotreglering — kvoten hålls automatiskt",
+      "objective": "Observera hur SP nu följer Flöde A automatiskt, så att kvoten hålls nära sitt målvärde.",
+      "instruction": "Kör cirka 150 steg. Notera:\n• SP (i statusraden) rör sig nu hela tiden i takt med Flöde A — inte längre fast\n• Den faktiska kvoten (Flöde B/Flöde A) ligger nu stabilt nära 0,5, oavsett hur Flöde A rör sig\n• Jämför med föregående steg: samma vattenflödesvariation, men helt annat resultat",
+      "checkpoint": {
+        "question": "Vad beräknas SP till, varje steg, när kvotreglering är aktiverad?",
+        "options": [
+          "SP sätts till ett genomsnitt av tidigare värden på Flöde A",
+          "SP = Kvot × Flöde A, omräknat varje steg",
+          "SP förblir det värde operatören senast skrev in",
+          "SP sätts alltid till 50 % av mätområdet"
+        ],
+        "correct": 1,
+        "explanation": "Kvotblocket beräknar SP = Kvot × Flöde A på nytt VARJE steg — regulatorn som styr Flöde B är i övrigt helt oförändrad, den vet inte ens att dess börvärde kommer från en beräkning. Det är därför kvoten hålls automatiskt: SP jagar aldrig efter en gammal, inaktuell nivå på Flöde A."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "kvotreglering-demo-fel-kvot.json",
+      "title": "Felaktigt satt kvot",
+      "objective": "Observera att kvotreglering bara är så bra som kvotvärdet den ges.",
+      "instruction": "Kvotfältet är nu satt till 0,3 istället för det avsedda 0,5. Kör cirka 150 steg. Notera:\n• SP följer fortfarande Flöde A troget, precis som i föregående steg\n• Men den faktiska kvoten hålls nu stabilt nära 0,3 — INTE 0,5\n• Till skillnad från föregående lärstig-steg (som drev iväg OKONTROLLERAT) håller regleringen HÄR en kvot stabilt — bara fel kvot",
+      "checkpoint": {
+        "question": "Vad är den viktigaste skillnaden mellan felet i detta steg och problemet i \"Utan kvotreglering\"?",
+        "options": [
+          "Det är samma sorts fel — kvoten glider okontrollerat i båda fallen",
+          "Här hålls kvoten STABILT, men vid fel värde (en inställningsmiss) — utan kvotreglering var kvoten okontrollerad och drev med Flöde A",
+          "Det här felet är allvarligare eftersom PV inte längre följer SP",
+          "Detta fel uppstår bara vid höga värden på Flöde A"
+        ],
+        "correct": 1,
+        "explanation": "Kvotregleringen gör exakt det den är konfigurerad att göra: hålla SP = Kvot × Flöde A. Med fel kvotvärde håller den alltså en FEL kvot lika troget som den skulle hållit rätt kvot — mekanismen fungerar perfekt, förutsättningen (kvotvärdet) är bara fel. Det är en viktig påminnelse: kvotreglering, precis som framkoppling, är bara så bra som det värde den matas med — den upptäcker aldrig sitt eget fel."
+      }
+    }
+  ]
+}

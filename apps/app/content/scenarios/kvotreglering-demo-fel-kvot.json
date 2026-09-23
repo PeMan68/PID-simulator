@@ -1,0 +1,26 @@
+{
+  "id": "kvotreglering-demo-fel-kvot",
+  "version": "v1.0.0",
+  "title": "Kvotreglering – felaktigt satt kvot",
+  "description": "Samma uppställning som kvotreglering-demo-korrekt.json, men med Kvot satt till 0,3 istället för det avsedda 0,5 — visar att kvotregleringen håller EN kvot stabilt, men fel kvot, om den ges ett felaktigt värde.",
+  "tags": ["kvotreglering", "pi", "ratio"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.0,
+    "T": 8.0,
+    "L": 0.0,
+    "normalValue": 0.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "pi",
+    "kp": 3.0,
+    "ti": 5.0,
+    "td": 0.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 400, "setpoint": 15.0, "autopause": false },
+  "ratioControl": { "enabled": true, "ratio": 0.3, "wildFlow": { "base": 50.0, "volatility": 2.0 } }
+}

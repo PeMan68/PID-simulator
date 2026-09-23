@@ -793,6 +793,19 @@
           </div>
           <div class="advanced-toggle" id="advancedToggleProcess" onclick="toggleAdvanced('process')"><button class="group-toggle">▸</button> Avancerat</div>
           <div class="advanced-fields" id="advancedFieldsProcess" hidden>
+            <!-- FEAT-048 (STRAT-006, PO-beslut 2026-09-24) — Kvotreglering:
+                 flöde A ("vilt", okontrollerat) är en PROCESSEGENSKAP i den
+                 meningen att dess bas-nivå/volatilitet beskriver signalen
+                 själv, inte regulatorn — Kvotreglering aktiv/Kvot ligger i
+                 Regulatorkonfiguration nedan. -->
+            <div class="field" data-addon="kvotreglering">
+              <label for="wildFlowBase">Flöde A basnivå <button class="help-btn" data-help="wildFlowBase">?</button></label>
+              <input id="wildFlowBase" type="number" step="1" min="0">
+            </div>
+            <div class="field" data-addon="kvotreglering">
+              <label for="wildFlowVolatility">Flöde A volatilitet <button class="help-btn" data-help="wildFlowVolatility">?</button></label>
+              <input id="wildFlowVolatility" type="number" step="0.1" min="0">
+            </div>
             <div class="field" id="nonlinearGainField" data-addon="ventilkarakteristik">
               <label for="nonlinearGainEnabled">Olinjär ventilkarakteristik <button class="help-btn" data-help="nonlinearGainEnabled">?</button></label>
               <input id="nonlinearGainEnabled" type="checkbox" title="Processens K varierar med utsignalen i tre fasta zoner">
@@ -898,6 +911,18 @@
             <div class="field" data-addon="framkoppling">
               <label for="kff">Kff <button class="help-btn" data-help="kff">?</button></label>
               <input id="kff" type="number" step="0.05">
+            </div>
+            <!-- FEAT-048 (STRAT-006, PO-beslut 2026-09-24) — Kvotreglering:
+                 SP beräknas automatiskt som Kvot × Flöde A (Processinställning
+                 ovan). Ingen lägesgating (till skillnad från Kff) — SP läses
+                 av samtliga regulatorlägen, inte bara p/pi/pid. -->
+            <div class="field" data-addon="kvotreglering">
+              <label for="ratioControlEnabled">Kvotreglering <button class="help-btn" data-help="ratioControlEnabled">?</button></label>
+              <input id="ratioControlEnabled" type="checkbox" title="SP beräknas automatiskt som Kvot × Flöde A">
+            </div>
+            <div class="field" data-addon="kvotreglering">
+              <label for="ratio">Kvot <button class="help-btn" data-help="ratio">?</button></label>
+              <input id="ratio" type="number" step="0.01" min="0">
             </div>
             <div class="field" id="gainScheduleField" data-addon="parameterstyrning">
               <label for="gainScheduleEnabled">Parameterstyrning <button class="help-btn" data-help="gainScheduleEnabled">?</button></label>
@@ -1044,7 +1069,7 @@
 
     <div id="chartWrap">
       <canvas id="chart" width="980" height="280"></canvas>
-      <div class="legend">Blå: PV &nbsp;&nbsp; Röd streckad: SP &nbsp;&nbsp; Grön: u</div>
+      <div class="legend" id="chartLegend">Blå: PV &nbsp;&nbsp; Röd streckad: SP &nbsp;&nbsp; Grön: u</div>
     </div>
 
     <div id="measurePanel">

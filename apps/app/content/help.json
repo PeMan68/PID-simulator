@@ -146,5 +146,21 @@
   "applicationProfile": {
     "title": "Tillämpning",
     "body": "Väljer vilket sammanhang du utforskar — styr vilka Processmodeller som erbjuds nedan, och vilka strategitillägg (Framkoppling/Parameterstyrning/Olinjär ventilkarakteristik) som visas.\n\n'Avancerat' visar allt, precis som tidigare — inget döljs eller begränsas, och alla Avancerat-sektioner öppnas automatiskt.\n\nDe andra tillämpningarna smalnar bara av VILKA ALTERNATIV som visas (t.ex. Nivåprocess visar bara Integrerande i Processmodell-väljaren) — själva Processmodell-begreppet är alltid synligt, oavsett tillämpning, eftersom det är en central reglerteknisk grundidé.\n\nByt tillämpning fritt när som helst — inget sparas mellan sidladdningar, och inga simuleringsvärden eller scenarier påverkas, bara vilka fält som visas."
+  },
+  "ratioControlEnabled": {
+    "title": "Kvotreglering",
+    "body": "Aktiverar kvotreglering: börvärdet (SP) beräknas automatiskt varje steg som SP = Kvot × Flöde A, istället för att vara ett fast värde du skriver in själv.\n\nExempel: kemikaliedosering (Flöde B, den process du reglerar) som ska hållas i en viss proportion mot ett vattenflöde (Flöde A) — ett okontrollerat flöde som varierar fritt. Utan kvotreglering håller regulatorn ett fast börvärde perfekt, men den FAKTISKA kvoten (Flöde B/Flöde A) glider iväg så fort Flöde A ändras. Med kvotreglering följer SP automatiskt med.\n\nRegulatorn som styr Flöde B (Kp/Ti/Td, Läge) är i övrigt helt oförändrad — den vet inte ens att SP kommer från en beräkning.\n\nSP-fältet i Processpåverkan inaktiveras medan kvotreglering är aktiv, eftersom det annars ändå skrivs över varje steg."
+  },
+  "ratio": {
+    "title": "Kvot",
+    "body": "Multiplikatorn i SP = Kvot × Flöde A. Ett Kvot-värde på 0,5 betyder att Flöde B (den reglerade processen) ska hållas vid hälften av Flöde A.\n\nKvotreglering är bara så bra som det Kvot-värde den ges — är Kvot felaktigt satt håller regleringen fortfarande EN kvot stabilt, bara fel kvot. Den upptäcker inte sitt eget fel, precis som Framkopplings Kff."
+  },
+  "wildFlowBase": {
+    "title": "Flöde A basnivå",
+    "body": "Startnivån och centrum för det \"vilda\" (okontrollerade) flödet A — den processignal kvotregleringens SP-beräkning följer, se 'Kvotreglering'.\n\nFlöde A vandrar fritt kring denna nivå (se 'Flöde A volatilitet') inom ett spann på ±50 % av basnivån.\n\nBasnivå=0 → flöde A förblir inaktivt (ingen variation alls) — kvotreglering har då ingen mening, oavsett övriga inställningar."
+  },
+  "wildFlowVolatility": {
+    "title": "Flöde A volatilitet",
+    "body": "Hur mycket flöde A:s slumpvandring rör sig per steg — ett högre värde ger snabbare, kraftigare svängningar kring basnivån.\n\nFlöde A måste variera KONTINUERLIGT (inte som en engångshändelse) för att kvotregleringens poäng — att SP AUTOMATISKT följer en signal som fortsätter ändras — ska synas. Volatilitet=0 gör flöde A helt konstant, vilket gör skillnaden mot ett fast börvärde osynlig."
   }
 }

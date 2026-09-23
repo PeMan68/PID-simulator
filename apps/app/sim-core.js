@@ -160,9 +160,28 @@
       // BESTÅENDE (PO-beslut, STRAT-005) — ligger kvar tills reset() eller
       // en ny triggerAuxSignal()-triggning ersätter värdet.
       this.auxValue = 0;
-      this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0] };
+      // FEAT-048 — Kvotreglering: "vilt" flöde A, en KONTINUERLIGT varierande
+      // signal (slumpvandring via samma RNG som brusmodellen redan använder,
+      // se step()) — medvetet INTE en engångstriggad nivå som auxValue ovan
+      // (STRAT-006 avsnitt 4: en statisk nivå hade gjort hela lärstigen
+      // pedagogiskt tandlös, kvotens poäng är att SP AUTOMATISKT följer en
+      // signal som fortsätter ändras). Startar på konfigurerad bas-nivå;
+      // scenarier utan ratioControl-fält ger 0 (no-op, samma
+      // bakåtkompatibla mönster som auxValue/auxGain).
+      this.wildFlow = scenario.ratioControl?.wildFlow?.base ?? 0;
+      // FEAT-048 användartest (PO, 2026-09-24) — till skillnad från
+      // auxValue/Last (se STRAT-005/FEAT-045-kommentaren ovan, som
+      // MEDVETET INTE ritas som graflinje) behöver flöde A synas i
+      // TRENDGRAFEN: poängen är att studenten ska se sambandet Flöde A →
+      // SP_B → PV_B över tid, inte bara en ögonblicksbild i statusraden.
+      // Till skillnad från Last (som kan bli negativ och då hamna helt
+      // utanför panelens klippta yta, se FEAT-045-kommentaren) kan wildFlow
+      // ALDRIG bli negativt eller nå 0 medan det vandrar — klippningen i
+      // step() (±50% av en bas-nivå > 0) garanterar ett strikt positivt
+      // intervall, så den risken gäller inte här.
+      this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0], wildFlow: [this.wildFlow] };
     }
-    reset() { this.stepNo = 0; this.maxSteps = this.baseMaxSteps; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.auxValue = 0; this.scenario.controller.bias = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0] }; }
+    reset() { this.stepNo = 0; this.maxSteps = this.baseMaxSteps; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.auxValue = 0; this.wildFlow = this.scenario.ratioControl?.wildFlow?.base ?? 0; this.scenario.controller.bias = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0], wildFlow: [this.wildFlow] }; }
     triggerPulse() { const p = this.scenario.disturbance.pulse; if (p && p.durationSteps > 0) this.pulseStepsLeft = p.durationSteps; }
     // FEAT-045 — sätter lasten till scenariots auxSignal.magnitude i ETT
     // anrop, ingen räknare (se ovan). Ett nytt klick med ett ändrat fältvärde
@@ -174,6 +193,38 @@
     extendSteps() { this.maxSteps += this.baseMaxSteps; }
     step() {
       if (this.stepNo >= this.maxSteps) return null;
+      // FEAT-048 — Kvotreglering: flöde A vandrar (slumpvandring, klippt
+      // till ±50% av bas-nivån — "rimligt intervall", STRAT-006 avsnitt 4)
+      // NÄR SOM HELST processen är konfigurerad (bas-nivå > 0) — OBEROENDE
+      // av om kvotregleringen faktiskt är aktiverad. Detta är medvetet: PO:s
+      // lärstig behöver kunna visa flöde A variera FRITT medan SP fortfarande
+      // är manuellt fast (lärstigens "Steg 2 — utan kvotreglering", som
+      // demonstrerar PROBLEMET en drivande, okontrollerad signal ger innan
+      // lösningen visas i Steg 3). Väktaren `base > 0` (inte bara `rc`
+      // truthy) är avsiktlig: syncParamsFromUI() skriver ratioControl till
+      // VARJE scenario (samma mönster som gainSchedule/nonlinearGain redan
+      // gör), så utan den skulle gaussian(this.rng) konsumera slumptal på
+      // VARJE steg i ALLA scenarier så fort UI:t synkats en enda gång —
+      // ett tyst RNG-läckage som skulle rubba brusmodellens (noiseStd)
+      // reproducerbarhet i helt orelaterade scenarier. Ett scenario vars
+      // bas-nivå aldrig konfigurerats (default 0, se hydrateFields) förblir
+      // därför en fullständig no-op, precis som auxGain/Kff.
+      //
+      // SP = kvot × flöde A skrivs TILLBAKA till scenario.runtime.setpoint
+      // (samma fält alla lägen redan läser, ingen ny parallell SP-källa)
+      // — men BARA när kvotregleringen är uttryckligen aktiverad
+      // (rc.enabled, "Steg 3"). Görs OBEROENDE av regulatorläge (till
+      // skillnad från Kff/gainSchedule, som bara gäller p/pi/pid) eftersom
+      // SP självt redan används av samtliga lägen (onoff:s hysteresgränser,
+      // manuellts felvisning) — se STRAT-006 avsnitt 3.
+      const rc = this.scenario.ratioControl;
+      if (rc?.wildFlow?.base > 0) {
+        const base = rc.wildFlow.base;
+        const volatility = rc.wildFlow.volatility ?? 0;
+        const minFlow = base * 0.5, maxFlow = base * 1.5;
+        this.wildFlow = Math.min(maxFlow, Math.max(minFlow, this.wildFlow + gaussian(this.rng) * volatility));
+        if (rc.enabled) this.scenario.runtime.setpoint = (rc.ratio || 0) * this.wildFlow;
+      }
       const sp = this.scenario.runtime.setpoint;
       const pv = this.process.y;
       const mode = this.scenario.controller.mode;
@@ -241,7 +292,7 @@
       const y = this.process.step(ctrl.u, this.dt, disturbance, this.auxValue);
       this.stepNo += 1;
       const t = this.stepNo * this.dt;
-      this.history.t.push(t); this.history.y.push(y); this.history.sp.push(sp); this.history.u.push(ctrl.u); this.history.e.push(ctrl.error); this.history.p.push(ctrl.pTerm || 0); this.history.i.push(ctrl.iTerm || 0); this.history.d.push(ctrl.dTerm || 0); this.history.aux.push(this.auxValue);
+      this.history.t.push(t); this.history.y.push(y); this.history.sp.push(sp); this.history.u.push(ctrl.u); this.history.e.push(ctrl.error); this.history.p.push(ctrl.pTerm || 0); this.history.i.push(ctrl.iTerm || 0); this.history.d.push(ctrl.dTerm || 0); this.history.aux.push(this.auxValue); this.history.wildFlow.push(this.wildFlow);
       return { t: t, y: y, u: ctrl.u, e: ctrl.error };
     }
     run(n) { const frames = []; for (let i = 0; i < n; i += 1) { const f = this.step(); if (!f) break; frames.push(f); } return frames; }

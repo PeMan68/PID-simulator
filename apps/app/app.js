@@ -120,7 +120,13 @@ const fields = {
   // FEAT-042 — Olinjär ventilkarakteristik (processens K-schema, keyed på u)
   nonlinearGainEnabled: document.getElementById("nonlinearGainEnabled"),
   ngBreak1: document.getElementById("ngBreak1"), ngBreak2: document.getElementById("ngBreak2"),
-  ngZ1K: document.getElementById("ngZ1K"), ngZ2K: document.getElementById("ngZ2K"), ngZ3K: document.getElementById("ngZ3K")
+  ngZ1K: document.getElementById("ngZ1K"), ngZ2K: document.getElementById("ngZ2K"), ngZ3K: document.getElementById("ngZ3K"),
+  // FEAT-048 — Kvotreglering: SP_B = Kvot × Flöde A (Flöde A = "vilt", varierar
+  // kontinuerligt, se sim-core.js). ratioControlEnabled/ratio i Regulator-
+  // konfiguration; wildFlowBase/wildFlowVolatility (processens egenskaper hos
+  // det vilda flödet, inte regulatorn) i Processinställning.
+  ratioControlEnabled: document.getElementById("ratioControlEnabled"), ratio: document.getElementById("ratio"),
+  wildFlowBase: document.getElementById("wildFlowBase"), wildFlowVolatility: document.getElementById("wildFlowVolatility")
 };
 
 let currentScenario = null;
@@ -142,9 +148,12 @@ let currentScenarioRef = null; // senast laddade scenariots FIL-referens (t.ex. 
 
 function appendLog(line) { logEl.textContent += line + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 function fitCanvas() { const w = Math.max(680, chartCanvas.clientWidth); if (chartCanvas.width !== w) chartCanvas.width = w; }
-function drawSeries(ctx, points, color, dashed) {
+// FEAT-048 — width är valfri (default 2, oförändrat för alla befintliga
+// anrop) så en sekundär, stödjande signal (Flöde A) kan ritas TUNNARE än
+// PV/SP/u — visuellt underordnad utan att vara en helt ny ritfunktion.
+function drawSeries(ctx, points, color, dashed, width = 2) {
   if (!points.length) return;
-  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash(dashed ? [6, 4] : []);
+  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dashed ? [6, 4] : []);
   ctx.moveTo(points[0].x, points[0].y);
   for (let i = 1; i < points.length; i += 1) ctx.lineTo(points[i].x, points[i].y);
   ctx.stroke(); ctx.setLineDash([]);
@@ -156,6 +165,12 @@ function drawChart() {
   const w = chartCanvas.width, h = chartCanvas.height;
   const pad = { left: 52, right: 16, top: 14, bottom: 28 };
   const t = sim.history.t, y = sim.history.y, sp = sim.history.sp, u = sim.history.u;
+  // FEAT-048 (komplettering, PO 2026-09-24) — lyft till funktionsnivå (var
+  // tidigare lokal för linjeritningsblocket) så BÅDE grafens Flöde A-linje
+  // OCH Mätlägets crosshair kan återanvända samma "är kvotreglering aktiv
+  // och relevant just nu"-villkor, istället för att duplicera det.
+  const wildFlow = sim.history.wildFlow;
+  const hasWildFlow = sim.scenario.ratioControl?.wildFlow?.base > 0 && wildFlow && wildFlow.length === t.length;
   const tFull = Math.max(1, t[t.length - 1] || 1);
   const tStart = zoomView ? zoomView.start : 0;
   const tMax   = zoomView ? zoomView.end   : tFull;
@@ -255,14 +270,41 @@ function drawChart() {
   ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
-  // FEAT-045 (användartest, punkt 5) — lastsignalen ritas INTE längre som en
-  // egen graflinje: den delar PV/SP-panelens 0–100-skala, och ett negativt
-  // lastvärde (t.ex. värmeväxlar-exemplets −20) hamnade då UTANFÖR panelens
-  // klippta yta och blev helt osynlig. Lastens nivå visas istället i
-  // statusraden (se updateStatus()) — en siffra är otvetydig oavsett tecken,
-  // till skillnad från en linjeposition på en skala den inte passar i.
-  // Markeringslinjen vid triggning (sim.history.markers, "Last → -20")
-  // fungerar oförändrat och är den huvudsakliga tidsreferensen i grafen.
+  // FEAT-045 (användartest, punkt 5) — lastsignalen (auxValue) ritas
+  // FORTFARANDE INTE som egen graflinje: den kan bli negativ (se
+  // värmeväxlar-exemplet, −20) och hamnar då helt utanför panelens klippta
+  // yta. Visas i statusraden istället (se updateStatus()).
+  //
+  // FEAT-048 användartest (PO, 2026-09-24) — Flöde A (kvotregleringens
+  // "vilda" signal) ritas DÄREMOT som en egen linje: till skillnad från
+  // Last kan den aldrig bli negativ eller nå 0 medan den vandrar (klippt
+  // till ±50% av en bas-nivå > 0 i step()), så den slipper Lastens problem.
+  // PO:s uttryckliga mål efter användartestet: sambandet Flöde A → SP_B →
+  // PV_B ska synas TIDSMÄSSIGT, inte bara som en ögonblicksbild i
+  // statusraden — det kräver en linje i samma panel/skala som SP, inte en
+  // separat panel (då hade jämförelsen krävt att blicken hoppade mellan
+  // två grafer istället för att se en kurva forma den andra direkt ovanför).
+  // Tunnare (width=1) än PV/SP och en annan färg (inget av blått/rött/
+  // grönt/lila/orange/turkos som redan används av andra hjälplinjer) så
+  // den läses som stödjande kontext, inte en tredje huvudsignal att tävla
+  // med PV/SP om uppmärksamheten. Ritas BARA när flöde A faktiskt är
+  // konfigurerat (samma bas>0-villkor som styr om det vandrar alls i
+  // sim-core.js) — annars en flat, meningslös linje på alla andra scenarier.
+  if (hasWildFlow) {
+    drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(wildFlow[i]) })), "#c2185b", true, 1);
+  }
+  // Legenden byggs om varje ritning istället för att vara statisk HTML, så
+  // Flöde A-raden bara syns när linjen faktiskt ritas (samma princip som
+  // resten av grafen — inget visas som inte är relevant för scenariot).
+  const legendEl = document.getElementById("chartLegend");
+  if (legendEl) {
+    //  ×2 (icke-brytande mellanslag), INTE vanliga mellanslag — annars
+    // kollapsar webbläsarens standard white-space-hantering dem till ett
+    // enda och äter upp den visuella luften mellan posterna (samma
+    // anledning till att HTML-varianten ursprungligen använde &nbsp;&nbsp;).
+    const gap = "  ";
+    legendEl.textContent = "Blå: PV" + gap + "Röd streckad: SP" + gap + "Grön: u" + (hasWildFlow ? gap + "Rosa streckad (tunn): Flöde A" : "");
+  }
   ctx.restore();
 
   ctx.save();
@@ -428,6 +470,18 @@ function drawChart() {
         const pvH = y[iNear] != null ? y[iNear] : 0;
         const uH = u[iNear] != null ? u[iNear] : 0;
 
+        // FEAT-048 komplettering (PO, 2026-09-24) — Mätlägets crosshair
+        // visar SP_B/Flöde A ENDAST när kvotreglering är aktiv (samma
+        // `hasWildFlow`-villkor som redan styr grafens Flöde A-linje) — för
+        // alla ÖVRIGA reglerstrategier är crosshairen medvetet oförändrad
+        // (samma tre rader, samma format, som innan denna komplettering).
+        // Målet (PO:s ord): studerande ska kunna avläsa reglerfel, jämföra
+        // SP_B mot PV_B, och analysera kvotregleringens noggrannhet — allt
+        // kräver SP_B punktvis vid en given tidpunkt, inte bara grafens
+        // visuella intryck.
+        const spH = hasWildFlow ? (sp[iNear] != null ? sp[iNear] : 0) : null;
+        const wildH = hasWildFlow ? (wildFlow[iNear] != null ? wildFlow[iNear] : 0) : null;
+
         ctx.save();
         ctx.strokeStyle = "rgba(30,30,30,0.38)"; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
         ctx.beginPath(); ctx.moveTo(mx, pad.top); ctx.lineTo(mx, h * 0.62); ctx.stroke();
@@ -437,6 +491,10 @@ function drawChart() {
         ctx.setLineDash([]);
 
         const lines = ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(1), "u  = " + uH.toFixed(1)];
+        if (hasWildFlow) {
+          lines.push("SP_B    = " + spH.toFixed(1));
+          lines.push("Flöde A = " + wildH.toFixed(1));
+        }
         ctx.font = "11px Consolas, monospace";
         const lH = 15, pX = 7, pY = 5;
         const ttW = Math.max(...lines.map(s => ctx.measureText(s).width)) + pX * 2;
@@ -459,6 +517,12 @@ function drawChart() {
 function fmt1(v) {
   const s = v.toFixed(1);
   return s === "-0.0" ? "0.0" : s;
+}
+// FEAT-048 — kvoter (t.ex. 0,5) behöver mer precision än fmt1 ger (0,5 vs
+// t.ex. 0,48) för att skillnaden mellan avsedd och faktisk kvot ska synas.
+function fmt2(v) {
+  const s = v.toFixed(2);
+  return s === "-0.00" ? "0.00" : s;
 }
 // FEAT-043 — visar knappen "Fler steg" bara när scenariots aktiva tak faktiskt
 // är nått. Anropas efter varje händelse som kan ändra stepNo/maxSteps (steg,
@@ -573,7 +637,15 @@ function updateStatus() {
   // otvetydig siffra i statusraden istället för en graflinje (se drawChart()).
   // Bara synlig när lasten faktiskt är triggad (auxValue skiljer sig från 0).
   const auxInfo = sim.auxValue ? "  | Last: " + fmt1(sim.auxValue) + " (aktiv)" : "";
-  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning + scheduleInfo + auxInfo;
+  // FEAT-048 — samma "läsbar siffra i statusraden, ingen graflinje"-princip
+  // som Framkopplingens Last ovan (PO:s uttryckliga krav: studenten ska
+  // kunna observera kvoten direkt, inte behöva räkna ut den själv). Synlig
+  // så fort flöde A vandrar (sim.wildFlow är nollskilt bara då, se
+  // sim-core.js:s `base > 0`-väktare) — även när kvotregleringen inte är
+  // AKTIVERAD, eftersom lärstigens "utan kvotreglering"-steg specifikt
+  // behöver kunna visa flöde A och den glidande kvoten trots att SP är fast.
+  const ratioInfo = sim.wildFlow ? "  | Flöde A=" + fmt1(sim.wildFlow) + ", Flöde B=" + fmt1(s.y) + ", Kvot (faktisk)=" + fmt2(s.y / sim.wildFlow) : "";
+  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning + scheduleInfo + auxInfo + ratioInfo;
   updateZoneIndicators();
 }
 function hydrateFields(s) {
@@ -611,6 +683,15 @@ function hydrateFields(s) {
   fields.ngBreak2.value = ng?.breakpoint2 ?? 66;
   const ngZones = ng?.zones || [];
   [fields.ngZ1K, fields.ngZ2K, fields.ngZ3K].forEach((f, i) => { f.value = ngZones[i] ?? s.process.K; });
+  // FEAT-048 — Kvotreglering. wildFlowBase defaultar till 0 (INTE en
+  // "vänlig" siffra som ratio/volatility nedan) — se sim-core.js:s
+  // `rc.wildFlow?.base > 0`-väktare: 0 är den avsiktliga no-op-nivån som
+  // håller scenarier utan kvotreglering fria från all RNG-påverkan.
+  const rc = s.ratioControl;
+  fields.ratioControlEnabled.checked = !!(rc && rc.enabled);
+  fields.ratio.value = rc?.ratio ?? 0.5;
+  fields.wildFlowBase.value = rc?.wildFlow?.base ?? 0;
+  fields.wildFlowVolatility.value = rc?.wildFlow?.volatility ?? 2;
 }
 // GAM-002: kontext för aktivitetsprototypens försöks-/konfigurationsspårning —
 // lärstigssteg om en lärstig är aktiv, annars scenariot självt.
@@ -639,6 +720,12 @@ function deriveApplicationProfile(scenario) {
   // scenarier, så detta bredare villkor är riskfritt mot allt annat innehåll.
   if (scenario.auxSignal || scenario.controller.kff) return "temperatur"; // Framkoppling (FEAT-045) — bara byggt för Temperaturprocess hittills
   if (scenario.controller.gainSchedule?.enabled || scenario.process.nonlinearGain?.enabled) return "temperatur"; // Parameterstyrning/Ventilkarakteristik (FEAT-042) — samma
+  // FEAT-048 — Kvotreglering. Samma "base > 0"-gate som sim-core.js: derivera
+  // till Temperaturprocess så snart flöde A är KONFIGURERAT (inte bara när
+  // enabled=true) — annars skulle lärstigens eget "Steg 2 — utan
+  // kvotreglering" (enabled=false, base=50, avsiktligt för att visa flöde A
+  // variera fritt) dölja precis de fält studenten ska kunna inspektera.
+  if (scenario.ratioControl?.wildFlow?.base > 0) return "temperatur";
   if (scenario.process.type === "integrating") return "niva";
   // UX-002_SYNLIGHETSGRANSKNING.md avsnitt 1 — on/off har ingen egen
   // tillämpning längre (fel axel, se APPLICATION_PROFILES-kommentaren);
@@ -700,6 +787,12 @@ function markerSnapshot(scenario) {
     // ingen ändring behöver detekteras, inte VAD som ändrades i detalj).
     gainSchedule: JSON.stringify(scenario.controller.gainSchedule || null),
     nonlinearGain: JSON.stringify(scenario.process.nonlinearGain || null),
+    // FEAT-048 — samma jämförbarhetsprincip som gainSchedule/nonlinearGain.
+    // Fångar bara KONFIGURATIONEN (enabled/ratio/wildFlow-inställningar), INTE
+    // det löpande beräknade SP-värdet självt (det hör redan hemma i `sp` ovan)
+    // — annars skulle kvotregleringens egen, AVSEDDA SP-rörelse varje steg
+    // felaktigt synas som en "ändring" här också.
+    ratioControl: JSON.stringify(scenario.ratioControl ? { enabled: scenario.ratioControl.enabled, ratio: scenario.ratioControl.ratio, wildFlow: scenario.ratioControl.wildFlow } : null),
   };
 }
 function modeLabel(modeValue) {
@@ -715,6 +808,7 @@ function describeMarkerChange(a, b) {
   if (a.gainSchedule !== b.gainSchedule) return "Parameterstyrning ändrad";
   if (a.nonlinearGain !== b.nonlinearGain) return "Ventilkarakteristik ändrad";
   if (a.kff !== b.kff || a.auxGain !== b.auxGain) return "Framkoppling ändrad";
+  if (a.ratioControl !== b.ratioControl) return "Kvotreglering ändrad";
   return null;
 }
 function captureMarkerBaseline() {
@@ -817,6 +911,17 @@ function syncParamsFromUI() {
       zones: [readClamped(fields.ngZ1K, 0.001), readClamped(fields.ngZ2K, 0.001), readClamped(fields.ngZ3K, 0.001)],
     };
   }
+  // FEAT-048 — Kvotreglering. Alltid synkad (som gainSchedule/nonlinearGain
+  // ovan) — sim-core.js:s egen `wildFlow?.base > 0`-väktare (inte denna kod)
+  // håller scenarier som aldrig konfigurerat kvotreglering fria från
+  // RNG-påverkan, se motivering i sim-core.js. Kvot medvetet OKLIPPT
+  // (samma skäl som Kff) — en negativ kvot är fysikaliskt meningslös här,
+  // men inte appens sak att förhindra i fältet.
+  currentScenario.ratioControl = {
+    enabled: fields.ratioControlEnabled.checked,
+    ratio: Number(fields.ratio.value),
+    wildFlow: { base: readClamped(fields.wildFlowBase, 0), volatility: readClamped(fields.wildFlowVolatility, 0) },
+  };
 
   if (prevMode !== nextMode) {
     const bumplessOn = document.getElementById("bumpless").checked;
@@ -993,8 +1098,14 @@ function updateNonlinearGainUIState() {
 // fungerar lika bra på en integrerande process). OnOff är nu istället ett
 // giltigt Läge-val INOM varje tillämpning.
 const APPLICATION_PROFILES = {
-  avancerat:  { processModels: ["self_regulating", "self_regulating_2", "integrating"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
-  temperatur: { processModels: ["self_regulating", "self_regulating_2"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
+  // FEAT-048 (STRAT-006, PO-beslut 2026-09-24) — Kvotreglering är ett NYTT
+  // ADDON, inte en egen Tillämpning, samma princip som Framkoppling/
+  // Parameterstyrning/Ventilkarakteristik. Tillagt i samma profiler som
+  // framkoppling (Flöde B:s dynamik är en vanlig självreglerande process,
+  // exakt samma motivering STRAT-006 avsnitt 6 gav) — inte i niva, som
+  // idag saknar tillägg helt.
+  avancerat:  { processModels: ["self_regulating", "self_regulating_2", "integrating"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik", "kvotreglering"] },
+  temperatur: { processModels: ["self_regulating", "self_regulating_2"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik", "kvotreglering"] },
   niva:       { processModels: ["integrating"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: [] },
 };
 const APPLICATION_PROFILE_STORAGE_KEY = "pidSimApplicationProfile"; // UX-004 — se kommentaren ovanför APPLICATION_PROFILES
@@ -1038,6 +1149,16 @@ function updateKffVisibility() {
   document.querySelectorAll('[data-addon="framkoppling"]').forEach(el => {
     el.classList.toggle("addon-hidden", !visible);
   });
+}
+// FEAT-048 — SP-fältet är verkningslöst när kvotreglering är aktiverad
+// (sim-core.js skriver över scenario.runtime.setpoint varje steg, se
+// Simulation.step()) — inaktiverat (INTE dolt, till skillnad från addon-
+// döljningen ovan) så studenten fortfarande kan SE senaste SP-värdet, bara
+// inte redigera ett fält som ändå ignoreras. Till skillnad från Kff är
+// detta INTE lägesberoende — SP läses av samtliga regulatorlägen
+// (onoff:s hysteresgränser, manuellts felvisning), se STRAT-006 avsnitt 3.
+function updateRatioControlUIState() {
+  fields.sp.disabled = fields.ratioControlEnabled.checked;
 }
 function applyApplicationProfile() {
   const profile = APPLICATION_PROFILES[fields.applicationProfile.value] || APPLICATION_PROFILES.avancerat;
@@ -1084,6 +1205,14 @@ function applyApplicationProfile() {
   if (!profile.addons.includes("parameterstyrning")) fields.gainScheduleEnabled.checked = false;
   if (!profile.addons.includes("ventilkarakteristik")) fields.nonlinearGainEnabled.checked = false;
   if (!profile.addons.includes("framkoppling")) fields.kff.value = 0;
+  // FEAT-048 — wildFlowBase (INTE bara checkboxen) måste nollställas: det är
+  // `base > 0`, inte `enabled`, som avgör om flöde A vandrar i sim-core.js
+  // (se den funktionens kommentar) — annars skulle kvotregleringen fortsätta
+  // konsumera slumptal osynligt i bakgrunden efter ett tillämpningsbyte,
+  // exakt den typen av "dolt men fortfarande aktivt"-bugg PO:s FEAT-042-
+  // granskning redan en gång fällde för Parameterstyrning.
+  if (!profile.addons.includes("kvotreglering")) { fields.ratioControlEnabled.checked = false; fields.wildFlowBase.value = 0; }
+  updateRatioControlUIState();
   updateGainScheduleUIState();
   updateControllerUIState(); // synkar Läge-beroende fält (inkl. Bumpless och Kff) om Läge tvingades om
   updateProcessUIState();
@@ -1516,16 +1645,19 @@ fields.showPB.addEventListener("change", drawChart);
 // innan ett steg körts, samma motivering som kp/sp/hysteres ovan.
 [fields.gsBreak1, fields.gsBreak2, fields.gsZ1Kp, fields.gsZ1Ti, fields.gsZ1Td,
  fields.gsZ2Kp, fields.gsZ2Ti, fields.gsZ2Td, fields.gsZ3Kp, fields.gsZ3Ti, fields.gsZ3Td,
- fields.ngBreak1, fields.ngBreak2, fields.ngZ1K, fields.ngZ2K, fields.ngZ3K].forEach(f => {
+ fields.ngBreak1, fields.ngBreak2, fields.ngZ1K, fields.ngZ2K, fields.ngZ3K,
+ fields.ratio, fields.wildFlowBase, fields.wildFlowVolatility].forEach(f => {
   f.addEventListener("change", () => { syncParamsFromUI(); drawChart(); });
 });
 fields.gainScheduleEnabled.addEventListener("change", () => { updateGainScheduleUIState(); syncParamsFromUI(); drawChart(); });
 fields.nonlinearGainEnabled.addEventListener("change", () => { updateNonlinearGainUIState(); syncParamsFromUI(); drawChart(); });
+fields.ratioControlEnabled.addEventListener("change", () => { updateRatioControlUIState(); syncParamsFromUI(); drawChart(); });
 // GAM-002: tunt, tillagt lyssnarpar enbart för aktivitetsloggning — rör inte
 // appens egen parameterhantering ovan/i syncParamsFromUI().
 [["k", fields.k], ["t", fields.t], ["l", fields.l], ["auxGain", fields.auxGain], ["kp", fields.kp], ["ti", fields.ti], ["td", fields.td], ["kff", fields.kff],
  ["sp", fields.sp], ["umin", fields.umin], ["umax", fields.umax], ["manualOutput", fields.manualOutput],
- ["noise", fields.noise], ["pulseMag", fields.pulseMag], ["pulseDuration", fields.pulseDuration], ["auxMag", fields.auxMag]]
+ ["noise", fields.noise], ["pulseMag", fields.pulseMag], ["pulseDuration", fields.pulseDuration], ["auxMag", fields.auxMag],
+ ["ratio", fields.ratio], ["wildFlowBase", fields.wildFlowBase], ["wildFlowVolatility", fields.wildFlowVolatility]]
   .forEach(pair => {
     const name = pair[0], el = pair[1];
     el.addEventListener("change", () => {
@@ -1637,8 +1769,8 @@ document.getElementById("triggerAux").addEventListener("click", () => {
   drawChart();
   activityDispatch("disturbance_triggered", { contextKey: activityContextKey(), field: "auxSignal" });
 });
-document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
-document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], wildFlow: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], wildFlow: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
