@@ -23,7 +23,7 @@
       "comparisonGroup": "pb-kp-escalation",
       "title": "Stort PB — försiktig regulator",
       "objective": "Se hur ett stort proportionalband ger en försiktig, långsam regulator med stort kvarstående fel.",
-      "instruction": "Ändra Kp till 0.5 (PB blir då 200%). Aktivera kryssrutan 'Visa PB' i Regulator-gruppen — ett lila skuggat område och en streckad linje visas i grafen.\n\nKör minst 30 steg. PV planar ut väl innan dess.\n\nNotera var PV stabiliserar sig och var PB-linjen (u=100%-nivån) ligger i förhållande till SP.",
+      "instruction": "Ändra Kp till 0.5 (PB blir då 200%). Aktivera kryssrutan 'Visa PB' ovanför grafen — ett lila skuggat område och en streckad linje visas i grafen.\n\nKör minst 30 steg. PV planar ut väl innan dess.\n\nNotera var PV stabiliserar sig och var PB-linjen (u=100%-nivån) ligger i förhållande till SP.",
       "checkpoint": {
         "question": "Den streckade PB-linjen i grafen markerar var u = 100%. Vad betyder det?",
         "options": [

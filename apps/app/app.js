@@ -4,7 +4,7 @@
    Simulation kommer från sim-core.js (laddas som separat <script> före
    denna fil) — se apps/app/sim-core.js. Delad med tests/simulation/. */
 
-const APP_VERSION = "1.5.5";
+const APP_VERSION = "1.6.0";
 
 /* ENV_CONFIG sätts av env.js (laddas som separat <script> FÖRE denna fil,
    se index.html och docs/development/ENVIRONMENTS.md). Fallback här är en
@@ -89,14 +89,26 @@ const learnBody = document.getElementById("learnBody");
 const btnExtendSteps = document.getElementById("btnExtendSteps");
 
 const fields = {
+  // UX-002 — Tillämpning (styr vilka processmodeller/strategitillägg som visas, se applyApplicationProfile())
+  applicationProfile: document.getElementById("applicationProfile"),
   processType: document.getElementById("processType"),
   k: document.getElementById("k"), t: document.getElementById("t"), l: document.getElementById("l"),
   normalValue: document.getElementById("normalValue"),
   outflow: document.getElementById("outflow"),
+  // FEAT-045 — Framkoppling: processens egen lastförstärkning
+  auxGain: document.getElementById("auxGain"),
   kp: document.getElementById("kp"), ti: document.getElementById("ti"), td: document.getElementById("td"),
+  // FEAT-045 — Framkoppling: regulatorns framkopplingsförstärkning (kan vara negativ)
+  kff: document.getElementById("kff"),
   sp: document.getElementById("sp"), umin: document.getElementById("umin"), umax: document.getElementById("umax"),
   manualOutput: document.getElementById("manualOutput"),
-  mode: document.getElementById("mode"), noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"), pulseDuration: document.getElementById("pulseDuration"), showPB: document.getElementById("showPB"),
+  mode: document.getElementById("mode"),
+  // UX-004 Justering 4 — synliga Läge-kontroller (mode ovan förblir den dolda
+  // interna sanningskällan, se updateControllerUIState()/mode-lyssnaren)
+  regulatorType: document.getElementById("regulatorType"), autoManualToggle: document.getElementById("autoManualToggle"),
+  noise: document.getElementById("noise"), pulseMag: document.getElementById("pulseMag"), pulseDuration: document.getElementById("pulseDuration"), showPB: document.getElementById("showPB"),
+  // FEAT-045 — Framkoppling: den mätbara lastens triggade nivå
+  auxMag: document.getElementById("auxMag"),
   hysteresLower: document.getElementById("hysteresLower"), hysteresUpper: document.getElementById("hysteresUpper"),
   antiWindup: document.getElementById("antiWindup"),
   // FEAT-042 — Parameterstyrning (regulatorns kp/ti/td-schema, keyed på PV)
@@ -243,6 +255,14 @@ function drawChart() {
   ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
+  // FEAT-045 (användartest, punkt 5) — lastsignalen ritas INTE längre som en
+  // egen graflinje: den delar PV/SP-panelens 0–100-skala, och ett negativt
+  // lastvärde (t.ex. värmeväxlar-exemplets −20) hamnade då UTANFÖR panelens
+  // klippta yta och blev helt osynlig. Lastens nivå visas istället i
+  // statusraden (se updateStatus()) — en siffra är otvetydig oavsett tecken,
+  // till skillnad från en linjeposition på en skala den inte passar i.
+  // Markeringslinjen vid triggning (sim.history.markers, "Last → -20")
+  // fungerar oförändrat och är den huvudsakliga tidsreferensen i grafen.
   ctx.restore();
 
   ctx.save();
@@ -416,7 +436,7 @@ function drawChart() {
         }
         ctx.setLineDash([]);
 
-        const lines = ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(2), "u  = " + uH.toFixed(2)];
+        const lines = ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(1), "u  = " + uH.toFixed(1)];
         ctx.font = "11px Consolas, monospace";
         const lH = 15, pX = 7, pY = 5;
         const ttW = Math.max(...lines.map(s => ctx.measureText(s).width)) + pX * 2;
@@ -549,16 +569,23 @@ function updateStatus() {
   if (processZone !== null) {
     scheduleInfo += "  | K-zon " + (processZone + 1) + " (K=" + fmt1(currentScenario.process.nonlinearGain.zones[processZone]) + ")";
   }
-  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning + scheduleInfo;
+  // FEAT-045 (användartest, punkt 5) — lastens aktuella nivå, som en
+  // otvetydig siffra i statusraden istället för en graflinje (se drawChart()).
+  // Bara synlig när lasten faktiskt är triggad (auxValue skiljer sig från 0).
+  const auxInfo = sim.auxValue ? "  | Last: " + fmt1(sim.auxValue) + " (aktiv)" : "";
+  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning + scheduleInfo + auxInfo;
   updateZoneIndicators();
 }
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;
+  fields.auxGain.value = s.process.auxGain ?? 0;
   fields.normalValue.value = s.process.normalValue ?? 0;
   fields.kp.value = s.controller.kp || 0; fields.ti.value = s.controller.ti || 0; fields.td.value = s.controller.td || 0;
+  fields.kff.value = s.controller.kff ?? 0;
   fields.manualOutput.value = s.controller.manualOutput ?? 0;
   fields.sp.value = s.runtime.setpoint; fields.umin.value = s.controller.outputLimits.min; fields.umax.value = s.controller.outputLimits.max;
   fields.mode.value = s.controller.mode; fields.noise.value = s.disturbance.noiseStd || 0; fields.pulseMag.value = s.disturbance.pulse.magnitude || 0; fields.pulseDuration.value = s.disturbance.pulse.durationSteps || 3;
+  fields.auxMag.value = s.auxSignal?.magnitude ?? 0;
   fields.hysteresLower.value = s.controller.hysteresis?.lower ?? 2;
   fields.hysteresUpper.value = s.controller.hysteresis?.upper ?? 2;
   fields.antiWindup.checked = s.controller.antiWindup !== false;
@@ -591,6 +618,35 @@ function activityContextKey() {
   if (currentPath && currentPathStep >= 0) return currentPathId + "#" + currentPathStep;
   return currentScenario ? currentScenario.id : null;
 }
+// UX-002 (PO:s granskningsobservation 2) — härleder vilken Tillämpning som
+// matchar ett scenario, rent utifrån data som redan finns i scenariot (inget
+// nytt scenariofält). Körs vid VARJE scenarioladdning (lärstig OCH manuellt
+// val i scenario-listan, se loadScenarioByName()) — garanterar att
+// Tillämpning + Processmodell + strategitillägg alltid är en sammanhängande
+// kombination, aldrig kvarlämnad från ett tidigare, orelaterat scenario.
+function deriveApplicationProfile(scenario) {
+  // UX-004 Justering 3 (PO-beslut 2026-09-21) — Last (auxSignal) är numera en
+  // generell processpåverkan, inte längre exklusiv för Framkoppling (se
+  // updateKffVisibility()): ett auxSignal ENSAMT bevisar inte längre att ett
+  // scenario "handlar om" Framkoppling (Last-fälten är synliga oavsett
+  // Tillämpning nu). Ändå behålls auxSignal HÄR som signal, tillsammans med
+  // Kff — inte för att Last kräver Temperaturprocess, utan för att
+  // framkoppling.v1s FÖRSTA steg (framkoppling-demo-pid.json) medvetet har
+  // kff=0 ("PID ensam", innan Kff introduceras i steg 2/3) men ÄNDÅ ska
+  // härledas till SAMMA Tillämpning som lärstigens övriga två steg — annars
+  // hoppar Tillämpning-väljaren mitt i en sammanhållen 3-stegs progression.
+  // Verifierat: idag är auxSignal ENDAST satt av framkoppling.v1s fyra
+  // scenarier, så detta bredare villkor är riskfritt mot allt annat innehåll.
+  if (scenario.auxSignal || scenario.controller.kff) return "temperatur"; // Framkoppling (FEAT-045) — bara byggt för Temperaturprocess hittills
+  if (scenario.controller.gainSchedule?.enabled || scenario.process.nonlinearGain?.enabled) return "temperatur"; // Parameterstyrning/Ventilkarakteristik (FEAT-042) — samma
+  if (scenario.process.type === "integrating") return "niva";
+  // UX-002_SYNLIGHETSGRANSKNING.md avsnitt 1 — on/off har ingen egen
+  // tillämpning längre (fel axel, se APPLICATION_PROFILES-kommentaren);
+  // ett generiskt on/off-scenario (t.ex. onoff-basic.json, ingen substans-
+  // berättelse) härleds därför till Avancerat precis som appens andra
+  // generiska scenarier.
+  return "avancerat";
+}
 function loadScenarioByName(name) {
   if (measureMode) exitMeasureMode();
   zoomView = null; pvZoomView = null;
@@ -599,10 +655,31 @@ function loadScenarioByName(name) {
   sim = new Simulation(currentScenario, 42);
   sim.history.markers = [];
   hydrateFields(currentScenario);
+  fields.applicationProfile.value = deriveApplicationProfile(currentScenario);
+  // PO-beslut 2026-09-22 — kom-igång.v1 ska konsekvent starta i
+  // Temperaturprocess, inte i det härledda "Avancerat" (dess generiska
+  // scenarier saknar särskiljande signaler, se deriveApplicationProfile()),
+  // eftersom Avancerat annars tvingar alla Avancerat-sektioner öppna för en
+  // helt ny användares FÖRSTA lärstig — direkt emot UX-004:s mål om
+  // progressiv exponering. Samma infrastruktur och samma stalenessvakt
+  // (currentPath && currentPathStep >= 0) som visibilityOverride — se dess
+  // kommentar för varför vakten behövs (annars läcker en lärstigs override
+  // till ett senare, manuellt valt scenario).
+  if (currentPath && currentPathStep >= 0 && currentPath.forceApplicationProfile) {
+    fields.applicationProfile.value = currentPath.forceApplicationProfile;
+  }
+  applyApplicationProfile(); // filtrerar Processmodell-alternativen/tilläggen åt den härledda (eller lärstigs-tvingade) Tillämpningen, och synkar om processType-beroende fält
   captureMarkerBaseline();
   appendLog("Laddat scenario: " + currentScenario.id);
   updateControllerUIState();
-  updateProcessUIState();
+  // UX-004 — updateControllerUIState() ovan anropar internt
+  // updateKffVisibility(), som härleder Kff-synlighet ENBART från Tillämpning
+  // + Läge och därför skriver över (upptäckt vid webbläsarverifiering, se
+  // UX-004 Implementering) en aktiv lärstigs visibilityOverride satt av det
+  // TIDIGARE anropet till applyApplicationProfile() ovan. Måste därför
+  // upprepas HÄR, som allra sista steget, precis som i
+  // applyApplicationProfile() självt.
+  applyPathVisibilityOverride();
   updateStatus(); updateStepLimitUI(); drawChart();
   activityDispatch("scenario_loaded", { scenarioId: currentScenario.id, contextKey: activityContextKey() });
 }
@@ -617,6 +694,8 @@ function markerSnapshot(scenario) {
     kp: scenario.controller.kp, ti: scenario.controller.ti, td: scenario.controller.td,
     sp: scenario.runtime.setpoint, noise: scenario.disturbance.noiseStd,
     k: scenario.process.K, t: scenario.process.T, l: scenario.process.L, processType: scenario.process.type,
+    // FEAT-045 — samma jämförbarhetsprincip som gainSchedule/nonlinearGain nedan.
+    kff: scenario.controller.kff, auxGain: scenario.process.auxGain,
     // FEAT-042 — hela schemat som en jämförbar sträng räcker (bara ändring/
     // ingen ändring behöver detekteras, inte VAD som ändrades i detalj).
     gainSchedule: JSON.stringify(scenario.controller.gainSchedule || null),
@@ -635,6 +714,7 @@ function describeMarkerChange(a, b) {
   if (a.k !== b.k || a.t !== b.t || a.l !== b.l || a.processType !== b.processType) return "Process ändrad";
   if (a.gainSchedule !== b.gainSchedule) return "Parameterstyrning ändrad";
   if (a.nonlinearGain !== b.nonlinearGain) return "Ventilkarakteristik ändrad";
+  if (a.kff !== b.kff || a.auxGain !== b.auxGain) return "Framkoppling ändrad";
   return null;
 }
 function captureMarkerBaseline() {
@@ -666,11 +746,18 @@ function syncParamsFromUI() {
   currentScenario.process.L = readClamped(fields.l, 0);
   currentScenario.process.normalValue = Number(fields.normalValue.value);
   currentScenario.process.outflow = readClamped(fields.outflow, 0);
+  // FEAT-045 — processens egen lastförstärkning. Alltid synkad (som outflow
+  // ovan), oberoende av om scenariot triggar en last eller ej — utan ett
+  // triggat auxSignal-värde (0) har den ingen effekt (se ProcessModel.step()).
+  currentScenario.process.auxGain = Number(fields.auxGain.value);
   const noTi = nextMode === "p" || nextMode === "manual" || nextMode === "onoff";
   const noTd = nextMode === "p" || nextMode === "pi" || nextMode === "manual" || nextMode === "onoff";
   currentScenario.controller.kp = readClamped(fields.kp, 0.1);
   currentScenario.controller.ti = noTi ? 0 : readClamped(fields.ti, 0);
   currentScenario.controller.td = noTd ? 0 : readClamped(fields.td, 0);
+  // FEAT-045 — framkopplingsförstärkning. Medvetet OKLIPPT (till skillnad
+  // från kp ovan) — Kff kan vara negativt, se STRAT-005 avsnitt 6/help.json.
+  currentScenario.controller.kff = Number(fields.kff.value);
   currentScenario.controller.manualOutput = readClamped(fields.manualOutput, 0, 100);
   currentScenario.runtime.setpoint = readClamped(fields.sp, 0, 100);
   const safeUmin = clamp(Number(fields.umin.value), 0, 100);
@@ -683,6 +770,18 @@ function syncParamsFromUI() {
   currentScenario.disturbance.noiseStd = readClamped(fields.noise, 0);
   currentScenario.disturbance.pulse.magnitude = Number(fields.pulseMag.value);
   currentScenario.disturbance.pulse.durationSteps = Math.max(0, Number(fields.pulseDuration.value));
+  // FEAT-045 — auxSignal (mätbar last) skapas bara i scenariot om fältet
+  // faktiskt används (redan satt av scenariofilen, eller ett nollskilt värde
+  // manuellt inskrivet) — INTE defensivt för alla scenarier, till skillnad
+  // från auxGain/kff ovan. Annars skulle grafens lastlinje (drawChart, se
+  // STRAT-005 avsnitt 4) börja ritas som en flat 0-linje på alla ~40
+  // befintliga scenarier så fort ETT UI-fält synkas, inte bara de scenarier
+  // som faktiskt demonstrerar framkoppling.
+  const auxMagVal = Number(fields.auxMag.value);
+  if (currentScenario.auxSignal || auxMagVal !== 0) {
+    if (!currentScenario.auxSignal) currentScenario.auxSignal = {};
+    currentScenario.auxSignal.magnitude = auxMagVal;
+  }
   if (!currentScenario.controller.hysteresis) currentScenario.controller.hysteresis = {};
   currentScenario.controller.hysteresis.lower = readClamped(fields.hysteresLower, 0);
   currentScenario.controller.hysteresis.upper = readClamped(fields.hysteresUpper, 0);
@@ -776,7 +875,17 @@ function updateControllerUIState() {
   const isPI = mode === "pi";
   const isManual = mode === "manual";
   const isOnOff = mode === "onoff";
-  
+
+  // UX-004 Justering 4 — synka de SYNLIGA Läge-kontrollerna (Regulatortyp +
+  // Auto/Manuell-togglen) med #mode (dold, den interna sanningskällan),
+  // oavsett VILKEN väg mode.value ändrades (scenarioladdning, lärstig,
+  // Tillämpningsbyte, eller de nya kontrollerna själva). Vid mode==="manual"
+  // lämnas regulatorType.value orört — det ÄR minnet av "senaste automatiska
+  // typ", ingen egen variabel behövs (samma typ återställs vid nästa
+  // Auto-växling).
+  if (!isManual) fields.regulatorType.value = mode;
+  fields.autoManualToggle.checked = isManual;
+
   // Enable/disable fields based on mode
   fields.kp.disabled = isManual || isOnOff;
   fields.kp.parentElement.style.display = (isManual || isOnOff) ? "none" : "";
@@ -790,6 +899,11 @@ function updateControllerUIState() {
   fields.td.parentElement.style.display = (isP || isPI || isManual || isOnOff) ? "none" : "";
   fields.manualOutput.parentElement.style.display = isManual ? "" : "none";
   fields.antiWindup.parentElement.style.display = noIntegral ? "none" : "";
+  // PO:s granskning (2026-09-20) — Bumpless styr bara mjuk övergång VID
+  // BYTE till p/pi/pid/manuell (se syncParamsFromUI()/mode-lyssnaren) — den
+  // har INGEN effekt för OnOff (ingen bias/Kp att fasa in), så kryssrutan är
+  // missvisande att visa (och lämna ikryssad) i det läget.
+  document.getElementById("bumpless").parentElement.style.display = isOnOff ? "none" : "";
   fields.hysteresLower.parentElement.style.display = isOnOff ? "" : "none";
   fields.hysteresUpper.parentElement.style.display = isOnOff ? "" : "none";
   fields.showPB.parentElement.style.display = (isOnOff || isManual) ? "none" : "";
@@ -798,6 +912,10 @@ function updateControllerUIState() {
   document.getElementById("gainScheduleField").style.display = noIntegral ? "none" : "";
   if (noIntegral) fields.gainScheduleEnabled.checked = false;
   updateGainScheduleUIState();
+  // UX-002_SYNLIGHETSGRANSKNING.md avsnitt 2.1 — Kff kräver P/PI/PID (se
+  // updateKffVisibility()); räknas om här så ett rent lägesbyte (utan
+  // tillämpningsbyte) också döljer/visar rätt.
+  updateKffVisibility();
 
   // Update controller parameters based on mode
   if (currentScenario && currentScenario.controller) {
@@ -845,6 +963,224 @@ function updateNonlinearGainUIState() {
   // FEAT-042 (PO-granskning, punkt 3) — se motsvarande kommentar i
   // updateGainScheduleUIState().
   updateZoneIndicators();
+}
+
+// UX-002 (UX-001 Fas 0) — Tillämpning: filtrerar vilka processmodeller som
+// erbjuds i Processmodell-väljaren (fields.processType) och vilka
+// strategitillägg (Framkoppling/Parameterstyrning/Ventilkarakteristik, se
+// data-addon-attribut i index.html) som visas. Döljer ALDRIG själva
+// Processmodell-väljaren eller dess begrepp — bara vilka ALTERNATIV som
+// erbjuds (PO:s uttryckliga pedagogiska krav, UX-001 avsnitt 1). UX-004
+// Justering 1 (PO-beslut 2026-09-21) — "Fri utforskning" heter numera
+// "Avancerat": kortare, mer etablerat begrepp, samma roll som tidigare
+// (expertläge, dagens fulla UI, helt ofiltrerad) men namnet gör även
+// kopplingen till UX-004s Avancerat-disklosyr tydlig — att välja denna
+// Tillämpning öppnar automatiskt ALLA Avancerat-sektioner också (se
+// deriveAdvancedOpen()). Senast MANUELLT valda Tillämpning sparas i
+// localStorage (APPLICATION_PROFILE_STORAGE_KEY, PO-uppdrag "UX-004
+// Implementering" 2026-09-22 — lärare/studerande återkommer ofta till samma
+// scenario över flera sessioner) och återställs vid nästa sidladdning INNAN
+// startscenariot annars skulle härlett "Avancerat" (se initUI()). Sparas
+// bara vid ett manuellt val (#applicationProfile-lyssnaren), INTE vid varje
+// scenario-/lärstigsstyrd omhärledning (deriveApplicationProfile() körs vid
+// varje scenarioladdning) — annars skulle nästa uppstart återspegla vilken
+// lärstig som råkade laddas sist, inte användarens egna, avsiktliga val.
+// UX-002_SYNLIGHETSGRANSKNING.md avsnitt 1 (PO-godkänd 2026-09-20) —
+// "Tvålägesreglering (On/Off)" fanns tidigare som en egen tillämpning, men
+// on/off är en REGULATORSTRATEGI (samma axel som Läge), inte en
+// processkontext (samma axel som Temperaturprocess/Nivåprocess) — fel axel,
+// och dess uteslutning av Integrerande saknade reglerteknisk grund (on/off
+// fungerar lika bra på en integrerande process). OnOff är nu istället ett
+// giltigt Läge-val INOM varje tillämpning.
+const APPLICATION_PROFILES = {
+  avancerat:  { processModels: ["self_regulating", "self_regulating_2", "integrating"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
+  temperatur: { processModels: ["self_regulating", "self_regulating_2"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: ["framkoppling", "parameterstyrning", "ventilkarakteristik"] },
+  niva:       { processModels: ["integrating"], modes: ["onoff", "p", "pi", "pid", "manual"], addons: [] },
+};
+const APPLICATION_PROFILE_STORAGE_KEY = "pidSimApplicationProfile"; // UX-004 — se kommentaren ovanför APPLICATION_PROFILES
+// Filtrerar ett <select>s <option>-ALTERNATIV till de tillåtna värdena —
+// väljaren själv döljs aldrig (samma princip för Processmodell som för
+// Läge). Returnerar true om nuvarande värde behövde bytas (inte längre
+// tillåtet), så anroparen kan trigga rätt uppföljande UI-uppdatering.
+function filterSelectOptions(selectEl, allowedValues) {
+  let currentValueAllowed = false;
+  Array.from(selectEl.options).forEach(opt => {
+    const allowed = allowedValues.includes(opt.value);
+    opt.hidden = !allowed;
+    if (opt.value === selectEl.value && allowed) currentValueAllowed = true;
+  });
+  if (!currentValueAllowed) selectEl.value = allowedValues[0];
+  return !currentValueAllowed;
+}
+// UX-004 Justering 3 (PO-beslut 2026-09-21) — Lastförstärkning/Last mag/
+// Trigga last är INTE längre exklusiva för Framkoppling: Last är en generell
+// processpåverkan (laststeg är lika användbart för ren regulatorprovning som
+// ett SP-steg, oavsett om Kff används) och har dessutom aldrig varit
+// lägesberoende i sim-core.js — auxGain×auxValue påverkar processen i
+// ProcessModel.step() OAVSETT regulatorläge, till skillnad från Kff (som
+// bara läses i PIDControllers p/pi/pid-gren). De tre fälten är alltså inte
+// längre `[data-addon="framkoppling"]` i index.html — bara alltid synliga,
+// som Puls/Brus.
+//
+// Kff är däremot kvar addon+läges-gated (UX-002_SYNLIGHETSGRANSKNING.md
+// avsnitt 2.1, fortsatt giltig ENDAST för Kff): den kräver BÅDE att
+// Tillämpningen tillåter Framkoppling OCH att Läget faktiskt använder Kff
+// (P/PI/PID — sim-core.js applicerar feedforward bara i den grenen). Egen
+// funktion (inte bara den generiska [data-addon]-loopen) eftersom det är
+// den enda kvarvarande kontrollen som behöver två villkor samtidigt.
+// Anropas både härifrån OCH från updateControllerUIState(), så ett rent
+// lägesbyte (utan tillämpningsbyte) också räknas om.
+function updateKffVisibility() {
+  const profile = APPLICATION_PROFILES[fields.applicationProfile.value] || APPLICATION_PROFILES.avancerat;
+  const mode = fields.mode.value;
+  const isPidFamily = mode === "p" || mode === "pi" || mode === "pid";
+  const visible = profile.addons.includes("framkoppling") && isPidFamily;
+  document.querySelectorAll('[data-addon="framkoppling"]').forEach(el => {
+    el.classList.toggle("addon-hidden", !visible);
+  });
+}
+function applyApplicationProfile() {
+  const profile = APPLICATION_PROFILES[fields.applicationProfile.value] || APPLICATION_PROFILES.avancerat;
+  filterSelectOptions(fields.processType, profile.processModels);
+  filterSelectOptions(fields.mode, profile.modes);
+  // UX-004 Justering 4 — regulatorType (synlig) filtreras med samma
+  // regellista MINUS "manual" (som inte är ett eget alternativ där längre,
+  // se Auto/Manuell-togglen). Filtrerar bara vilka ALTERNATIV som visas i
+  // rullgardinen — dess VÄRDE synkas alltid auktoritativt från #mode av
+  // updateControllerUIState() längre ner i denna funktion, oavsett vad en
+  // eventuell fallback här sätter (samma "en sanningskälla"-princip som
+  // resten av Tillämpnings-mekaniken).
+  filterSelectOptions(fields.regulatorType, profile.modes.filter(m => m !== "manual"));
+  // Visa/dölj Parameterstyrning/Ventilkarakteristik. CSS-klassen (inte
+  // style.display direkt) så att den alltid vinner över lägesbaserad
+  // style.display på samma element (t.ex. updateProcessUIState()s
+  // nonlinearGainField-hantering) — se [data-addon].addon-hidden i
+  // index.html. Kff (enda kvarvarande Framkopplings-addon-fältet) hanteras
+  // separat, se updateKffVisibility() ovan (kräver även rätt Läge).
+  document.querySelectorAll("[data-addon]").forEach(el => {
+    if (el.dataset.addon === "framkoppling") return;
+    el.classList.toggle("addon-hidden", !profile.addons.includes(el.dataset.addon));
+  });
+  updateKffVisibility();
+  // PO:s granskning (2026-09-20) — att bara DÖLJA ett tillägg räcker inte:
+  // dess effekt fortsatte gälla i simuleringen trots att kryssrutan/fältet
+  // blivit osynligt och oåtkomligt. Samma princip som redan fanns för
+  // lägesstyrd döljning (se updateControllerUIState()s
+  // "if (noIntegral) fields.gainScheduleEnabled.checked = false;") —
+  // tillämpad här också. Ingen omedelbar syncParamsFromUI()/omritning här
+  // (skulle kunna skapa en missvisande ändringsmarkering om detta körs
+  // precis efter en scenarioladdning, INNAN captureMarkerBaseline() hunnit
+  // sätta en ny baslinje) — nästa Stega/Kör-klick synkar bort det ändå,
+  // precis som lägesbyten redan gör. Vid ett MANUELLT tillämpningsbyte
+  // (den enda situationen där kvarvarande tillstånd annars märks) synkas
+  // och ritas om direkt i #applicationProfile-lyssnaren istället.
+  //
+  // UX-004 Justering 3 — Last (auxMag/sim.auxValue) och Lastförstärkning
+  // (auxGain) nollställs INTE längre här: de är inte längre en del av
+  // Framkopplings-tillägget (se updateKffVisibility()-kommentaren ovan),
+  // utan en generell processpåverkan som ska bestå oavsett vald Tillämpning
+  // — precis som Puls/Brus aldrig nollställs av ett tillämpningsbyte.
+  // Bara Kff (regulatorns eget, addon-specifika bidrag) nollställs.
+  if (!profile.addons.includes("parameterstyrning")) fields.gainScheduleEnabled.checked = false;
+  if (!profile.addons.includes("ventilkarakteristik")) fields.nonlinearGainEnabled.checked = false;
+  if (!profile.addons.includes("framkoppling")) fields.kff.value = 0;
+  updateGainScheduleUIState();
+  updateControllerUIState(); // synkar Läge-beroende fält (inkl. Bumpless och Kff) om Läge tvingades om
+  updateProcessUIState();
+  applyAdvancedState(); // UX-004 — härled Avancerat-status åt båda grupperna från (nya) currentScenario + Tillämpning
+  applyPathVisibilityOverride(); // UX-004 — lärstigsstyrd synlighet, sista och mest specifika lagret (se funktionens kommentar)
+}
+
+// UX-004 (PO-beslut 2026-09-21, docs/reports/UX-004_OMSTRUKTURERING-HUVUDYTA.md
+// avsnitt 4) — "Avancerat"-sektionens öppen/stängd-status härleds
+// AUTOMATISKT, samma princip som Tillämpning själv: ingen ny lärstigstaggning
+// krävs i normalfallet, bara i undantag (se forceAdvancedOpen nedan).
+//
+// Regel: en grupp öppnas om (a) vald Tillämpning är "avancerat" (Justering 1
+// — expertläge, allt synligt och redan uppackat), ELLER (b) scenariot har ett
+// AKTIVT värde i något av gruppens Avancerat-fält (samma signal som redan
+// avgör Tillämpning, se deriveApplicationProfile()), ELLER (c) scenariot
+// explicit ber om det via `forceAdvancedOpen` — ett litet, valfritt
+// undantagsfält FÖR DE FÅTAL lärstigar (idag: windup-antiwindup.v1) vars
+// ämne är en fält-EXISTENS (Anti-windup/Bumpless) snarare än ett avvikande
+// värde, och som därför aldrig skulle triggas av (b) — Anti-windup/Bumpless
+// är `true` i nästan alla scenarier (default, inte ett ämnessignal).
+function deriveAdvancedOpen(scenario, group) {
+  if (fields.applicationProfile.value === "avancerat") return true;
+  if (scenario?.forceAdvancedOpen?.includes(group)) return true;
+  if (!scenario) return false;
+  if (group === "process") {
+    // UX-004 Implementering, punkt 4 (PO-test 2026-09-22) — Lastförstärkning
+    // (auxGain) flyttades ut till Processpåverkans grundnivå (alltid synlig
+    // där nu, precis som Last mag/Trigga last) och ligger inte längre i
+    // advancedFieldsProcess. Den enda kvarvarande, faktiskt dolda funktionen
+    // i Processinställningens Avancerat-sektion är Olinjär ventilkarakteristik
+    // — auxGain ska alltså inte längre tvinga sektionen öppen (ett scenario
+    // med bara ett Lastförstärknings-värde men UTAN ventilkarakteristik har
+    // inget skäl att visa den tomma sektionen uppackad).
+    return !!(scenario.process.nonlinearGain?.enabled);
+  }
+  if (group === "regulator") {
+    return !!(scenario.controller.gainSchedule?.enabled) || !!(scenario.controller.kff);
+  }
+  return false;
+}
+function setAdvancedOpen(group, open) {
+  const cap = group === "process" ? "Process" : "Regulator";
+  document.getElementById("advancedFields" + cap).hidden = !open;
+  document.getElementById("advancedToggle" + cap).classList.toggle("open", open);
+}
+function applyAdvancedState() {
+  ["process", "regulator"].forEach(group => setAdvancedOpen(group, deriveAdvancedOpen(currentScenario, group)));
+}
+// UX-004 (PO-uppdrag "UX-004 Implementering", 2026-09-22) — infrastruktur för
+// lärstigsstyrd synlighet: en lärstig kan deklarera ett eget, valfritt
+// toppnivåfält `visibilityOverride: { show: [...], hide: [...] }` (samma
+// addon-vokabulär som data-addon/APPLICATION_PROFILES.addons — idag
+// "framkoppling"/"parameterstyrning"/"ventilkarakteristik") för att fokusera
+// UI:t på exakt de funktioner lärstigen handlar om, t.ex. döljer en
+// parameterstyrningslärstig Kff/Framkoppling även om vald Tillämpning
+// (härledd av deriveApplicationProfile()) annars skulle tillåtit det, eller
+// tvärtom för en framkopplingslärstig. Körs sist i applyApplicationProfile()
+// — mest specifika lagret av de tre (Tillämpning → Avancerat → lärstig),
+// så en lärstigs egen deklaration alltid vinner. Gated på
+// `currentPathStep >= 0` (samma villkor som activityContextKey()) så att en
+// override inte "läcker kvar" efter att lärstigen avslutats och användaren
+// manuellt laddar ett orelaterat scenario (currentPath nollställs annars
+// aldrig, bara currentPathStep). Inget krav att sätta detta fält — helt
+// bakåtkompatibelt, tomt/odefinierat = ingen effekt (dagens 12 lärstigar
+// fortsätter fungera oförändrat om de inte sätter det).
+const ADDON_TO_ADVANCED_GROUP = { framkoppling: "regulator", parameterstyrning: "regulator", ventilkarakteristik: "process" };
+function applyPathVisibilityOverride() {
+  if (!currentPath || currentPathStep < 0) return;
+  // UX-004 Implementering, punkt 2 (PO-test 2026-09-22) — Tillämpning
+  // "Avancerat" ska vara en KOMPLETT sandlåda (allt synligt, inget filter),
+  // även mitt i en aktiv lärstig med en egen visibilityOverride. Utan denna
+  // spärr skulle t.ex. framkoppling.v1s "dölj Parameterstyrning" fortsätta
+  // gälla efter att användaren manuellt bytt till Avancerat — precis
+  // motsatsen till vad Justering 1 (2026-09-21) redan etablerat för
+  // Avancerat-disklosyren (deriveAdvancedOpen() tvingar den öppen), nu
+  // konsekvent genomfört även för lärstigens EGEN, mer specifika override.
+  if (fields.applicationProfile.value === "avancerat") return;
+  const override = currentPath.visibilityOverride;
+  if (!override) return;
+  (override.hide || []).forEach(addon => {
+    document.querySelectorAll('[data-addon="' + addon + '"]').forEach(el => el.classList.add("addon-hidden"));
+  });
+  (override.show || []).forEach(addon => {
+    document.querySelectorAll('[data-addon="' + addon + '"]').forEach(el => el.classList.remove("addon-hidden"));
+    const group = ADDON_TO_ADVANCED_GROUP[addon];
+    if (group) setAdvancedOpen(group, true);
+  });
+}
+// Manuellt klick — fristående sessionstillstånd, precis som ett manuellt
+// Tillämpningsbyte: gäller tills nästa scenarioladdning/Tillämpningsbyte
+// härleder om det (ingen localStorage-persistens, till skillnad från
+// toggleParamGroup()s hela grupper).
+function toggleAdvanced(group) {
+  const cap = group === "process" ? "Process" : "Regulator";
+  const fieldsEl = document.getElementById("advancedFields" + cap);
+  setAdvancedOpen(group, fieldsEl.hidden);
 }
 
 function updateScoreDisplay() {
@@ -1002,7 +1338,32 @@ function showWelcome() {
 function initUI() {
   Object.entries(SCENARIOS).forEach(([name, s]) => { if (!s._standalone) return; const o = document.createElement("option"); o.value = name; o.textContent = s.title || name; scenarioSelect.appendChild(o); });
   Object.entries(LEARNING_PATHS).forEach(([id, p]) => { const o = document.createElement("option"); o.value = id; o.textContent = p.title || id; learningPathSelect.appendChild(o); });
+  // UX-002 — loadScenarioByName() sätter redan rätt Tillämpning (se
+  // deriveApplicationProfile()); för startscenariot ger det "Avancerat"
+  // (basic-step-self-regulating.json har inga aktiva tillägg, faller igenom
+  // till den generiska fallbacken).
   loadScenarioByName("basic-step-self-regulating.json");
+  // UX-004 Implementering (PO-uppdrag 2026-09-22) — INTE lämna "Avancerat"
+  // stå kvar som förvalt startläge: "Avancerat" tvingar per definition ALLA
+  // Avancerat-disklosyrsektioner öppna (Justering 1, se deriveAdvancedOpen()),
+  // vilket direkt bryter mot detta uppdragets uttryckliga krav ("Initialt
+  // öppet läge" — endast grundnivå ska synas vid en helt ny sidladdning).
+  // Ett återkommande besök återställer i stället senast MANUELLT valda
+  // Tillämpning (se kommentaren vid APPLICATION_PROFILES); saknas ett sparat
+  // val (första besöket, eller en tömd localStorage) används "temperatur"
+  // som neutral grundnivå-standard — den enda av de tre tillämpningarna som
+  // faktiskt matchar startscenariots egen processtyp (self_regulating) och
+  // vars Avancerat-sektioner INTE tvingas öppna. Efter, inte in i,
+  // loadScenarioByName() ovan — samma mönster som ett manuellt
+  // tillämpningsbyte (syncParamsFromUI + omritning), eftersom sim redan
+  // finns vid det här laget.
+  const savedProfile = localStorage.getItem(APPLICATION_PROFILE_STORAGE_KEY);
+  const initialProfile = (savedProfile && APPLICATION_PROFILES[savedProfile]) ? savedProfile : "temperatur";
+  if (initialProfile !== fields.applicationProfile.value) {
+    fields.applicationProfile.value = initialProfile;
+    applyApplicationProfile();
+    if (sim) { syncParamsFromUI(); drawChart(); updateStatus(); }
+  }
   if (!localStorage.getItem("pidSimWelcomed")) showWelcome();
   applyEnvironmentUI();
 }
@@ -1127,10 +1488,22 @@ function toggleParamGroup(id) {
   const collapsed = group.classList.toggle("collapsed");
   localStorage.setItem("pg-" + id, collapsed ? "1" : "0");
 }
-["groupProcess","groupRegulator","groupStyrning","groupStorningar"].forEach(id => {
+["groupProcessinstallning","groupRegulatorkonfiguration","groupProcesspaverkan"].forEach(id => {
   if (localStorage.getItem("pg-" + id) === "1") document.getElementById(id).classList.add("collapsed");
 });
-document.getElementById("load").addEventListener("click", () => loadScenarioByName(scenarioSelect.value));
+document.getElementById("load").addEventListener("click", () => {
+  // UX-004 Implementering, punkt 3 (PO-test 2026-09-22) — currentPath
+  // nollställs ALDRIG av sig själv (bara currentPathStep, se loadPath()/
+  // testMode-togglen), så ett manuellt scenarioval mitt i en aktiv lärstig
+  // lämnade tidigare kvar lärstigens visibilityOverride (och aktiverade
+  // Föregående-knappen tillbaka in i lärstigen) på det nya, orelaterade
+  // scenariot. currentPathStep = -1 är samma "har lämnat den aktiva
+  // guidade stegvyn"-signal som redan används överallt annanstans
+  // (updateNavButtons(), activityContextKey(), applyPathVisibilityOverride()).
+  currentPathStep = -1;
+  updateNavButtons();
+  loadScenarioByName(scenarioSelect.value);
+});
 fields.pulseDuration.addEventListener("input", () => { if (Number(fields.pulseDuration.value) < 0) fields.pulseDuration.value = 0; });
 fields.showPB.addEventListener("change", drawChart);
 // Kp, SP och hysteresgränserna ritas i grafen (PB-band, SP-linje,
@@ -1150,9 +1523,9 @@ fields.gainScheduleEnabled.addEventListener("change", () => { updateGainSchedule
 fields.nonlinearGainEnabled.addEventListener("change", () => { updateNonlinearGainUIState(); syncParamsFromUI(); drawChart(); });
 // GAM-002: tunt, tillagt lyssnarpar enbart för aktivitetsloggning — rör inte
 // appens egen parameterhantering ovan/i syncParamsFromUI().
-[["k", fields.k], ["t", fields.t], ["l", fields.l], ["kp", fields.kp], ["ti", fields.ti], ["td", fields.td],
+[["k", fields.k], ["t", fields.t], ["l", fields.l], ["auxGain", fields.auxGain], ["kp", fields.kp], ["ti", fields.ti], ["td", fields.td], ["kff", fields.kff],
  ["sp", fields.sp], ["umin", fields.umin], ["umax", fields.umax], ["manualOutput", fields.manualOutput],
- ["noise", fields.noise], ["pulseMag", fields.pulseMag], ["pulseDuration", fields.pulseDuration]]
+ ["noise", fields.noise], ["pulseMag", fields.pulseMag], ["pulseDuration", fields.pulseDuration], ["auxMag", fields.auxMag]]
   .forEach(pair => {
     const name = pair[0], el = pair[1];
     el.addEventListener("change", () => {
@@ -1166,24 +1539,58 @@ fields.nonlinearGainEnabled.addEventListener("change", () => { updateNonlinearGa
   });
 document.getElementById("mode").addEventListener("change", () => {
   const newMode = fields.mode.value;
-  const bumplessOn = document.getElementById("bumpless").checked;
   if (sim && currentScenario) {
     const prevMode = currentScenario.controller.mode;
+    // UX-004 Justering 4 (PO-beslut 2026-09-21) — övergången till Manuellt
+    // ska ALLTID vara stötfri (seedas med aktuellt u), oavsett
+    // Bumpless-kryssrutan — den styr en ANNAN sak (regulatorns egen
+    // bias-fasning vid övergång TILL p/pi/pid, se syncParamsFromUI()).
+    // Verklig driftväxling Auto→Manuell är aldrig valfritt stötfri.
     if (newMode === "manual" && prevMode !== "manual") {
-      if (bumplessOn) {
-        const lastU = sim.getState().u;
-        fields.manualOutput.value = lastU.toFixed(2);
-        currentScenario.controller.manualOutput = lastU;
-      }
+      const lastU = sim.getState().u;
+      fields.manualOutput.value = lastU.toFixed(2);
+      currentScenario.controller.manualOutput = lastU;
       currentScenario.controller.mode = "manual";
     }
   }
   updateControllerUIState();
   activityDispatch("regulator_mode_changed", { field: "mode", value: newMode });
 });
+// UX-004 Justering 4 — de två SYNLIGA Läge-kontrollerna skriver bara till
+// #mode (dold) och triggar dess befintliga "change"-hantering ovan, precis
+// som om användaren ändrat den direkt — all nedströms-logik (syncParamsFromUI,
+// updateControllerUIState, Tillämpnings-filtrering) är oförändrad.
+document.getElementById("regulatorType").addEventListener("change", () => {
+  if (fields.autoManualToggle.checked) return; // typvalet gäller bara nästa Auto-växling, sparas tyst så länge Manuellt är valt
+  fields.mode.value = fields.regulatorType.value;
+  fields.mode.dispatchEvent(new Event("change"));
+  activityDispatch("regulator_type_changed", { field: "regulatorType", value: fields.regulatorType.value });
+});
+document.getElementById("autoManualToggle").addEventListener("change", () => {
+  fields.mode.value = fields.autoManualToggle.checked ? "manual" : fields.regulatorType.value;
+  fields.mode.dispatchEvent(new Event("change"));
+  activityDispatch("auto_manual_toggled", { field: "autoManualToggle", value: fields.autoManualToggle.checked });
+});
 document.getElementById("processType").addEventListener("change", () => {
   updateProcessUIState();
   activityDispatch("process_type_changed", { field: "processType", value: fields.processType.value });
+});
+// UX-002 — Tillämpning: byte filtrerar processmodellerna + strategitilläggen, se applyApplicationProfile().
+document.getElementById("applicationProfile").addEventListener("change", () => {
+  applyApplicationProfile();
+  // UX-004 — spara bara MANUELLA val (se kommentaren vid APPLICATION_PROFILES);
+  // deriveApplicationProfile() sätter samma fält vid varje scenario-/
+  // lärstigsladdning, men det ska inte skriva över användarens sparade val.
+  localStorage.setItem(APPLICATION_PROFILE_STORAGE_KEY, fields.applicationProfile.value);
+  // PO:s granskning (2026-09-20) — till skillnad från anropet inifrån
+  // loadScenarioByName() (där en omedelbar synk skulle kunna skapa en
+  // missvisande ändringsmarkering innan captureMarkerBaseline() hunnit sätta
+  // en ny baslinje) är ett MANUELLT tillämpningsbyte den enda situationen
+  // där kvarvarande, nu dolt tillstånd (Parameterstyrning/Ventilkarakteristik/
+  // Framkoppling/Läge) annars skulle fortsätta påverka en redan igångsatt
+  // körning osynligt. Synka och rita om direkt här.
+  if (sim) { syncParamsFromUI(); drawChart(); updateStatus(); }
+  activityDispatch("application_profile_changed", { field: "applicationProfile", value: fields.applicationProfile.value });
 });
 document.getElementById("step").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); const f = sim.step(); if (!f) appendLog("Simulering stoppad — scenariots maxantal steg är nått. Klicka “Fler steg →” för att fortsätta."); else { appendLog("Step: t=" + f.t.toFixed(2) + " y=" + f.y.toFixed(3) + " u=" + f.u.toFixed(3)); markZoneChangeIfAny(); } updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("simulation_step", { contextKey: activityContextKey() }); });
 document.getElementById("run10").addEventListener("click", () => {
@@ -1215,8 +1622,23 @@ document.getElementById("btnExtendSteps").addEventListener("click", () => {
   activityDispatch("steps_extended", { contextKey: activityContextKey(), newMax: sim.maxSteps });
 });
 document.getElementById("pulse").addEventListener("click", () => { if (!sim) return; syncParamsFromUI(); sim.triggerPulse(); if (!sim.history.markers) sim.history.markers = []; sim.history.markers.push({ t: sim.history.t[sim.history.t.length - 1] ?? 0, label: "Puls" }); appendLog("Puls triggad."); activityDispatch("disturbance_triggered", { contextKey: activityContextKey() }); });
-document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
-document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
+// FEAT-045 — "Trigga last", samma interaktionsmönster som "Trigga puls" ovan
+// (STRAT-005 avsnitt 3), men markeringsetiketten visar det NYA lastvärdet
+// (t.ex. "Last → 20") istället för en enkel "Last"-etikett, eftersom
+// lastens exakta nivå är pedagogiskt relevant på ett sätt pulsens
+// magnitud inte är.
+document.getElementById("triggerAux").addEventListener("click", () => {
+  if (!sim) return;
+  syncParamsFromUI();
+  sim.triggerAuxSignal();
+  if (!sim.history.markers) sim.history.markers = [];
+  sim.history.markers.push({ t: sim.history.t[sim.history.t.length - 1] ?? 0, label: "Last → " + sim.auxValue });
+  appendLog("Last triggad (" + sim.auxValue + ").");
+  drawChart();
+  activityDispatch("disturbance_triggered", { contextKey: activityContextKey(), field: "auxSignal" });
+});
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
@@ -1275,7 +1697,7 @@ function enterMeasureMode() {
     measureCollapsedLeft = false;
   }
   measureCollapsedGroups = [];
-  ["groupProcess","groupRegulator","groupStyrning","groupStorningar"].forEach(id => {
+  ["groupProcessinstallning","groupRegulatorkonfiguration","groupProcesspaverkan"].forEach(id => {
     const g = document.getElementById(id);
     if (!g.classList.contains("collapsed")) {
       g.classList.add("collapsed");

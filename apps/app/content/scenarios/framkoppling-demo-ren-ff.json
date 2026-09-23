@@ -1,0 +1,28 @@
+{
+  "id": "framkoppling-demo-ren-ff",
+  "version": "v1.2.0",
+  "title": "Framkoppling — demo: ren framkoppling, fel Kff (värmeväxlare)",
+  "description": "Samma värmeväxlare/last som 'PID ensam'-demot, men regulatorn kör praktiskt taget utan återkoppling (Kp på UI-minimum, Ti=Td=0) och kompenserar temperaturgivarens uppmätta störning enbart via ett MEDVETET FEL Kff (exakt halva det teoretiskt korrekta värdet -0.5, dvs -0.25). Visar att framkoppling reagerar direkt men aldrig blir bättre än sin egen modell om ingen återkoppling städar upp resten — en PERMANENT kvarstående avvikelse, till skillnad från övriga demon (som alla kör full PID och alltså till slut rättar till sig själva). Används i övningsdokumentet (ovningar-framkoppling.md), inte i huvudlärstigen. Simuleringsverifierat.",
+  "tags": ["feedforward", "varmevaxlare", "pure-feedforward"],
+  "process": {
+    "type": "self_regulating",
+    "K": 1.3,
+    "T": 15.0,
+    "L": 0.0,
+    "normalValue": 50.0,
+    "measurementRange": { "min": 0.0, "max": 100.0 },
+    "auxGain": 0.65
+  },
+  "controller": {
+    "mode": "pid",
+    "kp": 0.1,
+    "ti": 0.0,
+    "td": 0.0,
+    "kff": -0.25,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "auxSignal": { "magnitude": -40.0 },
+  "runtime": { "dt": 1.0, "maxSteps": 200, "setpoint": 50.0, "autopause": false }
+}

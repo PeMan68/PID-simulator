@@ -43,7 +43,8 @@ const EXPECTED_LEARNING_PATHS = [
   "processbegransningar.v1",
   "windup-antiwindup.v1",
   "storningar-robusthet.v1", // v1.5.0 — FEAT-030, PO-testad och godkänd för PROD
-  "parameterstyrning-ventilkarakteristik.v1" // v1.5.5 — FEAT-042, PO-testad och godkänd för PROD
+  "parameterstyrning-ventilkarakteristik.v1", // v1.5.5 — FEAT-042, PO-testad och godkänd för PROD
+  "framkoppling.v1" // v1.6.0 — FEAT-045, PO-testad och godkänd för PROD
 ];
 const HIDDEN_LEARNING_PATHS = [
   "integrerande-process-niva.v1",

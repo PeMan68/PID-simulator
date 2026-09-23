@@ -51,12 +51,20 @@
   class PIDController {
     constructor(cfg = {}, dt = 1) { this.kp = cfg.kp || 0; this.ti = cfg.ti || 0; this.td = cfg.td || 0; this.dt = dt; this.integral = 0; this.prevPv = 0; this.mode = "pid"; this.bias = cfg.bias || 0; this.biasFadeSteps = 0; this.biasFadePerStep = 0; this.gainZone = null; }
     reset() { this.integral = 0; this.prevPv = 0; this.bias = 0; this.biasFadeSteps = 0; this.biasFadePerStep = 0; this.gainZone = null; }
-    step(sp, pv, limits, antiWindup) {
+    // feedforward (FEAT-045) — regulatorns framkopplingsterm (kff × auxValue),
+    // beräknad av anroparen (Simulation.step()) och adderad HÄR, INNAN
+    // klippning mot outputLimits — så att anti-windup-logiken nedan (som
+    // redan jämför mot den KLIPPTA, kombinerade utsignalen u) korrekt ser om
+    // PID+framkoppling TILLSAMMANS mättar utsignalen, inte bara PID-delen för
+    // sig. Se STRAT-005 avsnitt 2. Ingen bumplös fasning av denna term —
+    // avsiktligt, se Simulation.triggerAuxSignal().
+    step(sp, pv, limits, antiWindup, feedforward) {
       const error = sp - pv;
       const integralCandidate = this.integral + error * this.dt;
       const derivative = (pv - this.prevPv) / this.dt;
       const iTerm = this.ti > 1e-9 ? integralCandidate / this.ti : 0;
-      const raw = this.bias + this.kp * (error + iTerm - this.td * derivative);
+      const ff = feedforward || 0;
+      const raw = this.bias + this.kp * (error + iTerm - this.td * derivative) + ff;
       const u = Math.max(limits.min, Math.min(limits.max, raw));
       // Only update integral if not in P-only mode
       if (this.mode !== "p") {
@@ -69,7 +77,7 @@
       this.prevPv = pv;
       const pTerm = this.kp * error;
       const dTerm = -this.kp * this.td * derivative;
-      return { u: u, error: error, integral: this.integral, derivative: derivative, pTerm: pTerm, iTerm: (this.mode === "p" || this.mode === "onoff" || this.mode === "manual") ? 0 : this.kp * iTerm, dTerm: (this.mode === "p" || this.mode === "pi" || this.mode === "onoff" || this.mode === "manual") ? 0 : dTerm };
+      return { u: u, error: error, integral: this.integral, derivative: derivative, pTerm: pTerm, iTerm: (this.mode === "p" || this.mode === "onoff" || this.mode === "manual") ? 0 : this.kp * iTerm, dTerm: (this.mode === "p" || this.mode === "pi" || this.mode === "onoff" || this.mode === "manual") ? 0 : dTerm, ffTerm: ff };
     }
   }
 
@@ -97,23 +105,30 @@
       }
       return this.cfg.K;
     }
-    step(u, dt, disturbance) {
+    // auxValue (FEAT-045) — den mätbara laststörningens aktuella nivå (0 tills
+    // triggad, se Simulation.triggerAuxSignal()). Dess bidrag går genom SAMMA
+    // drivande term/tidskonstant som huvudprocessen (auxGain × auxValue) —
+    // TILL SKILLNAD från `disturbance` (brus/puls), som adderas direkt till y
+    // nedan och alltså är odämpad/omätbar. Se STRAT-005 avsnitt 2: detta är
+    // en medveten, pedagogiskt viktig åtskillnad mellan de två störningstyperna.
+    step(u, dt, disturbance, auxValue) {
       let ud;
       if (this.delay.length > 0) { this.delay.push(u); ud = this.delay.shift(); }
       else { ud = u; }
       const T = Math.max(1, this.cfg.T);
+      const auxTerm = (this.cfg.auxGain || 0) * (auxValue || 0);
       if (this.cfg.type === "integrating") {
         const outflow = this.cfg.outflow ?? 0;
-        this.y += (this.cfg.K * ud - outflow) * dt;
+        this.y += (this.cfg.K * ud - outflow + auxTerm) * dt;
       }
-      else if (this.cfg.type === "unstable") this.y += ((this.y - this.cfg.normalValue + this.cfg.K * ud) * dt) / T;
+      else if (this.cfg.type === "unstable") this.y += ((this.y - this.cfg.normalValue + this.cfg.K * ud + auxTerm) * dt) / T;
       else if (this.cfg.type === "self_regulating_2") {
         const Ti = T / 3;
-        this.stages[0] += ((-(this.stages[0] - this.cfg.normalValue) + this.cfg.K * ud) * dt) / Ti;
+        this.stages[0] += ((-(this.stages[0] - this.cfg.normalValue) + this.cfg.K * ud + auxTerm) * dt) / Ti;
         this.stages[1] += (-(this.stages[1] - this.stages[0]) * dt) / Ti;
         this.y += (-(this.y - this.stages[1]) * dt) / Ti;
       }
-      else this.y += ((-(this.y - this.cfg.normalValue) + this.effectiveK(ud) * ud) * dt) / T;
+      else this.y += ((-(this.y - this.cfg.normalValue) + this.effectiveK(ud) * ud + auxTerm) * dt) / T;
       this.y += disturbance;
       return this.y;
     }
@@ -140,10 +155,20 @@
       const hysteresisCfg = scenario.controller.hysteresis || {};
       this.onoff = new OnOffController({ ...onoffCfg, low: hysteresisCfg.lower ?? onoffCfg.low ?? 2, high: hysteresisCfg.upper ?? onoffCfg.high ?? 2 });
       this.pulseStepsLeft = 0;
-      this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0] };
+      // FEAT-045 — den mätbara laststörningens aktuella nivå. Ingen
+      // nedräkning (till skillnad från pulseStepsLeft) eftersom lasten är
+      // BESTÅENDE (PO-beslut, STRAT-005) — ligger kvar tills reset() eller
+      // en ny triggerAuxSignal()-triggning ersätter värdet.
+      this.auxValue = 0;
+      this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0] };
     }
-    reset() { this.stepNo = 0; this.maxSteps = this.baseMaxSteps; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.scenario.controller.bias = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0] }; }
+    reset() { this.stepNo = 0; this.maxSteps = this.baseMaxSteps; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.auxValue = 0; this.scenario.controller.bias = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0] }; }
     triggerPulse() { const p = this.scenario.disturbance.pulse; if (p && p.durationSteps > 0) this.pulseStepsLeft = p.durationSteps; }
+    // FEAT-045 — sätter lasten till scenariots auxSignal.magnitude i ETT
+    // anrop, ingen räknare (se ovan). Ett nytt klick med ett ändrat fältvärde
+    // ERSÄTTER helt enkelt auxValue, inklusive att sätta det till 0 för att
+    // ta bort lasten. Scenarier utan auxSignal-fält ger 0 (no-op).
+    triggerAuxSignal() { const a = this.scenario.auxSignal; this.auxValue = a ? (a.magnitude || 0) : 0; }
     // FEAT-043 — släpper fram ytterligare ett "baseMaxSteps"-block av steg,
     // så att en pågående körning kan fortsätta utan att tappa historik/tillstånd.
     extendSteps() { this.maxSteps += this.baseMaxSteps; }
@@ -206,15 +231,17 @@
             this.pid.bias = this.scenario.controller.bias || 0;
           }
         }
-        ctrl = this.pid.step(sp, pv, limits, this.scenario.controller.antiWindup !== false);
+        // FEAT-045 — framkopplingsterm (kff × auxValue), se PIDController.step().
+        const feedforward = (this.scenario.controller.kff || 0) * this.auxValue;
+        ctrl = this.pid.step(sp, pv, limits, this.scenario.controller.antiWindup !== false, feedforward);
       }
       let disturbance = 0;
       if ((this.scenario.disturbance.noiseStd || 0) > 0) disturbance += gaussian(this.rng) * this.scenario.disturbance.noiseStd;
       if (this.pulseStepsLeft > 0) { disturbance += this.scenario.disturbance.pulse.magnitude || 0; this.pulseStepsLeft -= 1; }
-      const y = this.process.step(ctrl.u, this.dt, disturbance);
+      const y = this.process.step(ctrl.u, this.dt, disturbance, this.auxValue);
       this.stepNo += 1;
       const t = this.stepNo * this.dt;
-      this.history.t.push(t); this.history.y.push(y); this.history.sp.push(sp); this.history.u.push(ctrl.u); this.history.e.push(ctrl.error); this.history.p.push(ctrl.pTerm || 0); this.history.i.push(ctrl.iTerm || 0); this.history.d.push(ctrl.dTerm || 0);
+      this.history.t.push(t); this.history.y.push(y); this.history.sp.push(sp); this.history.u.push(ctrl.u); this.history.e.push(ctrl.error); this.history.p.push(ctrl.pTerm || 0); this.history.i.push(ctrl.iTerm || 0); this.history.d.push(ctrl.dTerm || 0); this.history.aux.push(this.auxValue);
       return { t: t, y: y, u: ctrl.u, e: ctrl.error };
     }
     run(n) { const frames = []; for (let i = 0; i < n; i += 1) { const f = this.step(); if (!f) break; frames.push(f); } return frames; }

@@ -12,17 +12,24 @@ täcker inte kursens övriga innehåll om fysiska mätdon och styrdon.
 
 ## Officiell version
 
-- **Stabil version:** v1.5.5 (källkoden är taggad `v1.5.5`)
+- **Stabil version:** v1.6.0 (källkoden är taggad `v1.6.0`)
 - **Officiell URL:** https://peman68.github.io/PID-simulator/
 
 Använd den officiella URL:en för undervisning och självstudier. `main`-branchen är källan
 för den stabila undervisningsversionen, och GitHub Pages bygger och publicerar
 produktionsprofilen (PROD) uteslutande därifrån.
 
-## Funktioner i v1.5.5
+## Funktioner i v1.6.0
 
 Publicerat i produktionsversionen:
 
+- **Tillämpning** (Temperaturprocess/Nivåprocess/Avancerat) styr vilka
+  processmodeller, regulatorlägen och strategitillägg som visas, och
+  **Avancerat**-disklosyrer per parametergrupp håller avancerade fält
+  (Parameterstyrning, Kff, olinjär ventilkarakteristik, Bumpless,
+  Anti-windup m.fl.) undanstoppade tills en lärstig eller ett scenario
+  faktiskt handlar om dem — progressiv exponering, färre synliga kontroller
+  för nya användare
 - Ett kort introduktionsdokument för studerande ([`docs/exercises/introduktion.md`](docs/exercises/introduktion.md))
   och en permanent "❓ Kom igång"-knapp i sidopanelen som öppnar välkomstrutan när som
   helst (döljs automatiskt från nivå 3 i nivåprogressionen)
@@ -40,7 +47,7 @@ Publicerat i produktionsversionen:
   synliggör aktivitet och repetition. Sparas lokalt per enhet. Inte ett betyg eller
   mått på yrkeskompetens — se [`docs/development/GAMIFICATION-XP-PROTOTYPE.md`](docs/development/GAMIFICATION-XP-PROTOTYPE.md).
 
-Sju publicerade lärstigar, i denna ordning:
+Nio publicerade lärstigar, i denna ordning:
 
 1. Kom igång med PID Simulator
 2. Öppen slinga, On/Off och P-reglering
@@ -49,6 +56,8 @@ Sju publicerade lärstigar, i denna ordning:
 5. Processens begränsningar
 6. Windup och anti-windup
 7. Störningar och robusthet
+8. Parameterstyrning och olinjär ventilkarakteristik
+9. Framkoppling (Feedforward)
 
 Produktionsversionen innehåller **inte** Test-läge, poängräkning eller
 experimentella scenarier — se nästa avsnitt.
@@ -130,7 +139,7 @@ innan det visas i PROD.
 
 ## Projektstatus
 
-v1.5.0 är den senaste stabila undervisningsversionen. Fortsatt utveckling sker i
+v1.6.0 är den senaste stabila undervisningsversionen. Fortsatt utveckling sker i
 `develop`. Tre ytterligare lärstigar (Integrerande process och nivåreglering, Stegsvar
 och processidentifiering, Lambda-metoden) finns i utvecklingsversionen och väntar på
 pedagogisk granskning innan produktionsgodkännande. Test-läge med poängräkning är

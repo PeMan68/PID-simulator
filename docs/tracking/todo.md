@@ -8,6 +8,74 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
+**Prioritet:** Hög — PO:s explicita beslut (2026-09-20): pausa ny
+reglerstrategiutveckling (Kvotreglering, Kaskadreglering) tills detta spår är
+klart.
+**Beskrivning:**
+Efter FEAT-042 och FEAT-045 konstaterade PO ett större, återkommande
+UX-problem: parametergridet har vuxit till 45 kontroller, varav 19 hör till
+enskilda, avancerade lärstigar (16 FEAT-042, 3+1 FEAT-045) men visas för ALLA
+studenter oavsett vad de faktiskt övar på. PO:s riktning: ett
+"Processval"/tillämpningsval (t.ex. Temperaturprocess, Nivåprocess,
+Blandnings-/kvotprocess, Kaskadreglerad process) som samtidigt styr
+processmodell, relevanta parametrar, relevanta strategier och relevanta
+givare — inte bara enskild fält-visa/dölj.
+**Genomförande (förstudie, rev. 2 efter PO:s tvådimensionella korrigering):**
+Full analys: `docs/reports/UX-001_FORSTUDIE-PROCESSBASERAD-UX.md`. Rev. 1
+slog ihop processdynamik och tillämpning till EN axel — PO korrigerade:
+det är TVÅ separata dimensioner. **Processmodell** (Självreglerande
+enkapacitiv/flerkapacitiv, Integrerande — motsvarar dagens `processType`,
+bara tydligare namngivet) avgör dynamiken och ska förbli synlig/begriplig
+för studenten (centralt reglertekniskt begrepp, får INTE gömmas). **Tillämpning**
+(Tvålägesreglering, Temperaturprocess, Nivåprocess, Blandnings-/kvotprocess*,
+Kaskadreglerad process*, Fri utforskning — *framtida) avgör vilka
+processmodeller som ERBJUDS, vilka parametrar/givare/strategitillägg som
+visas, och vilka lärstigar som hör hemma där. Parameterstyrning/
+Ventilkarakteristik/Framkoppling blir "Tillägg" inom Temperaturprocess (inte
+egna tillämpningar). Migreringsväg i tre faser oförändrad i sak: Fas 0 (två
+kopplade väljare — Tillämpning + en filtrerad Processmodell-väljare direkt
+under — additiv UI-filtrering, "Fri utforskning" förblir default, ingen
+ändring av sim-core/scenarioformat, alla 12 befintliga lärstigar opåverkade),
+Fas 1 (koppla lärstigar till tillämpning+processmodell via nya valfria fält),
+Fas 2 (Kvotreglering/Kaskadreglering byggs DIREKT mot dedikerad UI, inklusive
+kaskadens per-slinga-processmodellval). Fyra öppna frågor till PO i
+rapportens slut (namnbyte som egen snabb åtgärd redan nu, genomläsning av
+`oppen-slinga-onoff-p.v1` för korrekt tillämpnings-tagg, om kaskadens
+inre/yttre slinga kan ha OLIKA processmodeller, komplett tillämpningslista).
+**Status:** Förstudie (rev. 2) klar, väntar på PO:s svar på de öppna frågorna
+innan ett Fas 0-bygguppdrag formuleras. Ingen kod skriven, ingen branch. Ny
+reglerstrategiutveckling (Kvotreglering/Kaskadreglering) PAUSAD tills detta
+spår är klart, per PO:s beslut.
+
+---
+
+### FEAT-046 — Blockschema-SVG:er för reglerstrategier
+**Branch:** `feature/FEAT-046-blockschema-svg`
+**Prioritet:** Låg — sidospår/experiment, PO:s explicita "prova"-uppdrag
+**Beskrivning:**
+PO:s uppdrag: skapa återanvändbara SVG-blockschema för de reglerstrategier som
+redan är dokumenterade/planerade (Återkoppling/PID, Framkoppling, PID+Framkoppling,
+Kvotreglering, Kaskadreglering) — som fristående filer, inte inbyggda i appens
+rendering (det skulle vara en separat, större ändring av teori-/lärstigsschemat).
+PO relayerade en extern skiss/rekommendation (ASCII-diagram + två stilalternativ)
+och bad mig ta ställning och bygga vidare.
+**Genomförande:**
+5 fristående SVG-filer i `docs/assets/diagrams/`, konsekvent design (samma
+block-/färgkodning genomgående): PID-regulator=orange, Framkoppling/Kvotblock=
+grönteal (samma "beräkningsblock"-familj), Process/Ventil=mörkblågrå,
+mätbar störning=lila, omätbar störning=grå streckad, Givare=teal cirkel.
+Valde "Alternativ 2" (kursdiagram — SP/PV/u, mätbar/omätbar störning, givare,
+signalnamn) framför en minimalistisk variant, enligt den relayerade
+rekommendationen: samma SVG:er återanvändbara i lärstigar, övningsdokument och
+framtida presentationer, vilket sänker kostnaden för Kvotreglering/Kaskadreglering
+när de byggs (STRAT-001/004/005-kedjan). Publicerad som Artifact för visuell
+granskning (kan inte förhandsgranskas i denna miljö annars).
+**Status:** Öppen/experimentell — se leveransrapport, PO:s visuella godkännande
+avgör om filerna behålls, justeras eller görs om.
+
+---
+
 ### FEAT-044 — Gruppera Parameterstyrningens/ventilkarakteristikens zonfält
 **Branch:** `feature/FEAT-044-zone-fields-table`
 **Prioritet:** Låg — kosmetisk UI-förbättring, upptäckt av PO under FEAT-042-testning

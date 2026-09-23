@@ -290,6 +290,15 @@
       font-family: inherit;
       font-size: 13px;
     }
+    /* PO:s UX-granskning (2026-09-20, uppföljning) — <input type="number">
+       saknar en egen innehållsstyrd bredd (till skillnad från <select>, som
+       webbläsaren själv sizear efter det valda alternativets text): utan
+       denna rad tar varje talfält webbläsarens breda standardbredd
+       (~170-220px), oavsett hur kort värdet är (K/T/L visade sig fortfarande
+       vara mycket bredare än nödvändigt trots att .field själv nu är
+       innehållsstyrd, se föregående fix). Ett fast, kompakt mått räcker gott
+       för alla tal i appen (längsta värdet är runt "-0,6154"). */
+    input[type="number"] { width: 90px; }
     button {
       cursor: pointer;
       border-color: #919eac;
@@ -331,9 +340,20 @@
 
     /* ── Parameter groups ── */
     .params-container { display: flex; flex-direction: column; gap: 6px; }
+    /* UX-002 — tillämpningsstyrd döljning av strategitillägg (Framkoppling/
+       Parameterstyrning/Ventilkarakteristik). !important krävs eftersom
+       samma element ofta även styrs av lägesbaserad style.display (t.ex.
+       updateGainScheduleUIState()) — addon-döljningen ska alltid vinna. */
+    [data-addon].addon-hidden { display: none !important; }
+    /* UX-002 (PO:s UX-granskning) — flexbox med radbrytning istället för ett
+       fast 6-kolumners rutnät: varje fält får bredden dess EGET innehåll
+       (etikett eller select/input) faktiskt behöver, istället för att alla
+       fält tvingas till samma kolumnbredd. Löser att långa värden (t.ex.
+       "Självreglerande (flerkapacitiv)") klipptes av medan korta fält (K, T,
+       L) slösade utrymme i onödan. */
     .param-group {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(110px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       padding: 6px 10px 10px;
       border: 1px solid var(--line);
@@ -342,7 +362,7 @@
     }
     .param-group.collapsed { padding-bottom: 6px; }
     .param-group-label {
-      grid-column: 1 / -1;
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: flex-start;
@@ -369,11 +389,35 @@
     .param-group.collapsed .param-group-body { display: none; }
     .schedule-fields { display: contents; }
     .schedule-fields[hidden] { display: none; }
-    /* FEAT-044 — zonerna för Parameterstyrning/Olinjär ventilkarakteristik
-       samlade i en kompakt tabell (en rad per zon) istället för utspridda
-       enskilda fält — adresserar att layouten upplevdes rörig. Tabellen
-       spänner över hela param-group-gridets bredd så den inte klämmer in
-       sig i en enda grid-kolumn. */
+    /* UX-004 (PO-beslut 2026-09-21) — "Avancerat"-disklosyr per grupp:
+       samma mönster som .param-group-label/.group-toggle ovan, men en
+       nivå djupare (inne i en .param-group-body, som redan är
+       display:contents — width:100% ger samma radbrytning som
+       .param-group-label redan använder). */
+    .advanced-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+      padding-top: 4px;
+      margin-top: 2px;
+      border-top: 1px dashed var(--line);
+    }
+    .advanced-toggle .group-toggle { transform: rotate(0deg); }
+    .advanced-toggle.open .group-toggle { transform: rotate(90deg); }
+    .advanced-fields { display: contents; }
+    .advanced-fields[hidden] { display: none; }
+    /* FEAT-044 (mergad ovanpå UX-004) — zonerna för Parameterstyrning/
+       Olinjär ventilkarakteristik samlade i en kompakt tabell (en rad per
+       zon) istället för utspridda enskilda fält — adresserar att layouten
+       upplevdes rörig. Tabellen spänner över hela param-group-gridets
+       bredd så den inte klämmer in sig i en enda grid-kolumn. Fungerar
+       lika bra inuti en .advanced-fields-sektion som direkt i
+       .param-group-body — båda är display:contents. */
     .zone-table-wrap { grid-column: 1 / -1; margin: 2px 0 4px; }
     .zone-table { border-collapse: collapse; font-size: 12px; }
     .zone-table th, .zone-table td { padding: 3px 10px 3px 0; text-align: left; }
@@ -385,19 +429,21 @@
     .zone-table tbody th { font-weight: 600; white-space: nowrap; padding-right: 12px; }
     .zone-table input[type="number"] { width: 64px; padding: 4px 6px; font-size: 12px; }
     /* FEAT-042 (PO-granskning, punkt 3) — tydlig visuell markering av aktiv
-       zon, nu som en helmarkerad tabellrad. Samma färger som
-       brytpunktslinjerna i grafen (orange = regulatorschema, grön =
-       processchema) så radhighlight/graf hänger ihop som EN visuell
-       helhet. (Badge-varianten testades och togs bort efter PO:s sista
-       granskningsrunda — se docs/reports/FEAT-042_ANVANDARTEST-ATGARDER.md;
-       tabellayouten ersatte den tidigare per-fält-ramen i FEAT-044.) */
+       zon, som en helmarkerad tabellrad (FEAT-044 ersatte den tidigare
+       per-fält-ramen, se .field.zone-active-*-kommentaren i git-historiken).
+       Samma färger som brytpunktslinjerna i grafen (orange = regulatorschema,
+       grön = processchema) så radhighlight/graf hänger ihop som EN visuell
+       helhet. */
     .zone-table tr.zone-active-regulator th,
     .zone-table tr.zone-active-regulator td { background: #fdf0e3; }
     .zone-table tr.zone-active-regulator th { color: #b5590f; }
     .zone-table tr.zone-active-process th,
     .zone-table tr.zone-active-process td { background: #e6f5f2; }
     .zone-table tr.zone-active-process th { color: #0f6a53; }
-    .field { display: flex; flex-direction: column; gap: 4px; transition: opacity 120ms ease; }
+    /* flex: 0 0 auto — bredden styrs av innehållet (etiketten eller
+       select/input:s egen naturliga bredd), inte av en delad rutnätskolumn.
+       min-width är en golvnivå, inte ett tvingat mått. */
+    .field { display: flex; flex-direction: column; gap: 4px; transition: opacity 120ms ease; flex: 0 0 auto; min-width: 90px; }
     .field label {
       font-size: 12px;
       color: var(--muted);
@@ -589,17 +635,15 @@
       .present-step-num { font-size: 14px; }
     }
 
-    @media (max-width: 1200px) {
-      .param-group { grid-template-columns: repeat(4, minmax(110px, 1fr)); }
-    }
     @media (max-width: 860px) {
       :root { --sb-left-w: 200px; --sb-right-w: 220px; }
-      .param-group { grid-template-columns: repeat(3, minmax(100px, 1fr)); }
     }
     @media (max-width: 640px) {
       .sidebar-left, .sidebar-right { width: var(--sb-toggle-w) !important; }
       .sidebar-left .sidebar-inner, .sidebar-right .sidebar-inner { opacity: 0; pointer-events: none; width: 0; padding: 0; }
-      .param-group { grid-template-columns: repeat(2, minmax(100px, 1fr)); }
+      /* Ett fält per rad på smala skärmar — samma avsikt som tidigare
+         grid-template-columns-övermappningarna, anpassad till flexbox. */
+      .field { width: 100%; }
       button, select, input[type="number"] { width: 100%; }
     }
   </style>
@@ -674,15 +718,36 @@
   <main class="main-content">
     <div class="params-container">
 
-      <!-- Process -->
-      <div class="param-group" id="groupProcess">
-        <span class="param-group-label" onclick="toggleParamGroup('groupProcess')"><button class="group-toggle">▼</button> Process</span>
+      <!-- UX-004 (PO+PM-beslut 2026-09-21) — huvudytan omstrukturerad kring
+           tre grupper (Processinställning/Regulatorkonfiguration/
+           Processpåverkan, se docs/reports/UX-004_OMSTRUKTURERING-HUVUDYTA.md)
+           istället för de fyra tidigare (Process/Regulator/Styrning/
+           Störningar). Varje grupps AVANCERADE fält ligger i en nästlad,
+           kollapsbar ".advanced-fields"-sektion (öppen/stängd härleds
+           automatiskt, se applyAdvancedState() i app.js — inte sparad i
+           localStorage, till skillnad från hela gruppens egen
+           kollaps/localStorage via toggleParamGroup()). -->
+
+      <!-- Processinställning -->
+      <div class="param-group" id="groupProcessinstallning">
+        <span class="param-group-label" onclick="toggleParamGroup('groupProcessinstallning')"><button class="group-toggle">▼</button> Processinställning</span>
         <div class="param-group-body">
+          <!-- Tillämpning (UX-002/UX-001 Fas 0) — placerad direkt före Processmodell
+               för att synliggöra sambandet Tillämpning → Processmodell → processparametrar
+               (PO:s granskningsobservation 1: egen grupp tog för mycket plats för ett fält). -->
           <div class="field">
-            <label for="processType">Processtyp <button class="help-btn" data-help="processType">?</button></label>
+            <label for="applicationProfile">Tillämpning <button class="help-btn" data-help="applicationProfile">?</button></label>
+            <select id="applicationProfile">
+              <option value="avancerat">Avancerat</option>
+              <option value="temperatur">Temperaturprocess</option>
+              <option value="niva">Nivåprocess</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="processType">Processmodell <button class="help-btn" data-help="processType">?</button></label>
             <select id="processType">
-              <option value="self_regulating">Självreglerande</option>
-              <option value="self_regulating_2">Självreglerande 2:a ordn.</option>
+              <option value="self_regulating">Självreglerande (enkapacitiv)</option>
+              <option value="self_regulating_2">Självreglerande (flerkapacitiv)</option>
               <option value="integrating">Integrerande</option>
             </select>
           </div>
@@ -706,49 +771,72 @@
             <label for="outflow">Utflöde <button class="help-btn" data-help="outflow">?</button></label>
             <input id="outflow" type="number" step="0.1" min="0">
           </div>
-          <div class="field" id="nonlinearGainField">
-            <label for="nonlinearGainEnabled">Olinjär ventilkarakteristik <button class="help-btn" data-help="nonlinearGainEnabled">?</button></label>
-            <input id="nonlinearGainEnabled" type="checkbox" title="Processens K varierar med utsignalen i tre fasta zoner">
-          </div>
-          <div class="schedule-fields" id="nonlinearGainFields" hidden>
-            <div class="field">
-              <label for="ngBreak1">Brytpunkt 1 (u) <button class="help-btn" data-help="ngBreak">?</button></label>
-              <input id="ngBreak1" type="number" step="1" min="0" max="100">
+          <div class="advanced-toggle" id="advancedToggleProcess" onclick="toggleAdvanced('process')"><button class="group-toggle">▸</button> Avancerat</div>
+          <div class="advanced-fields" id="advancedFieldsProcess" hidden>
+            <div class="field" id="nonlinearGainField" data-addon="ventilkarakteristik">
+              <label for="nonlinearGainEnabled">Olinjär ventilkarakteristik <button class="help-btn" data-help="nonlinearGainEnabled">?</button></label>
+              <input id="nonlinearGainEnabled" type="checkbox" title="Processens K varierar med utsignalen i tre fasta zoner">
             </div>
-            <div class="field">
-              <label for="ngBreak2">Brytpunkt 2 (u) <button class="help-btn" data-help="ngBreak">?</button></label>
-              <input id="ngBreak2" type="number" step="1" min="0" max="100">
-            </div>
-            <div class="zone-table-wrap">
-              <table class="zone-table">
-                <thead>
-                  <tr><th></th><th>K <button class="help-btn" data-help="ngZoneK">?</button></th></tr>
-                </thead>
-                <tbody>
-                  <tr id="ngZoneRow1"><th>Zon 1 (låg u)</th><td><input id="ngZ1K" type="number" step="0.01" min="0.001"></td></tr>
-                  <tr id="ngZoneRow2"><th>Zon 2 (mellan-u)</th><td><input id="ngZ2K" type="number" step="0.01" min="0.001"></td></tr>
-                  <tr id="ngZoneRow3"><th>Zon 3 (hög u)</th><td><input id="ngZ3K" type="number" step="0.01" min="0.001"></td></tr>
-                </tbody>
-              </table>
+            <div class="schedule-fields" id="nonlinearGainFields" data-addon="ventilkarakteristik" hidden>
+              <div class="field">
+                <label for="ngBreak1">Brytpunkt 1 (u) <button class="help-btn" data-help="ngBreak">?</button></label>
+                <input id="ngBreak1" type="number" step="1" min="0" max="100">
+              </div>
+              <div class="field">
+                <label for="ngBreak2">Brytpunkt 2 (u) <button class="help-btn" data-help="ngBreak">?</button></label>
+                <input id="ngBreak2" type="number" step="1" min="0" max="100">
+              </div>
+              <!-- FEAT-044 (mergad ovanpå UX-004) — zonfälten som en kompakt
+                   tabell istället för tre utspridda .field-rutor. -->
+              <div class="zone-table-wrap">
+                <table class="zone-table">
+                  <thead>
+                    <tr><th></th><th>K <button class="help-btn" data-help="ngZoneK">?</button></th></tr>
+                  </thead>
+                  <tbody>
+                    <tr id="ngZoneRow1"><th>Zon 1 (låg u)</th><td><input id="ngZ1K" type="number" step="0.01" min="0.001"></td></tr>
+                    <tr id="ngZoneRow2"><th>Zon 2 (mellan-u)</th><td><input id="ngZ2K" type="number" step="0.01" min="0.001"></td></tr>
+                    <tr id="ngZoneRow3"><th>Zon 3 (hög u)</th><td><input id="ngZ3K" type="number" step="0.01" min="0.001"></td></tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Regulator -->
-      <div class="param-group" id="groupRegulator">
-        <span class="param-group-label" onclick="toggleParamGroup('groupRegulator')"><button class="group-toggle">▼</button> Regulator</span>
+      <!-- Regulatorkonfiguration -->
+      <div class="param-group" id="groupRegulatorkonfiguration">
+        <span class="param-group-label" onclick="toggleParamGroup('groupRegulatorkonfiguration')"><button class="group-toggle">▼</button> Regulatorkonfiguration</span>
         <div class="param-group-body">
+          <!-- UX-004 Justering 4 (PO-beslut 2026-09-21) — Manuell är inte
+               längre ett alternativ HÄR, utan en separat Auto/Manuell-toggle
+               (se nedan), som i verklig driftväxling: regulatortyp och
+               Auto/Manuell är två oberoende val. -->
           <div class="field">
-            <label for="mode">Läge <button class="help-btn" data-help="mode">?</button></label>
-            <select id="mode">
+            <label for="regulatorType">Läge <button class="help-btn" data-help="mode">?</button></label>
+            <select id="regulatorType">
               <option value="onoff">OnOff</option>
               <option value="p">P</option>
               <option value="pi">PI</option>
               <option value="pid">PID</option>
-              <option value="manual">Manuell</option>
             </select>
           </div>
+          <div class="field">
+            <label for="autoManualToggle">Auto/Manuell <button class="help-btn" data-help="autoManualToggle">?</button></label>
+            <input id="autoManualToggle" type="checkbox" title="Manuellt: operatören styr utsignalen direkt, som vid verklig driftväxling">
+          </div>
+          <!-- Dold: intern sanningskälla, oförändrad av befintlig logik/
+               tester (syncParamsFromUI, updateControllerUIState,
+               Tillämpnings-filtrering m.fl.) — bara HUR värdet sätts av
+               användaren är nytt, se app.js. -->
+          <select id="mode" hidden>
+            <option value="onoff">OnOff</option>
+            <option value="p">P</option>
+            <option value="pi">PI</option>
+            <option value="pid">PID</option>
+            <option value="manual">Manuell</option>
+          </select>
           <div class="field">
             <label for="kp">Kp <button class="help-btn" data-help="kp">?</button></label>
             <input id="kp" type="number" step="0.1" min="0.1">
@@ -761,83 +849,6 @@
             <label for="td">Td <button class="help-btn" data-help="td">?</button></label>
             <input id="td" type="number" step="0.1" min="0">
           </div>
-          <div class="field" id="gainScheduleField">
-            <label for="gainScheduleEnabled">Parameterstyrning <button class="help-btn" data-help="gainScheduleEnabled">?</button></label>
-            <input id="gainScheduleEnabled" type="checkbox" title="Kp/Ti/Td väljs utifrån PV i tre fasta zoner">
-          </div>
-          <div class="schedule-fields" id="gainScheduleFields" hidden>
-            <div class="field">
-              <label for="gsBreak1">Brytpunkt 1 (PV) <button class="help-btn" data-help="gsBreak">?</button></label>
-              <input id="gsBreak1" type="number" step="1" min="0" max="100">
-            </div>
-            <div class="field">
-              <label for="gsBreak2">Brytpunkt 2 (PV) <button class="help-btn" data-help="gsBreak">?</button></label>
-              <input id="gsBreak2" type="number" step="1" min="0" max="100">
-            </div>
-            <div class="zone-table-wrap">
-              <table class="zone-table">
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Kp <button class="help-btn" data-help="gsZoneKp">?</button></th>
-                    <th>Ti <button class="help-btn" data-help="gsZoneTi">?</button></th>
-                    <th>Td <button class="help-btn" data-help="gsZoneTd">?</button></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr id="gsZoneRow1">
-                    <th>Zon 1</th>
-                    <td><input id="gsZ1Kp" type="number" step="0.1" min="0.1"></td>
-                    <td><input id="gsZ1Ti" type="number" step="0.1" min="0"></td>
-                    <td><input id="gsZ1Td" type="number" step="0.1" min="0"></td>
-                  </tr>
-                  <tr id="gsZoneRow2">
-                    <th>Zon 2</th>
-                    <td><input id="gsZ2Kp" type="number" step="0.1" min="0.1"></td>
-                    <td><input id="gsZ2Ti" type="number" step="0.1" min="0"></td>
-                    <td><input id="gsZ2Td" type="number" step="0.1" min="0"></td>
-                  </tr>
-                  <tr id="gsZoneRow3">
-                    <th>Zon 3</th>
-                    <td><input id="gsZ3Kp" type="number" step="0.1" min="0.1"></td>
-                    <td><input id="gsZ3Ti" type="number" step="0.1" min="0"></td>
-                    <td><input id="gsZ3Td" type="number" step="0.1" min="0"></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="field">
-            <label for="bumpless">Bumpless <button class="help-btn" data-help="bumpless">?</button></label>
-            <input id="bumpless" type="checkbox" checked title="Mjuk övergång vid lägesbyte">
-          </div>
-          <div class="field">
-            <label for="antiWindup">Anti-windup <button class="help-btn" data-help="antiWindup">?</button></label>
-            <input id="antiWindup" type="checkbox" checked title="Förhindra integratoruppvridning vid mättning">
-          </div>
-          <div class="field">
-            <label for="showPB">Visa PB <button class="help-btn" data-help="showPB">?</button></label>
-            <input id="showPB" type="checkbox" title="Visa proportionalbandet i grafen">
-          </div>
-          <div class="field">
-            <label for="hysteresLower">Hyst. låg <button class="help-btn" data-help="hysteresLower">?</button></label>
-            <input id="hysteresLower" type="number" step="0.1" min="0">
-          </div>
-          <div class="field">
-            <label for="hysteresUpper">Hyst. hög <button class="help-btn" data-help="hysteresUpper">?</button></label>
-            <input id="hysteresUpper" type="number" step="0.1" min="0">
-          </div>
-        </div>
-      </div>
-
-      <!-- Styrning -->
-      <div class="param-group" id="groupStyrning">
-        <span class="param-group-label" onclick="toggleParamGroup('groupStyrning')"><button class="group-toggle">▼</button> Styrning</span>
-        <div class="param-group-body">
-          <div class="field">
-            <label for="sp">SP <button class="help-btn" data-help="sp">?</button></label>
-            <input id="sp" type="number" step="0.1" min="0" max="100">
-          </div>
           <div class="field">
             <label for="umin">U min <button class="help-btn" data-help="umin">?</button></label>
             <input id="umin" type="number" step="0.1" min="0" max="100">
@@ -847,16 +858,94 @@
             <input id="umax" type="number" step="0.1" min="0" max="100">
           </div>
           <div class="field">
-            <label for="manualOutput">Manuell u <button class="help-btn" data-help="manualOutput">?</button></label>
-            <input id="manualOutput" type="number" step="0.1" min="0" max="100">
+            <label for="hysteresLower">Hyst. låg <button class="help-btn" data-help="hysteresLower">?</button></label>
+            <input id="hysteresLower" type="number" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label for="hysteresUpper">Hyst. hög <button class="help-btn" data-help="hysteresUpper">?</button></label>
+            <input id="hysteresUpper" type="number" step="0.1" min="0">
+          </div>
+          <div class="advanced-toggle" id="advancedToggleRegulator" onclick="toggleAdvanced('regulator')"><button class="group-toggle">▸</button> Avancerat</div>
+          <div class="advanced-fields" id="advancedFieldsRegulator" hidden>
+            <div class="field" data-addon="framkoppling">
+              <label for="kff">Kff <button class="help-btn" data-help="kff">?</button></label>
+              <input id="kff" type="number" step="0.05">
+            </div>
+            <div class="field" id="gainScheduleField" data-addon="parameterstyrning">
+              <label for="gainScheduleEnabled">Parameterstyrning <button class="help-btn" data-help="gainScheduleEnabled">?</button></label>
+              <input id="gainScheduleEnabled" type="checkbox" title="Kp/Ti/Td väljs utifrån PV i tre fasta zoner">
+            </div>
+            <div class="schedule-fields" id="gainScheduleFields" data-addon="parameterstyrning" hidden>
+              <div class="field">
+                <label for="gsBreak1">Brytpunkt 1 (PV) <button class="help-btn" data-help="gsBreak">?</button></label>
+                <input id="gsBreak1" type="number" step="1" min="0" max="100">
+              </div>
+              <div class="field">
+                <label for="gsBreak2">Brytpunkt 2 (PV) <button class="help-btn" data-help="gsBreak">?</button></label>
+                <input id="gsBreak2" type="number" step="1" min="0" max="100">
+              </div>
+              <!-- FEAT-044 (mergad ovanpå UX-004) — zonfälten som en kompakt
+                   tabell istället för nio utspridda .field-rutor. -->
+              <div class="zone-table-wrap">
+                <table class="zone-table">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Kp <button class="help-btn" data-help="gsZoneKp">?</button></th>
+                      <th>Ti <button class="help-btn" data-help="gsZoneTi">?</button></th>
+                      <th>Td <button class="help-btn" data-help="gsZoneTd">?</button></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr id="gsZoneRow1">
+                      <th>Zon 1</th>
+                      <td><input id="gsZ1Kp" type="number" step="0.1" min="0.1"></td>
+                      <td><input id="gsZ1Ti" type="number" step="0.1" min="0"></td>
+                      <td><input id="gsZ1Td" type="number" step="0.1" min="0"></td>
+                    </tr>
+                    <tr id="gsZoneRow2">
+                      <th>Zon 2</th>
+                      <td><input id="gsZ2Kp" type="number" step="0.1" min="0.1"></td>
+                      <td><input id="gsZ2Ti" type="number" step="0.1" min="0"></td>
+                      <td><input id="gsZ2Td" type="number" step="0.1" min="0"></td>
+                    </tr>
+                    <tr id="gsZoneRow3">
+                      <th>Zon 3</th>
+                      <td><input id="gsZ3Kp" type="number" step="0.1" min="0.1"></td>
+                      <td><input id="gsZ3Ti" type="number" step="0.1" min="0"></td>
+                      <td><input id="gsZ3Td" type="number" step="0.1" min="0"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="field">
+              <label for="bumpless">Bumpless <button class="help-btn" data-help="bumpless">?</button></label>
+              <input id="bumpless" type="checkbox" checked title="Mjuk övergång vid lägesbyte">
+            </div>
+            <div class="field">
+              <label for="antiWindup">Anti-windup <button class="help-btn" data-help="antiWindup">?</button></label>
+              <input id="antiWindup" type="checkbox" checked title="Förhindra integratoruppvridning vid mättning">
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Störningar -->
-      <div class="param-group" id="groupStorningar">
-        <span class="param-group-label" onclick="toggleParamGroup('groupStorningar')"><button class="group-toggle">▼</button> Störningar</span>
+      <!-- Processpåverkan — UX-004: "Styrning"+"Störningar" slagna ihop,
+           eftersom båda är parametrar användaren ändrar UNDER pågående
+           körning (PO:s motivering). Hålls medvetet FLACK, ingen egen
+           Avancerat-sektion — se rapporten avsnitt 2.2. -->
+      <div class="param-group" id="groupProcesspaverkan">
+        <span class="param-group-label" onclick="toggleParamGroup('groupProcesspaverkan')"><button class="group-toggle">▼</button> Processpåverkan</span>
         <div class="param-group-body">
+          <div class="field">
+            <label for="sp">SP <button class="help-btn" data-help="sp">?</button></label>
+            <input id="sp" type="number" step="0.1" min="0" max="100">
+          </div>
+          <div class="field">
+            <label for="manualOutput">Manuell u <button class="help-btn" data-help="manualOutput">?</button></label>
+            <input id="manualOutput" type="number" step="0.1" min="0" max="100">
+          </div>
           <div class="field">
             <label for="noise">Brus std <button class="help-btn" data-help="noise">?</button></label>
             <input id="noise" type="number" step="0.1" min="0">
@@ -871,6 +960,27 @@
           </div>
           <div class="field" style="justify-content:flex-end;">
             <button id="pulse">Trigga puls</button>
+          </div>
+          <!-- UX-004 Justering 3 (PO-beslut 2026-09-21) — Last mag/Trigga
+               last är inte längre exklusiva för Framkoppling (se
+               updateKffVisibility() i app.js): laststeg är en generell
+               processpåverkan, lika användbar för ren regulatorprovning som
+               ett SP-steg. Inget data-addon-attribut längre — alltid synliga,
+               som Puls/Brus. UX-004 Implementering, punkt 4 (PO-test
+               2026-09-22) — Lastförstärkning flyttad hit från
+               Processinställnings Avancerat-sektion: den, Last mag och
+               Trigga last hör till samma användningsfall och visas nu
+               tillsammans. -->
+          <div class="field">
+            <label for="auxGain">Lastförstärkning <button class="help-btn" data-help="auxGain">?</button></label>
+            <input id="auxGain" type="number" step="0.05">
+          </div>
+          <div class="field">
+            <label for="auxMag">Last mag <button class="help-btn" data-help="auxMag">?</button></label>
+            <input id="auxMag" type="number" step="0.5">
+          </div>
+          <div class="field" style="justify-content:flex-end;">
+            <button id="triggerAux">Trigga last</button>
           </div>
         </div>
       </div>
@@ -887,6 +997,14 @@
     </div>
 
     <div class="row" id="status">Status: ej laddad</div>
+
+    <!-- UX-004 Justering 5 (PO-beslut 2026-09-21) — PB är en härledd
+         GRAF-visning (av aktuell Kp), inte något användaren konfigurerar
+         (det gör man via Kp) — hör därför hemma vid grafen den analyseras i,
+         inte i Regulatorkonfiguration. -->
+    <div class="row" id="chartControls">
+      <label class="measure-check"><input type="checkbox" id="showPB"> Visa PB <button class="help-btn" data-help="showPB">?</button></label>
+    </div>
 
     <div id="chartWrap">
       <canvas id="chart" width="980" height="280"></canvas>

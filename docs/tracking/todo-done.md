@@ -35,6 +35,394 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande features 
 
 ## Webbapp (`apps/app/`)
 
+### UX-002 — Tillämpnings-/processmodellsväljare (Fas 0 av UX-001)
+**Prioritet:** Hög — PO:s beslutade nästa steg (2026-09-20), efter UX-001.
+**Beskrivning:**
+Fas 0 från `docs/reports/UX-001_FORSTUDIE-PROCESSBASERAD-UX.md` avsnitt 5:
+ny "Tillämpning"-väljare (Fri utforskning/Tvålägesreglering/Temperaturprocess/
+Nivåprocess) som filtrerar vilka processmodeller (`processType`) som erbjuds
+och vilka strategitillägg (Framkoppling/Parameterstyrning/Ventilkarakteristik)
+som visas. Processmodellen ("Processtyp" döpt om till "Processmodell") förblir
+alltid synlig och väljbar — bara ALTERNATIVEN filtreras, inte begreppet.
+Ingen ändring i `sim-core.js`, inget nytt scenariofält, Fri utforskning är
+default (= dagens fulla UI, oförändrat för alla 12 befintliga lärstigar).
+Blandnings-/kvotprocess och Kaskadreglerad process byggs INTE nu (Fas 2,
+kräver egen strategikod som inte finns än).
+**Genomförande:**
+Ny "Tillämpning"-grupp överst i parametersidopanelen (`#groupTillampning`,
+samma `.param-group`-mönster som övriga grupper) med väljaren
+`#applicationProfile` (Fri utforskning/Tvålägesreglering/Temperaturprocess/
+Nivåprocess). Ny `APPLICATION_PROFILES`-tabell i `app.js` (fyra profiler,
+matchar UX-001 avsnitt 1.1 exakt) och `applyApplicationProfile()`: filtrerar
+`#processType`s `<option>`-alternativ via `.hidden` (väljaren SJÄLV döljs
+aldrig, bara alternativen — PO:s pedagogiska krav), faller tillbaka till ett
+giltigt värde om det aktuella blir otillåtet, och visar/döljer
+strategitilläggen via en ny `[data-addon]`-attributmarkering (auxGain/Kff/
+Last mag/Trigga last → `framkoppling`; `#gainScheduleField(s)` →
+`parameterstyrning`; `#nonlinearGainField(s)` → `ventilkarakteristik`) och en
+`.addon-hidden`-CSS-klass med `!important` (vinner medvetet över befintlig
+lägesbaserad `style.display` på samma element, t.ex.
+`updateProcessUIState()`s hantering av `nonlinearGainField` — annars hade de
+två skrivit över varandra). "Processtyp" omdöpt till "Processmodell"
+(fält-etikett + `help.json`). Inget sparat tillämpningsläge mellan
+sidladdningar — Fri utforskning är alltid startläget, per PO:s ord. Ingen
+ändring i `sim-core.js`, inget nytt scenariofält.
+**Tester:** `tests/ux-002-application-profile.test.mjs` (43 kontroller, ren
+statisk källkodsgranskning — samma mönster som
+`hotfix-v1.4.1-facit-env.test.mjs` — inklusive att `APPLICATION_PROFILES`
+extraheras och körs isolerat för att verifiera den faktiska datastrukturen,
+inte bara regexmatchas). Full regression grön (9 testfiler, 218
+kontroller), DEV-/PROD-innehålls- och byggvalidering grön.
+
+**Åtgärder efter PO:s första visuella granskning (2026-09-20):**
+1. **Observation 1 (egen grupp tog för mycket plats):** "Tillämpning"-fältet
+   flyttat ur sin egen `#groupTillampning`-grupp (borttagen) och in i
+   Process-gruppen, direkt FÖRE Processmodell — synliggör sambandet
+   Tillämpning → Processmodell → processparametrar utan extra vertikalt
+   utrymme.
+2. **Observation 2 (lärstig satte bara Processmodell, inte Tillämpning —
+   kunde visa "Nivåprocess" + ett självreglerande scenario samtidigt):** ny
+   `deriveApplicationProfile(scenario)` i `app.js`, körd vid VARJE
+   scenarioladdning (`loadScenarioByName()`, både via lärstig och manuellt
+   scenarioval) — härleder Tillämpning från data som redan finns i
+   scenariot (inget nytt scenariofält): `auxSignal`/aktiv
+   `gainSchedule`/`nonlinearGain` → Temperaturprocess, `process.type ===
+   "integrating"` → Nivåprocess, `mode === "onoff"` → Tvålägesreglering,
+   annars → Fri utforskning. Sätts INNAN `applyApplicationProfile()`
+   filtrerar Processmodell-alternativen, så de två alltid är en
+   sammanhängande kombination — aldrig kvarlämnad från ett tidigare,
+   orelaterat scenario. Verifierat mot verkliga scenariofiler
+   (`integrating-pi.json`→niva, `onoff-basic.json`→onoff,
+   `valve-nonlinear-gain-demo.json`/`framkoppling-demo-pid.json`→temperatur,
+   generiska PID-scenarier→fri).
+
+**Åtgärd efter PO:s andra visuella granskning (skärmdump, 2026-09-20):** fält
+i parametergrupperna satt i ett FAST 6-kolumners CSS-rutnät
+(`grid-template-columns: repeat(6, minmax(110px, 1fr))`) — alla fält tvingades
+till samma kolumnbredd oavsett innehåll. Konkret symptom i skärmdumpen:
+Processmodell-väljaren klippte av lång text ("Självreglerande" utan att visa
+"(enkapacitiv)"/"(flerkapacitiv)"), medan korta fält som K/T/L slösade
+utrymme. Löst genom att byta `.param-group` från `display: grid` till
+`display: flex; flex-wrap: wrap` — varje `.field` får nu bredden dess EGET
+innehåll (etikett eller select/input) faktiskt behöver (`flex: 0 0 auto` +
+`min-width: 90px` som golv, inte tvingat mått), istället för en delad
+rutnätskolumn. De tre breakpoint-specifika `grid-template-columns`-
+övermappningarna (1200px/860px/640px) är onödiga med flexbox (radbrytning
+sker naturligt) och borttagna; 640px-brytpunkten har istället `.field {
+width: 100%; }` tillagd för att bevara ett-fält-per-rad på smala skärmar,
+samma avsikt som tidigare. Ren CSS-ändring, ingen JS/HTML-struktur berörd
+utöver `.param-group-label`s `grid-column: 1 / -1` → `width: 100%`. Full
+regression fortsatt grön (218 kontroller).
+
+**Uppföljning efter PO:s tredje skärmdump (2026-09-20):** flex-fixet ovan
+gjorde `.field` innehållsstyrd, men `<input type="number">` (K/T/L m.fl.)
+saknar SJÄLV en innehållsstyrd bredd — till skillnad från `<select>` (som
+webbläsaren automatiskt sizear efter det valda alternativets text) använder
+en `<input>` webbläsarens breda standardbredd (~170–220px) oavsett hur kort
+värdet är. Löst med en ny regel `input[type="number"] { width: 90px; }`.
+Full regression fortsatt grön (218 kontroller).
+
+**Funktionell bugg + två uppföljningsfrågor, åtgärdade tillsammans
+(2026-09-20):** PO:s skärmdumpar visade att Parameterstyrning förblev AKTIV
+i simuleringen efter byte till Tvålägesreglering, trots att kryssrutan blivit
+osynlig och oåtkomlig — att bara DÖLJA ett tillägg räckte inte, dess EFFEKT
+måste stängas av. Löst i `applyApplicationProfile()`: Parameterstyrning/
+Ventilkarakteristik avmarkeras, Framkoppling nollställs (Kff, Last mag, OCH
+ett redan triggat `sim.auxValue`). PO:s uppföljningsfråga 1 (ska Läge
+blockeras vid Tvålägesreglering?): ja — `APPLICATION_PROFILES` utökad med
+`modes` per profil. PO:s uppföljningsfråga 2 (Bumpless giltigt vid on/off?):
+nej — verifierat att Bumpless bara har effekt vid byte till p/pi/pid/
+manuellt läge; fältet döljs nu vid Läge=OnOff.
+
+12 nya testkontroller (55 totalt). Full regression grön (9 testfiler, 230
+kontroller), DEV-/PROD-validering grön.
+
+**Systematisk synlighetsgranskning (2026-09-20), PO:s uppdrag:** full
+genomgång i `docs/reports/UX-002_SYNLIGHETSGRANSKNING.md`. Rekommendation:
+(1) ta bort Tvålägesreglering som egen tillämpning (fel axel — on/off är en
+regulatorstrategi, samma axel som Läge, inte en processkontext; dess
+uteslutning av Integrerande saknar reglerteknisk grund); (2) lägg till
+Läges-villkor på Framkopplingens fält (bekräftad bugg — de saknade
+Läges-villkor helt, till skillnad från Parameterstyrning som redan hade
+motsvarande skydd sedan FEAT-042). Samtliga 12 lärstigars scenarioreferenser
+körda programmatiskt genom `deriveApplicationProfile()` — härledningslogiken
+själv korrekt för alla redan idag.
+
+**PO gav klartecken (2026-09-20)** att implementera exakt de två
+rekommenderade ändringarna:
+1. **Tvålägesreglering borttagen som egen tillämpning.**
+   `APPLICATION_PROFILES` går från fyra till TRE profiler (`fri`/
+   `temperatur`/`niva`); `"onoff"` tillagt i `temperatur.modes`/
+   `niva.modes`; `deriveApplicationProfile()`s `onoff`-specialfall borttaget.
+2. **Läges-villkor tillagt för Framkoppling.** Ny funktion
+   `updateFramkopplingVisibility()`: Lastförstärkning/Kff/Last mag/Trigga
+   last kräver nu BÅDE att Tillämpningen tillåter tillägget OCH att Läge ∈
+   {P, PI, PID}. Anropas från både `applyApplicationProfile()` och
+   `updateControllerUIState()`.
+
+Synlighetsmatrisen re-verifierad programmatiskt mot samtliga 12 lärstigar
+efter ändringen: inga avvikelser. 20 nya/ändrade testkontroller (56 totalt).
+Full regression grön (9 testfiler, 231 kontroller), DEV-/PROD-validering
+grön.
+
+**Uppföljningsanalys innan merge (UX-003, 2026-09-21):** PO observerade att
+Fri utforskning och Temperaturprocess i praktiken nästan är identiska och
+bad om en analys av att ta bort Fri utforskning till förmån för en
+"Avancerat"-sektion per tillämpning. Se `docs/reports/UX-003_BEHOVS-FRI-UTFORSKNING.md`
+— rekommendation: behåll Fri utforskning (Alternativ A), ingen konsekvens
+för UX-002. Se egen UX-003-post i `todo.md` för fortsatt beslutsstatus
+(Fri utforskning kvar; ingen ytterligare analys planerad just nu).
+
+**Status:** Mergad till `develop` (2026-09-21), PO:s klartecken. Branch
+`feature/UX-002-tillampningsval` borttagen.
+
+### UX-003 — Behövs Fri utforskning?
+**Prioritet:** Hög — utreds innan UX-002:s mergebeslut, på PO:s begäran
+(2026-09-21).
+**Beskrivning:**
+Efter UX-002:s tredje kodrunda observerade PO att Fri utforskning och
+Temperaturprocess i praktiken skiljer sig väldigt lite. Uppdrag: analysera
+Alternativ A (behåll Fri utforskning) mot Alternativ B (ta bort den, inför en
+hopfällbar "Avancerat"-sektion per tillämpning som visar allt kompatibelt med
+vald Processmodell). Ren analys, ingen kod, ingen branch.
+**Leverans:** `docs/reports/UX-003_BEHOVS-FRI-UTFORSKNING.md`. Sammanfattning:
+
+1. **Nulägesbekräftelse:** med dagens `APPLICATION_PROFILES` är `modes` och
+   `addons` identiska mellan `fri` och `temperatur` — enda skillnaden är att
+   `fri` även tillåter Integrerande som Processmodell. Ingen av de 12
+   lärstigarna använder faktiskt den kombinationen (Integrerande + tillägg)
+   idag.
+2. **Fri utforskning fyller TVÅ separata roller**, inte en: (1) en
+   processmodell-fråga (obegränsad kombination, oanvänd av dagens innehåll)
+   och (2) semantiskt hem för åtta MEDVETET kontextlösa lärstigar
+   (`kom-igång` m.fl., se UX-001 avsnitt 1.3) — Roll 2 försvinner inte bara
+   för att Roll 1 byggs om.
+3. **Alternativ B:s definition ("Avancerat" = allt kompatibelt med aktuell
+   Processmodell) förutsätter en redan vald Tillämpning** — löser alltså
+   inte var de åtta kontextlösa lärstigarna ska höra hemma utan att antingen
+   (a) tvinga in dem under en tillämpning de inte handlar om, i strid med
+   UX-001 avsnitt 1.3, eller (b) återinföra ett neutralt "allt olåst"-läge
+   ändå, fast under annat namn/annan form — dvs. Fri utforskning omdöpt, inte
+   borttaget.
+4. Alternativ B skulle dessutom göra `framkoppling.v1`s och
+   `parameterstyrning-ventilkarakteristik.v1`s EGNA ämnesfält gömda bakom
+   ett extra klick i sina egna dedikerade lärstigar — motsatt effekt av
+   UX-001s syfte.
+5. Alternativ B:s enda tydliga vinst (slipper manuell synk mot `fri.addons`
+   när Kvotreglering/Kaskadreglering tillkommer) koncentreras till
+   Kvotreglering — Kaskadreglering behöver enligt STRAT-001 ändå en egen
+   layout.
+6. **Rekommendation: Alternativ A** (behåll Fri utforskning).
+
+**Status:** **PO antog rekommendationen (2026-09-21)** — Alternativ A,
+Fri utforskning behålls oförändrad. Ingen implementation krävs (dagens kod
+matchade redan rekommendationen). Ingen ytterligare analys av frågan
+planerad. Stängt.
+
+### UX-004 — Omstrukturering av huvudyta och progressiv exponering
+**Branch:** `feature/UX-004-huvudyta-omstrukturering` (raderad efter merge)
+**Prioritet:** Hög — PO+PM:s designbeslut (2026-09-21), direkt efter UX-002:s
+merge.
+**Beskrivning:**
+PO+PM har fattat ett redan beslutat designbeslut (ej del av denna analys):
+huvudytan ska omorganiseras kring tre grupper — Processinställning,
+Regulatorkonfiguration, Processpåverkan (Styrning+Störningar slås ihop) —
+med avancerade fält separerade från grundparametrarna för att minska visuell
+komplexitet. Uppdrag: analysera slutlig informationsarkitektur, vad som
+alltid ska synas, vad som ska bakom "Avancerat", hur lärstigar ska styra
+synligheten, samspelet Tillämpning/Processmodell/lärsteg, risker, och ett
+konkret layoutförslag. Ren analys, ingen kod, ingen branch.
+**Leverans:** `docs/reports/UX-004_OMSTRUKTURERING-HUVUDYTA.md`. Sammanfattning:
+
+1. **Viktig avgränsning:** detta "Avancerat" är INTE UX-003:s avfärdade
+   förslag (som skulle ERSÄTTA Tillämpning/Fri utforskning) — det är ett
+   disklosyr-lager som verkar INOM det redan mergade UX-002-systemet.
+   Tillämpning avgör fortfarande vilka fält som är MÖJLIGA; Avancerat avgör
+   bara om ett redan tillåtet fält visas direkt eller bakom en klickning.
+2. **Informationsarkitektur:** U min/U max flyttas till
+   Regulatorkonfigurations grundnivå (konfiguration, ändras sällan under
+   körning); SP och Manuell u till Processpåverkan (ändras under körning,
+   per PO:s egen definition av gruppen). 23 av dagens 45 kontroller blir
+   grundnivå, 22 blir Avancerat (exakt lista i rapporten avsnitt 3).
+   Processpåverkan föreslås förbli FLACK (ingen egen Avancerat-nivå) — redan
+   smal och redan addon-filtrerad.
+3. **Lärstigsstyrning (kärnlösning):** Avancerat-sektionens öppen/stängd-
+   status härleds AUTOMATISKT från scenariots egna aktiva värden
+   (`kff !== 0`, `gainSchedule.enabled`, etc.) — återanvänder samma
+   signalkälla som UX-002:s `deriveApplicationProfile()`, ingen ny
+   lärstigstaggning krävs i normalfallet. Undantag: Bumpless/Anti-windup är
+   `true` i nästan alla scenarier (default, inte ett ämnessignal) — löses
+   med ett nytt, valfritt `forceAdvancedOpen`-fält per lärstigssteg, bara
+   för de fåtal lärstigar (idag: `windup-antiwindup.v1`) där ämnet är en
+   fält-EXISTENS snarare än ett avvikande värde.
+4. **Störst risk:** discoverability-regression för Anti-windup/Bumpless
+   (flyttas till Avancerat trots att de inte är addon-gated idag) —
+   `windup-antiwindup.v1` måste verifieras manuellt efter implementation,
+   inte bara programmatiskt. Näst störst: två disklosyr-mekanismer
+   (addon-hidden från UX-002 + ny Avancerat-kollaps) verkar på samma fält
+   (t.ex. Kff) — måste kombineras med AND, inte skriva över varandra.
+5. **Layoutförslag:** nästlad kollapsbar "Avancerat"-rad per grupp,
+   återanvänder FEAT-044s redan etablerade `.zone-table`-hopfällningsmönster
+   — ingen ny komponenttyp att lära ut.
+
+**PO:s fyra justeringsbeslut (2026-09-21) och genomförande:**
+
+1. **Justering 1 — "Fri utforskning" → "Avancerat".** Kortare, mer
+   etablerat begrepp, samma expertlägesroll ("visar allt"). Genomfört:
+   `APPLICATION_PROFILES`-nyckeln `fri` → `avancerat`, UI-alternativet döpt
+   om. Att välja Avancerat tvingar nu ÄVEN alla Avancerat-disklosyrsektioner
+   öppna (kopplar ihop UX-002:s Tillämpningsbegrepp med UX-004:s nya
+   disklosyrmekanism till EN sammanhängande "expertläge"-betydelse, istället
+   för två delvis överlappande begrepp).
+2. **Justering 3 — Last är generell processpåverkan, inte exklusiv för
+   Framkoppling.** Motivering: laststeg är användbart för ren
+   regulatorprovning även utan Kff, och hittills har bara SP-steg funnits
+   som generellt utvärderingsverktyg. Genomfört: `data-addon="framkoppling"`
+   borttaget från Lastförstärkning/Last mag/Trigga last (kvar bara på Kff);
+   `updateFramkopplingVisibility()` → `updateKffVisibility()`; inget
+   nollställs längre vid tillämpningsbyte för Last. **Upptäckt och åtgärdad
+   regression under implementationen:** `deriveApplicationProfile()` hade
+   ändrats att bara härleda Temperaturprocess från Kff — men
+   `framkoppling.v1`s FÖRSTA steg har `kff=0` ("PID ensam", innan Kff
+   introduceras), vilket hade härlett det steget till en ANNAN Tillämpning
+   än lärstigens övriga två steg. Löst genom att behålla `auxSignal` som
+   signal TILLSAMMANS MED `kff` — verifierat programmatiskt att `auxSignal`
+   idag ENDAST förekommer i `framkoppling.v1`s fyra scenarier, så det bredare
+   villkoret är riskfritt. Samtliga 12 lärstigar re-verifierade
+   programmatiskt efter fixen: inga avvikelser.
+3. **Justering 4 — Auto/Manuell som togglefunktion.** Läge-väljaren ersatt
+   av Regulatortyp (OnOff/P/PI/PID) + en separat Auto/Manuell-toggle, som
+   verklig driftväxling. `#mode` (5 alternativ) kvar som DOLD intern
+   sanningskälla — all befintlig logik (`syncParamsFromUI`,
+   `updateControllerUIState`, Tillämpnings-filtrering) rör den ALDRIG, bara
+   HUR värdet sätts är nytt. Byte till Manuellt seedar nu `manualOutput`
+   OVILLKORLIGT med aktuellt u (tidigare gated på Bumpless-kryssrutan, som
+   styr en annan, separat sak — regulatorns egen bias-fasning vid övergång
+   TILL p/pi/pid). Ingen ändring i `sim-core.js`.
+4. **Justering 5 — Visa PB flyttat till grafen.** PB är en härledd
+   graf-visning (av aktuell Kp), inte något användaren konfigurerar — hör
+   hemma vid grafen den analyseras i. Genomfört: ny rad `#chartControls`
+   direkt ovanför `#chartWrap`, samma `#showPB`-id (bara ny DOM-plats).
+
+**Genomförande i övrigt (full IA från analysen, se rapporten):** tre grupper
+(`groupProcessinstallning`/`groupRegulatorkonfiguration`/
+`groupProcesspaverkan`) ersätter de fyra gamla. Nästlad, kollapsbar
+"Avancerat"-sektion per grupp (Processinställning: Lastförstärkning +
+Ventilkarakteristik; Regulatorkonfiguration: Kff + Parameterstyrning +
+Bumpless + Anti-windup) — öppen/stängd härleds automatiskt
+(`deriveAdvancedOpen()`) från: Tillämpning="avancerat" (allt uppackat) ELLER
+scenariots aktiva värden (samma signal som `deriveApplicationProfile()`)
+ELLER ett nytt, valfritt scenariofält `forceAdvancedOpen` (satt på
+`pi-windup-demo.json`, eftersom Anti-windup/Bumpless är `true` i nästan alla
+scenarier och alltså inte fångas av "aktivt värde"-heuristiken).
+Processpåverkan hålls flack (ingen egen Avancerat-nivå, per analysens
+rekommendation 2.2).
+
+**UX-004 Implementering (uppföljande PO-uppdrag, 2026-09-22):**
+
+1. **Tillämpning sparas nu i `localStorage`** (`APPLICATION_PROFILE_STORAGE_KEY`,
+   `pidSimApplicationProfile`) — motsatsen till förra sessionens beslut ("aldrig
+   sparat"), ett uttryckligt nytt PO-krav ("lärare/studerande återkommer ofta
+   till samma scenario"). Sparas bara vid ett MANUELLT val i
+   `#applicationProfile`, inte vid varje scenario-/lärstigsstyrd omhärledning.
+2. **Infrastruktur för lärstigsstyrd synlighet** — ett nytt, valfritt fält
+   `visibilityOverride: { show: [...], hide: [...] }` (addon-namn) på en
+   lärstigs JSON, applicerat sist av tre lager (Tillämpning → Avancerat →
+   lärstig) via ny `applyPathVisibilityOverride()`. Wired in i
+   `parameterstyrning-ventilkarakteristik.v1` (visar Parameterstyrning,
+   döljer Kff) och `framkoppling.v1` (visar Kff, döljer Parameterstyrning).
+3. Bugg hittad och fixad under webbläsarverifiering: en helt ny sidladdning
+   (tom `localStorage`) lämnade Tillämpning på det härledda "Avancerat",
+   vilket tvingade ALLA Avancerat-sektioner öppna — emot "Initialt öppet
+   läge"-kravet. Fixat: `initUI()` använder `"temperatur"` som förvalt
+   startläge när inget är sparat.
+4. Bugg hittad och fixad: `loadScenarioByName()` anropar
+   `updateControllerUIState()` en andra gång EFTER `applyApplicationProfile()`
+   returnerat — dess interna `updateKffVisibility()` skrev tyst över en aktiv
+   `hide`-override av Kff. `applyPathVisibilityOverride()` anropas därför en
+   gång till, sist i `loadScenarioByName()` också.
+5. `windup-antiwindup.v1` (högsta discoverability-risken) visuellt
+   verifierad — Bumpless/Anti-windup faktiskt synliga, Avancerat-sektionen
+   faktiskt öppen.
+
+**UX-004 kompletteringar efter PO-test (samma dag, 2026-09-22) — sex punkter:**
+
+1. **"Avancerat (N dolda)"-räknaren borttagen helt** — PO ville bara ha
+   "Avancerat", ingen räknare.
+2. Bugg fixad: Tillämpning="Avancerat" var inte en komplett sandlåda — en
+   aktiv lärstigs `visibilityOverride` fortsatte gälla efter manuellt byte
+   till Avancerat. `applyPathVisibilityOverride()` returnerar nu tidigt om
+   `fields.applicationProfile.value === "avancerat"`.
+3. Bugg fixad: en aktiv lärstigs filter kunde läcka till ett senare,
+   manuellt valt scenario (`currentPath`/`currentPathStep` nollställdes
+   bara av `loadPath()`/testMode, inte av "Ladda scenario"-knappen). Fixat.
+4. **Lastförstärkning flyttad** från Processinställningens Avancerat-sektion
+   till Processpåverkans grundnivå, bredvid Last mag/Trigga last.
+   `deriveAdvancedOpen()`s "process"-villkor justerat i samma veva (bara
+   `nonlinearGain?.enabled`, inte längre `auxGain`).
+5. Samtliga 12 aktiva lärstigar granskade rad för rad för kvarvarande
+   referenser till de fyra gamla gruppnamnen (Process/Regulator/Styrning/
+   Störningar) — sex filer hade stale text, samtliga fixade (inkl.
+   introduktionslärstigen `kom-igång.v1`, granskad extra noggrant).
+6. Zonparametrarnas visuella sammanflytning i Parameterstyrning registrerad
+   i `docs/planning/WEB-IAKTTAGELSER.md` som framtida finputsning, INTE
+   åtgärdad (PO:s uttryckliga instruktion).
+
+**kom-igång.v1 — separat PO-beslut (samma dag, 2026-09-22):**
+introduktionslärstigen härledde till Tillämpning="Avancerat" (dess
+generiska scenarier saknar särskiljande signaler) — tvingade alla
+Avancerat-sektioner öppna för en helt ny användares FÖRSTA lärstig. PO
+beslutade: kom-igång.v1 ska konsekvent starta i Temperaturprocess. Ny,
+generell infrastruktur: ett valfritt lärstigsfält `forceApplicationProfile`
+(samma mönster/stalenessvakt som `visibilityOverride`), applicerat i
+`loadScenarioByName()` efter `deriveApplicationProfile()`.
+`kom-igång.v1.json` fick `forceApplicationProfile: "temperatur"`.
+
+**Verifiering:** 372 automatiska kontroller gröna (16 testfiler),
+DEV-/PROD-innehålls- och byggvalidering grön. Fullständigt visuellt
+verifierat i isolerad headless Chrome (Chrome DevTools Protocol, Node 24:s
+inbyggda `WebSocket`-klient) — fräsch sidladdning, Tillämpnings-persistens,
+lärstigsstyrd synlighet i båda riktningarna, sandlådebeteende för
+Tillämpning="Avancerat", stalenessvakt vid manuellt scenariobyte,
+`kom-igång.v1` hela vägen genom samtliga 5 steg, samt en explicit kontroll
+att FEAT-044 (`.zone-table`) INTE följt med. Se
+`docs/tests/test-ux-004-huvudyta.md` för fullständig testmatris.
+
+**Status:** PO godkände UX-004 (2026-09-22) och gav uppdrag att genomföra
+merge enligt projektets normala Gitflow. Mergad
+`feature/UX-004-huvudyta-omstrukturering` → `test/ux-004-huvudyta` → `develop`
+(2026-09-22). Branchen raderad efter merge.
+
+### STRAT-004 — Förstudie: Framkoppling (Feedforward)
+**Prioritet:** Medel — analysuppdrag, ingen implementation
+**Beskrivning:**
+Uppdrag från PO: förstudie för Framkoppling (Feedforward), näst i STRAT-001s
+prioritetsordning efter Parameterstyrning (FEAT-042, nu levererad). Analys av
+pedagogiskt mål, teknisk lösning, visualisering, scenarier/lärstigar och
+arkitektur — samt lärdomar från FEAT-042s tre granskningsrundor. Ingen kod,
+ingen branch, ren analys.
+**Genomförande:**
+Full rapport: `docs/reports/STRAT-004_FORSTUDIE-FRAMKOPPLING.md`. Rekommenderad
+designriktning: ett generellt namngivet `scenario.auxSignal`-koncept (STRAT-001s
+hjälpsignal, konkretiserat), manuellt triggad via en ny knapp ("Trigga last")
+i exakt samma mönster som `triggerPulse()`/"Trigga puls" redan etablerat.
+Statisk framkoppling (`u_ff = Kff × auxSignal`), ingen dynamisk
+fördröjningsmodell. Lastsignalen ritas som en tredje linje i den redan
+existerande övre grafpanelen — ingen ny panel. "Ren framkoppling utan
+återkoppling" uppnås genom Kp≈UI-minimum, inget nytt regulatorläge behövs.
+Samma hjälpsignal återanvändbar rakt av för Kvotreglering senare (kostar i
+praktiken noll extra att hålla generell). Fyra risker identifierade, viktigast:
+beslutet "övergående kontra permanent laststörning" är olöst och bör avgöras
+innan en designspecifikation skrivs. Tre konkreta FEAT-042-lärdomar inbakade i
+rekommendationen: dedikerade scenariofiler per lärstigssteg (inte
+reload-beroende), Mätläge+2%-toleransband som mätmetod redan från start, och
+kompakt fältgruppering (FEAT-044-mönstret) redan i förstadesignen.
+**Status:** Mergad till `develop`. Ren analys, ingen appkod ändrad.
+Rekommenderat nästa steg: PO-beslut om öppen fråga (avsnitt 3.1), därefter en
+designspecifikation (STRAT-003s roll) innan ett bygguppdrag.
+
+---
+
 ### FEAT-042 — Parameterstyrning + olinjär ventilkarakteristik
 **Branch:** `feature/FEAT-042-parameterstyrning-ventilkarakteristik` (mergad till
 `develop`, raderad)
@@ -1514,3 +1902,153 @@ men avfärdas — bryter appens genomgående 0–100 %-konvention).
 ---
 
 
+
+### FEAT-045 — Framkoppling (Feedforward)
+**Branch:** `feature/FEAT-045-framkoppling`
+**Prioritet:** Medel — bygguppdrag pågår (PO-uppdrag efter STRAT-005)
+**Beskrivning:**
+Uppdrag från PO efter STRAT-004: designspecifikation för Framkoppling, näst i
+STRAT-001s prioritetsordning efter Parameterstyrning (FEAT-042). PO:s beslut:
+`auxSignal` representerar en BESTÅENDE lastförändring — ligger kvar tills
+systemet återställs eller lasten ändras igen (inte en övergående puls).
+PO:s efterföljande bygguppdrag (2026-09-19): full implementation enligt
+STRAT-005 — sim-core, UI, teorimodul, lärstig, övningsdokument, tester,
+simuleringsverifiering. Avgränsat: ingen kvotreglering/kaskadreglering, ingen
+dynamisk profil (ramp/sine), endast EN auxSignal, ingen extra grafpanel,
+ingen generell signalmotor. Pedagogiskt krav: tre tydligt separata strategier
+i lärstigen (Återkoppling/Framkoppling/Återkoppling+Framkoppling) — att "ren
+framkoppling" internt realiseras via Kp≈0.1/Ti=Td=0 är en implementationsdetalj,
+inte lärstigens fokus. Öppen fråga (uttryckligen ingen utredning i detta
+uppdrag): var FEAT-046s blockschema-SVG:er (Framkoppling/PID+Framkoppling)
+bäst kan användas i denna lärstig/övningsdokument som nästa steg.
+**Genomförande (implementation, 2026-09-19):**
+Full implementation på feature-branchen enligt STRAT-005, se
+`docs/reports/FEAT-045_IMPLEMENTATION.md` för alla detaljer. Sammanfattning:
+`sim-core.js` (`Simulation.auxValue`/`triggerAuxSignal()`,
+`ProcessModel.step()`s auxGain-term genom processens tidskonstant,
+`PIDController.step()`s feedforward-parameter före klippning), tre UI-fält
++"Trigga last"-knapp, tredje graflinje (lila prickstreck), ny teorimodul,
+4-stegs lärstig, nytt övningsdokument (`docs/exercises/ovningar-framkoppling.md`,
+4 uppgifter), 21 nya testkontroller (`tests/feat-045-framkoppling.test.mjs`).
+Full regression grön (9 testfiler, 175 kontroller), DEV-/PROD-innehålls- och
+byggvalidering grön, PROD-katalogen OFÖRÄNDRAD (inget release-uppdrag).
+Två simuleringsverifierade avsteg från STRAT-005s arbetshypoteser (se
+rapportens avsnitt 3/5): (1) processen startar vid `normalValue=SP` med en
+NEGATIV last istället för `normalValue=0`+positiv last — STRAT-005s förslag
+gav ett fysiskt omöjligt korrigeringskrav (u<0); (2) mätmetod per lärstigssteg
+(crosshair för steg där PV återgår till samma SP, 2%-band där PV settlar på
+ett nytt värde) istället för enhetligt 2%-band överallt — verktyget kräver
+PV₀≠PV∞ för att rita bandet. Den resulterande pedagogiska poängen (framkoppling
+=snabb men aldrig självkorrigerande vid fel Kff; PID=långsam men garanterat
+självkorrigerande; kombinationen=båda) är simuleringsverifierad och enligt min
+bedömning rikare än utkastets ursprungliga skiss.
+**Genomförande (designspecifikation, STRAT-005):**
+Full designspecifikation: `docs/reports/STRAT-005_DESIGN-FRAMKOPPLING.md`.
+PO:s "permanent"-beslut förenklar designen väsentligt jämfört med STRAT-004s
+öppna skiss: `auxSignal` blir alltid ett steg (ramp/sine bortfaller), inget
+`enabled`-fält behövs (bara ett triggat värde), och INGEN bumplös övergång
+krävs för framkopplingstermen (avsiktligt — ett omedelbart hopp i u är
+själva poängen med framkoppling, till skillnad från FEAT-042s zonbyten).
+Nytt scenariofält `auxSignal.magnitude`, `process.auxGain` (lastens egen
+processpåverkan), `controller.kff` (framkopplingsförstärkning, tillåtet
+negativ). Ny knapp "Trigga last" + fält i tre olika, redan existerande
+parametergrupper (Process/Regulator/Störningar) — ingen zontabell/gruppering
+behövs, till skillnad från FEAT-042 (tre fristående fält i tre olika grupper
+är inte samma situation som FEAT-042s samlade zonfält). Lastsignalen ritas
+som en tredje linje i den redan existerande övre grafpanelen. 3-stegs lärstig
+(PID ensam → ren framkoppling med fel Kff → PID+korrekt Kff) och 4
+övningsuppgifter föreslagna, med Mätläge+2%-toleransband inbyggt i
+instruktionerna FRÅN START (FEAT-042-lärdom). Simuleringsexempel med
+riktvärden (K=1.3, auxGain=0.8, teoretiskt korrekt kff=-auxGain/K≈-0.62 —
+notera det NEGATIVA tecknet, en icke-uppenbar poäng) — flaggat som
+arbetshypoteser som måste simuleringsverifieras innan de låses fast, samma
+disciplin som PED-003E/FEAT-042.
+**Status:** Andra implementationsomgången klar (2026-09-19), efter PO:s
+beslut: värmeväxlare som processexempel, graflinjen för lasten borttagen.
+Genomfört enligt `docs/reports/FEAT-045_ANVANDARTEST-ATGARDER.md`: (1) de två
+kodbuggarna fixade — Mätläge-ordningen rättad i alla lärstigssteg/
+övningsuppgifter (trigga FÖRST, Mätläge EFTERÅT), och lastens graflinje
+ersatt med en statusradsavläsning (`| Last: −20 (aktiv)`, samma mönster som
+Parameterstyrningens zoninfo) eftersom den klipptes bort/blev osynlig för
+negativa värden; (2) Δt-baserad mätinstruktion (t_last/t_slut/Δt) istället
+för absoluta stegnummer, med 2%-toleransbandet korrekt ankrat (PV₀=avläst
+dippvärde, PV∞=SP) för de steg där PV återgår till SP; (3) crosshair
+avrundad till 1 decimal (global ändring, påverkar alla lärstigar i Mätläge);
+(4) värmeväxlarexemplet vävt in i teorimodul, lärstig, övningsdokument och
+`help.json` (auxGain/kff/auxMag) — generiska fältnamn i UI:t oförändrade,
+bara den förklarande texten uppdaterad. Full regression fortsatt grön
+(175/175), DEV-/PROD-validering grön. Redo för PO:s förnyade granskning.
+
+**Tillägg (2026-09-19), PO:s justering av lärstigens progression:** bytt
+ut den gamla 3-stegsstrukturen (PID ensam → REN framkoppling/P-only med fel
+Kff, permanent fel → PID+korrekt Kff) mot en renare trimningsberättelse enligt
+PO:s uppdrag: PID ensam → PID+FEL Kff (≈−0.3) → PID+KORREKT Kff (≈−0.6), där
+alla tre steg kör FULL PID (Kp=1.2, Ti=20) — bara Kff ändras. Ny dedikerad
+scenariofil `framkoppling-demo-pid-fel-kff.json`. Simuleringsverifierat med
+en delad, återanvänd 2%-toleransram (satt i steg 1, medvetet oförändrad i
+steg 2/3 för rättvis jämförelse): avvikelse krymper monotont (≈4.9 → ≈2.5 →
+≈0.1), men insvängningstiden gör bara ett MÅTTLIGT hopp i steg 2 (123→105
+steg — samma PID-dynamik jagar en mindre avvikelse) och ett STORT hopp först
+i steg 3 (105→25 steg — knappt något kvar att jaga). Denna nyans (storlek
+och hastighet förbättras INTE proportionerligt) är en starkare, mer
+verifierad pedagogisk poäng än den tidigare "monotont bättre"-berättelsen,
+och checkpoints i steg 2/3 är skrivna kring den. Den gamla "ren
+framkoppling ger permanent fel"-demonstrationen är INTE borttagen — den
+lever kvar oförändrad i `docs/exercises/ovningar-framkoppling.md` (Uppgift
+2/3, som behöver Ti=0 för att en "stabilt PV-värde per Kff"-jämförelse ska
+vara meningsfull) men ingår inte längre i huvudlärstigen. Kff-värden
+avrundade till en decimal genomgående (scenariofiler, lärstig, teorimodul,
+övningsdokument, hjälptexter) — `-0.31`/`-0.6154`/`-0.92` → `-0.3`/`-0.6`/
+`-0.9`. Full regression fortsatt grön (175/175), DEV-/PROD-validering grön.
+
+**Tillägg (2026-09-19), auxGain/lastmagnitud justerade för HELT exakta
+Kff-värden (PO:s uppdrag, efter ett resonemangsvarv om alternativ):**
+`process.auxGain` 0.8→0.65 och `auxSignal.magnitude` −20→−40 i alla fyra
+scenariofiler. Vald KOMBINATION, inte auxGain ensamt: 0.65 valdes specifikt
+SKILT från K=1.3 (inte satt lika med K) för att undvika att återskapa
+förväxlingsrisken mellan auxGain/K som PO:s tidigare fråga redan retts ut;
+−40 valdes för större, tydligare marginal mot crosshairens 1-decimalsprecision
+i det (tidigare) näst intill osynliga sista steget. Resultat: `Kff = −auxGain/K
+= −0.5` EXAKT — ingen avrundning kvar någonstans i teorimodul, lärstig,
+övningsdokument eller hjälptexter. Fel-Kff/för-mycket-Kff blir därmed också
+exakta (−0.25/−0.75, halva/1.5× av −0.5). Bieffekt, simuleringsverifierad:
+med exakt Kff blir avvikelsen i lärstigens steg 3 nu LITERALT noll (inte
+bara mycket liten) — PV rör sig inte alls, `Δt`=0 — vilket gjorde
+"hovra och mät den lilla avvikelsen"-instruktionen obsolet; ersatt med
+"observera att kurvan inte rör sig alls". Nya A–F-mätvärden: A≈8.0/B=123
+(steg 1) → C=4.0/D=104 (steg 2, exakt hälften i avvikelse, måttlig
+Δt-förbättring) → E=0/F=0 (steg 3, fullständig). Checkpoints i steg 2/3
+uppdaterade i linje med detta. Uppgift 2:s över-/underkompensation blev
+samtidigt perfekt symmetrisk (±11.5 kring exakt SP). Full regression grön
+(175/175), DEV-/PROD-validering grön.
+
+**Status:** PO-godkänt efter granskning (2026-09-20). Mergad till `develop`
+(`--no-ff`). Lärstigen `framkoppling.v1` tillagd SIST i `catalog.prod.json`s
+`learning_paths` (9:e lärstigen i PROD), tillsammans med dess teori- och
+scenarioberoenden (`framkoppling-demo-pid`/`-pid-fel-kff`/`-pid-ff` samt
+`framkoppling-demo-ren-ff` för övningsdokumentet). `tests/validate-prod.mjs`s
+`EXPECTED_LEARNING_PATHS` uppdaterad. `catalog.prod.json` → v1.6.0-prod,
+`catalog.json` (DEV) → v1.6.0, `APP_VERSION` → 1.6.0. Full regression grön
+(175/175), DEV-/PROD-innehålls- och byggvalidering grön, PROD-allowlistet
+verifierat att matcha exakt (`node tests/validate-prod.mjs`).
+
+---
+
+### UX-001b — Namnbyte: processmodellernas etiketter
+**Branch:** `feature/UX-001b-processmodell-namn`
+**Prioritet:** Låg — trivial, men PO-godkänd att göra direkt (2026-09-20),
+oberoende av resten av UX-001.
+**Beskrivning:** PO:s svar på UX-001s öppna fråga 1: byt `processType`-väljarens
+etiketter "Självreglerande"/"Självreglerande 2:a ordn." till "Självreglerande
+(enkapacitiv)"/"Självreglerande (flerkapacitiv)" — tydligare, mer
+reglertekniskt korrekt terminologi, matchar UX-001-förstudiens föreslagna
+namngivning.
+**Genomförande:** Ren textändring i `apps/app/index.html`s `<option>`-element
+(`processType`-select). Inga andra ställen refererade den gamla texten
+("Självreglerande 2:a ordn.") — `help.json`s `processType`-hjälptext talar
+generiskt om "Självreglerande" utan ordningsdistinktion och behöver ingen
+ändring. Ingen kod i `sim-core.js`/`app.js` berörs (`self_regulating_2` som
+internt värde är oförändrat).
+**Status:** Mergad till `develop`.
+
+---
