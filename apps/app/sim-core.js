@@ -169,9 +169,19 @@
       // scenarier utan ratioControl-fält ger 0 (no-op, samma
       // bakåtkompatibla mönster som auxValue/auxGain).
       this.wildFlow = scenario.ratioControl?.wildFlow?.base ?? 0;
-      this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0] };
+      // FEAT-048 användartest (PO, 2026-09-24) — till skillnad från
+      // auxValue/Last (se STRAT-005/FEAT-045-kommentaren ovan, som
+      // MEDVETET INTE ritas som graflinje) behöver flöde A synas i
+      // TRENDGRAFEN: poängen är att studenten ska se sambandet Flöde A →
+      // SP_B → PV_B över tid, inte bara en ögonblicksbild i statusraden.
+      // Till skillnad från Last (som kan bli negativ och då hamna helt
+      // utanför panelens klippta yta, se FEAT-045-kommentaren) kan wildFlow
+      // ALDRIG bli negativt eller nå 0 medan det vandrar — klippningen i
+      // step() (±50% av en bas-nivå > 0) garanterar ett strikt positivt
+      // intervall, så den risken gäller inte här.
+      this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0], wildFlow: [this.wildFlow] };
     }
-    reset() { this.stepNo = 0; this.maxSteps = this.baseMaxSteps; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.auxValue = 0; this.wildFlow = this.scenario.ratioControl?.wildFlow?.base ?? 0; this.scenario.controller.bias = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0] }; }
+    reset() { this.stepNo = 0; this.maxSteps = this.baseMaxSteps; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.auxValue = 0; this.wildFlow = this.scenario.ratioControl?.wildFlow?.base ?? 0; this.scenario.controller.bias = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0], wildFlow: [this.wildFlow] }; }
     triggerPulse() { const p = this.scenario.disturbance.pulse; if (p && p.durationSteps > 0) this.pulseStepsLeft = p.durationSteps; }
     // FEAT-045 — sätter lasten till scenariots auxSignal.magnitude i ETT
     // anrop, ingen räknare (se ovan). Ett nytt klick med ett ändrat fältvärde
@@ -282,7 +292,7 @@
       const y = this.process.step(ctrl.u, this.dt, disturbance, this.auxValue);
       this.stepNo += 1;
       const t = this.stepNo * this.dt;
-      this.history.t.push(t); this.history.y.push(y); this.history.sp.push(sp); this.history.u.push(ctrl.u); this.history.e.push(ctrl.error); this.history.p.push(ctrl.pTerm || 0); this.history.i.push(ctrl.iTerm || 0); this.history.d.push(ctrl.dTerm || 0); this.history.aux.push(this.auxValue);
+      this.history.t.push(t); this.history.y.push(y); this.history.sp.push(sp); this.history.u.push(ctrl.u); this.history.e.push(ctrl.error); this.history.p.push(ctrl.pTerm || 0); this.history.i.push(ctrl.iTerm || 0); this.history.d.push(ctrl.dTerm || 0); this.history.aux.push(this.auxValue); this.history.wildFlow.push(this.wildFlow);
       return { t: t, y: y, u: ctrl.u, e: ctrl.error };
     }
     run(n) { const frames = []; for (let i = 0; i < n; i += 1) { const f = this.step(); if (!f) break; frames.push(f); } return frames; }

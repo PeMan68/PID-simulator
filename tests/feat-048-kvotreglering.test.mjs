@@ -146,9 +146,38 @@ function makeScenario({ ratioControl, kp = 3.0, ti = 5.0, sp = 25, noiseStd = 0 
   check("9e. deriveApplicationProfile() härleder Temperaturprocess när flöde A är konfigurerat", /if \(scenario\.ratioControl\?\.wildFlow\?\.base > 0\) return "temperatur";/.test(appJs));
   check("9f. updateRatioControlUIState() inaktiverar SP-fältet (inte döljer) när kvotreglering är aktiv", /function updateRatioControlUIState\(\) \{\s*\n\s*fields\.sp\.disabled = fields\.ratioControlEnabled\.checked;/.test(appJs));
   check("9g. applyApplicationProfile() nollställer wildFlowBase (INTE bara checkboxen) när tillägget otillåtet", /if \(!profile\.addons\.includes\("kvotreglering"\)\) \{ fields\.ratioControlEnabled\.checked = false; fields\.wildFlowBase\.value = 0; \}/.test(appJs));
-  check("9h. Statusraden visar Flöde A/Flöde B/faktisk kvot (ingen ny graflinje, PO:s explicita krav)", /Flöde A=.*Flöde B=.*Kvot \(faktisk\)=/.test(appJs));
+  // FEAT-048 användartest (2026-09-24) lade senare till en graflinje också
+  // (avsnitt 11) — statusraden behölls DÄRUTÖVER, inte ersatt, eftersom den
+  // ger en exakt siffra grafen bara antyder visuellt.
+  check("9h. Statusraden visar Flöde A/Flöde B/faktisk kvot", /Flöde A=.*Flöde B=.*Kvot \(faktisk\)=/.test(appJs));
   check("9i. help.json har poster för samtliga fyra nya fält", !!helpJson.ratioControlEnabled && !!helpJson.ratio && !!helpJson.wildFlowBase && !!helpJson.wildFlowVolatility);
   check("9j. markerSnapshot()/describeMarkerChange() känner av kvotregleringens KONFIGURATION (inte den löpande SP-rörelsen)", /ratioControl: JSON\.stringify\(scenario\.ratioControl/.test(appJs) && /if \(a\.ratioControl !== b\.ratioControl\) return "Kvotreglering ändrad";/.test(appJs));
+}
+
+// ── 10. history.wildFlow — trendgrafens datakälla (PO:s användartest 2026-09-24:
+// Flöde A måste synas i grafen, inte bara statusraden) ──
+{
+  const sim = new Simulation(makeScenario({ ratioControl: { enabled: true, ratio: 0.5, wildFlow: { base: 50, volatility: 2 } } }), 42);
+  check("10a. history.wildFlow finns från start, ett värde (bas-nivån) vid t=0", Array.isArray(sim.history.wildFlow) && sim.history.wildFlow.length === 1 && sim.history.wildFlow[0] === 50);
+  for (let i = 0; i < 50; i++) sim.step();
+  check("10b. history.wildFlow växer i takt med t/y/sp (samma längd, en post per steg)", sim.history.wildFlow.length === sim.history.t.length && sim.history.t.length === sim.history.y.length);
+  check("10c. Samtliga wildFlow-poster i historiken förblir strikt positiva (aldrig den \"osynlig utanför panelen\"-risk Last/auxValue har, se sim-core.js-kommentaren)", sim.history.wildFlow.every(v => v > 0));
+
+  const simUnrelated = new Simulation(makeScenario({ sp: 10 }), 42);
+  for (let i = 0; i < 20; i++) simUnrelated.step();
+  check("10d. Ett scenario utan ratioControl får en flat, harmlös wildFlow-historik (alla 0)", simUnrelated.history.wildFlow.every(v => v === 0));
+}
+
+// ── 11. Grafen — Flöde A ritas som egen kurva (statisk källkodskontroll) ──
+{
+  const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
+  const html = readFileSync(path.join(APP_DIR, "index.html"), "utf8");
+  check("11a. drawChart() ritar Flöde A villkorat på samma bas>0-signal som styr om det vandrar i sim-core.js", /const hasWildFlow = sim\.scenario\.ratioControl\?\.wildFlow\?\.base > 0/.test(appJs));
+  check("11b. Flöde A ritas i SAMMA panel/skala som PV\/SP (yScaleTop), inte en separat panel — PO:s krav att sambandet ska synas direkt", /drawSeries\(ctx, t\.map\(\(tv, i\) => \(\{ x: xScale\(tv\), y: yScaleTop\(wildFlow\[i\]\) \}\)\), "#c2185b", true, 1\)/.test(appJs));
+  check("11c. Flöde A ritas TUNNARE (width=1) än PV/SP/u (width=2) — visuellt underordnad, inte en tredje huvudsignal", /drawSeries\(ctx, points, color, dashed, width = 2\)/.test(appJs));
+  check("11d. Legenden byggs om dynamiskt och nämner Flöde A bara när linjen faktiskt ritas", /hasWildFlow \? gap \+ "Rosa streckad \(tunn\): Flöde A" : ""/.test(appJs));
+  check("11e. #chartLegend-elementet finns i markupen (id tillagt för att JS ska kunna uppdatera det)", html.includes('id="chartLegend"'));
+  check("11f. clearChart/systemReset-knapparna nollställer wildFlow-historiken (annars kraschar nästa steg mot ett tomt/undefined-fält)", (appJs.match(/aux: \[\], wildFlow: \[\], markers: \[\]/g) || []).length === 2);
 }
 
 console.log(`\n${passed} OK, ${failed} FAIL`);

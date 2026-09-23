@@ -41,8 +41,9 @@ UI-arkitektur rakt av.
    som framkoppling — INGEN ny Tillämpning, INGEN ny fjärde profil).
    SP-fältet inaktiveras (inte döljs) när kvotreglering är aktiv, eftersom
    det annars ändå skrivs över varje steg. Statusraden visar Flöde A/
-   Flöde B/faktisk kvot (`fmt2`, ny 2-decimalers hjälpfunktion) — ingen ny
-   graflinje. `markerSnapshot()`/`describeMarkerChange()` utökad med
+   Flöde B/faktisk kvot (`fmt2`, ny 2-decimalers hjälpfunktion) — ursprungligen
+   ingen graflinje (se uppföljning nedan, PO:s användartest 2026-09-24 ändrade
+   det). `markerSnapshot()`/`describeMarkerChange()` utökad med
    "Kvotreglering ändrad", fångar bara KONFIGURATIONEN, inte den löpande
    SP-rörelsen (annars en falsk markering varje steg).
 3. `index.html`: fyra nya fält, `data-addon="kvotreglering"` på samtliga,
@@ -57,13 +58,48 @@ UI-arkitektur rakt av.
 5. Samtliga instruktionstal i lärstigen verifierade genom en fullständig
    end-to-end-körning mot de FAKTISKA, sparade scenariofilerna (inte
    uppskattade eller gissade).
-**Tester:** Ny `tests/feat-048-kvotreglering.test.mjs` (27 kontroller: 17
-beteendetester direkt mot `sim-core.js` via bridgen, 10 statiska UI-
-strukturtester). Full regression grön (11 testfiler, 320 kontroller totalt),
+**Tester (första rundan):** `tests/feat-048-kvotreglering.test.mjs` (27
+kontroller). Full regression grön (11 testfiler, 320 kontroller totalt),
 `tests/simulation/analyze.test.mjs` grön, DEV-/PROD-innehålls- och
 byggvalidering grön, `catalog.prod.json` verifierat oförändrat.
-**Status:** Implementerat, väntar på PO:s granskning. **Ingen merge, ingen
-release** — per uppdragets uttryckliga instruktion.
+
+**PO:s användartest (2026-09-24):** funktionalitet och lärstig bedömdes
+fungera bra, men en pedagogisk brist identifierades: Flöde A syntes bara i
+statusraden, vilket gjorde det svårt att visuellt se SAMBANDET Flöde A →
+SP_B → PV_B över tid. Uppdrag: undersök och implementera bästa
+visualisering i trendgrafen.
+
+**Genomfört:**
+1. `sim-core.js`: nytt `history.wildFlow`-fält (samma mönster som `history.aux`),
+   fyllt varje steg. Till skillnad från Last/auxValue (som medvetet INTE
+   ritas, se STRAT-005/FEAT-045-kommentaren — ett negativt lastvärde skulle
+   hamna helt utanför panelens klippta yta) kan wildFlow aldrig bli negativt
+   eller nå 0 medan det vandrar (klippt till ±50% av en bas-nivå > 0) — den
+   risken gäller alltså inte här.
+2. `app.js` `drawChart()`: Flöde A ritas som en egen, TUNN (width=1, ny
+   valfri parameter på `drawSeries()`) rosa (`#c2185b`) streckad linje —
+   i SAMMA panel/skala som PV/SP (inte en separat panel), så sambandet syns
+   direkt utan att blicken måste hoppa mellan två grafer. Ritas bara när
+   `ratioControl.wildFlow.base > 0` (samma villkor som styr vandringen i
+   sim-core.js) — osynlig för alla andra scenarier. Legenden (nu
+   `#chartLegend`, byggs om dynamiskt i JS istället för statisk HTML)
+   nämner Flöde A bara när linjen faktiskt ritas. Statusradens siffror
+   (Flöde A/B/faktisk kvot) behölls DÄRUTÖVER — grafen visar FORMEN/
+   TIDSFÖRLOPPET, statusraden ger en exakt siffra.
+3. `clearChart`/`systemReset` uppdaterade så de nollställer
+   `wildFlow`-historiken (annars skulle nästa steg krascha mot ett
+   odefinierat fält).
+4. Lärstigen re-verifierad end-to-end mot de faktiska scenariofilerna —
+   siffrorna oförändrade (ren visualiseringsändring, ingen ändring av
+   beräkningslogiken): t150 kvot 0,368 (utan)/0,498 (korrekt)/0,299 (fel),
+   identiskt med första rundans verifiering.
+5. `tests/feat-048-kvotreglering.test.mjs` utökad med 10 nya kontroller
+   (avsnitt 10–11: `history.wildFlow`-beteende + statisk kontroll av
+   graflinjen/legenden) — totalt 37. Full regression grön (11 testfiler,
+   330 kontroller), DEV-/PROD-validering grön, `catalog.prod.json` oförändrat.
+
+**Status:** Implementerat, väntar på PO:s förnyade granskning. **Ingen
+merge, ingen release** — per uppdragets uttryckliga instruktion.
 
 ### STRAT-006 — Förstudie: Kvotreglering (Ratio Control)
 **Prioritet:** Medel — analysuppdrag, ingen implementation, PO:s explicita beställning

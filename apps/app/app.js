@@ -148,9 +148,12 @@ let currentScenarioRef = null; // senast laddade scenariots FIL-referens (t.ex. 
 
 function appendLog(line) { logEl.textContent += line + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 function fitCanvas() { const w = Math.max(680, chartCanvas.clientWidth); if (chartCanvas.width !== w) chartCanvas.width = w; }
-function drawSeries(ctx, points, color, dashed) {
+// FEAT-048 — width är valfri (default 2, oförändrat för alla befintliga
+// anrop) så en sekundär, stödjande signal (Flöde A) kan ritas TUNNARE än
+// PV/SP/u — visuellt underordnad utan att vara en helt ny ritfunktion.
+function drawSeries(ctx, points, color, dashed, width = 2) {
   if (!points.length) return;
-  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash(dashed ? [6, 4] : []);
+  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dashed ? [6, 4] : []);
   ctx.moveTo(points[0].x, points[0].y);
   for (let i = 1; i < points.length; i += 1) ctx.lineTo(points[i].x, points[i].y);
   ctx.stroke(); ctx.setLineDash([]);
@@ -261,14 +264,43 @@ function drawChart() {
   ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
-  // FEAT-045 (användartest, punkt 5) — lastsignalen ritas INTE längre som en
-  // egen graflinje: den delar PV/SP-panelens 0–100-skala, och ett negativt
-  // lastvärde (t.ex. värmeväxlar-exemplets −20) hamnade då UTANFÖR panelens
-  // klippta yta och blev helt osynlig. Lastens nivå visas istället i
-  // statusraden (se updateStatus()) — en siffra är otvetydig oavsett tecken,
-  // till skillnad från en linjeposition på en skala den inte passar i.
-  // Markeringslinjen vid triggning (sim.history.markers, "Last → -20")
-  // fungerar oförändrat och är den huvudsakliga tidsreferensen i grafen.
+  // FEAT-045 (användartest, punkt 5) — lastsignalen (auxValue) ritas
+  // FORTFARANDE INTE som egen graflinje: den kan bli negativ (se
+  // värmeväxlar-exemplet, −20) och hamnar då helt utanför panelens klippta
+  // yta. Visas i statusraden istället (se updateStatus()).
+  //
+  // FEAT-048 användartest (PO, 2026-09-24) — Flöde A (kvotregleringens
+  // "vilda" signal) ritas DÄREMOT som en egen linje: till skillnad från
+  // Last kan den aldrig bli negativ eller nå 0 medan den vandrar (klippt
+  // till ±50% av en bas-nivå > 0 i step()), så den slipper Lastens problem.
+  // PO:s uttryckliga mål efter användartestet: sambandet Flöde A → SP_B →
+  // PV_B ska synas TIDSMÄSSIGT, inte bara som en ögonblicksbild i
+  // statusraden — det kräver en linje i samma panel/skala som SP, inte en
+  // separat panel (då hade jämförelsen krävt att blicken hoppade mellan
+  // två grafer istället för att se en kurva forma den andra direkt ovanför).
+  // Tunnare (width=1) än PV/SP och en annan färg (inget av blått/rött/
+  // grönt/lila/orange/turkos som redan används av andra hjälplinjer) så
+  // den läses som stödjande kontext, inte en tredje huvudsignal att tävla
+  // med PV/SP om uppmärksamheten. Ritas BARA när flöde A faktiskt är
+  // konfigurerat (samma bas>0-villkor som styr om det vandrar alls i
+  // sim-core.js) — annars en flat, meningslös linje på alla andra scenarier.
+  const wildFlow = sim.history.wildFlow;
+  const hasWildFlow = sim.scenario.ratioControl?.wildFlow?.base > 0 && wildFlow && wildFlow.length === t.length;
+  if (hasWildFlow) {
+    drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(wildFlow[i]) })), "#c2185b", true, 1);
+  }
+  // Legenden byggs om varje ritning istället för att vara statisk HTML, så
+  // Flöde A-raden bara syns när linjen faktiskt ritas (samma princip som
+  // resten av grafen — inget visas som inte är relevant för scenariot).
+  const legendEl = document.getElementById("chartLegend");
+  if (legendEl) {
+    //  ×2 (icke-brytande mellanslag), INTE vanliga mellanslag — annars
+    // kollapsar webbläsarens standard white-space-hantering dem till ett
+    // enda och äter upp den visuella luften mellan posterna (samma
+    // anledning till att HTML-varianten ursprungligen använde &nbsp;&nbsp;).
+    const gap = "  ";
+    legendEl.textContent = "Blå: PV" + gap + "Röd streckad: SP" + gap + "Grön: u" + (hasWildFlow ? gap + "Rosa streckad (tunn): Flöde A" : "");
+  }
   ctx.restore();
 
   ctx.save();
@@ -1717,8 +1749,8 @@ document.getElementById("triggerAux").addEventListener("click", () => {
   drawChart();
   activityDispatch("disturbance_triggered", { contextKey: activityContextKey(), field: "auxSignal" });
 });
-document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
-document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], wildFlow: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], wildFlow: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
