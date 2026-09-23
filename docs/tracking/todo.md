@@ -8,67 +8,6 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
-### FEAT-047 — Förbättrad lärstig för integrerande process och nivåreglering
-**Branch:** `feature/FEAT-047-nivareglering-larstig`
-**Prioritet:** Medel — PO:s fynd vid manuell granskning (2026-09-23), lärstigen
-bedöms inte redo för PROD i nuvarande form.
-**Beskrivning:**
-PO:s granskning av `integrerande-process-niva.v1` identifierade tre problem: (1)
-200 steg räcker inte för att visa stationärt tillstånd, (2) pulsstörningen är för
-kraftig och dominerar innehållet, (3) för få lärstigssteg jämfört med senare
-lärstigar. Uppdrag: analysera och ta fram förbättringsförslag, verifierat i
-simulatorn. Ren analys, ingen kod, ingen branch.
-**Leverans:** `docs/reports/FEAT-047_FORSTUDIE-NIVAREGLERING.md`. Sammanfattning:
-
-1. **Brist 1 bekräftad och kvantifierad:** nuvarande tuning (Kp=1,5/Ti=80) svänger
-   permanent inom 2%-bandet först vid steg 395 — vid steg 200 (instruktionens egen
-   rekommendation) är PV=63,0, redan på väg FÖRBI SP i en lång, svagt dämpad
-   översläng. Löst genom omtuning, INTE genom att bara förlänga väntetiden:
-   **Kp=4/Ti=60** ger insvängning vid steg ~112 (verifierat i ett rutnät av
-   Kp∈[1,5–5]/Ti∈[20–80]).
-2. **Brist 2 grundorsaksbestämd, inte bara "för stort tal":** `disturbance.pulse`
-   adderas till `y` VARJE steg pulsen är aktiv (inte en engångshändelse) — för en
-   integrerande process finns ingen återställande kraft som motverkar detta (till
-   skillnad från självreglerande processer), så hela tillskottet (magnitude ×
-   durationSteps) blir kvar. Dagens puls (mag=5, dur=20) driver PV till 154,9 —
-   långt över mätområdet. Löst genom att KORTA durationSteps (20→2), inte bara
-   sänka magnitude — verifierat ge en tydlig men hanterbar topp (~69–70).
-   `noiseStd` övervägd som alternativ/tillägg (strukturellt säkrare, nollmedelvärde)
-   men rekommenderas inte som ERSÄTTNING — pulsen ger en diskret, pedagogiskt
-   värdefull observerbar händelse brus inte ger.
-3. **Brist 3 kvantifierad mot hela katalogen:** 2 steg är kortast i hela katalogen
-   (median ~5–7). Föreslår 5 steg: lägg till ett P-ensam-baslinjesteg (verifierat:
-   P-reglering ensam stannar på PV≈26 mot SP=60 — ett permanent, stort fel som
-   idag HÄVDAS i en checkpoint men aldrig VISAS), bryt ut pulsstörningen till ett
-   eget steg med egen checkpoint, och en avslutande reflektion mot
-   självreglerande processer.
-4. **Arbetsinsats:** litet–medelstort, RENT innehållsarbete — ingen ändring i
-   `sim-core.js` eller `app.js`, bara nya/ändrade scenario-JSON och lärstigstext.
-   Uppskattas till en session.
-
-**PO:s klartecken (2026-09-23) och genomförande:** implementerat rakt av enligt
-förstudien, på `feature/FEAT-047-nivareglering-larstig`:
-
-1. Ny scenariofil `integrating-p-only.json` (P-ensam, Kp=1,5) för det nya steg 2.
-2. `integrating-pi.json` omtunad Kp 1,5→4, Ti 80→60; pulsens `durationSteps` 20→2.
-3. `integrerande-process-niva.v1.json` utökad 2→5 steg: teori → P-ensam (ny) → PI
-   (omtunad instruktionstext) → störningsavvisning (ny, `continueFromPreviousStep`
-   från PI-steget) → jämförelse mot självreglerande process (ny, återanvänder
-   `basic-step-self-regulating.json`, PO:s invit "om det kan motiveras
-   pedagogiskt" — enda avvikelsen från förstudiens mer öppna skiss).
-4. Samtliga instruktionstal verifierade genom en fullständig, stegvis
-   end-to-end-simulering som replikerar appens egen `loadScenarioByName()`/
-   `continueFromPreviousStep`-logik: PV=25,73 (P-ensam, instruktion ≈26),
-   PV=60,11 (PI, når SP=60), toppvärde=70,00 (puls, instruktion ≈70), PV=59,32
-   efter återhämtning, PV=49,22 (jämförelsesteget, SP=50, snabb stabilisering).
-5. `node tests/validate-content.mjs` grön (32/32 scenarier, 12/12 lärstigar, inga
-   referensfel). `catalog.prod.json` orört och verifierad oförändrad (lärstigen
-   är DEV-only, ingen PROD-påverkan).
-6. Ingen ändring i `sim-core.js`/`app.js`.
-
-**Status:** Implementerat, väntar på PO:s granskning. Ingen merge/release ännu,
-per uppdragets uttryckliga instruktion.
-
 ### STRAT-006 — Förstudie: Kvotreglering (Ratio Control)
 **Prioritet:** Medel — analysuppdrag, ingen implementation, PO:s explicita beställning
 (2026-09-23).

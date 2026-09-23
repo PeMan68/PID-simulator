@@ -35,6 +35,40 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande features 
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-047 — Förbättrad lärstig för integrerande process och nivåreglering
+**Prioritet:** Medel — PO:s fynd vid manuell granskning (2026-09-23), lärstigen
+bedömdes inte redo för PROD i nuvarande form.
+**Beskrivning:**
+PO:s granskning av `integrerande-process-niva.v1` identifierade tre problem: (1)
+200 steg räckte inte för att visa stationärt tillstånd, (2) pulsstörningen var för
+kraftig och dominerade innehållet, (3) för få lärstigssteg jämfört med senare
+lärstigar.
+**Förstudie:** `docs/reports/FEAT-047_FORSTUDIE-NIVAREGLERING.md`. Nuvarande tuning
+(Kp=1,5/Ti=80) svängde permanent inom 2%-bandet först vid steg 395 (inte 200);
+pulsen (mag=5, dur=20) drev PV till 154,9, långt över mätområdet, eftersom en
+integrerande process saknar återställande kraft mot ackumulerande stötar; 2 steg
+var kortast i hela katalogen (median ~5–7).
+**Genomförande (PO-godkänd 2026-09-23):**
+1. Ny scenariofil `integrating-p-only.json` (P-ensam, Kp=1,5) för ett nytt
+   baslinjesteg som visar det kvarstående felet (PV≈26 mot SP=60) — verifierat.
+2. `integrating-pi.json` omtunad Kp 1,5→4, Ti 80→60 (insvängning vid steg ~112
+   istället för ~395); pulsens `durationSteps` 20→2 (samma magnitude=5, topp ~70
+   istället för ~155).
+3. `integrerande-process-niva.v1.json` utökad 2→5 steg: teori → P-ensam (ny) → PI
+   (omtunad) → störningsavvisning (ny, `continueFromPreviousStep` från
+   PI-steget) → jämförelse mot självreglerande process (ny, återanvänder
+   `basic-step-self-regulating.json` — enda avvikelsen från förstudiens mer
+   öppna skiss, PO:s egen invit "om det kan motiveras pedagogiskt").
+4. Samtliga instruktionstal verifierade genom en fullständig, stegvis
+   end-to-end-simulering som replikerar appens egen `loadScenarioByName()`/
+   `continueFromPreviousStep`-logik exakt — matchar rapportens siffror.
+5. `node tests/validate-content.mjs` grön (32/32 scenarier, 12/12 lärstigar).
+   `catalog.prod.json` orört (lärstigen är DEV-only). Ingen ändring i
+   `sim-core.js`/`app.js`.
+**Status:** Mergad till `develop` (2026-09-23). Branch
+`feature/FEAT-047-nivareglering-larstig` raderad. **Inte släppt till main/PROD**
+— avsedd för nästa planerade PROD-kandidat, per uttrycklig PO-instruktion.
+
 ### UX-002 — Tillämpnings-/processmodellsväljare (Fas 0 av UX-001)
 **Prioritet:** Hög — PO:s beslutade nästa steg (2026-09-20), efter UX-001.
 **Beskrivning:**
