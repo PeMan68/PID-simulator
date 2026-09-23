@@ -497,6 +497,51 @@ nästa ordinarie release för att nå produktion.
 
 ---
 
+### FEAT-044 — Gruppera Parameterstyrningens/ventilkarakteristikens zonfält
+**Branch:** `feature/FEAT-044-zone-fields-table` (raderad efter merge)
+**Prioritet:** Låg — kosmetisk UI-förbättring, upptäckt av PO under FEAT-042-testning
+**Beskrivning:**
+PO:s observation (skärmdump): FEAT-042s 11 regulatorschema-fält (2 brytpunkter + 3×3
+Kp/Ti/Td) och 5 processchema-fält låg utspridda som enskilda `.field`-rutor i
+parametergridet — upplevdes rörigt, svårt att se vilket fält som hör till vilken zon.
+Uppdrag: gruppera visuellt utan att öka vertikalt skärmutrymme nämnvärt.
+**Genomförande:**
+Zonfälten (Kp/Ti/Td × 3 zoner för Parameterstyrning, K × 3 zoner för
+ventilkarakteristik) omstrukturerade från utspridda `.field`-rutor till en kompakt
+tabell (`.zone-table`, en rad per zon, kolumner för respektive parameter). Brytpunkts-
+fälten ligger kvar oförändrade utanför tabellen. Aktiv-zon-highlighten (FEAT-042,
+punkt 3) flyttad från per-fält-ram till helmarkerad tabellrad (`GS_ZONE_ROWS`/
+`NG_ZONE_ROWS` i `app.js`, ersätter de gamla `GS_ZONE_FIELD_GROUPS`/
+`NG_ZONE_FIELD_GROUPS`) — samma färgkodning (orange/grön) som tidigare. Ingen ändring
+i `sim-core.js`, inga nya fält-ID:n.
+
+**Integration mot UX-004 (2026-09-23):** branchen grenade 2026-09-19, före UX-002/
+UX-004s omstrukturering av huvudytan, och behövde uppdateras mot dagens `develop`
+innan merge. `git merge develop` in i feature-branchen: `app.js` mergade helt
+automatiskt (ingen konflikt — FEAT-044s radbaserade highlight och UX-004s ändringar
+rör olika delar av filen). `index.html` hade 3 konflikter, samtliga lösta genom att
+placera FEAT-044s `.zone-table`-markup INUTI UX-004s redan existerande Avancerat-
+sektioner (`nonlinearGainFields`/`gainScheduleFields`), istället för att låta
+FEAT-044 återskapa den gamla fyrgruppsstrukturen (Process/Regulator/Styrning/
+Störningar) den ursprungligen grenade från. Fullständig teknisk redogörelse:
+`docs/reports/FEAT-044_INTEGRATIONSRAPPORT.md`.
+
+**Verifiering:** 386 automatiska kontroller gröna (inkl. FEAT-042 24/24, UX-004
+64/64 — ingen återgång till gamla grupper). Visuellt verifierat i headless Chrome:
+Parameterstyrning, Olinjär ventilkarakteristik, aktiv zonmarkering (grön/orange rad-
+highlight matchar statusraden) och zonbyte mellan flera zoner under en körning
+(fyra "Zonbyte"-markeringar loggade, radhighlight vandrade Zon 1→2→3), samt den
+guidade lärstigen "Parameterstyrning och olinjär ventilkarakteristik" end-to-end.
+**PO:s egen visuella granskning (2026-09-23): godkänd** — "FEAT-044 uppfyller sitt
+syfte... Några nya UX-problem har inte identifierats." Fullständig testmatris:
+`docs/tests/test-feat-044-zone-fields-table.md`.
+
+**Status:** Mergad till `develop` (2026-09-23) via `test/feat-044-zone-fields-table`.
+`main` oförändrat tills vidare — ingår i nästa PROD-kandidat, inte i den redan
+publicerade v1.6.0.
+
+---
+
 ### FEAT-043 — Knapp för att släppa fram fler steg vid maxSteps-taket
 **Branch:** `feature/FEAT-043-extend-max-steps` (mergad till `develop`)
 **Beskrivning:**
