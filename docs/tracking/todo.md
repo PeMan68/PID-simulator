@@ -8,6 +8,40 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### STRAT-006 — Förstudie: Kvotreglering (Ratio Control)
+**Prioritet:** Medel — analysuppdrag, ingen implementation, PO:s explicita beställning
+(2026-09-23).
+**Beskrivning:**
+Uppdrag: analysera hur Kvotreglering bör införas — pedagogiskt mål, processexempel,
+reglerteknisk modell, nödvändiga signaler, blockschema, UI-påverkan, interaktion med
+befintlig återkoppling, lärstigsförslag, risker/förenklingar. Ren analys, ingen kod,
+ingen branch.
+**Leverans:** `docs/reports/STRAT-006_FORSTUDIE-KVOTREGLERING.md`. Sammanfattning:
+
+1. **Kräver INGEN ny process/regulatorinstans och INGEN flerslinge-UI** — bara EN
+   riktig `ProcessModel` (den reglerade sidan, "Flöde B"), plus en genererad
+   "vild"-signal ("Flöde A") som INTE simuleras som en egen process.
+2. **Förfinar STRAT-001s ursprungliga, mer optimistiska bedömning**: en riktig,
+   liten ändring i `Simulation.step()` behövs (analog med Parameterstyrningens
+   zonuppslag) — inte "noll ändringar i sim-core.js" som antogs innan Framkoppling
+   faktiskt byggdes.
+3. **Största risken:** Flöde A-signalen måste variera KONTINUERLIGT under en
+   körning (återanvänd befintlig `seededRandom`/`gaussian`) — en engångs-triggad
+   nivå (som Framkopplings `auxValue`-mönster) skulle göra hela lärstigen
+   pedagogiskt tandlös.
+4. **Korrigerar UX-001s ursprungliga tillämpningsskiss** ("egen Blandnings-/
+   kvotprocess-tillämpning med processmodellval PER FLÖDE") — rekommenderar
+   istället ett nytt ADDON (som Framkoppling/Parameterstyrning), inte en ny
+   Tillämpning, i linje med UX-002/UX-003s redan etablerade axel-princip.
+5. Blockschema finns redan ritat (`04-kvotreglering.svg`, FEAT-046, ej mergad än)
+   — bekräftar oberoende samma modell som härletts direkt ur koden.
+6. Lärstigsförslag i samma 3–4-stegs stil som det redan PO-godkända
+   `framkoppling.v1` ("utan kvotreglering" → "med kvotreglering" → valfritt
+   "felaktig kvot").
+
+**Status:** Analys levererad. Väntar på PO:s designbeslut (särskilt
+Tillämpnings-placeringen, avsnitt 6/9) innan något implementeras.
+
 ### UX-001 — Processbaserad användarmodell (förstudie klar, PAUS på ny reglerstrategiutveckling)
 **Prioritet:** Hög — PO:s explicita beslut (2026-09-20): pausa ny
 reglerstrategiutveckling (Kvotreglering, Kaskadreglering) tills detta spår är
