@@ -8,6 +8,46 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-047 — Förbättrad lärstig för integrerande process och nivåreglering
+**Prioritet:** Medel — PO:s fynd vid manuell granskning (2026-09-23), lärstigen
+bedöms inte redo för PROD i nuvarande form.
+**Beskrivning:**
+PO:s granskning av `integrerande-process-niva.v1` identifierade tre problem: (1)
+200 steg räcker inte för att visa stationärt tillstånd, (2) pulsstörningen är för
+kraftig och dominerar innehållet, (3) för få lärstigssteg jämfört med senare
+lärstigar. Uppdrag: analysera och ta fram förbättringsförslag, verifierat i
+simulatorn. Ren analys, ingen kod, ingen branch.
+**Leverans:** `docs/reports/FEAT-047_FORSTUDIE-NIVAREGLERING.md`. Sammanfattning:
+
+1. **Brist 1 bekräftad och kvantifierad:** nuvarande tuning (Kp=1,5/Ti=80) svänger
+   permanent inom 2%-bandet först vid steg 395 — vid steg 200 (instruktionens egen
+   rekommendation) är PV=63,0, redan på väg FÖRBI SP i en lång, svagt dämpad
+   översläng. Löst genom omtuning, INTE genom att bara förlänga väntetiden:
+   **Kp=4/Ti=60** ger insvängning vid steg ~112 (verifierat i ett rutnät av
+   Kp∈[1,5–5]/Ti∈[20–80]).
+2. **Brist 2 grundorsaksbestämd, inte bara "för stort tal":** `disturbance.pulse`
+   adderas till `y` VARJE steg pulsen är aktiv (inte en engångshändelse) — för en
+   integrerande process finns ingen återställande kraft som motverkar detta (till
+   skillnad från självreglerande processer), så hela tillskottet (magnitude ×
+   durationSteps) blir kvar. Dagens puls (mag=5, dur=20) driver PV till 154,9 —
+   långt över mätområdet. Löst genom att KORTA durationSteps (20→2), inte bara
+   sänka magnitude — verifierat ge en tydlig men hanterbar topp (~69–70).
+   `noiseStd` övervägd som alternativ/tillägg (strukturellt säkrare, nollmedelvärde)
+   men rekommenderas inte som ERSÄTTNING — pulsen ger en diskret, pedagogiskt
+   värdefull observerbar händelse brus inte ger.
+3. **Brist 3 kvantifierad mot hela katalogen:** 2 steg är kortast i hela katalogen
+   (median ~5–7). Föreslår 5 steg: lägg till ett P-ensam-baslinjesteg (verifierat:
+   P-reglering ensam stannar på PV≈26 mot SP=60 — ett permanent, stort fel som
+   idag HÄVDAS i en checkpoint men aldrig VISAS), bryt ut pulsstörningen till ett
+   eget steg med egen checkpoint, och en avslutande reflektion mot
+   självreglerande processer.
+4. **Arbetsinsats:** litet–medelstort, RENT innehållsarbete — ingen ändring i
+   `sim-core.js` eller `app.js`, bara nya/ändrade scenario-JSON och lärstigstext.
+   Uppskattas till en session.
+
+**Status:** Analys levererad. Väntar på PO:s designbeslut/klartecken innan något
+implementeras.
+
 ### STRAT-006 — Förstudie: Kvotreglering (Ratio Control)
 **Prioritet:** Medel — analysuppdrag, ingen implementation, PO:s explicita beställning
 (2026-09-23).
