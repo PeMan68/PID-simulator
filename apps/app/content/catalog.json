@@ -12,6 +12,7 @@
     { "id": "pid-disturbance-noise",      "file": "scenarios/pid-disturbance-noise.json" },
     { "id": "pid-pulse-rejection",        "file": "scenarios/pid-pulse-rejection.json" },
     { "id": "pi-windup-demo",              "file": "scenarios/pi-windup-demo.json" },
+    { "id": "integrating-p-only",          "file": "scenarios/integrating-p-only.json" },
     { "id": "integrating-pi",             "file": "scenarios/integrating-pi.json" },
     { "id": "integrating-experimental",   "file": "scenarios/integrating-experimental.json" },
     { "id": "unstable-experimental",      "file": "scenarios/unstable-experimental.json" },
