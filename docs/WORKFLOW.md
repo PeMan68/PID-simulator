@@ -78,6 +78,19 @@ När alla tester är gröna:
    git push
    git checkout develop
    ```
+5. **Bumpa version — obligatoriskt för VARJE release till `main`, inte bara stora
+   samlade releaser** (PO-beslut 2026-09-23): `APP_VERSION` i `apps/app/app.js`,
+   en ny sektion i `CHANGELOG.md`, och versionsreferenserna i `README.md`
+   ("Stabil version"/tagg, "Funktioner i vX.X.X"-rubrik, "Projektstatus").
+   Committa detta på `develop` (`chore(release): changelog, README och
+   APP_VERSION för vX.X.X`), fast-forwarda `main` till den commiten, och tagga:
+   ```
+   git tag -a vX.X.X -m "vX.X.X — <kort beskrivning>"
+   git push origin main
+   git push origin vX.X.X
+   ```
+   Följ semver-känsla efter releasens storlek (patch för en enskild kosmetisk
+   fix som FEAT-044, minor/major för samlade funktionsreleaser som v1.6.0).
 
 ---
 
