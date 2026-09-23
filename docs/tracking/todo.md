@@ -8,6 +8,44 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-049 — HMI-/SCADA-vy för reglerstrategier
+**Prioritet:** Ej prioriterad — idé registrerad på PO:s begäran (2026-09-24).
+**INGEN analys gjord, INGEN branch, INGEN implementation påbörjad** — väntar
+på ett separat prioriteringsbeslut från PO. En EGEN feature, uttryckligen
+INTE kopplad till FEAT-048 (Kvotreglering).
+**Bakgrund:**
+Simulatorn visar idag trendgraf, parametrar och statusrad — fungerar bra för
+grundläggande PID-reglering. När reglerstrategier som Framkoppling,
+Kvotreglering och Kaskadreglering införs blir det svårare för studerande att
+förstå signalflöden och samband enbart via trendgrafer. PO vill därför införa
+en separat HMI-/SCADA-vy: en pedagogisk processbild som KOMPLETTERAR
+trendgrafen (ersätter den inte).
+**Mål:** studerande ska i realtid kunna se signalvägar, regulatorer, givare,
+börvärden, styrsignaler och processvärden medan simuleringen körs.
+**Grundprincip:** processbilden ska baseras på de reglerscheman/blockscheman
+som redan tagits fram (FEAT-046, `docs/assets/diagrams/`). Varje strategi ska
+kunna visa sitt reglerschema, aktuella värden i schemat, och aktiva signaler
+i realtid.
+**Exempel PO gav (ordagrant relayerat, inte en specifikation av exakt
+layout):**
+- Kvotreglering: FI-A (52,3 m³/h) → Kvotblock (0,50) → SP_B (26,2) → FIC-B
+  (AUTO) → Ventil B (41 %) → Flöde B (26,0 m³/h)
+- Framkoppling: Last (18,5), Kff (0,62), PID, PV, U
+- Kaskadreglering: Yttre regulator, Inre regulator, SP2, PV2, Ventil, PV1
+**Version 1-omfattning (PO:s egen avgränsning):**
+- Behöver bara stödja: uppdatering av numeriska värden, markering av aktiva
+  signaler, markering av aktiv regulatorväg. Ingen avancerad grafik, ingen
+  historik, ingen larmfunktion.
+- **Explicit UTANFÖR scope:** ersättning av trendgrafen, industriell
+  SCADA-funktionalitet, dataloggning, larmhantering, kommunikation med
+  externa system. Fokus är pedagogik, inte industriell realism.
+**Pedagogiskt mål:** studerande ska se (1) vad som mäts, (2) vad som
+regleras, (3) hur signalerna passerar genom systemet, (4) var respektive
+reglerstrategi verkar. Ska minska lärarens behov av att manuellt rita
+reglerscheman under genomgångar.
+**Status:** Idé registrerad. Väntar på PO:s prioriteringsbeslut innan analys
+eller implementation påbörjas.
+
 ### STRAT-006 — Förstudie: Kvotreglering (Ratio Control)
 **Prioritet:** Medel — analysuppdrag, ingen implementation, PO:s explicita beställning
 (2026-09-23).
