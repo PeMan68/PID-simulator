@@ -1,5 +1,5 @@
 # Övningsuppgifter: Framkoppling (Feedforward)
-*Dokumentversion 1.5. Kräver PID Simulator med stöd för Framkoppling (FEAT-045).*
+*Dokumentversion 1.6. Kräver PID Simulator 1.6.0 eller högre (parametergrupperna heter Processinställning/Regulatorkonfiguration/Processpåverkan sedan UX-004, med Kff bakom en "Avancerat"-disklosyr i Regulatorkonfiguration).*
 
 > **⚠️ Viktigt**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
@@ -15,10 +15,11 @@ Det här dokumentet är fristående lösblad — samma mönster som `ovningar-pa
 
 ## Termer och definitioner
 
-- **Last** — i det här dokumentet: en mätbar förändring i värmeväxlarens inkommande temperatur, uppmätt av en temperaturgivare uppströms. Anges på simulatorns gemensamma 0–100-skala, precis som PV/SP — inte i grader eller en annan fysisk enhet; en riktig givares egen kalibrering till den skalan ligger utanför vad simulatorn modellerar. Triggas med knappen "Trigga last" (Störningar-gruppen) och ligger sedan kvar BESTÅENDE tills systemet återställs eller en ny last triggas — till skillnad från Puls, som återgår till 0 av sig själv.
-- **Lastförstärkning** — hur starkt den triggade lasten fysiskt påverkar utgående temperatur. Processens egen egenskap, i Process-gruppen.
-- **Kff (framkopplingsförstärkning)** — regulatorns kompensation för lasten (hur mycket ångventilen förjusteras), adderad direkt till utsignalen. I Regulator-gruppen. Kan vara negativt.
-- **Teoretiskt korrekt Kff** — det värde som exakt kompensationerar lastens effekt: `Kff = −auxGain / K`, där K är PROCESSENS EGNA K (samma K-fält som i Process-gruppen) — inte auxGain igen och ingen tredje storhet. Med auxGain=0.65 och K=1.3 blir det exakt −0.5, ingen avrundning.
+- **Last** — i det här dokumentet: en mätbar förändring i värmeväxlarens inkommande temperatur, uppmätt av en temperaturgivare uppströms. Anges på simulatorns gemensamma 0–100-skala, precis som PV/SP — inte i grader eller en annan fysisk enhet; en riktig givares egen kalibrering till den skalan ligger utanför vad simulatorn modellerar. Triggas med knappen "Trigga last" (**Processpåverkan**) och ligger sedan kvar BESTÅENDE tills systemet återställs eller en ny last triggas — till skillnad från Puls, som återgår till 0 av sig själv.
+- **Lastförstärkning** — hur starkt den triggade lasten fysiskt påverkar utgående temperatur. Processens egen egenskap, i **Processpåverkan** (bredvid Last mag/Trigga last — alltid synlig, inte bakom Avancerat).
+- **Kff (framkopplingsförstärkning)** — regulatorns kompensation för lasten (hur mycket ångventilen förjusteras), adderad direkt till utsignalen. I **Regulatorkonfiguration → Avancerat**. Kan vara negativt.
+- **Teoretiskt korrekt Kff** — det värde som exakt kompensationerar lastens effekt: `Kff = −auxGain / K`, där K är PROCESSENS EGNA K (samma K-fält som i **Processinställning**, grundnivå) — inte auxGain igen och ingen tredje storhet. Med auxGain=0.65 och K=1.3 blir det exakt −0.5, ingen avrundning.
+- **Avancerat** — en hopfällbar sektion längst ner i Regulatorkonfiguration (klicka "▸ Avancerat" för att fälla ut den). Kff-fältet ligger där och öppnas AUTOMATISKT om det laddade scenariot redan har ett Kff skilt från 0 — annars (t.ex. scenariot "PID ensam" med Kff=0) måste du klicka upp sektionen själv. Uppgifterna nedan säger till när det behövs.
 - **t_last, t_slut, Δt** — t-värdet (avläst i grafen) när lasten triggas, t-värdet när PV har stabiliserat sig, och skillnaden mellan dem (`Δt = t_slut − t_last`) — den faktiska insvängningstiden EFTER lasten, inte ett absolut stegnummer.
 - **K, T, L, Kp, Ti, Td** — se `ovningar-reglerstrategier.md` för grundläggande definitioner om de är nya begrepp för dig.
 
@@ -40,7 +41,7 @@ Det här dokumentet är fristående lösblad — samma mönster som `ovningar-pa
 **Process:** Värmeväxlare, K=1.3, T=15, normalvärde=50 (samma som SP — utgående temperatur står redan i vila vid börvärdet), Lastförstärkning=0.65. SP=50. Last mag=−40 (en temperaturminskning i inkommande flöde).
 
 ### Test A — PID ensam
-1. Ladda scenariot **"Framkoppling — demo: PID ensam (värmeväxlare)"**. Kontrollera Kp=1.2, Ti=20, Kff=0.
+1. Ladda scenariot **"Framkoppling — demo: PID ensam (värmeväxlare)"**. Kontrollera Kp=1.2, Ti=20 (synliga direkt i Regulatorkonfiguration). Kff=0 i det här scenariot, så Regulatorkonfigurationens Avancerat-sektion är stängd som standard — klicka upp "▸ Avancerat" om du vill se fältet och bekräfta att det står på 0.
 2. Klicka "Trigga last" — notera t-värdet för markeringslinjen ("Last → -40"), det är `t_last`. Kör minst 200 steg.
 3. Aktivera Mätläge. Hovra över grafens djupaste punkt (dippen) och läs av PV. Notera avvikelsen (50 − avläst PV).
 4. Skriv in det avlästa värdet som PV₀ och SP=50 som PV∞, kryssa i "2%-toleransband". Hovra tills kurvan går in i och stannar kvar i bandet — läs av t-värdet där, det är `t_slut`. Räkna ut `Δt = t_slut − t_last`.
@@ -92,7 +93,7 @@ Det här dokumentet är fristående lösblad — samma mönster som `ovningar-pa
 
 **Syfte:** Öva att räkna ut och verifiera ett korrekt Kff-värde själv, inte bara läsa av ett facit.
 
-**Process:** Samma scenario som Uppgift 2 (ren framkoppling, Kp=0.1, Ti=0). Processen har K=1.3 och Lastförstärkning=0.65 — kontrollera själv i Process-gruppen.
+**Process:** Samma scenario som Uppgift 2 (ren framkoppling, Kp=0.1, Ti=0). Processen har K=1.3 (Processinställning) och Lastförstärkning=0.65 (Processpåverkan) — kontrollera själv.
 
 1. Räkna ut vilket Kff-värde som EXAKT ska kompensera lasten, med formeln `Kff = −auxGain / K` (samma formel som i teorimodulen/Kff-fältets hjälptext).
 2. Sätt ditt uträknade Kff. Klicka "Återställ system", klicka "Trigga last", kör minst 150 steg.
@@ -121,7 +122,7 @@ Det här dokumentet är fristående lösblad — samma mönster som `ovningar-pa
 1. Klicka "Trigga last". Kör 60 steg. Notera (t.ex. i statusraden eller via Mätläge efteråt) att PV inte rör sig alls — du har redan sett detta i Uppgift 1/lärstigens steg 3.
 
 ### Del B — mätbar last + omätbar puls samtidigt
-1. Klicka "Återställ system". Sätt Puls mag=−8, Puls steg=5 (Störningar-gruppen, samma fält som i `ovningar-reglerstrategier.md`).
+1. Klicka "Återställ system". Sätt Puls mag=−8, Puls steg=5 (Processpåverkan, samma fält som i `ovningar-reglerstrategier.md`).
 2. Klicka "Trigga last" OCH "Trigga puls" (i valfri ordning, gärna direkt efter varandra).
 3. Kör minst 60 steg. Aktivera Mätläge och notera den STÖRSTA avvikelsen från SP du ser den här gången.
 

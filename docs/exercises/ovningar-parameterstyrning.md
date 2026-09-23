@@ -1,5 +1,5 @@
 # Övningsuppgifter: Parameterstyrning och olinjär ventilkarakteristik
-*Dokumentversion 1.0. Kräver PID Simulator med stöd för Parameterstyrning och Olinjär ventilkarakteristik (FEAT-042).*
+*Dokumentversion 1.1. Kräver PID Simulator 1.6.0 eller högre (parametergrupperna heter Processinställning/Regulatorkonfiguration/Processpåverkan sedan UX-004, med Parameterstyrning och Olinjär ventilkarakteristik bakom en "Avancerat"-disklosyr).*
 
 > **⚠️ Viktigt**: Denna övningssamling har delvis genererats med AI-assistans och kan innehålla tekniska felaktigheter eller missvisande information. Använd alltid din tekniska kunskap och verifiera resultaten genom praktisk testning i simulatorn. Vid tveksamheter, konsultera kurslitteratur eller expertis inom reglerteknik.
 
@@ -13,8 +13,9 @@ Simulatorns lärstig "Parameterstyrning och olinjär ventilkarakteristik" visar 
 
 ## Termer och definitioner
 
-- **Olinjär ventilkarakteristik** — processens förstärkning K väljs i tre fasta zoner beroende på var utsignalen u befinner sig, istället för att vara ett konstant tal. Fältet finns i Process-gruppen, bara för processtyp Självreglerande.
-- **Parameterstyrning (Gain Scheduling)** — regulatorns Kp/Ti/Td väljs i tre fasta zoner beroende på var PV befinner sig, istället för att vara konstanta. Fältet finns i Regulator-gruppen.
+- **Olinjär ventilkarakteristik** — processens förstärkning K väljs i tre fasta zoner beroende på var utsignalen u befinner sig, istället för att vara ett konstant tal. Fältet finns i **Processinställning → Avancerat**, bara för processtyp Självreglerande.
+- **Parameterstyrning (Gain Scheduling)** — regulatorns Kp/Ti/Td väljs i tre fasta zoner beroende på var PV befinner sig, istället för att vara konstanta. Fältet finns i **Regulatorkonfiguration → Avancerat**.
+- **Avancerat** — en hopfällbar sektion längst ner i respektive parametergrupp (klicka på "▸ Avancerat" för att fälla ut den). Fälten ovan öppnas AUTOMATISKT om det laddade scenariot redan har funktionen aktiverad — annars måste du klicka upp sektionen själv innan du kan se/ändra fälten. Uppgifterna nedan säger uttryckligen till när ett manuellt klick behövs.
 - **Zon** — ett av de tre fasta driftpunktsintervallen (Zon 1 lägst, Zon 3 högst). Vilken zon som gäller just nu visas i statusraden när respektive funktion är aktiverad.
 - **Brytpunkt** — gränsvärdet mellan två zoner. Två brytpunkter delar in 0–100 i tre zoner. Ritas som en streckad hjälplinje i grafen (orange för Parameterstyrning, grön för ventilkarakteristik) när respektive funktion är aktiverad.
 - **K, T, L, Kp, Ti, Td** — se `ovningar-reglerstrategier.md` för grundläggande definitioner om de är nya begrepp för dig.
@@ -34,9 +35,9 @@ Simulatorns lärstig "Parameterstyrning och olinjär ventilkarakteristik" visar 
 
 **Syfte:** Se med egna ögon att en processs egen förstärkning kan skilja sig åt beroende på driftpunkt, och vad det gör med regleringen.
 
-**Process:** Ladda scenariot **"Olinjär ventilkarakteristik — demo"**. Kontrollera i Process-gruppen att processtyp är Självreglerande, K=1.3 (grundvärdet, används bara om funktionen stängs av), och att kryssrutan **"Olinjär ventilkarakteristik"** är ikryssad med Brytpunkt 1=25, Brytpunkt 2=65, K vid låg u=0.5, K vid mellan-u=2.0, K vid hög u=2.5 (scenariots startvärden).
+**Process:** Ladda scenariot **"Olinjär ventilkarakteristik — demo"**. Kontrollera i Processinställning att processtyp är Självreglerande, K=1.3 (grundvärdet, används bara om funktionen stängs av). Scenariot har redan Olinjär ventilkarakteristik aktiverad, så Processinställningens **Avancerat**-sektion är redan uppfälld automatiskt — kontrollera där att kryssrutan **"Olinjär ventilkarakteristik"** är ikryssad med Brytpunkt 1=25, Brytpunkt 2=65, K vid låg u=0.5, K vid mellan-u=2.0, K vid hög u=2.5 (scenariots startvärden).
 
-Regulator: PI, Kp=1.2, Ti=20 (scenariots startvärden). Kontrollera att kryssrutan "Parameterstyrning" är AV i den här uppgiften.
+Regulator: PI, Kp=1.2, Ti=20 (scenariots startvärden, synliga direkt i Regulatorkonfiguration). Parameterstyrning är AV i den här uppgiften — Regulatorkonfigurationens Avancerat-sektion är därför stängd som standard, och det är den avsedda utgångspunkten (ingen åtgärd behövs).
 
 ### Test A — låg driftpunkt
 1. SP=10 (scenariots startvärde). Kör minst 150 steg.
@@ -98,7 +99,7 @@ Regulator: PI, Kp=1.2, Ti=20 (scenariots startvärden). Kontrollera att kryssrut
 2. Höj Kp till 3. Upprepa Test A och Test B.
 
 ### Del B — Parameterstyrning
-1. Ladda om scenariot (Kp återgår till 1.2). Kryssa i **"Parameterstyrning"** i Regulator-gruppen. Kontrollera att Zon 1 Kp=5, Zon 2 Kp=1.2, Zon 3 Kp=1.2 (scenariots startvärden, samma Ti=20 i alla zoner, Td=0).
+1. Ladda om scenariot (Kp återgår till 1.2). Klicka upp **"▸ Avancerat"** under Regulatorkonfiguration (stängd som standard eftersom scenariot inte har Parameterstyrning aktiverad från början) och kryssa i **"Parameterstyrning"** där. Kontrollera att Zon 1 Kp=5, Zon 2 Kp=1.2, Zon 3 Kp=1.2 (scenariots startvärden, samma Ti=20 i alla zoner, Td=0).
 2. Kör Test A (SP=10) och Test B (SP=90) igen.
 
 **Mätprotokoll Uppgift 3:**
@@ -124,7 +125,7 @@ Regulator: PI, Kp=1.2, Ti=20 (scenariots startvärden). Kontrollera att kryssrut
 
 **Process:** Samma scenario, "Olinjär ventilkarakteristik" ikryssad med grundvärdena (K=0.5/2.0/2.5, brytpunkter 25/65).
 
-1. Kryssa i "Parameterstyrning". Nollställ alla tre zonernas Kp till samma värde du använde i Uppgift 1 (Kp=1.2 i alla tre zoner) — det ska motsvara att inte ha någon egentlig styrning alls.
+1. Klicka upp "▸ Avancerat" under Regulatorkonfiguration (stängd som standard) och kryssa i "Parameterstyrning". Nollställ alla tre zonernas Kp till samma värde du använde i Uppgift 1 (Kp=1.2 i alla tre zoner) — det ska motsvara att inte ha någon egentlig styrning alls.
 2. Testa nu att ÖKA Zon 1:s Kp stegvis (t.ex. 2, 3, 5, 8) medan Zon 2/3 förblir 1.2. Kör Test A (SP=10) vid varje steg. Hitta ett Kp-värde för Zon 1 där insvängningen känns tydligt snabbare än Uppgift 1:s baslinje, men INTE så högt att du ser tecken på översläng eller instabilitet (jämför gärna med vad som hände i Uppgift 3 vid Kp=6 i den ostyrda jämförelsen, om du testade det).
 3. Testa på samma sätt att sänka Zon 3:s Kp (t.ex. 1.0, 0.7, 0.5) medan Zon 1 har ditt valda värde och Zon 2 förblir 1.2. Kör Test B (SP=90) vid varje steg. Hitta ett värde som fortfarande är snabbt men känns tryggare (mer marginal) än scenariots ursprungliga Zon 3-värde.
 
