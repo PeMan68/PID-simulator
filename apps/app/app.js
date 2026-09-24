@@ -844,13 +844,16 @@ function deriveApplicationProfile(scenario) {
   // kvotreglering" (enabled=false, base=50, avsiktligt för att visa flöde A
   // variera fritt) dölja precis de fält studenten ska kunna inspektera.
   if (scenario.ratioControl?.wildFlow?.base > 0) return "temperatur";
-  if (scenario.process.type === "integrating") return "niva";
-  // UX-002_SYNLIGHETSGRANSKNING.md avsnitt 1 — on/off har ingen egen
-  // tillämpning längre (fel axel, se APPLICATION_PROFILES-kommentaren);
-  // ett generiskt on/off-scenario (t.ex. onoff-basic.json, ingen substans-
-  // berättelse) härleds därför till Avancerat precis som appens andra
-  // generiska scenarier.
-  return "avancerat";
+  // Bugg 2026-019 (PO-beslut 2026-09-24) — "Avancerat" härleds ALDRIG för
+  // ett scenario vars processmodell en vanlig Tillämpning täcker. Tidigare
+  // blev generiska scenarier (självreglerande utan tillägg, t.ex.
+  // manual-open-loop.json, onoff-basic.json) "avancerat", vilket via
+  // deriveAdvancedOpen() fällde upp alla Avancerat-sektioner i nästan varje
+  // lärstigssteg. Avancerat är ett läge användaren själv väljer. Reserven
+  // gäller bara processmodeller som ingen annan Tillämpning täcker (idag
+  // endast det experimentella "unstable", som annars skulle filtreras bort).
+  const byModel = ["temperatur", "niva"].find(p => APPLICATION_PROFILES[p].processModels.includes(scenario.process.type));
+  return byModel || "avancerat";
 }
 function loadScenarioByName(name) {
   if (measureMode) exitMeasureMode();
@@ -1482,6 +1485,11 @@ function loadPath(name) {
   currentPathStep = -1;
   pathScore = { correct: 0, total: 0 };
   checkpointAnswered = false;
+  // Bugg 2026-019 — introt och teoristeg laddar inget scenario, så de ärvde
+  // uppfällda Avancerat-sektioner från den förra lärstigens sista scenario.
+  // Fäll ihop dem vid lärstigsbyte. Nästa scenariosteg härleder om dem, och
+  // "Avancerat" (användarens eget val) lämnas orört.
+  if (fields.applicationProfile.value !== "avancerat") { setAdvancedOpen("process", false); setAdvancedOpen("regulator", false); }
   updateNavButtons();
   updateScoreDisplay();
   learnBody.innerHTML = "<em>" + currentPath.title + "</em><br>" + (currentPath.description || "") + "<br><br>Klicka <strong>Nästa »</strong> för att börja.";

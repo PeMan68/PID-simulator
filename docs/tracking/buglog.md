@@ -22,7 +22,17 @@ Buggen kom inte med v1.7.0. Ett v1.6.2-bygge beter sig likadant, och v1.7.0 lade
 
 **Förväntat beteende (PO, 2026-09-24):** Ingen lärstig ska hamna i Tillämpning "Avancerat". Avancerat är ett läge som användaren själv väljer.
 
-**Status:** Öppen
+**Fix-notering:**
+1. `deriveApplicationProfile()`: reserven härleds från processmodellen, alltså den Tillämpning (`temperatur`/`niva`) vars `processModels` innehåller scenariots typ. "avancerat" blir bara kvar som reserv för processmodeller som ingen annan Tillämpning täcker. Idag gäller det bara det experimentella `unstable`, som inte finns i PROD.
+2. `loadPath()`: fäller ihop båda Avancerat-sektionerna vid lärstigsbyte. Tidigare ärvde introt och teoristegen uppfällda sektioner från den förra lärstigens sista scenario. Om användaren själv har valt "Avancerat" lämnas det orört.
+3. `windup-antiwindup.v1`: ny `visibilityOverride` som döljer strategitilläggen. Lärstigen fäller avsiktligt upp regulatorsektionen för Anti-windup/Bumpless (`forceAdvancedOpen` i `pi-windup-demo.json`), men där syntes även Kff, Kvotreglering och Parameterstyrning.
+
+**Verifiering:** Samma synlighetssvep i headless Edge (riktiga knapptryck: Ladda lärstig, Nästa genom alla steg, både från ren start och efter ett manuellt laddat scenario), före och efter fixen.
+- FÖRE (både v1.6.2 och v1.7.0): Tillämpning "Avancerat" med alla sektioner uppfällda i nästan alla steg i 9 av 12 lärstigar.
+- EFTER (DEV och PROD-bygge): 0 av 366 stegtillstånd i "Avancerat". De enda uppfällda sektionerna är de avsedda: Parameterstyrning (gs/ng), Framkoppling (Kff) och Windup (bara Anti-windup/Bumpless). 0 sidfel.
+- Markeringssvepet från 2026-018 är fortsatt rent i PROD-bygget. Hela testsviten och innehålls-/PROD-valideringen är gröna. Test 6k i `ux-002-application-profile.test.mjs` är uppdaterat till den nya regeln.
+
+**Status:** Fixad på `bugfix/2026-019`, inte mergad. Väntar på PO:s beslut om merge och release (v1.7.1).
 
 ---
 
