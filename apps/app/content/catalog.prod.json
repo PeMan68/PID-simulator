@@ -1,5 +1,5 @@
 {
-  "version": "v1.6.0-prod",
+  "version": "v1.6.2-prod",
   "help": "help.json",
   "scenarios": [
     { "id": "basic-step-self-regulating", "file": "scenarios/basic-step-self-regulating.json", "standalone": true },
@@ -14,6 +14,8 @@
     { "id": "pi-step-self-regulating",    "file": "scenarios/pi-step-self-regulating.json",     "standalone": true },
     { "id": "pi-deadtime-comparison",     "file": "scenarios/pi-deadtime-comparison.json",      "standalone": false },
     { "id": "pi-windup-demo",             "file": "scenarios/pi-windup-demo.json",              "standalone": true },
+    { "id": "integrating-p-only",         "file": "scenarios/integrating-p-only.json",          "standalone": true },
+    { "id": "integrating-pi",             "file": "scenarios/integrating-pi.json",              "standalone": true },
     { "id": "pid-disturbance-noise",      "file": "scenarios/pid-disturbance-noise.json",       "standalone": true },
     { "id": "pid-pulse-rejection",        "file": "scenarios/pid-pulse-rejection.json",         "standalone": true },
     { "id": "valve-nonlinear-gain-demo",           "file": "scenarios/valve-nonlinear-gain-demo.json",           "standalone": true },
@@ -31,6 +33,7 @@
     { "id": "process-basics",    "file": "theory/process-basics.v1.json" },
     { "id": "integrator-windup", "file": "theory/integrator-windup.v1.json" },
     { "id": "disturbance-robustness", "file": "theory/disturbance-robustness.v1.json" },
+    { "id": "integrating-process",    "file": "theory/integrating-process.v1.json" },
     { "id": "parameterstyrning-ventilkarakteristik", "file": "theory/parameterstyrning-ventilkarakteristik.v1.json" },
     { "id": "framkoppling", "file": "theory/framkoppling.v1.json" }
   ],
@@ -42,6 +45,7 @@
     { "id": "processbegransningar.v1",          "file": "exercises/processbegransningar.v1.json" },
     { "id": "windup-antiwindup.v1",             "file": "exercises/windup-antiwindup.v1.json" },
     { "id": "storningar-robusthet.v1",          "file": "exercises/storningar-robusthet.v1.json" },
+    { "id": "integrerande-process-niva.v1",     "file": "exercises/integrerande-process-niva.v1.json" },
     { "id": "parameterstyrning-ventilkarakteristik.v1", "file": "exercises/parameterstyrning-ventilkarakteristik.v1.json" },
     { "id": "framkoppling.v1", "file": "exercises/framkoppling.v1.json" }
   ]
