@@ -50,6 +50,39 @@ yttre regulatorns U min/max till [0,100] varje steg, vilket skulle förstöra
 kaskadens avvikelsebaserade SP2-spann (t.ex. ±50) — fixat till ett bredare
 spann när `cascade.enabled`. Se `apps/app/app.js` (sökord FEAT-050) för detaljer.
 
+**Uppföljning efter PO-test (2026-09-24), genomförd:**
+1. Slavslinga-panelen visades tidigare ALLTID, oavsett scenario — rotorsak:
+   `.param-group{display:flex}` vann över webbläsarens inbyggda
+   `[hidden]{display:none}` (samma specificitet, författarregel vinner).
+   Fixat med en explicit `#groupSlavslinga[hidden]{display:none!important}`.
+   Synlighet är nu två oberoende villkor: FAKTA (`cascade.enabled`, styr
+   `hidden`-attributet) och TILLÅTELSE (nytt addon-namn "kaskadreglering",
+   samma APPLICATION_PROFILES/visibilityOverride-mekanism som Framkoppling/
+   Kvotreglering/Parameterstyrning). Vald tolkning (flaggad för PO): under
+   Avancerat visas panelen ändå INTE för scenarier utan `cascade.enabled` —
+   bedömdes mer sensibelt än att visa en tom panel med nollor.
+2. Slavslinga-panelen är nu kollapsbar (samma `.param-group`/
+   `toggleParamGroup()`-mönster som övriga grupper, inkl. persisterat
+   collapse-läge).
+3. Slavslingans trend (PV2/SP2) flyttad FRÅN huvudgrafen till en egen liten
+   trendgraf (`#cascadeMiniChart`) inuti Slavslinga-panelen. Huvudgrafen är
+   därför tillbaka till sin ursprungliga tvåpanels-geometri (PV1/SP1, u) —
+   all `getCascadePanelSplit()`-logik borttagen igen.
+4. Laststörningen i lärstigens tre scenarier höjd från −8 till −35 (PO:s
+   riktlinje 30–40), omverifierad mot faktiska `Simulation`-körningar:
+   enkelslinga 13,9 enh./470 steg, kaskad (bra) 1,1 enh./55 steg, kaskad
+   (feltrimmad) 15,9 enh./~1050 steg — instruktionstexter/checkpoints
+   uppdaterade med de nya, verifierade talen.
+5–6. `visibilityOverride` (show/hide) infört/kompletterat i samtliga fyra
+   strategi-lärstigar (Framkoppling, Kvotreglering, Parameterstyrning,
+   Kaskadreglering) så var och en bara visar sin egen strategis fält.
+   Undantag, avsiktligt: Parameterstyrnings lärstig visar även
+   "ventilkarakteristik" (samma lärstig, samma ämne — dess första scenario
+   ÄR en ventilkarakteristik-demo).
+7. Avancerat-läget oförändrat: visar alltjämt alla fyra strategiers
+   konfigurationsfält, inga lärstigsfilter tillämpas där (befintlig,
+   oförändrad `applyPathVisibilityOverride()`-spärr).
+
 ### FEAT-049 — HMI-/SCADA-vy för reglerstrategier
 **Prioritet:** Ej prioriterad — idé registrerad på PO:s begäran (2026-09-24).
 **INGEN analys gjord, INGEN branch, INGEN implementation påbörjad** — väntar

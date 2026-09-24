@@ -4,6 +4,7 @@
   "title": "Kvotreglering (Ratio Control)",
   "description": "Kemikaliedosering proportionell mot vattenflöde — hur ett automatiskt beräknat börvärde håller en kvot konstant, till skillnad från ett fast börvärde.",
   "difficulty": "intermediate",
+  "visibilityOverride": { "show": ["kvotreglering"], "hide": ["framkoppling", "parameterstyrning", "ventilkarakteristik", "kaskadreglering"] },
   "steps": [
     {
       "type": "theory",

@@ -2,7 +2,7 @@
   "id": "kaskad-demo-langsam-slav",
   "version": "v1.0.0",
   "title": "Kaskadreglering — demo: felaktigt trimmad slavslinga",
-  "description": "Samma kaskadstruktur och samma störning som föregående steg, men slavslingan är nu feltrimmad (Kp=0,3, Ti=60 istället för Kp=2,0, Ti=6) — inte längre tydligt snabbare än huvudslingan. Numeriskt verifierat: topp-avvikelse 3,63 enheter och ca 550 stegs återhämtning — SÄMRE än enkelslingan i steg 1 (3,18 enheter, 355 steg), trots att kaskadstrukturen i sig är oförändrad.",
+  "description": "Samma kaskadstruktur och samma störning som föregående steg, men slavslingan är nu feltrimmad (Kp=0,3, Ti=60 istället för Kp=2,0, Ti=6) — inte längre tydligt snabbare än huvudslingan. Numeriskt verifierat (uppföljning efter PO-test): topp-avvikelse ca 15,9 enheter och ca 1050 stegs återhämtning — SÄMRE än enkelslingan i steg 1 (ca 13,9 enheter, 470 steg), trots att kaskadstrukturen i sig är oförändrad.",
   "tags": ["pid", "kaskadreglering", "varmevaxlare"],
   "process": {
     "type": "self_regulating",
@@ -42,6 +42,6 @@
     }
   },
   "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
-  "auxSignal": { "magnitude": -8.0 },
-  "runtime": { "dt": 1.0, "maxSteps": 700, "setpoint": 50.0, "autopause": false }
+  "auxSignal": { "magnitude": -35.0 },
+  "runtime": { "dt": 1.0, "maxSteps": 1300, "setpoint": 50.0, "autopause": false }
 }

@@ -2,7 +2,7 @@
   "id": "kaskad-demo-losning",
   "version": "v1.0.0",
   "title": "Kaskadreglering — demo: kaskad (lösningen)",
-  "description": "Samma värmeväxlare och samma störning som föregående steg, men nu med en inre flödesslinga (slavslinga) mellan huvudregulatorn och ventilen. Slavslingans PID-parametrar sätts av scenariot, inte av studenten (PO-beslut, DES-001). Numeriskt verifierat: topp-avvikelse 0,26 enheter (mot 3,18 utan kaskad) — PV1 lämnar aldrig ±0,5-bandet.",
+  "description": "Samma värmeväxlare och samma störning som föregående steg, men nu med en inre flödesslinga (slavslinga) mellan huvudregulatorn och ventilen. Slavslingans PID-parametrar sätts av scenariot, inte av studenten (PO-beslut, DES-001). Numeriskt verifierat (uppföljning efter PO-test): topp-avvikelse ca 1,1 enheter (mot ca 13,9 utan kaskad) — återhämtning ca 55 steg.",
   "tags": ["pid", "kaskadreglering", "varmevaxlare"],
   "process": {
     "type": "self_regulating",
@@ -42,6 +42,6 @@
     }
   },
   "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
-  "auxSignal": { "magnitude": -8.0 },
+  "auxSignal": { "magnitude": -35.0 },
   "runtime": { "dt": 1.0, "maxSteps": 500, "setpoint": 50.0, "autopause": false }
 }

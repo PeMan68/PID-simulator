@@ -102,8 +102,11 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
       check("5b. Exakt TRE profiler (avancerat/temperatur/niva) — Tvålägesreglering borttagen, fri→avancerat (Justering 1)", Object.keys(profiles).sort().join(",") === "avancerat,niva,temperatur");
       check("5c. avancerat tillåter alla tre processmodeller och alla fem lägen", JSON.stringify(profiles.avancerat.processModels.sort()) === JSON.stringify(["integrating", "self_regulating", "self_regulating_2"].sort()) && JSON.stringify(profiles.avancerat.modes.sort()) === JSON.stringify(["manual", "onoff", "p", "pi", "pid"].sort()));
       // FEAT-048 — Kvotreglering tillagt som fjärde addon (STRAT-006, PO-beslut 2026-09-24).
-      check("5d. avancerat visar alla fyra tillägg (inkl. kvotreglering)", JSON.stringify(profiles.avancerat.addons.sort()) === JSON.stringify(["framkoppling", "kvotreglering", "parameterstyrning", "ventilkarakteristik"].sort()));
-      check("5f. temperatur tillåter de två självreglerande modellerna och alla fyra tillägg", JSON.stringify(profiles.temperatur.processModels.sort()) === JSON.stringify(["self_regulating", "self_regulating_2"].sort()) && JSON.stringify(profiles.temperatur.addons.sort()) === JSON.stringify(["framkoppling", "kvotreglering", "parameterstyrning", "ventilkarakteristik"].sort()));
+      // FEAT-050 (uppföljning) — Kaskadreglering tillagt som femte addon (ingen
+      // egen konfiguration, bara återanvänder samma synlighetsmekanism för
+      // Slavslinga-panelen, se dess data-addon-kommentar i index.html).
+      check("5d. avancerat visar alla fem tillägg (inkl. kvotreglering, kaskadreglering)", JSON.stringify(profiles.avancerat.addons.sort()) === JSON.stringify(["framkoppling", "kaskadreglering", "kvotreglering", "parameterstyrning", "ventilkarakteristik"].sort()));
+      check("5f. temperatur tillåter de två självreglerande modellerna och alla fem tillägg", JSON.stringify(profiles.temperatur.processModels.sort()) === JSON.stringify(["self_regulating", "self_regulating_2"].sort()) && JSON.stringify(profiles.temperatur.addons.sort()) === JSON.stringify(["framkoppling", "kaskadreglering", "kvotreglering", "parameterstyrning", "ventilkarakteristik"].sort()));
       check("5g. niva tillåter ENDAST integrating, inga tillägg", JSON.stringify(profiles.niva.processModels) === JSON.stringify(["integrating"]) && profiles.niva.addons.length === 0);
       // UX-002_SYNLIGHETSGRANSKNING.md avsnitt 1 — OnOff ska vara ett
       // giltigt Läge-val i VARJE tillämpning (inte en egen tillämpning).

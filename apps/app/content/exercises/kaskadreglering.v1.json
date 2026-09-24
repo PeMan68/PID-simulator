@@ -5,6 +5,7 @@
   "description": "En värmeväxlares temperatur (huvudslinga) och flöde (slavslinga) — hur en snabb, inre slinga skyddar en långsam, yttre processvariabel från en störning, och vad som händer om den inre slingan inte faktiskt är snabb.",
   "difficulty": "advanced",
   "forceApplicationProfile": "temperatur",
+  "visibilityOverride": { "show": ["kaskadreglering"], "hide": ["framkoppling", "parameterstyrning", "ventilkarakteristik", "kvotreglering"] },
   "steps": [
     {
       "type": "theory",
@@ -29,7 +30,7 @@
       "comparisonGroup": "kaskad-jamforelse",
       "title": "Enkelslinga — problemet",
       "objective": "Se hur länge och hur mycket en vanlig, enkel PID-slinga avviker när en störning i flödet slår igenom direkt på temperaturen.",
-      "instruction": "Scenariot modellerar en värmeväxlare: PV är utgående temperatur, u är ventilens öppning, SP=50. Ingen kaskad ännu — regulatorn styr ventilen direkt.\n\nKlicka 'Trigga last' i Processpåverkan (Last mag = −8, ett tryckfall som minskar levererat flöde för samma ventilöppning).\n\nKör minst 400 steg efter triggningen (klicka 'Kör 10 steg' upprepade gånger) för att se hela förloppet.\n\nNotera: PV avviker som mest ca 3,2 enheter från SP, och tar drygt 350 steg att återhämta sig till inom ±0,5 av SP igen. Regulatorn har inte gjort något fel — den kan bara reagera EFTER att felet redan syns i PV."
+      "instruction": "Scenariot modellerar en värmeväxlare: PV är utgående temperatur, u är ventilens öppning, SP=50. Ingen kaskad ännu — regulatorn styr ventilen direkt.\n\nKlicka 'Trigga last' i Processpåverkan (Last mag = −35, ett stort tryckfall som minskar levererat flöde för samma ventilöppning).\n\nKör minst 500 steg efter triggningen (klicka 'Kör 10 steg' upprepade gånger) för att se hela förloppet.\n\nNotera: PV avviker som mest ca 14 enheter från SP — en tydlig, lätt synlig dipp i grafen — och tar ca 470 steg att återhämta sig till inom ±0,5 av SP igen. Regulatorn har inte gjort något fel — den kan bara reagera EFTER att felet redan syns i PV."
     },
     {
       "type": "scenario",
@@ -37,7 +38,7 @@
       "comparisonGroup": "kaskad-jamforelse",
       "title": "Kaskadreglering — lösningen",
       "objective": "Se hur en snabb, inre flödesslinga fångar samma störning innan den hinner påverka temperaturen.",
-      "instruction": "Samma värmeväxlare, samma störning (Last mag = −8) — men nu finns en Slavslinga (se den nya panelen och de tre grafpanelerna: PV1/SP1, PV2/SP2, U). Slavslingans egna parametrar är satta av scenariot, inte redigerbara.\n\nKlicka 'Trigga last'.\n\nKör minst 400 steg efter triggningen, precis som i förra steget.\n\nNotera: PV1 (huvudslingan, övre panelen) avviker som mest bara ca 0,3 enheter — den lämnar aldrig ens ett ±0,5-band. Titta på PV2/SP2 (mittenpanelen): det är DÄR allt arbete sker. Signalkedjeraden ovanför grafen visar exakt hur SP1 → SP2 → U → PV2 → PV1 hänger ihop, steg för steg.",
+      "instruction": "Samma värmeväxlare, samma störning (Last mag = −35) — men nu finns en Slavslinga-panel i sidopanelen (SP2, PV2, U och en egen liten trendgraf) mellan Regulatorkonfiguration och Processpåverkan. Slavslingans egna parametrar är satta av scenariot, inte redigerbara.\n\nKlicka 'Trigga last'.\n\nKör minst 100 steg efter triggningen — kaskaden är klart snabbare den här gången.\n\nNotera: huvudgrafens PV (temperaturen) avviker som mest bara ca 1,1 enhet — knappt synligt jämfört med förra stegets dipp på ca 14 enheter. Titta i Slavslinga-panelens lilla trendgraf: det är DÄR allt arbete sker (PV2 dyker och återhämtar sig snabbt). Signalkedjeraden ovanför huvudgrafen visar exakt hur SP1 → SP2 → U → PV2 → PV1 hänger ihop, steg för steg.",
       "checkpoint": {
         "question": "Vad beräknas SP2 till, och vem sätter det värdet?",
         "options": [
@@ -56,7 +57,7 @@
       "comparisonGroup": "kaskad-jamforelse",
       "title": "Felaktigt trimmad slavslinga",
       "objective": "Se att kaskadens fördel bygger på att slavslingan verkligen är snabbare än huvudslingan — och vad som händer om den inte är det.",
-      "instruction": "Samma kaskadstruktur som föregående steg, samma störning (Last mag = −8) — men slavslingan är nu feltrimmad (Kp=0,3, Ti=60 istället för Kp=2,0, Ti=6).\n\nKlicka 'Trigga last'.\n\nKör minst 550 steg efter triggningen.\n\nNotera: PV1 avviker nu som mest ca 3,6 enheter och tar ca 550 steg att återhämta sig — SÄMRE än enkelslingan i steg 1 (3,2 enheter, 350 steg), trots att kaskadstrukturen i sig är identisk med förra stegets. Jämför gärna med Framkoppling (tidigare lärstig): där gav ett FELAKTIGT Kff en mindre, men fortfarande begränsad, förbättring — här ger en feltrimmad slavslinga en regelrätt FÖRSÄMRING jämfört med att inte ha kaskad alls.",
+      "instruction": "Samma kaskadstruktur som föregående steg, samma störning (Last mag = −35) — men slavslingan är nu feltrimmad (Kp=0,3, Ti=60 istället för Kp=2,0, Ti=6).\n\nKlicka 'Trigga last'.\n\nKör minst 1100 steg efter triggningen för att se hela, långsamma förloppet.\n\nNotera: PV1 avviker nu som mest ca 16 enheter — MER än steg 1:s enkelslinga (ca 14 enheter) — och tar över 1000 steg att återhämta sig, mer än dubbelt så länge som steg 1:s 470 steg, trots att kaskadstrukturen i sig är identisk med förra stegets. Jämför gärna med Framkoppling (tidigare lärstig): där gav ett FELAKTIGT Kff en mindre, men fortfarande begränsad, förbättring — här ger en feltrimmad slavslinga en regelrätt FÖRSÄMRING jämfört med att inte ha kaskad alls.",
       "checkpoint": {
         "question": "Varför blev PV1:s avvikelse här STÖRRE än utan kaskad alls (steg 1), trots att strukturen (huvudslinga + slavslinga) är exakt densamma som i föregående steg?",
         "options": [

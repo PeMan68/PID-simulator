@@ -162,7 +162,7 @@ function baseScenario(overrides = {}) {
   check("7a. PV1 förblir ändligt genom hela körningen trots feltrimmad slavslinga", sim.history.y.every(Number.isFinite));
   check("7b. PV2 förblir ändligt genom hela körningen", sim.history.pv2.every(Number.isFinite));
   const peakDev = Math.max(...sim.history.y.slice(150).map(v => Math.abs(v - 50)));
-  check("7c. Topp-avvikelsen är stor men BEGRÄNSAD (ingen okontrollerad divergens) — numeriskt verifierat ca 3.6", peakDev > 2 && peakDev < 10, `peakDev=${peakDev}`);
+  check("7c. Topp-avvikelsen är stor men BEGRÄNSAD (ingen okontrollerad divergens) — numeriskt verifierat ca 15.9 (uppföljning, Last mag -35)", peakDev > 10 && peakDev < 25, `peakDev=${peakDev}`);
 }
 
 // ── 8. De tre nya innehållsfilerna laddar och kör utan fel ──

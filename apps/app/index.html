@@ -420,6 +420,18 @@
     #groupSlavslinga { border-color: #2f7a8f; }
     #groupSlavslinga .param-group-label { color: #2f7a8f; }
     #groupSlavslinga .field input[readonly] { background: var(--panel-strong); color: var(--muted); cursor: default; }
+    /* FEAT-050 uppföljning — [data-addon].addon-hidden (befintlig regel,
+       används redan av Framkoppling/Kvotreglering/Parameterstyrning) täcker
+       TILLÅTELSE-delen av synligheten. Denna regel täcker FAKTA-delen
+       (`hidden`-attributet): utan den vinner `.param-group{display:flex}`
+       över webbläsarens inbyggda `[hidden]{display:none}` eftersom båda är
+       author/UA-regler med samma specificitet — den bugg PO rapporterade
+       ("slavslingan visas nu generellt"). Samma mönster som
+       `.advanced-fields[hidden]`/`.schedule-fields[hidden]` redan använder
+       nedan, bara tillämpat på en `.param-group` istället för `display:contents`. */
+    #groupSlavslinga[hidden] { display: none !important; }
+    .slave-chart-wrap { flex: 1 0 100%; margin-top: 4px; }
+    .slave-chart-wrap canvas { width: 100%; max-width: 100%; height: 90px; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
     .slave-status-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: var(--panel-strong); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
     .slave-status-badge.saturated { background: #fbeadb; color: #b5651d; border-color: #e0a458; }
     #cascadeChain { font-family: Consolas, monospace; font-size: 12px; background: var(--panel-strong); border: 1px solid #2f7a8f; border-radius: 6px; padding: 6px 10px; color: #1b242c; overflow-x: auto; white-space: nowrap; }
@@ -1008,15 +1020,23 @@
         </div>
       </div>
 
-      <!-- FEAT-050 (STRAT-007/DES-001) — Kaskadreglering: Slavslingan är
-           INTE en andra, konfigurerbar regulator (PO-beslut, DES-001
-           avsnitt 2.2) — bara en skrivskyddad avläsning av SP2/PV2/U.
-           Döljs helt (`hidden`) utom när aktivt scenario har
-           `cascade.enabled`, satt av updateCascadeVisibility() i app.js.
-           Ingen Avancerat-sektion, ingen data-addon (ingen konfiguration
-           att gömma/visa via APPLICATION_PROFILES — se DES-001 avsnitt 2.3). -->
-      <div class="param-group" id="groupSlavslinga" hidden>
-        <span class="param-group-label">Slavslinga (inre process)</span>
+      <!-- FEAT-050 uppföljning (PO-test 2026-09-24) — Slavslingan är INTE en
+           andra, konfigurerbar regulator (DES-001 avsnitt 2.2) — bara en
+           skrivskyddad avläsning av SP2/PV2/U + en egen mini-trendgraf
+           (flyttad hit FRÅN huvudgrafen, se drawCascadeMiniChart() i app.js).
+           Synlighet är nu TVÅ oberoende villkor, båda måste vara sanna:
+           (1) FAKTA — `hidden`-attributet, satt av updateCascadePanel() i
+           app.js utifrån om aktivt scenario faktiskt har cascade.enabled.
+           Kräver #groupSlavslinga[hidden]{display:none!important} i CSS:en
+           (en generisk `.param-group{display:flex}` skulle annars vinna
+           över webbläsarens inbyggda [hidden]-regel — det var buggen PO
+           såg, "slavslingan visas nu generellt").
+           (2) TILLÅTELSE — `data-addon="kaskadreglering"`, samma
+           APPLICATION_PROFILES/visibilityOverride-mekanism som Framkoppling/
+           Kvotreglering/Parameterstyrning redan använder. Avancerat
+           tillåter alltid (oförändrat befintligt beteende). -->
+      <div class="param-group" id="groupSlavslinga" data-addon="kaskadreglering" hidden>
+        <span class="param-group-label" onclick="toggleParamGroup('groupSlavslinga')"><button class="group-toggle">▼</button> Slavslinga (inre process)</span>
         <div class="param-group-body">
           <div class="field">
             <label for="cascadeSp2">SP2 <button class="help-btn" data-help="cascadeSp2">?</button></label>
@@ -1033,6 +1053,9 @@
           <div class="field">
             <label>Status</label>
             <span id="cascadeStatusBadge" class="slave-status-badge">OK</span>
+          </div>
+          <div class="slave-chart-wrap">
+            <canvas id="cascadeMiniChart" width="260" height="90"></canvas>
           </div>
         </div>
       </div>

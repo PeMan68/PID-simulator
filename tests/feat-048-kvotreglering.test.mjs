@@ -142,7 +142,11 @@ function makeScenario({ ratioControl, kp = 3.0, ti = 5.0, sp = 25, noiseStd = 0 
   check("9a. Kvotreglering aktiv + Kvot ligger i advancedFieldsRegulator", /id="advancedFieldsRegulator"[\s\S]{0,900}<label for="ratioControlEnabled"[\s\S]{0,500}<label for="ratio"/.test(html));
   check("9b. Flöde A basnivå + volatilitet ligger i advancedFieldsProcess", /id="advancedFieldsProcess"[\s\S]{0,700}<label for="wildFlowBase"[\s\S]{0,500}<label for="wildFlowVolatility"/.test(html));
   check("9c. Samtliga fyra fält har data-addon=\"kvotreglering\" (samma [data-addon]-mönster som övriga tillägg)", (html.match(/data-addon="kvotreglering"/g) || []).length === 4);
-  check("9d. APPLICATION_PROFILES: kvotreglering tillagt som addon, INGEN egen Tillämpning skapad (fortfarande bara tre profiler)", /avancerat:.*addons: \["framkoppling", "parameterstyrning", "ventilkarakteristik", "kvotreglering"\]/.test(appJs) && (appJs.match(/^\s{2}\w+:\s*\{ processModels:/gm) || []).length === 3);
+  // FEAT-050 (uppföljning) — kaskadreglering tillagt i samma addons-array
+  // efter kvotreglering (samma återanvändning av APPLICATION_PROFILES-
+  // mekanismen, se dess egen data-addon-kommentar) — regexen vidgad för att
+  // tillåta det, fortfarande bara tre PROFILER (oförändrat).
+  check("9d. APPLICATION_PROFILES: kvotreglering tillagt som addon, INGEN egen Tillämpning skapad (fortfarande bara tre profiler)", /avancerat:.*addons: \["framkoppling", "parameterstyrning", "ventilkarakteristik", "kvotreglering", "kaskadreglering"\]/.test(appJs) && (appJs.match(/^\s{2}\w+:\s*\{ processModels:/gm) || []).length === 3);
   check("9e. deriveApplicationProfile() härleder Temperaturprocess när flöde A är konfigurerat", /if \(scenario\.ratioControl\?\.wildFlow\?\.base > 0\) return "temperatur";/.test(appJs));
   check("9f. updateRatioControlUIState() inaktiverar SP-fältet (inte döljer) när kvotreglering är aktiv", /function updateRatioControlUIState\(\) \{\s*\n\s*fields\.sp\.disabled = fields\.ratioControlEnabled\.checked;/.test(appJs));
   check("9g. applyApplicationProfile() nollställer wildFlowBase (INTE bara checkboxen) när tillägget otillåtet", /if \(!profile\.addons\.includes\("kvotreglering"\)\) \{ fields\.ratioControlEnabled\.checked = false; fields\.wildFlowBase\.value = 0; \}/.test(appJs));
