@@ -411,6 +411,35 @@
     .advanced-toggle.open .group-toggle { transform: rotate(90deg); }
     .advanced-fields { display: contents; }
     .advanced-fields[hidden] { display: none; }
+    /* FEAT-050 — Kaskadreglering: Slavslinga-panelen visar bara AVLÄSTA
+       värden (SP2/PV2/U), aldrig redigerbara — DES-001 avsnitt 2.2 var
+       tydlig med att detta INTE ska kunna förväxlas med en andra,
+       konfigurerbar regulator. `[readonly]` här är en ren visuell markör
+       (input-fältet accepterar ändå aldrig skrivning) som skiljer den
+       tydligt från alla vanliga, redigerbara .field-inputs i övriga grupper. */
+    #groupSlavslinga { border-color: #2f7a8f; }
+    #groupSlavslinga .param-group-label { color: #2f7a8f; }
+    #groupSlavslinga .field input[readonly] { background: var(--panel-strong); color: var(--muted); cursor: default; }
+    /* FEAT-050 uppföljning — [data-addon].addon-hidden (befintlig regel,
+       används redan av Framkoppling/Kvotreglering/Parameterstyrning) täcker
+       TILLÅTELSE-delen av synligheten. Denna regel täcker FAKTA-delen
+       (`hidden`-attributet): utan den vinner `.param-group{display:flex}`
+       över webbläsarens inbyggda `[hidden]{display:none}` eftersom båda är
+       author/UA-regler med samma specificitet — den bugg PO rapporterade
+       ("slavslingan visas nu generellt"). Samma mönster som
+       `.advanced-fields[hidden]`/`.schedule-fields[hidden]` redan använder
+       nedan, bara tillämpat på en `.param-group` istället för `display:contents`. */
+    #groupSlavslinga[hidden] { display: none !important; }
+    .slave-chart-wrap { flex: 1 0 100%; margin-top: 4px; }
+    .slave-chart-wrap canvas { width: 100%; max-width: 100%; height: 90px; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
+    .slave-status-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: var(--panel-strong); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+    .slave-status-badge.saturated { background: #fbeadb; color: #b5651d; border-color: #e0a458; }
+    /* FEAT-050 uppföljning (PO-test, andra rundan) — flyttad in i
+       Slavslinga-panelen (från en fristående rad ovanför huvudgrafen).
+       white-space:normal (inte nowrap som tidigare) eftersom panelen är
+       sidopanelsbred, inte lika bred som huvudgrafen. */
+    #cascadeChain { font-family: Consolas, monospace; font-size: 11px; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; color: #1b242c; white-space: normal; line-height: 1.5; }
+    #cascadeChain:empty { display: none; }
     /* FEAT-044 (mergad ovanpå UX-004) — zonerna för Parameterstyrning/
        Olinjär ventilkarakteristik samlade i en kompakt tabell (en rad per
        zon) istället för utspridda enskilda fält — adresserar att layouten
@@ -892,7 +921,11 @@
           </div>
           <div class="field">
             <label for="umin">U min <button class="help-btn" data-help="umin">?</button></label>
-            <input id="umin" type="number" step="0.1" min="0" max="100">
+            <!-- FEAT-050 — inget HTML min-attribut: i kaskadläge är detta ett
+                 avvikelsespann (t.ex. -50) kring slavslingans normalläge, inte
+                 en ventilprocent. Den auktoritativa gränsen sätts i JS av
+                 syncParamsFromUI() (se dess FEAT-050-kommentar), inte här. -->
+            <input id="umin" type="number" step="0.1" max="100">
           </div>
           <div class="field">
             <label for="umax">U max <button class="help-btn" data-help="umax">?</button></label>
@@ -988,6 +1021,53 @@
               <label for="antiWindup">Anti-windup <button class="help-btn" data-help="antiWindup">?</button></label>
               <input id="antiWindup" type="checkbox" checked title="Förhindra integratoruppvridning vid mättning">
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FEAT-050 uppföljning (PO-test 2026-09-24) — Slavslingan är INTE en
+           andra, konfigurerbar regulator (DES-001 avsnitt 2.2) — bara en
+           skrivskyddad avläsning av SP2/PV2/U + en egen mini-trendgraf
+           (flyttad hit FRÅN huvudgrafen, se drawCascadeMiniChart() i app.js).
+           Synlighet är nu TVÅ oberoende villkor, båda måste vara sanna:
+           (1) FAKTA — `hidden`-attributet, satt av updateCascadePanel() i
+           app.js utifrån om aktivt scenario faktiskt har cascade.enabled.
+           Kräver #groupSlavslinga[hidden]{display:none!important} i CSS:en
+           (en generisk `.param-group{display:flex}` skulle annars vinna
+           över webbläsarens inbyggda [hidden]-regel — det var buggen PO
+           såg, "slavslingan visas nu generellt").
+           (2) TILLÅTELSE — `data-addon="kaskadreglering"`, samma
+           APPLICATION_PROFILES/visibilityOverride-mekanism som Framkoppling/
+           Kvotreglering/Parameterstyrning redan använder. Avancerat
+           tillåter alltid (oförändrat befintligt beteende). -->
+      <div class="param-group" id="groupSlavslinga" data-addon="kaskadreglering" hidden>
+        <span class="param-group-label" onclick="toggleParamGroup('groupSlavslinga')"><button class="group-toggle">▼</button> Slavslinga (inre process)</span>
+        <div class="param-group-body">
+          <div class="field">
+            <label for="cascadeSp2">SP2 <button class="help-btn" data-help="cascadeSp2">?</button></label>
+            <input id="cascadeSp2" type="text" readonly>
+          </div>
+          <div class="field">
+            <label for="cascadePv2">PV2 <button class="help-btn" data-help="cascadePv2">?</button></label>
+            <input id="cascadePv2" type="text" readonly>
+          </div>
+          <div class="field">
+            <label for="cascadeU">U <button class="help-btn" data-help="cascadeU">?</button></label>
+            <input id="cascadeU" type="text" readonly>
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <span id="cascadeStatusBadge" class="slave-status-badge">OK</span>
+          </div>
+          <!-- FEAT-050 uppföljning (PO-test 2026-09-24, andra rundan) —
+               signalkedjeraden flyttad hit FRÅN en fristående rad ovanför
+               huvudgrafen: hela kedjan (inkl. SP2/U/PV2) hör hemma
+               tillsammans med resten av slavslinge-informationen, inte
+               bredvid huvudgrafen som bara visar huvudslingan nu. -->
+          <div id="cascadeChain" class="slave-chart-wrap"></div>
+          <div class="slave-chart-wrap">
+            <canvas id="cascadeMiniChart" width="260" height="90"></canvas>
+            <div id="cascadeMiniLegend" class="legend" style="font-size: 10px; margin-top: 2px;"></div>
           </div>
         </div>
       </div>

@@ -142,7 +142,11 @@ function makeScenario({ ratioControl, kp = 3.0, ti = 5.0, sp = 25, noiseStd = 0 
   check("9a. Kvotreglering aktiv + Kvot ligger i advancedFieldsRegulator", /id="advancedFieldsRegulator"[\s\S]{0,900}<label for="ratioControlEnabled"[\s\S]{0,500}<label for="ratio"/.test(html));
   check("9b. Flöde A basnivå + volatilitet ligger i advancedFieldsProcess", /id="advancedFieldsProcess"[\s\S]{0,700}<label for="wildFlowBase"[\s\S]{0,500}<label for="wildFlowVolatility"/.test(html));
   check("9c. Samtliga fyra fält har data-addon=\"kvotreglering\" (samma [data-addon]-mönster som övriga tillägg)", (html.match(/data-addon="kvotreglering"/g) || []).length === 4);
-  check("9d. APPLICATION_PROFILES: kvotreglering tillagt som addon, INGEN egen Tillämpning skapad (fortfarande bara tre profiler)", /avancerat:.*addons: \["framkoppling", "parameterstyrning", "ventilkarakteristik", "kvotreglering"\]/.test(appJs) && (appJs.match(/^\s{2}\w+:\s*\{ processModels:/gm) || []).length === 3);
+  // FEAT-050 (uppföljning) — kaskadreglering tillagt i samma addons-array
+  // efter kvotreglering (samma återanvändning av APPLICATION_PROFILES-
+  // mekanismen, se dess egen data-addon-kommentar) — regexen vidgad för att
+  // tillåta det, fortfarande bara tre PROFILER (oförändrat).
+  check("9d. APPLICATION_PROFILES: kvotreglering tillagt som addon, INGEN egen Tillämpning skapad (fortfarande bara tre profiler)", /avancerat:.*addons: \["framkoppling", "parameterstyrning", "ventilkarakteristik", "kvotreglering", "kaskadreglering"\]/.test(appJs) && (appJs.match(/^\s{2}\w+:\s*\{ processModels:/gm) || []).length === 3);
   check("9e. deriveApplicationProfile() härleder Temperaturprocess när flöde A är konfigurerat", /if \(scenario\.ratioControl\?\.wildFlow\?\.base > 0\) return "temperatur";/.test(appJs));
   check("9f. updateRatioControlUIState() inaktiverar SP-fältet (inte döljer) när kvotreglering är aktiv", /function updateRatioControlUIState\(\) \{\s*\n\s*fields\.sp\.disabled = fields\.ratioControlEnabled\.checked;/.test(appJs));
   check("9g. applyApplicationProfile() nollställer wildFlowBase (INTE bara checkboxen) när tillägget otillåtet", /if \(!profile\.addons\.includes\("kvotreglering"\)\) \{ fields\.ratioControlEnabled\.checked = false; fields\.wildFlowBase\.value = 0; \}/.test(appJs));
@@ -177,14 +181,27 @@ function makeScenario({ ratioControl, kp = 3.0, ti = 5.0, sp = 25, noiseStd = 0 
   check("11c. Flöde A ritas TUNNARE (width=1) än PV/SP/u (width=2) — visuellt underordnad, inte en tredje huvudsignal", /drawSeries\(ctx, points, color, dashed, width = 2\)/.test(appJs));
   check("11d. Legenden byggs om dynamiskt och nämner Flöde A bara när linjen faktiskt ritas", /hasWildFlow \? gap \+ "Rosa streckad \(tunn\): Flöde A" : ""/.test(appJs));
   check("11e. #chartLegend-elementet finns i markupen (id tillagt för att JS ska kunna uppdatera det)", html.includes('id="chartLegend"'));
-  check("11f. clearChart/systemReset-knapparna nollställer wildFlow-historiken (annars kraschar nästa steg mot ett tomt/undefined-fält)", (appJs.match(/aux: \[\], wildFlow: \[\], markers: \[\]/g) || []).length === 2);
+  // FEAT-050 (uppföljning, sjätte rundan) — den hårdkodade fältlistan denna
+  // regex vaktade ("aux: [], wildFlow: [], markers: []") glömde SENARE
+  // sp2/pv2/uInner och orsakade exakt samma sorts krasch igen (PO-test).
+  // Åtgärdat permanent genom att TA BORT hårdkodningen helt — clearChart/
+  // systemReset använder nu sim.reset()/sim.clearHistory() (sim-core.js),
+  // en enda källa till historikens fältform som inte kan bli inaktuell på
+  // det här sättet igen. Det riktiga beteendetestet (stega efter reset/
+  // clear kraschar inte, för både kaskad- och icke-kaskad-scenarier) finns
+  // nu i tests/feat-050-kaskadreglering.test.mjs, avsnitt 6b/6h.
+  check("11f. clearChart/systemReset använder sim.clearHistory()/sim.reset() — ingen hårdkodad fältlista att glömma fält i", /sim\.clearHistory\(\)/.test(appJs) && !/aux: \[\], wildFlow: \[\], markers: \[\]/.test(appJs));
 }
 
 // ── 12. Mätläge — crosshair visar Flöde A/SP_B när kvotreglering är aktiv
 // (PO:s komplettering, 2026-09-24), OFÖRÄNDRAT för övriga reglerstrategier ──
 {
   const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
-  check("12a. Crosshair-raderna PV/u är BYTE-IDENTISKA med tidigare (oförändrat för övriga strategier)", /const lines = \["t  = " \+ Math\.round\(tHover\), "PV = " \+ pvH\.toFixed\(1\), "u  = " \+ uH\.toFixed\(1\)\];/.test(appJs));
+  // FEAT-050 (uppföljning, femte rundan) — crosshairen grenar nu på
+  // cascadeActive (kaskadscenarier visar PV1/u1, huvudslingans egna
+  // värden, aldrig slavslingans SP2/PV2). Icke-kaskad-grenen är
+  // BYTE-IDENTISK med den ursprungliga, ovillkorade raden.
+  check("12a. Crosshair-raderna PV/u är BYTE-IDENTISKA med tidigare för icke-kaskad-grenen (oförändrat för övriga strategier)", /: \["t  = " \+ Math\.round\(tHover\), "PV = " \+ pvH\.toFixed\(1\), "u  = " \+ uH\.toFixed\(1\)\];/.test(appJs));
   check("12b. SP_B/Flöde A läggs till EXAKT när hasWildFlow — samma villkor som styr grafens Flöde A-linje (avsnitt 11a)", /if \(hasWildFlow\) \{\s*\n\s*lines\.push\("SP_B    = " \+ spH\.toFixed\(1\)\);\s*\n\s*lines\.push\("Flöde A = " \+ wildH\.toFixed\(1\)\);/.test(appJs));
   check("12c. spH/wildH läses från sim.history.sp/wildFlow vid samma tidpunkt (iNear) som PV/u redan gör — inte en separat, potentiellt osynkad källa", /const spH = hasWildFlow \? \(sp\[iNear\] != null \? sp\[iNear\] : 0\) : null;/.test(appJs) && /const wildH = hasWildFlow \? \(wildFlow\[iNear\] != null \? wildFlow\[iNear\] : 0\) : null;/.test(appJs));
   check("12d. wildFlow/hasWildFlow lyfta till funktionsnivå (återanvänds av både grafens linje och crosshairen, ingen duplicerad logik)", (appJs.match(/const hasWildFlow = sim\.scenario\.ratioControl\?\.wildFlow\?\.base > 0/g) || []).length === 1);

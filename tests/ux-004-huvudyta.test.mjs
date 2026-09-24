@@ -106,7 +106,11 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
 // ── 5. Justering 5 — Visa PB flyttat till grafen ──
 {
   check("5a. #showPB ligger INTE längre i någon .param-group (Processinställning/Regulatorkonfiguration/Processpåverkan)", !/id="group(Processinstallning|Regulatorkonfiguration|Processpaverkan)">[\s\S]*?id="showPB"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>\s*(<!--|<div class="param-group")/.test(html) && !/<label for="showPB">/.test(html.split('id="chartControls"')[0] || ""));
-  check("5b. #chartControls-raden med Visa PB finns direkt före #chartWrap", /id="chartControls">[\s\S]{0,200}id="showPB"[\s\S]{0,300}id="chartWrap"/.test(html));
+  // FEAT-050 (DES-001) — #cascadeChain (signalkedje-raden) infogades mellan
+  // #chartControls och #chartWrap, vidgar det tillåtna avståndet i linje med
+  // samma mönster som tidigare UX-004-kompletteringar (kommentarer/nya
+  // element ökar det rena teckenavståndet utan att ändra den logiska ordningen).
+  check("5b. #chartControls-raden med Visa PB finns före #chartWrap (ev. med #cascadeChain emellan)", /id="chartControls">[\s\S]{0,200}id="showPB"[\s\S]{0,600}id="chartWrap"/.test(html));
   check("5c. showPB fortsatt registrerad i fields{} (samma id, bara ny plats i DOM)", /showPB: document\.getElementById\("showPB"\)/.test(appJs));
 }
 

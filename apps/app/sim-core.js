@@ -169,6 +169,21 @@
       // scenarier utan ratioControl-fält ger 0 (no-op, samma
       // bakåtkompatibla mönster som auxValue/auxGain).
       this.wildFlow = scenario.ratioControl?.wildFlow?.base ?? 0;
+      // FEAT-050 — Kaskadreglering: en andra, INRE process+regulator, aktiv
+      // bara när scenariot uttryckligen konfigurerar den (bakåtkompatibelt
+      // no-op-mönster, samma som ratioControl/auxSignal ovan). Den yttre
+      // regulatorns (this.pid) utsignal tolkas i kaskadläge INTE som en
+      // ventilsignal längre, utan som en avvikelse (SP2 = inre processens
+      // normalValue + this.pid:s utsignal) — se STRAT-007 avsnitt 3 och
+      // DES-001. `controller.outputLimits` för den YTTRE regulatorn måste
+      // därför i kaskadscenarier sättas till ett avvikelseintervall (t.ex.
+      // ±50), inte 0–100, eftersom det nu är SP2:s spann, inte en ventils.
+      const cascadeCfg = scenario.cascade;
+      this.cascadeEnabled = !!(cascadeCfg && cascadeCfg.enabled);
+      if (this.cascadeEnabled) {
+        this.innerProcess = new ProcessModel(cascadeCfg.inner.process, this.dt);
+        this.innerPid = new PIDController(cascadeCfg.inner.controller, this.dt);
+      }
       // FEAT-048 användartest (PO, 2026-09-24) — till skillnad från
       // auxValue/Last (se STRAT-005/FEAT-045-kommentaren ovan, som
       // MEDVETET INTE ritas som graflinje) behöver flöde A synas i
@@ -179,9 +194,26 @@
       // ALDRIG bli negativt eller nå 0 medan det vandrar — klippningen i
       // step() (±50% av en bas-nivå > 0) garanterar ett strikt positivt
       // intervall, så den risken gäller inte här.
-      this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0], wildFlow: [this.wildFlow] };
+      this.history = { t: [0], y: [this.process.y], sp: [scenario.runtime.setpoint], u: [0], e: [scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0], wildFlow: [this.wildFlow], sp2: [this.cascadeEnabled ? this.innerProcess.cfg.normalValue : 0], pv2: [this.cascadeEnabled ? this.innerProcess.y : 0], uInner: [0] };
     }
-    reset() { this.stepNo = 0; this.maxSteps = this.baseMaxSteps; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.auxValue = 0; this.wildFlow = this.scenario.ratioControl?.wildFlow?.base ?? 0; this.scenario.controller.bias = 0; this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0], wildFlow: [this.wildFlow] }; }
+    reset() {
+      this.stepNo = 0; this.maxSteps = this.baseMaxSteps; this.process.reset(); this.pid.reset(); this.onoff.reset(); this.pulseStepsLeft = 0; this.auxValue = 0; this.wildFlow = this.scenario.ratioControl?.wildFlow?.base ?? 0; this.scenario.controller.bias = 0;
+      if (this.cascadeEnabled) { this.innerProcess.reset(); this.innerPid.reset(); }
+      this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0], wildFlow: [this.wildFlow], sp2: [this.cascadeEnabled ? this.innerProcess.cfg.normalValue : 0], pv2: [this.cascadeEnabled ? this.innerProcess.y : 0], uInner: [0] };
+    }
+    // FEAT-050 uppföljning (PO-test, sjätte rundan) — "Rensa graf" (till
+    // skillnad från reset()) ska INTE nollställa process-/regulatortillstånd,
+    // bara börja en ny, tom historik som fortsätter från NUVARANDE värden.
+    // Egen metod istället för att app.js hårdkodar fältlistan själv — det
+    // hände redan TVÅ gånger (FEAT-048/wildFlow, sedan FEAT-050/sp2-pv2-
+    // uInner) att en hårdkodad lista i app.js glömde ett nytt fält och
+    // fick sim.step() att kasta ett fel (`.push` på undefined) vid nästa
+    // steg efter en knapptryckning. En delad metod här är den enda platsen
+    // som behöver känna till historikens fullständiga fältform.
+    clearHistory() {
+      this.stepNo = 0;
+      this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [this.auxValue], wildFlow: [this.wildFlow], sp2: [this.cascadeEnabled ? this.innerProcess.cfg.normalValue : 0], pv2: [this.cascadeEnabled ? this.innerProcess.y : 0], uInner: [0] };
+    }
     triggerPulse() { const p = this.scenario.disturbance.pulse; if (p && p.durationSteps > 0) this.pulseStepsLeft = p.durationSteps; }
     // FEAT-045 — sätter lasten till scenariots auxSignal.magnitude i ETT
     // anrop, ingen räknare (se ovan). Ett nytt klick med ett ändrat fältvärde
@@ -289,14 +321,43 @@
       let disturbance = 0;
       if ((this.scenario.disturbance.noiseStd || 0) > 0) disturbance += gaussian(this.rng) * this.scenario.disturbance.noiseStd;
       if (this.pulseStepsLeft > 0) { disturbance += this.scenario.disturbance.pulse.magnitude || 0; this.pulseStepsLeft -= 1; }
-      const y = this.process.step(ctrl.u, this.dt, disturbance, this.auxValue);
+      // FEAT-050 uppföljning (PO-test, femte rundan) — history.u är ALLTID
+      // den YTTRE/HUVUD-regulatorns EGNA utsignal (ctrl.u) — precis som
+      // history.p/i/d redan ALLTID var (de lästes aldrig om från innerCtrl,
+      // en inkonsekvens som gjorde att statusradens "u" och "P/I/D" tidigare
+      // kunde visa två olika regulatorers värden på samma rad). I kaskadläge
+      // är detta en AVVIKELSE (kan vara negativ), inte en ventilsignal — se
+      // konstruktor-kommentaren ovan. Den INRE regulatorns egna, verkliga
+      // ventilsignal lagras separat i history.uInner (0 = no-op utan kaskad,
+      // samma mönster som sp2/pv2) — används ENDAST av Slavslinga-panelen,
+      // aldrig av huvudgrafen/statusraden.
+      let y, uInner = 0, sp2 = 0, pv2 = 0;
+      if (this.cascadeEnabled) {
+        // SP2 uttrycks i den inre processens egna enheter genom att lägga
+        // avvikelsen (ctrl.u) på dess normalValue — samma uppkoppling som
+        // verifierades numeriskt i STRAT-007 avsnitt 1/3 med oförändrade klasser.
+        sp2 = this.innerProcess.cfg.normalValue + ctrl.u;
+        const innerCfg = this.scenario.cascade.inner.controller;
+        const innerCtrl = this.innerPid.step(sp2, this.innerProcess.y, innerCfg.outputLimits, innerCfg.antiWindup !== false, 0);
+        // Brus/puls/last routas till den INRE slingan i kaskadläge — det är
+        // poängen med kaskad: en störning i flödet ska fångas och korrigeras
+        // av slavslingan INNAN den hinner påverka PV1 (den yttre processen).
+        pv2 = this.innerProcess.step(innerCtrl.u, this.dt, disturbance, this.auxValue);
+        // Den yttre processen drivs av den inre slingans PV, uttryckt som en
+        // avvikelse kring dess normalValue (samma linjära processmodell-
+        // konvention som resten av appen, se ProcessModel.step()).
+        y = this.process.step(pv2 - this.innerProcess.cfg.normalValue, this.dt, 0, 0);
+        uInner = innerCtrl.u;
+      } else {
+        y = this.process.step(ctrl.u, this.dt, disturbance, this.auxValue);
+      }
       this.stepNo += 1;
       const t = this.stepNo * this.dt;
-      this.history.t.push(t); this.history.y.push(y); this.history.sp.push(sp); this.history.u.push(ctrl.u); this.history.e.push(ctrl.error); this.history.p.push(ctrl.pTerm || 0); this.history.i.push(ctrl.iTerm || 0); this.history.d.push(ctrl.dTerm || 0); this.history.aux.push(this.auxValue); this.history.wildFlow.push(this.wildFlow);
+      this.history.t.push(t); this.history.y.push(y); this.history.sp.push(sp); this.history.u.push(ctrl.u); this.history.e.push(ctrl.error); this.history.p.push(ctrl.pTerm || 0); this.history.i.push(ctrl.iTerm || 0); this.history.d.push(ctrl.dTerm || 0); this.history.aux.push(this.auxValue); this.history.wildFlow.push(this.wildFlow); this.history.sp2.push(sp2); this.history.pv2.push(pv2); this.history.uInner.push(uInner);
       return { t: t, y: y, u: ctrl.u, e: ctrl.error };
     }
     run(n) { const frames = []; for (let i = 0; i < n; i += 1) { const f = this.step(); if (!f) break; frames.push(f); } return frames; }
-    getState() { const i = this.history.t.length - 1; if (i < 0) return { step: 0, t: 0, y: 0, u: 0, e: 0, pTerm: 0, iTerm: 0, dTerm: 0 }; return { step: this.stepNo, t: this.history.t[i], y: this.history.y[i], u: this.history.u[i], e: this.history.e[i], pTerm: this.history.p[i] || 0, iTerm: this.history.i[i] || 0, dTerm: this.history.d[i] || 0 }; }
+    getState() { const i = this.history.t.length - 1; if (i < 0) return { step: 0, t: 0, y: 0, u: 0, e: 0, pTerm: 0, iTerm: 0, dTerm: 0, sp2: 0, pv2: 0, uInner: 0 }; return { step: this.stepNo, t: this.history.t[i], y: this.history.y[i], u: this.history.u[i], e: this.history.e[i], pTerm: this.history.p[i] || 0, iTerm: this.history.i[i] || 0, dTerm: this.history.d[i] || 0, sp2: this.history.sp2[i], pv2: this.history.pv2[i], uInner: this.history.uInner[i] }; }
   }
 
   return { seededRandom, gaussian, scheduleZone, scheduledValue, OnOffController, PIDController, ProcessModel, Simulation };

@@ -162,5 +162,17 @@
   "wildFlowVolatility": {
     "title": "Flöde A volatilitet",
     "body": "Hur mycket flöde A:s slumpvandring rör sig per steg — ett högre värde ger snabbare, kraftigare svängningar kring basnivån.\n\nFlöde A måste variera KONTINUERLIGT (inte som en engångshändelse) för att kvotregleringens poäng — att SP AUTOMATISKT följer en signal som fortsätter ändras — ska synas. Volatilitet=0 gör flöde A helt konstant, vilket gör skillnaden mot ett fast börvärde osynlig."
+  },
+  "cascadeSp2": {
+    "title": "SP2 — Slavslingans börvärde",
+    "body": "Börvärdet för den INRE processen (t.ex. flödet genom ventilen), beräknat automatiskt av huvudslingans regulator varje steg — inte något du skriver in själv.\n\nHuvudregulatorns utsignal tolkas i kaskadläge som en avvikelse: SP2 = den inre processens normalläge + huvudregulatorns utsignal. Ju större fel huvudslingan (PV1 mot SP1) har, desto mer avviker SP2 från sitt normalläge."
+  },
+  "cascadePv2": {
+    "title": "PV2 — Slavslingans processvariabel",
+    "body": "Den uppmätta, faktiska nivån på den inre processen (t.ex. flödet), reglerad av slavslingan mot SP2.\n\nSambandet SP2 → PV2 fungerar precis som SP → PV i en vanlig, enkel slinga — bara att SP2 i sin tur kommer från huvudslingan, inte från en operatör."
+  },
+  "cascadeU": {
+    "title": "U — Slavslingans utsignal",
+    "body": "Den faktiska ventilsignalen (0–100 %), beräknad av slavregulatorn för att driva PV2 mot SP2.\n\nDet är slavregulatorn — inte huvudregulatorn — som styr ventilen direkt i kaskadreglering. Huvudregulatorns utsignal blir istället SP2 (se 'SP2')."
   }
 }
