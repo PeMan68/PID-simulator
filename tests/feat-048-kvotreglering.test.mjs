@@ -181,7 +181,16 @@ function makeScenario({ ratioControl, kp = 3.0, ti = 5.0, sp = 25, noiseStd = 0 
   check("11c. Flöde A ritas TUNNARE (width=1) än PV/SP/u (width=2) — visuellt underordnad, inte en tredje huvudsignal", /drawSeries\(ctx, points, color, dashed, width = 2\)/.test(appJs));
   check("11d. Legenden byggs om dynamiskt och nämner Flöde A bara när linjen faktiskt ritas", /hasWildFlow \? gap \+ "Rosa streckad \(tunn\): Flöde A" : ""/.test(appJs));
   check("11e. #chartLegend-elementet finns i markupen (id tillagt för att JS ska kunna uppdatera det)", html.includes('id="chartLegend"'));
-  check("11f. clearChart/systemReset-knapparna nollställer wildFlow-historiken (annars kraschar nästa steg mot ett tomt/undefined-fält)", (appJs.match(/aux: \[\], wildFlow: \[\], markers: \[\]/g) || []).length === 2);
+  // FEAT-050 (uppföljning, sjätte rundan) — den hårdkodade fältlistan denna
+  // regex vaktade ("aux: [], wildFlow: [], markers: []") glömde SENARE
+  // sp2/pv2/uInner och orsakade exakt samma sorts krasch igen (PO-test).
+  // Åtgärdat permanent genom att TA BORT hårdkodningen helt — clearChart/
+  // systemReset använder nu sim.reset()/sim.clearHistory() (sim-core.js),
+  // en enda källa till historikens fältform som inte kan bli inaktuell på
+  // det här sättet igen. Det riktiga beteendetestet (stega efter reset/
+  // clear kraschar inte, för både kaskad- och icke-kaskad-scenarier) finns
+  // nu i tests/feat-050-kaskadreglering.test.mjs, avsnitt 6b/6h.
+  check("11f. clearChart/systemReset använder sim.clearHistory()/sim.reset() — ingen hårdkodad fältlista att glömma fält i", /sim\.clearHistory\(\)/.test(appJs) && !/aux: \[\], wildFlow: \[\], markers: \[\]/.test(appJs));
 }
 
 // ── 12. Mätläge — crosshair visar Flöde A/SP_B när kvotreglering är aktiv

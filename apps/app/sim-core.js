@@ -201,6 +201,19 @@
       if (this.cascadeEnabled) { this.innerProcess.reset(); this.innerPid.reset(); }
       this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [0], wildFlow: [this.wildFlow], sp2: [this.cascadeEnabled ? this.innerProcess.cfg.normalValue : 0], pv2: [this.cascadeEnabled ? this.innerProcess.y : 0], uInner: [0] };
     }
+    // FEAT-050 uppföljning (PO-test, sjätte rundan) — "Rensa graf" (till
+    // skillnad från reset()) ska INTE nollställa process-/regulatortillstånd,
+    // bara börja en ny, tom historik som fortsätter från NUVARANDE värden.
+    // Egen metod istället för att app.js hårdkodar fältlistan själv — det
+    // hände redan TVÅ gånger (FEAT-048/wildFlow, sedan FEAT-050/sp2-pv2-
+    // uInner) att en hårdkodad lista i app.js glömde ett nytt fält och
+    // fick sim.step() att kasta ett fel (`.push` på undefined) vid nästa
+    // steg efter en knapptryckning. En delad metod här är den enda platsen
+    // som behöver känna till historikens fullständiga fältform.
+    clearHistory() {
+      this.stepNo = 0;
+      this.history = { t: [0], y: [this.process.y], sp: [this.scenario.runtime.setpoint], u: [0], e: [this.scenario.runtime.setpoint - this.process.y], p: [0], i: [0], d: [0], aux: [this.auxValue], wildFlow: [this.wildFlow], sp2: [this.cascadeEnabled ? this.innerProcess.cfg.normalValue : 0], pv2: [this.cascadeEnabled ? this.innerProcess.y : 0], uInner: [0] };
+    }
     triggerPulse() { const p = this.scenario.disturbance.pulse; if (p && p.durationSteps > 0) this.pulseStepsLeft = p.durationSteps; }
     // FEAT-045 — sätter lasten till scenariots auxSignal.magnitude i ETT
     // anrop, ingen räknare (se ovan). Ett nytt klick med ett ändrat fältvärde

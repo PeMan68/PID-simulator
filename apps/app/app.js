@@ -1900,8 +1900,23 @@ document.getElementById("triggerAux").addEventListener("click", () => {
   drawChart();
   activityDispatch("disturbance_triggered", { contextKey: activityContextKey(), field: "auxSignal" });
 });
-document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], wildFlow: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
-document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history = { t: [], y: [], u: [], e: [], sp: [], p: [], i: [], d: [], aux: [], wildFlow: [], markers: [] }; sim.stepNo = 0; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
+// FEAT-050 uppföljning (PO-test, sjätte rundan) — samma bugg som
+// "Återställ system" hade: en hårdkodad, ofullständig fältlista som glömde
+// sp2/pv2/uInner och fick nästa steg att krascha. Använder nu
+// sim.clearHistory() (se sim-core.js) — enda källan till historikens
+// fältform, fortsätter från NUVARANDE process-/regulatortillstånd (till
+// skillnad från "Återställ system", som även nollställer det).
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.clearHistory(); sim.history.markers = []; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
+// FEAT-050 uppföljning (PO-test, sjätte rundan) — den här handlern byggde
+// tidigare om sim.history för hand med en HÅRDKODAD fältlista (t/y/u/e/sp/
+// p/i/d/aux/wildFlow/markers) som glömde sp2/pv2/uInner — sim.step() kastade
+// då ett fel (`Cannot read properties of undefined, reading 'push'`) vid
+// nästa steg efter "Återställ system", eftersom de fälten blev undefined.
+// sim.reset() bygger REDAN ett komplett, korrekt history-objekt (matchar
+// exakt Simulation-klassens egna fält, oavsett vilka som finns) — den enda
+// EXTRA saken den här handlern behöver göra är att nollställa markers
+// (ett app.js-tillägg till history, inte en del av Simulation självt).
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history.markers = []; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);

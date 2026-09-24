@@ -163,6 +163,66 @@ function baseScenario(overrides = {}) {
   check("6d. auxValue nollställd efter reset() (samma som befintligt mönster)", sim.auxValue === 0);
 }
 
+// ── 6b. Regression: stega EFTER reset()/clearHistory() ska inte krascha ──
+// PO-test, sjätte rundan: app.js:s "Återställ system"/"Rensa graf"-knappar
+// byggde tidigare om sim.history för hand med en HÅRDKODAD, ofullständig
+// fältlista (glömde sp2/pv2/uInner) — sim.step() kastade då ett fel
+// (`Cannot read properties of undefined, reading 'push'`) vid nästa steg.
+// Detta test reproducerar EXAKT det app.js-koden nu gör (sim.reset()/
+// sim.clearHistory() + ett manuellt history.markers-tillägg), sedan
+// verifieras att ett nytt steg fungerar utan att kasta.
+{
+  const scenario = baseScenario({
+    cascade: {
+      enabled: true,
+      inner: {
+        process: { type: "self_regulating", K: 1.0, T: 8, L: 0, normalValue: 30, measurementRange: { min: 0, max: 100 } },
+        controller: { kp: 2.0, ti: 6, td: 0, outputLimits: { min: 0, max: 100 }, antiWindup: true }
+      }
+    }
+  });
+  const sim = new Simulation(scenario, 42);
+  sim.run(20);
+
+  sim.reset();
+  sim.history.markers = [];
+  let threwAfterReset = false;
+  try { sim.step(); } catch (e) { threwAfterReset = true; }
+  check("6e. Stega efter reset() kastar INTE (regression, 'Återställ system')", !threwAfterReset);
+
+  sim.run(20);
+  sim.clearHistory();
+  sim.history.markers = [];
+  let threwAfterClear = false;
+  try { sim.step(); } catch (e) { threwAfterClear = true; }
+  check("6f. Stega efter clearHistory() kastar INTE (regression, 'Rensa graf')", !threwAfterClear);
+  check("6g. clearHistory() ger en komplett historik (sp2/pv2/uInner finns, inte undefined)", Array.isArray(sim.history.sp2) && Array.isArray(sim.history.pv2) && Array.isArray(sim.history.uInner));
+}
+
+// ── 6h. Samma regression, ICKE-kaskad-scenario ──
+// Viktigt: history.sp2/pv2/uInner pushas OVILLKORLIGT i step() (se sim-core.js
+// rad ~356) för ALLA scenarier, inte bara kaskad — den gamla, hårdkodade
+// app.js-buggen hade alltså kunnat krascha "Återställ system"/"Rensa graf"
+// på VILKEN SOM HELST lärstig i hela appen, inte bara kaskad-lärstigen.
+// Bekräftat direkt mot en riktig, befintlig icke-kaskad-innehållsfil.
+{
+  const scenario = loadScenario("framkoppling-demo-pid.json");
+  const sim = new Simulation(scenario, 42);
+  sim.run(10);
+  sim.reset();
+  sim.history.markers = [];
+  let threwAfterReset = false;
+  try { sim.step(); } catch (e) { threwAfterReset = true; }
+  check("6h. Stega efter reset() kastar INTE för icke-kaskad-scenario (blast radius bekräftad app-brett)", !threwAfterReset);
+
+  sim.run(10);
+  sim.clearHistory();
+  sim.history.markers = [];
+  let threwAfterClear = false;
+  try { sim.step(); } catch (e) { threwAfterClear = true; }
+  check("6i. Stega efter clearHistory() kastar INTE för icke-kaskad-scenario", !threwAfterClear);
+}
+
 // ── 7. Kaskad-windup — ingen dedikerad cross-loop-mekanism finns (medvetet, se rapport) ──
 // Verifierar att FRÅNVARON av särskild kaskad-windup-hantering inte gör att
 // simulatorn producerar NaN/Infinity eller divergerar okontrollerat, ens när
