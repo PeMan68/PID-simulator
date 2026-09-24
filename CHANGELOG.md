@@ -2,6 +2,52 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.6.2] — 2026-09-24
+
+### Nytt i denna release
+
+- **Ny publicerad lärstig: "Integrerande process och nivåreglering"** (FEAT-047) —
+  åttonde lärstigen i produktionsversionen. Utökad från 2 till 5 steg: teori,
+  ett nytt baslinjesteg med ren P-reglering (visar det kvarstående felet), en
+  omtunad PI-regulator (snabbare, bättre dämpad insvängning), ett nytt
+  störningsavvisningssteg och en avslutande jämförelse mot en självreglerande
+  process. Två nya scenarier (`integrating-p-only`, en omtunad
+  `integrating-pi`) och en ny teorimodul tillkommer i produktionskatalogen.
+- **Brytpunkter i zontabellerna** (Parameterstyrning/Olinjär ventilkarakteristik,
+  FEAT-044) visas nu som en egen, visuellt distinkt rad MELLAN de två zoner de
+  avgränsar, istället för som separata fält före tabellen — gör sambandet
+  mellan brytpunkt och zongräns tydligare utan extra förklaringstext.
+
+### Produktionsurval i v1.6.2
+
+Tio lärstigar publicerade, i denna ordning:
+
+1. Kom igång med PID Simulator
+2. Öppen slinga, On/Off och P-reglering
+3. Proportionalband och regulatorförstärkning
+4. PI- och PID-reglering
+5. Processens begränsningar
+6. Windup och anti-windup
+7. Störningar och robusthet
+8. Integrerande process och nivåreglering
+9. Parameterstyrning och olinjär ventilkarakteristik
+10. Framkoppling (Feedforward)
+
+### Kända förhållanden
+
+- Kvotreglering (FEAT-048) och en HMI-/SCADA-vy-idé (FEAT-049) finns i
+  utvecklingsversionen men ingår medvetet INTE i denna release — väntar på ett
+  separat PO-beslut om produktionsgodkännande.
+- Test-läge (kontrollfrågor med poängräkning) ingår fortfarande inte i den
+  publicerade undervisningsversionen.
+- Två lärstigar (Stegsvar och processidentifiering, Lambda-metoden) ligger kvar
+  i utvecklingsversionen för fortsatt pedagogisk granskning innan de
+  publiceras.
+
+### Version
+
+`APP_VERSION` = 1.6.2.
+
 ## [v1.6.1] — 2026-09-23
 
 ### Nytt i denna release

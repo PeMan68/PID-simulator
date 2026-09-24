@@ -66,8 +66,11 @@ var kortast i hela katalogen (median ~5–7).
    `catalog.prod.json` orört (lärstigen är DEV-only). Ingen ändring i
    `sim-core.js`/`app.js`.
 **Status:** Mergad till `develop` (2026-09-23). Branch
-`feature/FEAT-047-nivareglering-larstig` raderad. **Inte släppt till main/PROD**
-— avsedd för nästa planerade PROD-kandidat, per uttrycklig PO-instruktion.
+`feature/FEAT-047-nivareglering-larstig` raderad. **Släppt till main/PROD i
+v1.6.2 (2026-09-24)** — lärstigen "Integrerande process och nivåreglering"
+och dess scenarier/teorimodul tillagda i `catalog.prod.json` (PO-godkänt
+efter uttrycklig fråga), `tests/validate-prod.mjs`s allowlist uppdaterad i
+samma commit. Se `CHANGELOG.md` v1.6.2.
 
 ### FEAT-048 — Kvotreglering (Ratio Control)
 **Prioritet:** Hög — PO:s produktbeslut efter godkänd förstudie (STRAT-006, 2026-09-24).
