@@ -4,7 +4,6 @@
   "title": "Windup och anti-windup",
   "description": "Vad som händer när integratorn \"laddar upp\" under lång mättning av utsignalen — och hur anti-windup löser det.",
   "difficulty": "intermediate",
-  "visibilityOverride": { "hide": ["framkoppling", "parameterstyrning", "ventilkarakteristik", "kvotreglering", "kaskadreglering"] },
   "steps": [
     {
       "type": "theory",

@@ -1442,8 +1442,17 @@ function applyPathVisibilityOverride() {
   // Avancerat-disklosyren (deriveAdvancedOpen() tvingar den öppen), nu
   // konsekvent genomfört även för lärstigens EGEN, mer specifika override.
   if (fields.applicationProfile.value === "avancerat") return;
-  const override = currentPath.visibilityOverride;
-  if (!override) return;
+  const override = currentPath.visibilityOverride || {};
+  // Bugg 2026-019 (PO-beslut 2026-09-24) — i en lärstig syns BARA de
+  // strategitillägg lärstigen själv deklarerar i `show`. Tidigare tillät
+  // Tillämpningen (t.ex. Temperaturprocess) alla tillägg, så en grundlärstig
+  // som Öppen slinga visade Kff/Kvot/Flöde A/Parameterstyrning när användaren
+  // fällde upp Avancerat. `hide` behålls för bakåtkompatibilitet men behövs
+  // inte längre.
+  const shown = override.show || [];
+  document.querySelectorAll("[data-addon]").forEach(el => {
+    if (!shown.includes(el.dataset.addon)) el.classList.add("addon-hidden");
+  });
   (override.hide || []).forEach(addon => {
     document.querySelectorAll('[data-addon="' + addon + '"]').forEach(el => el.classList.add("addon-hidden"));
   });
@@ -1489,7 +1498,10 @@ function loadPath(name) {
   // uppfällda Avancerat-sektioner från den förra lärstigens sista scenario.
   // Fäll ihop dem vid lärstigsbyte. Nästa scenariosteg härleder om dem, och
   // "Avancerat" (användarens eget val) lämnas orört.
-  if (fields.applicationProfile.value !== "avancerat") { setAdvancedOpen("process", false); setAdvancedOpen("regulator", false); }
+  if (fields.applicationProfile.value !== "avancerat") {
+    setAdvancedOpen("process", false); setAdvancedOpen("regulator", false);
+    document.querySelectorAll("[data-addon]").forEach(el => el.classList.add("addon-hidden")); // introt: inga tillägg förrän lärstigens första steg
+  }
   updateNavButtons();
   updateScoreDisplay();
   learnBody.innerHTML = "<em>" + currentPath.title + "</em><br>" + (currentPath.description || "") + "<br><br>Klicka <strong>Nästa »</strong> för att börja.";
@@ -1579,6 +1591,7 @@ function prevPathStep() {
     if (SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
   }
   activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey(), comparisonGroup: step.comparisonGroup || null, stepType: step.type, wordCount: stepReadingWordCount(step), progressRequirement: step.progressRequirement || null });
+  applyPathVisibilityOverride(); // Bugg 2026-019 — även teoristeg, som inte laddar något scenario
   renderStep(step);
 }
 function nextPathStep() {
@@ -1603,6 +1616,7 @@ function nextPathStep() {
     if (!continueSameRun && SCENARIOS[step.ref]) { scenarioSelect.value = step.ref; loadScenarioByName(step.ref); }
   }
   activityDispatch("learning_step_reached", { learningPathId: currentPathId, stepIndex: currentPathStep, isFinalStep: currentPathStep === currentPath.steps.length - 1, contextKey: activityContextKey(), comparisonGroup: step.comparisonGroup || null, stepType: step.type, wordCount: stepReadingWordCount(step), progressRequirement: step.progressRequirement || null });
+  applyPathVisibilityOverride(); // Bugg 2026-019 — även teoristeg, som inte laddar något scenario
   renderStep(step);
 }
 
