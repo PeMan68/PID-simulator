@@ -110,21 +110,34 @@ function baseScenario(overrides = {}) {
   check("4b. PV1 (yttre processen) rörs betydligt MINDRE än PV2 under samma 3 steg (kaskadens poäng)", Math.abs(yAfter - yBefore) < Math.abs(pv2After - pv2Before));
 }
 
-// ── 5. history.u i kaskadläge är SLAVREGULATORNS utsignal, inte den yttre PID:ns ──
+// ── 5. history.u i kaskadläge är den YTTRE regulatorns EGNA utsignal (u1) ──
+// PO-test, femte rundan: history.p/i/d var ALLTID den yttre PID:ns egna
+// termer (aldrig omlästa från innerCtrl) — men history.u lästes tidigare om
+// till slavregulatorns, en inkonsekvens (samma statusrad kunde visa två
+// olika regulatorers värden). Fixat: history.u är nu ALLTID ctrl.u (yttre),
+// den inre regulatorns egna, verkliga ventilsignal ligger i history.uInner.
 {
   const scenario = baseScenario({
     cascade: {
       enabled: true,
       inner: {
-        process: { type: "self_regulating", K: 1.0, T: 8, L: 0, normalValue: 30, measurementRange: { min: 0, max: 100 } },
+        process: { type: "self_regulating", K: 1.0, T: 8, L: 0, normalValue: 30, measurementRange: { min: 0, max: 100 }, auxGain: 1.0 },
         controller: { kp: 2.0, ti: 6, td: 0, outputLimits: { min: 0, max: 100 }, antiWindup: true }
       }
-    }
+    },
+    auxSignal: { magnitude: -35 }
   });
   const sim = new Simulation(scenario, 42);
-  sim.run(5);
+  sim.run(30);
+  sim.triggerAuxSignal();
+  sim.run(60);
   const u = sim.history.u[sim.history.u.length - 1];
-  check("5a. history.u ligger inom den INRE regulatorns outputLimits (0-100), inte den yttre (±50)", u >= 0 && u <= 100, `u=${u}`);
+  const uInner = sim.history.uInner[sim.history.uInner.length - 1];
+  check("5a. history.u ligger inom den YTTRE regulatorns outputLimits (±50), inte den inre (0-100)", u >= -50 && u <= 50, `u=${u}`);
+  check("5b. history.uInner ligger inom den INRE regulatorns outputLimits (0-100)", uInner >= 0 && uInner <= 100, `uInner=${uInner}`);
+  check("5c. history.u och history.uInner har olika värden efter en störning (två olika regulatorers utsignaler)", Math.abs(u - uInner) > 1, `u=${u}, uInner=${uInner}`);
+  const state = sim.getState();
+  check("5d. getState() exponerar både u (yttre) och uInner (inre) konsekvent med history", state.u === u && state.uInner === uInner);
 }
 
 // ── 6. reset() nollställer båda instanserna korrekt ──

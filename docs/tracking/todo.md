@@ -93,20 +93,48 @@ u-panel i kaskadläge visade slavregulatorns utsignal, inte huvudregulatorns:**
 
 **Uppföljning, tredje rundan (samma dag) — PO valde ändå att BEHÅLLA
 u-panelen, för konsekvent grafutseende mellan alla scenariotyper:**
-- Huvudgrafens u-panel återinförd för ALLA scenarier (kaskad eller ej) —
-  medveten dubblering med Slavslinga-panelens mini-graf (som fortsatt visar
-  U också), inte ett misstag. Crosshair/legend/Y-zoom tillbaka till exakt
-  samma kod som innan FEAT-050 påbörjades.
+- Huvudgrafens u-panel återinförd för ALLA scenarier (kaskad eller ej).
 - Nytt lärstigssteg tillagt: "Grundmekanismen — en SP-förändring"
   (`kaskad-demo-sp-steg.json`), placerat direkt efter teoriintrot och före
   "Enkelslinga — problemet". Visar SP1→SP2→U→PV2→PV1-kedjan via en
-  AVSIKTLIG börvärdesändring (inte en störning). Processens normalvärde
-  satt till 0 (inte 50) i just detta scenario, så SP1 kan flyttas ett stort
-  steg (0→50) utan att huvudregulatorns avvikelseutsignal behöver bli
-  negativ — scenariot startar i stabilt läge (PV1=SP1=0). Numeriskt
-  verifierat: PV1 når ~50,3 efter 470 steg, SP2/PV2/U stannar väl inom sina
-  intervall (max SP2≈70, max U≈71%).
-- 5 nya enhetstester (totalt 32 i tests/feat-050-kaskadreglering.test.mjs).
+  AVSIKTLIG börvärdesändring (inte en störning).
+- 5 nya enhetstester.
+
+**Uppföljning, fjärde rundan (samma dag) — fyra punktinsatser:**
+- Tog bort irrelevant implementationsresonemang ur "Grundmekanismen"-stegets
+  instruktion.
+- Huvudgrafens nedre panel märktes "u (slav)" för att förtydliga att värdet
+  var slavregulatorns (se femte rundan för den riktiga lösningen).
+- "Grundmekanismen"-scenariot byggdes om till normalValue=50 (SP1 50→90)
+  istället för normalValue=0 (SP1 0→50) — konsekvent med de tre andra
+  scenarierna, och undviker en teknisk risk (normalValue=0 hade gjort
+  störningsscenarierna sårbara för att PV1 dyker under 0, utanför grafens
+  synliga yta, vid en negativ störning).
+- Tog bort felaktig "sidopanelen"-terminologi — Slavslinga-panelen ligger i
+  huvudkolumnen, inte i en separat sidopanel.
+
+**Uppföljning, femte rundan (samma dag) — PO pekade ut en genuin bugg:**
+Huvudgrafens u-panel visade fortfarande slavregulatorns utsignal (bara
+omdöpt till "u (slav)" i förra rundan, inte åtgärdad), OCH statusraden hade
+samma fel. Rotorsaken var djupare än en etikett: `history.p/i/d` var sedan
+tidigare ALLTID den YTTRE regulatorns egna termer (aldrig omlästa från
+`innerCtrl`), men `history.u` lästes om till den INRE regulatorns — en
+inkonsekvens som gjorde att SAMMA statusrad kunde visa två olika
+regulatorers värden blandat.
+- `sim-core.js`: `history.u` är nu ALLTID den yttre/huvud-regulatorns EGNA
+  utsignal (`ctrl.u`, konsekvent med p/i/d) — en ren no-op för alla
+  icke-kaskad-scenarier (där den redan var samma värde). Ny fält
+  `history.uInner` för den inre regulatorns egna, verkliga ventilsignal
+  (0 = no-op utan kaskad, samma mönster som sp2/pv2). `getState()` returnerar
+  båda.
+- Huvudgrafen/statusraden/legend/crosshair visar nu `u1` (huvudslingans egna
+  utsignal, en avvikelse i kaskadläge — axeln skalas efter regulatorns egna
+  outputLimits istället för hårdkodat 0–100). SP2/PV2 borttagna ur
+  crosshairen (hör till slavslingan, redan alltid synliga i Slavslinga-
+  panelen). Slavslinga-panelens fält/mini-graf/statusbadge/signalkedja
+  använder nu `uInner` istället för `u`.
+- 3 nya/omskrivna enhetstester (totalt 35 i
+  tests/feat-050-kaskadreglering.test.mjs).
 
 ### FEAT-049 — HMI-/SCADA-vy för reglerstrategier
 **Prioritet:** Ej prioriterad — idé registrerad på PO:s begäran (2026-09-24).

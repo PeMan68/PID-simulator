@@ -184,18 +184,26 @@ function drawChart() {
   // panel 1:s "PV1/SP1"-etikett (fortfarande relevant: PV1 skiljer sig från
   // PV2, även om PV2 inte längre ritas här).
   const cascadeActive = !!(sim.scenario.cascade && sim.scenario.cascade.enabled);
-  // FEAT-050 uppföljning (PO-beslut, tredje rundan) — PO vill BEHÅLLA
-  // huvudgrafens u-panel för alla scenarier, kaskad eller ej, för
-  // konsekvent utseende mellan simuleringar ("den är ändå relevant") —
-  // trots att den i kaskadläge visar slavregulatorns utsignal (samma
-  // history.u/publishedU som Slavslinga-panelens mini-graf också visar,
-  // se drawCascadeMiniChart()). Medveten dubblering, inte ett misstag.
+  // FEAT-050 uppföljning (PO-test, femte rundan) — huvudgrafen visar NU
+  // ENDAST huvudslingans EGNA värden (PV1/SP1/u1) — sim-core.js:s
+  // history.u är sedan denna rundan alltid den YTTRE regulatorns egna
+  // utsignal (aldrig innerCtrl.u), så ingen omdirigering behövs här: `u`
+  // (hämtat rakt av från history.u nedan) ÄR redan u1. Slavslingans
+  // VERKLIGA ventilsignal (history.uInner) visas UTESLUTANDE i
+  // Slavslinga-panelen (fält + mini-graf), aldrig här.
+  //
+  // I kaskadläge är u1 en AVVIKELSE (kan vara negativ, t.ex. ±50) — inte en
+  // ventilprocent — så u-panelens axel skalas efter den YTTRE regulatorns
+  // egna outputLimits istället för det hårdkodade 0–100 som gäller för alla
+  // andra lägen (där outputLimits redan ÄR 0–100, så detta är en no-op-
+  // generalisering för icke-kaskad-scenarier).
   const tFull = Math.max(1, t[t.length - 1] || 1);
   const tStart = zoomView ? zoomView.start : 0;
   const tMax   = zoomView ? zoomView.end   : tFull;
   const yMin = pvZoomView ? pvZoomView.min : Math.min(sim.scenario.process.measurementRange.min, 0);
   const yMax = pvZoomView ? pvZoomView.max : Math.max(sim.scenario.process.measurementRange.max, 100);
-  const uViewMin = 0, uViewMax = 100;
+  const uViewMin = cascadeActive ? sim.scenario.controller.outputLimits.min : 0;
+  const uViewMax = cascadeActive ? sim.scenario.controller.outputLimits.max : 100;
   const xScale = v => pad.left + ((v - tStart) / (tMax - tStart || 1)) * (w - pad.left - pad.right);
   const yScaleTop = v => pad.top + (1 - (v - yMin) / (yMax - yMin || 1)) * (h * 0.62 - pad.top);
   const yScaleBot = v => h * 0.68 + (1 - (v - uViewMin) / (uViewMax - uViewMin || 1)) * (h - pad.bottom - h * 0.68);
@@ -208,8 +216,8 @@ function drawChart() {
   ctx.fillText("0", pad.left - 8, yScaleTop(0) + 4);
 
   // Y-axel etiketter för u (nedre grafen)
-  ctx.fillText("100", pad.left - 8, h * 0.68 + 4);
-  ctx.fillText("0", pad.left - 8, h - pad.bottom + 4);
+  ctx.fillText(String(uViewMax), pad.left - 8, h * 0.68 + 4);
+  ctx.fillText(String(uViewMin), pad.left - 8, h - pad.bottom + 4);
 
   // Hystersgränser för on/off
   if (sim.scenario.controller.mode === "onoff") {
@@ -288,7 +296,7 @@ function drawChart() {
   // ingen egen ventilsignal att visa (dess utsignal ÄR SP2). Löser en
   // återkommande fråga från PO-test utan att ändra layouten (PO valde att
   // behålla u-panelen för alla scenarier, se tidigare kommentar).
-  ctx.fillText(cascadeActive ? "u (slav)" : "u", pad.left + 6, h * 0.68 + 16);
+  ctx.fillText(cascadeActive ? "u1" : "u", pad.left + 6, h * 0.68 + 16);
   ctx.save();
   ctx.beginPath();
   ctx.rect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top);
@@ -330,14 +338,14 @@ function drawChart() {
     // enda och äter upp den visuella luften mellan posterna (samma
     // anledning till att HTML-varianten ursprungligen använde &nbsp;&nbsp;).
     const gap = "  ";
-    legendEl.textContent = (cascadeActive ? "Blå: PV1" + gap + "Röd streckad: SP1" : "Blå: PV" + gap + "Röd streckad: SP") + gap + (cascadeActive ? "Grön: u (slav)" : "Grön: u") + (hasWildFlow ? gap + "Rosa streckad (tunn): Flöde A" : "");
+    legendEl.textContent = (cascadeActive ? "Blå: PV1" + gap + "Röd streckad: SP1" : "Blå: PV" + gap + "Röd streckad: SP") + gap + (cascadeActive ? "Grön: u1" : "Grön: u") + (hasWildFlow ? gap + "Rosa streckad (tunn): Flöde A" : "");
   }
 
   ctx.save();
   ctx.beginPath();
   ctx.rect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
   ctx.clip();
-  drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(Math.max(0, Math.min(100, u[i]))) })), "#2f9e44", false);
+  drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(Math.max(uViewMin, Math.min(uViewMax, u[i]))) })), "#2f9e44", false);
   ctx.restore();
 
   // ── Markeringar vid parameterändring (fortsatt körning på samma graf) ──
@@ -516,18 +524,17 @@ function drawChart() {
         }
         ctx.setLineDash([]);
 
-        const lines = ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(1), "u  = " + uH.toFixed(1)];
+        // FEAT-050 uppföljning (PO-test, femte rundan) — crosshairen visar
+        // BARA huvudslingans egna värden (PV1/u1), samma princip som resten
+        // av huvudgrafen nu följer konsekvent. SP2/PV2 borttagna härifrån —
+        // de hör till slavslingan och är redan ständigt synliga i
+        // Slavslinga-panelens fält/mini-graf, inte bara vid hovring.
+        const lines = cascadeActive
+          ? ["t  = " + Math.round(tHover), "PV1 = " + pvH.toFixed(1), "u1  = " + uH.toFixed(1)]
+          : ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(1), "u  = " + uH.toFixed(1)];
         if (hasWildFlow) {
           lines.push("SP_B    = " + spH.toFixed(1));
           lines.push("Flöde A = " + wildH.toFixed(1));
-        }
-        // FEAT-050 — kaskad: crosshairen visar även SP2/PV2 punktvis, samma
-        // princip som Kvotreglerings SP_B/Flöde A ovan.
-        if (cascadeActive) {
-          const sp2H = sim.history.sp2[iNear] != null ? sim.history.sp2[iNear] : 0;
-          const pv2H = sim.history.pv2[iNear] != null ? sim.history.pv2[iNear] : 0;
-          lines.push("SP2 = " + sp2H.toFixed(1));
-          lines.push("PV2 = " + pv2H.toFixed(1));
         }
         ctx.font = "11px Consolas, monospace";
         const lH = 15, pX = 7, pY = 5;
@@ -639,16 +646,20 @@ function updateCascadePanel() {
   if (!active) { if (fields.cascadeChain) fields.cascadeChain.textContent = ""; return; }
   const s = sim.getState();
   const spAtStep = sim.history.sp[sim.history.sp.length - 1] ?? sim.scenario.runtime.setpoint;
+  // FEAT-050 uppföljning (PO-test, femte rundan) — s.uInner (den INRE
+  // regulatorns egna, verkliga ventilsignal) används HÄR — s.u är sedan
+  // denna rundan den YTTRE regulatorns egna utsignal (visas i huvudgrafen
+  // istället, se drawChart()).
   fields.cascadeSp2.value = fmt1(s.sp2);
   fields.cascadePv2.value = fmt1(s.pv2);
-  fields.cascadeU.value = fmt1(s.u) + " %";
+  fields.cascadeU.value = fmt1(s.uInner) + " %";
   const innerLimits = sim.scenario.cascade.inner.controller.outputLimits;
-  const saturated = s.u <= innerLimits.min + 1e-6 || s.u >= innerLimits.max - 1e-6;
+  const saturated = s.uInner <= innerLimits.min + 1e-6 || s.uInner >= innerLimits.max - 1e-6;
   if (fields.cascadeStatusBadge) {
     fields.cascadeStatusBadge.textContent = saturated ? "Mättad" : "OK";
     fields.cascadeStatusBadge.classList.toggle("saturated", saturated);
   }
-  fields.cascadeChain.textContent = "SP1=" + fmt1(spAtStep) + " → Huvud-PID → SP2=" + fmt1(s.sp2) + " → Slav-PID → U=" + fmt1(s.u) + "% → PV2=" + fmt1(s.pv2) + " → PV1=" + fmt1(s.y);
+  fields.cascadeChain.textContent = "SP1=" + fmt1(spAtStep) + " → Huvud-PID → SP2=" + fmt1(s.sp2) + " → Slav-PID → U=" + fmt1(s.uInner) + "% → PV2=" + fmt1(s.pv2) + " → PV1=" + fmt1(s.y);
   drawCascadeMiniChart();
 }
 // FEAT-050 uppföljning (PO-test 2026-09-24) — slavslingans trend flyttad hit
@@ -666,7 +677,11 @@ function drawCascadeMiniChart() {
   const w = canvas.width, h = canvas.height;
   const pad = { left: 30, right: 6, top: 6, bottom: 4 };
   ctx.clearRect(0, 0, w, h);
-  const t = sim.history.t, pv2 = sim.history.pv2, sp2 = sim.history.sp2, u = sim.history.u;
+  // FEAT-050 uppföljning (PO-test, femte rundan) — uInner (den INRE
+  // regulatorns egna, verkliga ventilsignal), INTE history.u (som sedan
+  // denna rundan alltid är den YTTRE regulatorns egna utsignal, u1, visad i
+  // huvudgrafen istället).
+  const t = sim.history.t, pv2 = sim.history.pv2, sp2 = sim.history.sp2, uInner = sim.history.uInner;
   const tFull = Math.max(1, t[t.length - 1] || 1);
   const innerProcCfg = sim.scenario.cascade.inner.process;
   const yMin = Math.min(innerProcCfg.measurementRange.min, 0);
@@ -681,7 +696,7 @@ function drawCascadeMiniChart() {
   // som huvudgrafens u-panel använder för icke-kaskad-scenarier. Delar
   // samma 0–100-axel som PV2/SP2 (U är redan 0–100%, samma skala råkar
   // stämma) — ingen egen sub-panel behövs, håller mini-grafen enkel.
-  drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScale(Math.max(0, Math.min(100, u[i]))) })), "#2f9e44", false, 1.5);
+  drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScale(Math.max(0, Math.min(100, uInner[i]))) })), "#2f9e44", false, 1.5);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScale(pv2[i]) })), "#2f7a8f", false, 1.5);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScale(sp2[i]) })), "#e07a2f", true, 1.5);
   const miniLegend = document.getElementById("cascadeMiniLegend");
@@ -741,7 +756,13 @@ function updateStatus() {
   // AKTIVERAD, eftersom lärstigens "utan kvotreglering"-steg specifikt
   // behöver kunna visa flöde A och den glidande kvoten trots att SP är fast.
   const ratioInfo = sim.wildFlow ? "  | Flöde A=" + fmt1(sim.wildFlow) + ", Flöde B=" + fmt1(s.y) + ", Kvot (faktisk)=" + fmt2(s.y / sim.wildFlow) : "";
-  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning + scheduleInfo + auxInfo + ratioInfo;
+  // FEAT-050 uppföljning (PO-test, femte rundan) — s.u ÄR redan huvud-
+  // regulatorns egna utsignal (se sim-core.js:s Simulation.step()) — bara
+  // etiketten ändras till "u1" i kaskadläge, för att matcha huvudgrafens
+  // egen "u1"-etikett och göra tydligt att det INTE är slavregulatorns
+  // (den visas separat i Slavslinga-panelen).
+  const uLabel = sim.scenario.cascade?.enabled ? "u1" : "u";
+  statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", " + uLabel + "=" + fmt1(s.u) + pidInfo + warning + scheduleInfo + auxInfo + ratioInfo;
   updateZoneIndicators();
   updateCascadePanel();
 }
