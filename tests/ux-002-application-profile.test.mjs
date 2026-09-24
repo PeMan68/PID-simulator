@@ -182,8 +182,11 @@ const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
   // framkoppling.v1s första steg (kff=0 där) härledas till en annan
   // Tillämpning än lärstigens övriga två steg. Se motivering i koden.
   check("6j. Framkoppling (auxSignal ELLER kff) → Temperaturprocess", /if \(scenario\.auxSignal \|\| scenario\.controller\.kff\) return "temperatur";/.test(appJs));
-  check("6k. Integrerande processtyp → Nivåprocess", /if \(scenario\.process\.type === "integrating"\) return "niva";/.test(appJs));
-  check("6l. Inget separat onoff-härledningsfall längre (Tvålägesreglering borttagen) — generiska on/off-scenarier faller tillbaka på Avancerat", !/return "onoff";/.test(appJs));
+  // Bugg 2026-019 — reserven härleds från processmodellen (temperatur/niva),
+  // aldrig "avancerat" för en modell som en vanlig Tillämpning täcker.
+  check("6k. Reserv härleds från processmodell: temperatur/niva via APPLICATION_PROFILES[p].processModels", /\["temperatur", "niva"\]\.find\(p => APPLICATION_PROFILES\[p\]\.processModels\.includes\(scenario\.process\.type\)\)/.test(appJs));
+  check("6k2. Integrerande processtyp ingår i Nivåprocess (→ niva)", /niva:\s*\{ processModels: \["integrating"\]/.test(appJs));
+  check("6l. Inget separat onoff-härledningsfall längre (Tvålägesreglering borttagen)", !/return "onoff";/.test(appJs));
   check(
     "6m. loadScenarioByName() sätter applicationProfile från deriveApplicationProfile() OCH tillämpar det, EFTER hydrateFields() (så det härleds från det nyss laddade scenariot)",
     /hydrateFields\(currentScenario\);\s*\n\s*fields\.applicationProfile\.value = deriveApplicationProfile\(currentScenario\);[\s\S]{0,1000}applyApplicationProfile\(\);/.test(appJs)
