@@ -2,6 +2,31 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.7.1] — 2026-09-24
+
+### Rättat
+
+- **Lärstigarna visar bara sina egna strategitillägg** (bugg 2026-019). Tidigare
+  byttes Tillämpning till "Avancerat" i de flesta lärstigssteg, och då fälldes
+  alla Avancerat-sektioner upp automatiskt. Även med Temperaturprocess syntes
+  Kff, Kvotreglering, Flöde A, Parameterstyrning och Ventilkarakteristik när
+  man fällde upp Avancerat själv, också i grundlärstigar som "Öppen slinga".
+  Nu gäller:
+  - Appen väljer aldrig "Avancerat" av sig själv. Självreglerande scenarier
+    öppnas i Temperaturprocess och integrerande i Nivåprocess. Avancerat är
+    ett läge man väljer själv, och där syns fortfarande allt.
+  - I en lärstig syns bara de tillägg lärstigen handlar om. Grundlärstigarna
+    visar inga tillägg. Framkoppling visar Kff, Kvotreglering visar
+    kvotfälten, och så vidare.
+  - Uppfällda sektioner följer inte med när man byter lärstig.
+
+Buggen fanns sedan v1.6.0. Inget innehåll, inga lärstigar och inga scenarier
+är ändrade.
+
+### Version
+
+`APP_VERSION` = 1.7.1.
+
 ## [v1.7.0] — 2026-09-24
 
 ### Nytt i denna release

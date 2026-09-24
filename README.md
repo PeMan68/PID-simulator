@@ -12,14 +12,14 @@ täcker inte kursens övriga innehåll om fysiska mätdon och styrdon.
 
 ## Officiell version
 
-- **Stabil version:** v1.7.0 (källkoden är taggad `v1.7.0`)
+- **Stabil version:** v1.7.1 (källkoden är taggad `v1.7.1`)
 - **Officiell URL:** https://peman68.github.io/PID-simulator/
 
 Använd den officiella URL:en för undervisning och självstudier. `main`-branchen är källan
 för den stabila undervisningsversionen, och GitHub Pages bygger och publicerar
 produktionsprofilen (PROD) uteslutande därifrån.
 
-## Funktioner i v1.7.0
+## Funktioner i v1.7.1
 
 Publicerat i produktionsversionen:
 
@@ -143,7 +143,7 @@ innan det visas i PROD.
 
 ## Projektstatus
 
-v1.7.0 är den senaste stabila undervisningsversionen. Med den är samtliga fyra
+v1.7.1 är den senaste stabila undervisningsversionen. Med den är samtliga fyra
 reglerstrategier (Parameterstyrning, Framkoppling, Kvotreglering, Kaskadreglering)
 publicerade. Fortsatt utveckling sker i `develop`. Två ytterligare lärstigar (Stegsvar
 och processidentifiering, Lambda-metoden) finns i utvecklingsversionen och väntar på
