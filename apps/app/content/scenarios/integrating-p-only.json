@@ -1,0 +1,26 @@
+{
+  "id": "integrating-p-only",
+  "version": "v1.0.0",
+  "title": "Integrerande process – P-reglering ensam",
+  "description": "Samma tanknivåprocess som integrating-pi.json, men med ren P-reglering — visar det permanenta, kvarstående felet en P-regulator ger på en integrerande process.",
+  "tags": ["integrating", "p", "level", "tank"],
+  "process": {
+    "type": "integrating",
+    "K": 0.01,
+    "T": 1.0,
+    "L": 0.0,
+    "normalValue": 20.0,
+    "outflow": 0.5,
+    "measurementRange": { "min": 0.0, "max": 100.0 }
+  },
+  "controller": {
+    "mode": "p",
+    "kp": 1.5,
+    "ti": 0.0,
+    "td": 0.0,
+    "antiWindup": true,
+    "outputLimits": { "min": 0.0, "max": 100.0 }
+  },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
+  "runtime": { "dt": 1.0, "maxSteps": 150, "setpoint": 60.0, "autopause": false }
+}

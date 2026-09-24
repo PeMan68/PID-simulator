@@ -35,6 +35,40 @@ Python-appen läggs ner, se BESLUT-002 i [todo.md](todo.md). Följande features 
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-047 — Förbättrad lärstig för integrerande process och nivåreglering
+**Prioritet:** Medel — PO:s fynd vid manuell granskning (2026-09-23), lärstigen
+bedömdes inte redo för PROD i nuvarande form.
+**Beskrivning:**
+PO:s granskning av `integrerande-process-niva.v1` identifierade tre problem: (1)
+200 steg räckte inte för att visa stationärt tillstånd, (2) pulsstörningen var för
+kraftig och dominerade innehållet, (3) för få lärstigssteg jämfört med senare
+lärstigar.
+**Förstudie:** `docs/reports/FEAT-047_FORSTUDIE-NIVAREGLERING.md`. Nuvarande tuning
+(Kp=1,5/Ti=80) svängde permanent inom 2%-bandet först vid steg 395 (inte 200);
+pulsen (mag=5, dur=20) drev PV till 154,9, långt över mätområdet, eftersom en
+integrerande process saknar återställande kraft mot ackumulerande stötar; 2 steg
+var kortast i hela katalogen (median ~5–7).
+**Genomförande (PO-godkänd 2026-09-23):**
+1. Ny scenariofil `integrating-p-only.json` (P-ensam, Kp=1,5) för ett nytt
+   baslinjesteg som visar det kvarstående felet (PV≈26 mot SP=60) — verifierat.
+2. `integrating-pi.json` omtunad Kp 1,5→4, Ti 80→60 (insvängning vid steg ~112
+   istället för ~395); pulsens `durationSteps` 20→2 (samma magnitude=5, topp ~70
+   istället för ~155).
+3. `integrerande-process-niva.v1.json` utökad 2→5 steg: teori → P-ensam (ny) → PI
+   (omtunad) → störningsavvisning (ny, `continueFromPreviousStep` från
+   PI-steget) → jämförelse mot självreglerande process (ny, återanvänder
+   `basic-step-self-regulating.json` — enda avvikelsen från förstudiens mer
+   öppna skiss, PO:s egen invit "om det kan motiveras pedagogiskt").
+4. Samtliga instruktionstal verifierade genom en fullständig, stegvis
+   end-to-end-simulering som replikerar appens egen `loadScenarioByName()`/
+   `continueFromPreviousStep`-logik exakt — matchar rapportens siffror.
+5. `node tests/validate-content.mjs` grön (32/32 scenarier, 12/12 lärstigar).
+   `catalog.prod.json` orört (lärstigen är DEV-only). Ingen ändring i
+   `sim-core.js`/`app.js`.
+**Status:** Mergad till `develop` (2026-09-23). Branch
+`feature/FEAT-047-nivareglering-larstig` raderad. **Inte släppt till main/PROD**
+— avsedd för nästa planerade PROD-kandidat, per uttrycklig PO-instruktion.
+
 ### UX-002 — Tillämpnings-/processmodellsväljare (Fas 0 av UX-001)
 **Prioritet:** Hög — PO:s beslutade nästa steg (2026-09-20), efter UX-001.
 **Beskrivning:**
@@ -536,9 +570,25 @@ guidade lärstigen "Parameterstyrning och olinjär ventilkarakteristik" end-to-e
 syfte... Några nya UX-problem har inte identifierats." Fullständig testmatris:
 `docs/tests/test-feat-044-zone-fields-table.md`.
 
-**Status:** Mergad till `develop` (2026-09-23) via `test/feat-044-zone-fields-table`.
-`main` oförändrat tills vidare — ingår i nästa PROD-kandidat, inte i den redan
-publicerade v1.6.0.
+**Status:** Mergad till `develop` (2026-09-23) via `test/feat-044-zone-fields-table`,
+sedan släppt till `main`/PROD som v1.6.1 (2026-09-23).
+
+**Uppföljning — pedagogisk layoutjustering (2026-09-23):** PO:s vidare granskning
+efter v1.6.1 (skärmdump): sambandet mellan en brytpunkt och de två zoner den
+avgränsar framgick inte visuellt (brytpunkterna låg som två separata fält FÖRE
+tabellen). Löst på `feature/FEAT-044-brytpunkt-layout`: varje brytpunkt flyttad
+till en egen, visuellt distinkt rad (streckad kant, mindre text) MELLAN de två
+zoner den avgränsar — Brytpunkt 1 mellan Zon 1/Zon 2, Brytpunkt 2 mellan Zon 2/
+Zon 3. Samma fält-/zonrad-ID:n som all befintlig logik redan adresserar via
+`getElementById` (verifierat genom genomläsning av samtliga `app.js`-referenser)
+— ren presentationsändring, ingen ändring i `app.js`/`sim-core.js`. Full
+regression grön (9 testfiler, 266 kontroller). PO:s visuella granskning
+(skärmdump) godkänd: "det ser bättre ut nu" — kvarvarande horisontellt tomrum i
+korten bedömt som en rimlig avvägning (zon-tabellerna är innehållsstyrt smala;
+att sträcka ut dem skulle försämra läsbarheten av siffrorna, inte förbättra
+den), ingen ytterligare ändring begärd. **Mergad till `develop` (2026-09-23),
+branch raderad. Inte släppt till main/PROD** — väntar på nästa planerade
+PROD-kandidat, som FEAT-047.
 
 ---
 

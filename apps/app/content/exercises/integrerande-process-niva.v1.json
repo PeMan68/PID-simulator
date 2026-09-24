@@ -1,6 +1,6 @@
 {
   "id": "integrerande-process-niva.v1",
-  "version": "v1.0.0",
+  "version": "v2.0.0",
   "title": "Integrerande process och nivåreglering",
   "description": "Tanknivå som exempel på en integrerande process — varför den skiljer sig från en självreglerande process och kräver PI-reglering.",
   "difficulty": "intermediate",
@@ -24,20 +24,75 @@
     },
     {
       "type": "scenario",
-      "ref": "integrating-pi.json",
-      "title": "Styr en tanknivå med PI",
-      "objective": "Observera hur PI-regulatorn hittar jämviktspunkten för en integrerande process.",
-      "instruction": "Kör 200 steg. Notera:\n• Nivån (PV) startar vid 20% och ska nå SP=60%\n• u stabiliseras inte vid 0 — regulatorn håller ett konstant u_jämvikt ≈ 50% (utflöde/K = 0.5/0.01)\n• Trigga puls för att simulera störning i utflödet — regulatorn korrigerar\n\nJämför med en självreglerande process: vad är den fundamentala skillnaden i hur steady-state uppnås?",
+      "ref": "integrating-p-only.json",
+      "title": "P-reglering ensam — det kvarstående felet",
+      "objective": "Observera i praktiken att P-reglering ensam aldrig når börvärdet på en integrerande process.",
+      "instruction": "Kör cirka 100–150 steg (t.ex. klicka \"Kör 10 steg\" upprepade gånger). Notera:\n• Nivån (PV) stiger inledningsvis men planar ut långt under SP=60, runt PV≈26\n• Felet (e) minskar aldrig till noll — det stannar på ett stort, permanent värde (≈34)\n• u stabiliseras ändå, runt 51 % — men bara för att felet förblir stort (u = Kp × e)\n\nDetta är precis vad teoristeget varnade för: en P-regulator måste ha ett kvarstående fel för att kunna hålla den utsignal processen kräver för jämvikt.",
       "checkpoint": {
-        "question": "Vad är jämviktspunkten (u_jämvikt) för denna integrerande process med K=0.01 och utflöde=0.5?",
+        "question": "Varför planar PV ut på cirka 26 istället för att nå SP=60, trots att regulatorn arbetar hela tiden?",
         "options": [
-          "u_jämvikt = 0% (processen håller sig utan inflöde)",
-          "u_jämvikt = 100% (full effekt krävs alltid)",
-          "u_jämvikt = 50% (utflöde / K = 0.5 / 0.01 = 50%)",
-          "u_jämvikt = SP/100 = 60%"
+          "Processen är för långsam — med fler steg skulle PV till slut nå 60",
+          "P-regulatorn kan bara hålla u≈51 % genom ett permanent fel (e≈34) — vid e=0 skulle u bli 0, vilket inte räcker för jämvikt",
+          "K-värdet är felaktigt inställt för denna process",
+          "Anti-windup förhindrar att PV når SP"
+        ],
+        "correct": 1,
+        "explanation": "Jämvikt kräver u = utflöde/K = 50 %. En P-regulator ger u = Kp × e, så för att hålla u nära 50 % med Kp=1,5 krävs ett permanent e≈34. Om PV nådde SP (e=0) skulle u falla till 0 — alldeles för lågt för att hålla nivån — så PV skulle drivas nedåt igen. Resultatet är en stabil punkt långt från SP, inte vid SP."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "integrating-pi.json",
+      "title": "PI-reglering hittar jämviktspunkten",
+      "objective": "Observera hur PI-regulatorn hittar jämviktspunkten för en integrerande process — till skillnad från P-regleringen i föregående steg.",
+      "instruction": "Kör cirka 130 steg. Notera:\n• Nivån (PV) startar vid 20 % och når nu faktiskt SP=60 % (till skillnad från föregående steg!)\n• u stabiliseras inte vid 0 — regulatorn håller ett konstant u_jämvikt ≈ 50 % (utflöde/K = 0,5/0,01)\n• Integralen (I-termen i statusraden) bygger successivt upp det u regulatorn behöver, tills PV=SP\n\nJämför med föregående steg: vad gjorde integraldelen möjligt som P-delen ensam inte klarade?",
+      "checkpoint": {
+        "question": "Vad är jämviktspunkten (u_jämvikt) för denna integrerande process med K=0,01 och utflöde=0,5?",
+        "options": [
+          "u_jämvikt = 0 % (processen håller sig utan inflöde)",
+          "u_jämvikt = 100 % (full effekt krävs alltid)",
+          "u_jämvikt = 50 % (utflöde / K = 0,5 / 0,01 = 50 %)",
+          "u_jämvikt = SP/100 = 60 %"
         ],
         "correct": 2,
-        "explanation": "Jämvikt: dPV/dt = 0 → K × u = utflöde → u = utflöde / K = 0.5 / 0.01 = 50%. PI-regulatorn hittar denna punkt automatiskt via integralen. Du kan verifiera: I-termen i statusraden bygger upp tills u ≈ 50% håller PV = SP = 60."
+        "explanation": "Jämvikt: dPV/dt = 0 → K × u = utflöde → u = utflöde / K = 0,5 / 0,01 = 50 %. PI-regulatorn hittar denna punkt automatiskt via integralen. Du kan verifiera: I-termen i statusraden bygger upp tills u ≈ 50 % håller PV = SP = 60 — något P-regulatorn i föregående steg aldrig lyckades med."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "integrating-pi.json",
+      "continueFromPreviousStep": true,
+      "title": "Störningsavvisning — trigga en puls",
+      "objective": "Observera hur regulatorn avvisar en kortvarig störning på en integrerande process, som saknar egen återställande kraft.",
+      "instruction": "PV ska redan ligga nära SP=60 från föregående steg. Klicka \"Trigga puls\". Notera:\n• PV hoppar upp till omkring 70 — en tydlig, snabb stöt\n• Till skillnad från en självreglerande process finns ingen naturlig kraft som drar nivån tillbaka på egen hand — regulatorn måste göra hela jobbet\n• Kör vidare (cirka 100–150 steg till) och se PV successivt återgå mot SP=60",
+      "checkpoint": {
+        "question": "Varför tar återhämtningen efter pulsen längre tid här än den skulle ta för en självreglerande process med en liknande störning?",
+        "options": [
+          "Det gör den inte — integrerande processer återhämtar sig alltid snabbare",
+          "Pulsen är för stor för att regulatorn någonsin ska kunna kompensera för den",
+          "En integrerande process saknar egen återställande kraft — all återhämtning måste komma från regulatorns integralverkan, som är trögare än en process egen dynamik",
+          "Anti-windup förhindrar regulatorn från att reagera på pulsen"
+        ],
+        "correct": 2,
+        "explanation": "En självreglerande process dras av sig själv tillbaka mot sitt normalvärde — en del av återhämtningen sker \"gratis\", utan regulatorns hjälp. En integrerande process saknar den mekanismen helt: allt som stör nivån blir kvar tills regulatorn AKTIVT motverkar det via sin integral, vilket tar den tid integraldelen (Ti) är inställd för."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "basic-step-self-regulating.json",
+      "title": "Jämförelse: självreglerande vs. integrerande",
+      "objective": "Jämför insvängningstiden för en självreglerande process mot den integrerande tanknivån du precis reglerat.",
+      "instruction": "Detta är samma typ av process du mötte tidigt i andra lärstigar — en självreglerande process med PID-reglering, SP=50. Kör cirka 30–40 steg och notera hur snabbt PV stabiliseras jämfört med tanknivån i föregående steg.",
+      "checkpoint": {
+        "question": "Vad är den grundläggande anledningen till att denna process stabiliseras mycket snabbare (inom ett fåtal tiotal steg) än tanknivån (över hundra steg)?",
+        "options": [
+          "Regulatorn är bättre inställd i det här scenariot",
+          "Denna process har en egen, inbyggd återställande kraft mot sitt normalvärde — tanknivån har ingen sådan kraft alls, all stabilisering måste komma från regulatorn",
+          "SP är lägre i det här scenariot, vilket alltid går snabbare",
+          "Mätområdet är mindre i det här scenariot"
+        ],
+        "correct": 1,
+        "explanation": "Det här är kärnskillnaden mellan processtyperna, samma som lärstigens första teoristeg introducerade: en självreglerande process dras naturligt tillbaka mot sitt normalvärde oavsett vad regulatorn gör, medan en integrerande process (som tanknivån) saknar den gränsen — dess nivå fortsätter dit den drivs tills något (regulatorn) aktivt stoppar den. Det gör integrerande processer långsammare att reglera och känsligare för ackumulerande störningar, precis som du såg i föregående steg."
       }
     }
   ]

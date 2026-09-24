@@ -15,12 +15,12 @@
   },
   "controller": {
     "mode": "pi",
-    "kp": 1.5,
-    "ti": 80.0,
+    "kp": 4.0,
+    "ti": 60.0,
     "td": 0.0,
     "antiWindup": true,
     "outputLimits": { "min": 0.0, "max": 100.0 }
   },
-  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 5.0, "durationSteps": 20 } },
+  "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 5.0, "durationSteps": 2 } },
   "runtime": { "dt": 1.0, "maxSteps": 600, "setpoint": 60.0, "autopause": false }
 }
