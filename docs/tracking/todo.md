@@ -83,6 +83,31 @@ spann när `cascade.enabled`. Se `apps/app/app.js` (sökord FEAT-050) för detal
    konfigurationsfält, inga lärstigsfilter tillämpas där (befintlig,
    oförändrad `applyPathVisibilityOverride()`-spärr).
 
+**Uppföljning, andra rundan (samma dag) — PO pekade ut att huvudgrafens
+u-panel i kaskadläge visade slavregulatorns utsignal, inte huvudregulatorns:**
+- Signalkedjeraden flyttad FRÅN en fristående rad ovanför huvudgrafen till
+  Slavslinga-panelen (all slavinformation samlad på ett ställe).
+- Huvudgrafens nedre "u"-panel togs bort för kaskadscenarier (huvudslingan
+  fyllde hela grafhöjden), och U lades till som en tredje linje i
+  Slavslinga-panelens mini-graf.
+
+**Uppföljning, tredje rundan (samma dag) — PO valde ändå att BEHÅLLA
+u-panelen, för konsekvent grafutseende mellan alla scenariotyper:**
+- Huvudgrafens u-panel återinförd för ALLA scenarier (kaskad eller ej) —
+  medveten dubblering med Slavslinga-panelens mini-graf (som fortsatt visar
+  U också), inte ett misstag. Crosshair/legend/Y-zoom tillbaka till exakt
+  samma kod som innan FEAT-050 påbörjades.
+- Nytt lärstigssteg tillagt: "Grundmekanismen — en SP-förändring"
+  (`kaskad-demo-sp-steg.json`), placerat direkt efter teoriintrot och före
+  "Enkelslinga — problemet". Visar SP1→SP2→U→PV2→PV1-kedjan via en
+  AVSIKTLIG börvärdesändring (inte en störning). Processens normalvärde
+  satt till 0 (inte 50) i just detta scenario, så SP1 kan flyttas ett stort
+  steg (0→50) utan att huvudregulatorns avvikelseutsignal behöver bli
+  negativ — scenariot startar i stabilt läge (PV1=SP1=0). Numeriskt
+  verifierat: PV1 når ~50,3 efter 470 steg, SP2/PV2/U stannar väl inom sina
+  intervall (max SP2≈70, max U≈71%).
+- 5 nya enhetstester (totalt 32 i tests/feat-050-kaskadreglering.test.mjs).
+
 ### FEAT-049 — HMI-/SCADA-vy för reglerstrategier
 **Prioritet:** Ej prioriterad — idé registrerad på PO:s begäran (2026-09-24).
 **INGEN analys gjord, INGEN branch, INGEN implementation påbörjad** — väntar

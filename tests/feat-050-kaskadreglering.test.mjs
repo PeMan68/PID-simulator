@@ -166,7 +166,7 @@ function baseScenario(overrides = {}) {
 }
 
 // ── 8. De tre nya innehållsfilerna laddar och kör utan fel ──
-for (const file of ["kaskad-demo-enkelslinga.json", "kaskad-demo-losning.json", "kaskad-demo-langsam-slav.json"]) {
+for (const file of ["kaskad-demo-enkelslinga.json", "kaskad-demo-losning.json", "kaskad-demo-langsam-slav.json", "kaskad-demo-sp-steg.json"]) {
   const scenario = loadScenario(file);
   const sim = new Simulation(scenario, 42);
   for (let i = 0; i < 50; i++) { if (i === 20) sim.triggerAuxSignal(); sim.step(); }
@@ -184,6 +184,19 @@ for (const file of ["kaskad-demo-enkelslinga.json", "kaskad-demo-losning.json", 
   const peakSingle = Math.max(...single.history.y.slice(150).map(v => Math.abs(v - 50)));
   const peakCascade = Math.max(...cascade.history.y.slice(150).map(v => Math.abs(v - 50)));
   check("9a. Kaskadens topp-avvikelse är väsentligt mindre än enkelslingans (>5x)", peakCascade * 5 < peakSingle, `single=${peakSingle.toFixed(2)}, cascade=${peakCascade.toFixed(2)}`);
+}
+
+// ── 10. SP1-stegsvar (uppföljning, PO-önskemål) — grundmekanismen SP1→SP2→U→PV2→PV1 ──
+{
+  const sim = new Simulation(loadScenario("kaskad-demo-sp-steg.json"), 42);
+  for (let i = 0; i < 30; i++) sim.step();
+  check("10a. PV1=SP1=0 innan SP-ändring (stabilt läge)", Math.abs(sim.history.y[sim.history.y.length - 1]) < 0.01);
+  sim.scenario.runtime.setpoint = 50;
+  for (let i = 0; i < 470; i++) sim.step();
+  const y = sim.history.y;
+  check("10b. PV1 närmar sig det nya SP1 (50) efter tillräckligt många steg", Math.abs(y[y.length - 1] - 50) < 2, `PV1=${y[y.length - 1]}`);
+  check("10c. Alla värden finita genom hela förloppet (inget NaN/Infinity)", y.every(Number.isFinite) && sim.history.sp2.every(Number.isFinite) && sim.history.pv2.every(Number.isFinite));
+  check("10d. SP2 rör sig SNABBARE än PV1 (beräknad kedja, inte fysisk process)", Math.abs(sim.history.sp2[60] - 30) > Math.abs(y[60] - 0), `sp2[60]=${sim.history.sp2[60]}, y[60]=${y[60]}`);
 }
 
 console.log(`\n${passed} OK, ${failed} FAIL`);

@@ -37,6 +37,7 @@
     { "id": "kvotreglering-demo-fast-sp",     "file": "scenarios/kvotreglering-demo-fast-sp.json" },
     { "id": "kvotreglering-demo-korrekt",     "file": "scenarios/kvotreglering-demo-korrekt.json" },
     { "id": "kvotreglering-demo-fel-kvot",    "file": "scenarios/kvotreglering-demo-fel-kvot.json" },
+    { "id": "kaskad-demo-sp-steg",       "file": "scenarios/kaskad-demo-sp-steg.json" },
     { "id": "kaskad-demo-enkelslinga",   "file": "scenarios/kaskad-demo-enkelslinga.json" },
     { "id": "kaskad-demo-losning",       "file": "scenarios/kaskad-demo-losning.json" },
     { "id": "kaskad-demo-langsam-slav",  "file": "scenarios/kaskad-demo-langsam-slav.json" }
