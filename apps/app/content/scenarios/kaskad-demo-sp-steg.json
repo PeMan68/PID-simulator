@@ -1,15 +1,15 @@
 {
   "id": "kaskad-demo-sp-steg",
-  "version": "v1.0.0",
+  "version": "v1.1.0",
   "title": "Kaskadreglering — demo: SP-förändring",
-  "description": "Samma värmeväxlare, samma kaskadstruktur — men här visas grundmekanismen genom en avsiktlig ändring av börvärdet (SP1) istället för en störning. Processens normalvärde är 0 (inte 50 som i övriga kaskad-scenarier) så att SP1 kan flyttas ett stort steg utan att den yttre regulatorns utsignal (avvikelsen som bildar SP2) behöver bli negativ. Scenariot startar med PV1=SP1=0, i stabilt läge. Numeriskt verifierat i simulatorn: en SP-ändring till 50 ger en mjuk, väldämpad anpassning utan mättning (max SP2≈70, max U≈71 %, båda inom sina intervall).",
+  "description": "Samma värmeväxlare, samma kaskadstruktur som övriga scenarier i lärstigen (samma normalvärde 50, samma K/T) — men här visas grundmekanismen genom en avsiktlig ändring av börvärdet (SP1) istället för en störning. Scenariot startar i stabilt läge (PV1=SP1=50). Numeriskt verifierat i simulatorn: en SP-ändring till 90 ger en mjuk, väldämpad anpassning utan mättning (max SP2/PV2≈62, max U≈57 %, alla inom sina intervall).",
   "tags": ["pid", "kaskadreglering", "varmevaxlare"],
   "process": {
     "type": "self_regulating",
     "K": 1.3,
     "T": 90.0,
     "L": 0.0,
-    "normalValue": 0.0,
+    "normalValue": 50.0,
     "measurementRange": { "min": 0.0, "max": 100.0 }
   },
   "controller": {
@@ -41,5 +41,5 @@
     }
   },
   "disturbance": { "noiseStd": 0.0, "pulse": { "magnitude": 0.0, "durationSteps": 0 } },
-  "runtime": { "dt": 1.0, "maxSteps": 500, "setpoint": 0.0, "autopause": false }
+  "runtime": { "dt": 1.0, "maxSteps": 500, "setpoint": 50.0, "autopause": false }
 }

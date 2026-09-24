@@ -188,15 +188,21 @@ for (const file of ["kaskad-demo-enkelslinga.json", "kaskad-demo-losning.json", 
 
 // ── 10. SP1-stegsvar (uppföljning, PO-önskemål) — grundmekanismen SP1→SP2→U→PV2→PV1 ──
 {
+  // FEAT-050 uppföljning (PO-test, fjärde rundan) — normalValue=50 här också
+  // (inte 0), för konsekvens med de tre andra scenarierna i lärstigen. SP1
+  // stegas 50→90 (uppåt, inom outer/inner-spannens säkra marginal) istället
+  // för 0→50 — undviker att PV1 någonsin skulle kunna dyka under 0 vid en
+  // EVENTUELL framtida nedåtstörning i samma scenario (inte aktuellt här,
+  // men håller mönstret konsekvent och risk-fritt).
   const sim = new Simulation(loadScenario("kaskad-demo-sp-steg.json"), 42);
   for (let i = 0; i < 30; i++) sim.step();
-  check("10a. PV1=SP1=0 innan SP-ändring (stabilt läge)", Math.abs(sim.history.y[sim.history.y.length - 1]) < 0.01);
-  sim.scenario.runtime.setpoint = 50;
+  check("10a. PV1=SP1=50 innan SP-ändring (stabilt läge, samma baslinje som övriga scenarier)", Math.abs(sim.history.y[sim.history.y.length - 1] - 50) < 0.01);
+  sim.scenario.runtime.setpoint = 90;
   for (let i = 0; i < 470; i++) sim.step();
   const y = sim.history.y;
-  check("10b. PV1 närmar sig det nya SP1 (50) efter tillräckligt många steg", Math.abs(y[y.length - 1] - 50) < 2, `PV1=${y[y.length - 1]}`);
+  check("10b. PV1 närmar sig det nya SP1 (90) efter tillräckligt många steg", Math.abs(y[y.length - 1] - 90) < 2, `PV1=${y[y.length - 1]}`);
   check("10c. Alla värden finita genom hela förloppet (inget NaN/Infinity)", y.every(Number.isFinite) && sim.history.sp2.every(Number.isFinite) && sim.history.pv2.every(Number.isFinite));
-  check("10d. SP2 rör sig SNABBARE än PV1 (beräknad kedja, inte fysisk process)", Math.abs(sim.history.sp2[60] - 30) > Math.abs(y[60] - 0), `sp2[60]=${sim.history.sp2[60]}, y[60]=${y[60]}`);
+  check("10d. SP2 rör sig SNABBARE än PV1 (beräknad kedja, inte fysisk process)", Math.abs(sim.history.sp2[60] - 30) > Math.abs(y[60] - 50), `sp2[60]=${sim.history.sp2[60]}, y[60]=${y[60]}`);
 }
 
 console.log(`\n${passed} OK, ${failed} FAIL`);

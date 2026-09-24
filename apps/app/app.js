@@ -282,7 +282,13 @@ function drawChart() {
 
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
   ctx.fillText(cascadeActive ? "PV1/SP1" : "PV/SP", pad.left + 6, pad.top + 14);
-  ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
+  // FEAT-050 uppföljning (PO-test, fjärde rundan) — etiketten förtydligar att
+  // detta ÄR slavregulatorns utsignal i kaskadläge (samma tal som Slavslinga-
+  // panelens U-fält/mini-graf), inte huvudregulatorns — huvudregulatorn har
+  // ingen egen ventilsignal att visa (dess utsignal ÄR SP2). Löser en
+  // återkommande fråga från PO-test utan att ändra layouten (PO valde att
+  // behålla u-panelen för alla scenarier, se tidigare kommentar).
+  ctx.fillText(cascadeActive ? "u (slav)" : "u", pad.left + 6, h * 0.68 + 16);
   ctx.save();
   ctx.beginPath();
   ctx.rect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top);
@@ -324,7 +330,7 @@ function drawChart() {
     // enda och äter upp den visuella luften mellan posterna (samma
     // anledning till att HTML-varianten ursprungligen använde &nbsp;&nbsp;).
     const gap = "  ";
-    legendEl.textContent = (cascadeActive ? "Blå: PV1" + gap + "Röd streckad: SP1" : "Blå: PV" + gap + "Röd streckad: SP") + gap + "Grön: u" + (hasWildFlow ? gap + "Rosa streckad (tunn): Flöde A" : "");
+    legendEl.textContent = (cascadeActive ? "Blå: PV1" + gap + "Röd streckad: SP1" : "Blå: PV" + gap + "Röd streckad: SP") + gap + (cascadeActive ? "Grön: u (slav)" : "Grön: u") + (hasWildFlow ? gap + "Rosa streckad (tunn): Flöde A" : "");
   }
 
   ctx.save();
