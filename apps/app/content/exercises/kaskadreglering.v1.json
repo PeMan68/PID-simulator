@@ -1,0 +1,73 @@
+{
+  "id": "kaskadreglering.v1",
+  "version": "v1.0.0",
+  "title": "Kaskadreglering (Cascade Control)",
+  "description": "En värmeväxlares temperatur (huvudslinga) och flöde (slavslinga) — hur en snabb, inre slinga skyddar en långsam, yttre processvariabel från en störning, och vad som händer om den inre slingan inte faktiskt är snabb.",
+  "difficulty": "advanced",
+  "forceApplicationProfile": "temperatur",
+  "steps": [
+    {
+      "type": "theory",
+      "ref": "kaskadreglering.v1.json",
+      "title": "Vad är kaskadreglering?",
+      "objective": "Förstå det hierarkiska mönstret huvudslinga/slavslinga, och varför det löser ett annat problem än Framkoppling.",
+      "checkpoint": {
+        "question": "Vad är den viktigaste skillnaden mellan Framkoppling och Kaskadreglering?",
+        "options": [
+          "Framkoppling kompenserar en SPECIFIK, i förväg känd och mätbar störning. Kaskadreglering fångar en störning som visar sig i en snabbare MELLANVARIABEL (t.ex. flödet), oavsett om störningens ursprungliga källa är känd eller mätbar",
+          "De är samma mekanism med olika namn",
+          "Kaskadreglering kräver mindre kod än Framkoppling",
+          "Framkoppling används bara för temperatur, Kaskadreglering bara för flöde"
+        ],
+        "correct": 0,
+        "explanation": "Framkoppling behöver känna störningens exakta storlek och hur den fysiskt påverkar processen (Kff). Kaskadreglering behöver bara att störningen visar sig i en SNABBARE, mätbar mellanvariabel (t.ex. flödet) mellan ventilen och den slutliga processvariabeln — den bryr sig inte om VARIFRÅN störningen kom, bara att slavslingan känner av den."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "kaskad-demo-enkelslinga.json",
+      "comparisonGroup": "kaskad-jamforelse",
+      "title": "Enkelslinga — problemet",
+      "objective": "Se hur länge och hur mycket en vanlig, enkel PID-slinga avviker när en störning i flödet slår igenom direkt på temperaturen.",
+      "instruction": "Scenariot modellerar en värmeväxlare: PV är utgående temperatur, u är ventilens öppning, SP=50. Ingen kaskad ännu — regulatorn styr ventilen direkt.\n\nKlicka 'Trigga last' i Processpåverkan (Last mag = −8, ett tryckfall som minskar levererat flöde för samma ventilöppning).\n\nKör minst 400 steg efter triggningen (klicka 'Kör 10 steg' upprepade gånger) för att se hela förloppet.\n\nNotera: PV avviker som mest ca 3,2 enheter från SP, och tar drygt 350 steg att återhämta sig till inom ±0,5 av SP igen. Regulatorn har inte gjort något fel — den kan bara reagera EFTER att felet redan syns i PV."
+    },
+    {
+      "type": "scenario",
+      "ref": "kaskad-demo-losning.json",
+      "comparisonGroup": "kaskad-jamforelse",
+      "title": "Kaskadreglering — lösningen",
+      "objective": "Se hur en snabb, inre flödesslinga fångar samma störning innan den hinner påverka temperaturen.",
+      "instruction": "Samma värmeväxlare, samma störning (Last mag = −8) — men nu finns en Slavslinga (se den nya panelen och de tre grafpanelerna: PV1/SP1, PV2/SP2, U). Slavslingans egna parametrar är satta av scenariot, inte redigerbara.\n\nKlicka 'Trigga last'.\n\nKör minst 400 steg efter triggningen, precis som i förra steget.\n\nNotera: PV1 (huvudslingan, övre panelen) avviker som mest bara ca 0,3 enheter — den lämnar aldrig ens ett ±0,5-band. Titta på PV2/SP2 (mittenpanelen): det är DÄR allt arbete sker. Signalkedjeraden ovanför grafen visar exakt hur SP1 → SP2 → U → PV2 → PV1 hänger ihop, steg för steg.",
+      "checkpoint": {
+        "question": "Vad beräknas SP2 till, och vem sätter det värdet?",
+        "options": [
+          "SP2 sätts av studenten, precis som SP1",
+          "SP2 beräknas automatiskt av huvudslingans regulator varje steg (huvudslingans utsignal, uttryckt som en avvikelse kring slavslingans normala arbetspunkt) — slavregulatorn vet inte ens att dess börvärde kommer från en beräkning",
+          "SP2 är alltid samma som SP1",
+          "SP2 sätts av slavregulatorn själv"
+        ],
+        "correct": 1,
+        "explanation": "Precis som i Kvotreglering (SP = Kvot × Flöde A) är poängen att en regulator kan få sitt börvärde från en BERÄKNING istället för en operatör — här är beräkningen huvudslingans egen utsignal. Slavregulatorn i sig är helt oförändrad och lika enkel som vilken PI-regulator som helst; den vet inte varifrån SP2 kommer."
+      }
+    },
+    {
+      "type": "scenario",
+      "ref": "kaskad-demo-langsam-slav.json",
+      "comparisonGroup": "kaskad-jamforelse",
+      "title": "Felaktigt trimmad slavslinga",
+      "objective": "Se att kaskadens fördel bygger på att slavslingan verkligen är snabbare än huvudslingan — och vad som händer om den inte är det.",
+      "instruction": "Samma kaskadstruktur som föregående steg, samma störning (Last mag = −8) — men slavslingan är nu feltrimmad (Kp=0,3, Ti=60 istället för Kp=2,0, Ti=6).\n\nKlicka 'Trigga last'.\n\nKör minst 550 steg efter triggningen.\n\nNotera: PV1 avviker nu som mest ca 3,6 enheter och tar ca 550 steg att återhämta sig — SÄMRE än enkelslingan i steg 1 (3,2 enheter, 350 steg), trots att kaskadstrukturen i sig är identisk med förra stegets. Jämför gärna med Framkoppling (tidigare lärstig): där gav ett FELAKTIGT Kff en mindre, men fortfarande begränsad, förbättring — här ger en feltrimmad slavslinga en regelrätt FÖRSÄMRING jämfört med att inte ha kaskad alls.",
+      "checkpoint": {
+        "question": "Varför blev PV1:s avvikelse här STÖRRE än utan kaskad alls (steg 1), trots att strukturen (huvudslinga + slavslinga) är exakt densamma som i föregående steg?",
+        "options": [
+          "Kaskadreglering fungerar aldrig bättre än enkelslinga i praktiken",
+          "En slavslinga som INTE är tydligt snabbare än huvudslingan hinner inte längre 'städa upp' störningen innan den läcker vidare — huvudslingan får då hantera störningen genom en extra, långsam mellanslinga istället för direkt, vilket är sämre än att hantera den direkt",
+          "Simulatorn har ett fel som bara syns med feltrimmade parametrar",
+          "Kp=0,3 gör att slavregulatorn stängs av helt"
+        ],
+        "correct": 1,
+        "explanation": "Kaskadens hela poäng är att slavslingan hinner korrigera störningen INNAN den når huvudslingans processvariabel. Om slavslingan är för långsam (låg Kp, lång Ti) hinner den inte det — störningen läcker igenom till PV2 nästan lika obehindrat som om den gått direkt till PV1, men nu FÖRDRÖJD och FÖRVRÄNGD av en extra, dåligt fungerande mellanslinga. Resultatet blir därför sämre än att aldrig ha lagt till kaskaden. Detta är varför en driftsingenjör alltid trimmar slavslingan (den snabba, inre slingan) FÖRST och ser till att den verkligen är snabb, innan huvudslingan trimmas."
+      }
+    }
+  ]
+}

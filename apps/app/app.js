@@ -126,7 +126,13 @@ const fields = {
   // konfiguration; wildFlowBase/wildFlowVolatility (processens egenskaper hos
   // det vilda flödet, inte regulatorn) i Processinställning.
   ratioControlEnabled: document.getElementById("ratioControlEnabled"), ratio: document.getElementById("ratio"),
-  wildFlowBase: document.getElementById("wildFlowBase"), wildFlowVolatility: document.getElementById("wildFlowVolatility")
+  wildFlowBase: document.getElementById("wildFlowBase"), wildFlowVolatility: document.getElementById("wildFlowVolatility"),
+  // FEAT-050 — Kaskadreglering: Slavslinga-panelens skrivskyddade avläsningar
+  // (DES-001 avsnitt 2.2) — INGA Kp/Ti/Td/anti-windup/bumpless för slavslingan.
+  groupSlavslinga: document.getElementById("groupSlavslinga"),
+  cascadeSp2: document.getElementById("cascadeSp2"), cascadePv2: document.getElementById("cascadePv2"),
+  cascadeU: document.getElementById("cascadeU"), cascadeStatusBadge: document.getElementById("cascadeStatusBadge"),
+  cascadeChain: document.getElementById("cascadeChain")
 };
 
 let currentScenario = null;
@@ -158,6 +164,21 @@ function drawSeries(ctx, points, color, dashed, width = 2) {
   for (let i = 1; i < points.length; i += 1) ctx.lineTo(points[i].x, points[i].y);
   ctx.stroke(); ctx.setLineDash([]);
 }
+// FEAT-050 — Kaskadreglering: hur den gamla "PV/SP"-ytan (pad.top till
+// h*0.62, oförändrad total höjd) delas i två paneler (PV1/SP1, PV2/SP2) när
+// aktivt scenario har cascade.enabled. Delad mellan drawChart() och
+// wheel-zoom-hanteraren nedan så Y-zoom-hitboxen alltid matchar ritningen.
+// Panel 3 (u) rörs INTE — den behöver ingen ändring eftersom sim-core.js
+// redan skriver slavslingans u till samma history.u-fält (se Simulation.step()).
+function getCascadePanelSplit(h) {
+  const padTop = 14;
+  const topRegionBottom = h * 0.62;
+  if (!sim || !(sim.scenario.cascade && sim.scenario.cascade.enabled)) {
+    return { active: false, outerBottom: topRegionBottom, innerTop: topRegionBottom, innerBottom: topRegionBottom };
+  }
+  const outerBottom = padTop + (topRegionBottom - padTop) * 0.55;
+  return { active: true, outerBottom, innerTop: outerBottom + 16, innerBottom: topRegionBottom };
+}
 function drawChart() {
   if (!sim) return;
   fitCanvas();
@@ -171,6 +192,17 @@ function drawChart() {
   // och relevant just nu"-villkor, istället för att duplicera det.
   const wildFlow = sim.history.wildFlow;
   const hasWildFlow = sim.scenario.ratioControl?.wildFlow?.base > 0 && wildFlow && wildFlow.length === t.length;
+  // FEAT-050 — Kaskadreglering: panel 1 (PV1/SP1) delas i två när aktivt
+  // scenario har cascade.enabled (DES-001 avsnitt 3, tre paneler) — panel 3
+  // (u) rörs INTE alls, den visar redan slavslingans u automatiskt tack
+  // vare sim-core.js:s publishedU (se Simulation.step()). Den yttre
+  // gränsen för det gamla "PV/SP"-området (h*0.62) hålls oförändrad så att
+  // ALLA icke-kaskad-scenarier ritas EXAKT som innan — bara hur den ytan
+  // delas INUTI ändras. getCascadePanelSplit() delas med scroll-zoom-
+  // hanteraren nedan så Y-zoom-hitboxen alltid matchar den ritade panelen.
+  const split = getCascadePanelSplit(h);
+  const cascadeActive = split.active;
+  const outerPanelBottom = split.outerBottom;
   const tFull = Math.max(1, t[t.length - 1] || 1);
   const tStart = zoomView ? zoomView.start : 0;
   const tMax   = zoomView ? zoomView.end   : tFull;
@@ -178,19 +210,35 @@ function drawChart() {
   const yMax = pvZoomView ? pvZoomView.max : Math.max(sim.scenario.process.measurementRange.max, 100);
   const uViewMin = 0, uViewMax = 100;
   const xScale = v => pad.left + ((v - tStart) / (tMax - tStart || 1)) * (w - pad.left - pad.right);
-  const yScaleTop = v => pad.top + (1 - (v - yMin) / (yMax - yMin || 1)) * (h * 0.62 - pad.top);
+  const yScaleTop = v => pad.top + (1 - (v - yMin) / (yMax - yMin || 1)) * (outerPanelBottom - pad.top);
   const yScaleBot = v => h * 0.68 + (1 - (v - uViewMin) / (uViewMax - uViewMin || 1)) * (h - pad.bottom - h * 0.68);
   ctx.clearRect(0, 0, w, h); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = "#d8d8d8"; ctx.strokeRect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top); ctx.strokeRect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
-  
-  // Y-axel etiketter för PV/SP
+  ctx.strokeStyle = "#d8d8d8"; ctx.strokeRect(pad.left, pad.top, w - pad.left - pad.right, outerPanelBottom - pad.top); ctx.strokeRect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
+
+  // Y-axel etiketter för PV1/SP1
   ctx.fillStyle = "#666"; ctx.font = "11px Segoe UI"; ctx.textAlign = "right";
   ctx.fillText("100", pad.left - 8, yScaleTop(100) + 4);
   ctx.fillText("0", pad.left - 8, yScaleTop(0) + 4);
-  
+
   // Y-axel etiketter för u (nedre grafen)
   ctx.fillText("100", pad.left - 8, h * 0.68 + 4);
   ctx.fillText("0", pad.left - 8, h - pad.bottom + 4);
+
+  // FEAT-050 — Panel 2 (PV2/SP2, slavslingan): egen ruta/skala i utrymmet
+  // getCascadePanelSplit() öppnat mellan panel 1 och panel 3. DES-001
+  // avsnitt 3, alternativ A: egen skala per panel (ingen risk att PV1:s och
+  // PV2:s naturliga intervall kolliderar visuellt).
+  let yScaleMid = null;
+  if (cascadeActive) {
+    const innerProcCfg = sim.scenario.cascade.inner.process;
+    const midMin = Math.min(innerProcCfg.measurementRange.min, 0);
+    const midMax = Math.max(innerProcCfg.measurementRange.max, 100);
+    yScaleMid = v => split.innerTop + (1 - (v - midMin) / (midMax - midMin || 1)) * (split.innerBottom - split.innerTop);
+    ctx.strokeStyle = "#d8d8d8"; ctx.strokeRect(pad.left, split.innerTop, w - pad.left - pad.right, split.innerBottom - split.innerTop);
+    ctx.fillStyle = "#666"; ctx.font = "11px Segoe UI"; ctx.textAlign = "right";
+    ctx.fillText("100", pad.left - 8, yScaleMid(100) + 4);
+    ctx.fillText("0", pad.left - 8, yScaleMid(0) + 4);
+  }
   
   // Hystersgränser för on/off
   if (sim.scenario.controller.mode === "onoff") {
@@ -262,11 +310,11 @@ function drawChart() {
   }
 
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
-  ctx.fillText("PV/SP", pad.left + 6, pad.top + 14);
+  ctx.fillText(cascadeActive ? "PV1/SP1" : "PV/SP", pad.left + 6, pad.top + 14);
   ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
   ctx.save();
   ctx.beginPath();
-  ctx.rect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top);
+  ctx.rect(pad.left, pad.top, w - pad.left - pad.right, outerPanelBottom - pad.top);
   ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
@@ -293,6 +341,24 @@ function drawChart() {
   if (hasWildFlow) {
     drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(wildFlow[i]) })), "#c2185b", true, 1);
   }
+  ctx.restore();
+
+  // FEAT-050 — Panel 2 (PV2/SP2, slavslingan). Egen färgkodning (teal/orange,
+  // samma ton som Slavslinga-panelen och FEAT-046s 05-kaskadreglering.svg)
+  // för visuell konsekvens mellan sidopanel/graf/blockschema (DES-001 avsnitt 5).
+  if (cascadeActive) {
+    ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
+    ctx.fillText("PV2/SP2", pad.left + 6, split.innerTop + 14);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pad.left, split.innerTop, w - pad.left - pad.right, split.innerBottom - split.innerTop);
+    ctx.clip();
+    const pv2 = sim.history.pv2, sp2 = sim.history.sp2;
+    drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleMid(pv2[i]) })), "#2f7a8f", false);
+    drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleMid(sp2[i]) })), "#e07a2f", true);
+    ctx.restore();
+  }
+
   // Legenden byggs om varje ritning istället för att vara statisk HTML, så
   // Flöde A-raden bara syns när linjen faktiskt ritas (samma princip som
   // resten av grafen — inget visas som inte är relevant för scenariot).
@@ -303,9 +369,8 @@ function drawChart() {
     // enda och äter upp den visuella luften mellan posterna (samma
     // anledning till att HTML-varianten ursprungligen använde &nbsp;&nbsp;).
     const gap = "  ";
-    legendEl.textContent = "Blå: PV" + gap + "Röd streckad: SP" + gap + "Grön: u" + (hasWildFlow ? gap + "Rosa streckad (tunn): Flöde A" : "");
+    legendEl.textContent = (cascadeActive ? "Blå: PV1" + gap + "Röd streckad: SP1" : "Blå: PV" + gap + "Röd streckad: SP") + gap + "Grön: u" + (hasWildFlow ? gap + "Rosa streckad (tunn): Flöde A" : "") + (cascadeActive ? gap + "Teal: PV2" + gap + "Orange streckad: SP2" : "");
   }
-  ctx.restore();
 
   ctx.save();
   ctx.beginPath();
@@ -484,8 +549,8 @@ function drawChart() {
 
         ctx.save();
         ctx.strokeStyle = "rgba(30,30,30,0.38)"; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
-        ctx.beginPath(); ctx.moveTo(mx, pad.top); ctx.lineTo(mx, h * 0.62); ctx.stroke();
-        if (hoverPos.y >= pad.top && hoverPos.y <= h * 0.62) {
+        ctx.beginPath(); ctx.moveTo(mx, pad.top); ctx.lineTo(mx, outerPanelBottom); ctx.stroke();
+        if (hoverPos.y >= pad.top && hoverPos.y <= outerPanelBottom) {
           ctx.beginPath(); ctx.moveTo(pad.left, hoverPos.y); ctx.lineTo(w - pad.right, hoverPos.y); ctx.stroke();
         }
         ctx.setLineDash([]);
@@ -495,12 +560,22 @@ function drawChart() {
           lines.push("SP_B    = " + spH.toFixed(1));
           lines.push("Flöde A = " + wildH.toFixed(1));
         }
+        // FEAT-050 — kaskad: crosshairen visar även SP2/PV2 punktvis, samma
+        // princip som Kvotreglerings SP_B/Flöde A ovan (PO-önskemål:
+        // studerande ska kunna avläsa slavslingans värden exakt, inte bara
+        // grafens visuella intryck).
+        if (cascadeActive) {
+          const sp2H = sim.history.sp2[iNear] != null ? sim.history.sp2[iNear] : 0;
+          const pv2H = sim.history.pv2[iNear] != null ? sim.history.pv2[iNear] : 0;
+          lines.push("SP2 = " + sp2H.toFixed(1));
+          lines.push("PV2 = " + pv2H.toFixed(1));
+        }
         ctx.font = "11px Consolas, monospace";
         const lH = 15, pX = 7, pY = 5;
         const ttW = Math.max(...lines.map(s => ctx.measureText(s).width)) + pX * 2;
         const ttH = lines.length * lH + pY * 2;
         const ttX = mx + 10 + ttW <= w - pad.right ? mx + 10 : mx - ttW - 8;
-        const ttY = Math.max(pad.top + 4, Math.min(h * 0.62 - ttH - 4, hoverPos.y - ttH / 2));
+        const ttY = Math.max(pad.top + 4, Math.min(outerPanelBottom - ttH - 4, hoverPos.y - ttH / 2));
         ctx.fillStyle = "rgba(255,255,255,0.95)";
         ctx.strokeStyle = "#bbb"; ctx.lineWidth = 1;
         ctx.fillRect(ttX, ttY, ttW, ttH); ctx.strokeRect(ttX, ttY, ttW, ttH);
@@ -591,8 +666,31 @@ function markZoneChangeIfAny() {
   lastGainZone = gainZone;
   lastProcessZone = processZone;
 }
+// FEAT-050 — Kaskadreglering: Slavslinga-panelen (SP2/PV2/U, skrivskyddad,
+// DES-001 avsnitt 2.2) och signalkedje-raden (DES-001 avsnitt 4). Båda är
+// rena avläsningar, styrda av scenariots cascade.enabled — ingen
+// APPLICATION_PROFILES/addon-gating (ingen konfiguration att visa/dölja
+// där, se index.html-kommentaren vid #groupSlavslinga).
+function updateCascadePanel() {
+  const active = !!(sim && sim.scenario.cascade && sim.scenario.cascade.enabled);
+  if (fields.groupSlavslinga) fields.groupSlavslinga.hidden = !active;
+  if (fields.cascadeChain) fields.cascadeChain.hidden = !active;
+  if (!active) return;
+  const s = sim.getState();
+  const spAtStep = sim.history.sp[sim.history.sp.length - 1] ?? sim.scenario.runtime.setpoint;
+  fields.cascadeSp2.value = fmt1(s.sp2);
+  fields.cascadePv2.value = fmt1(s.pv2);
+  fields.cascadeU.value = fmt1(s.u) + " %";
+  const innerLimits = sim.scenario.cascade.inner.controller.outputLimits;
+  const saturated = s.u <= innerLimits.min + 1e-6 || s.u >= innerLimits.max - 1e-6;
+  if (fields.cascadeStatusBadge) {
+    fields.cascadeStatusBadge.textContent = saturated ? "Mättad" : "OK";
+    fields.cascadeStatusBadge.classList.toggle("saturated", saturated);
+  }
+  fields.cascadeChain.textContent = "SP1=" + fmt1(spAtStep) + " → Huvud-PID → SP2=" + fmt1(s.sp2) + " → Slav-PID → U=" + fmt1(s.u) + "% → PV2=" + fmt1(s.pv2) + " → PV1=" + fmt1(s.y);
+}
 function updateStatus() {
-  if (!sim) { statusEl.textContent = "Status: ej laddad"; updateZoneIndicators(); return; }
+  if (!sim) { statusEl.textContent = "Status: ej laddad"; updateZoneIndicators(); updateCascadePanel(); return; }
   const s = sim.getState();
   const pidInfo = (s.pTerm !== 0 || s.iTerm !== 0 || s.dTerm !== 0)
     ? " | P=" + fmt1(s.pTerm) + ", I=" + fmt1(s.iTerm) + ", D=" + fmt1(s.dTerm)
@@ -647,6 +745,7 @@ function updateStatus() {
   const ratioInfo = sim.wildFlow ? "  | Flöde A=" + fmt1(sim.wildFlow) + ", Flöde B=" + fmt1(s.y) + ", Kvot (faktisk)=" + fmt2(s.y / sim.wildFlow) : "";
   statusEl.textContent = "Status: steg=" + s.step + ", t=" + fmt1(s.t) + ", SP=" + fmt1(spAtStep) + ", PV=" + fmt1(s.y) + ", e=" + fmt1(s.e) + ", u=" + fmt1(s.u) + pidInfo + warning + scheduleInfo + auxInfo + ratioInfo;
   updateZoneIndicators();
+  updateCascadePanel();
 }
 function hydrateFields(s) {
   fields.k.value = s.process.K; fields.t.value = s.process.T; fields.l.value = s.process.L;
@@ -854,8 +953,15 @@ function syncParamsFromUI() {
   currentScenario.controller.kff = Number(fields.kff.value);
   currentScenario.controller.manualOutput = readClamped(fields.manualOutput, 0, 100);
   currentScenario.runtime.setpoint = readClamped(fields.sp, 0, 100);
-  const safeUmin = clamp(Number(fields.umin.value), 0, 100);
-  const safeUmax = clamp(Number(fields.umax.value), 0, 100);
+  // FEAT-050 — Kaskadreglering: den YTTRE regulatorns outputLimits är i
+  // kaskadläge INTE en ventilprocent (0–100) utan ett avvikelsespann kring
+  // slavslingans normalläge (t.ex. ±50, se STRAT-007/DES-001) — måste tillåtas
+  // gå negativt, annars klipper denna synk bort hela den negativa halvan av
+  // spannet på varje steg (upptäckt vid webbläsarverifiering av FEAT-050).
+  const cascadeActiveForU = !!(currentScenario.cascade && currentScenario.cascade.enabled);
+  const uClampMin = cascadeActiveForU ? -100 : 0;
+  const safeUmin = clamp(Number(fields.umin.value), uClampMin, 100);
+  const safeUmax = clamp(Number(fields.umax.value), uClampMin, 100);
   currentScenario.controller.outputLimits.min = Math.min(safeUmin, safeUmax);
   currentScenario.controller.outputLimits.max = Math.max(safeUmin, safeUmax);
   fields.umin.value = currentScenario.controller.outputLimits.min;
@@ -1933,8 +2039,11 @@ chartCanvas.addEventListener("wheel", e => {
   const newEnd = Math.min(tFull, newStart + newSpan);
   zoomView = (newEnd - newStart >= tFull - 0.5) ? null : { start: newStart, end: newEnd };
 
-  // Y-zoom (endast PV-ytan)
-  if (my >= padTop && my <= ch * 0.62) {
+  // Y-zoom (endast PV1-ytan — FEAT-050: begränsad till panel 1 även när
+  // kaskad delar upp ytan i två, se getCascadePanelSplit(); panel 2 (PV2/SP2)
+  // har ingen egen zoom i denna första version, se DES-001/FEAT-050-rapporten).
+  const outerPanelBottomZoom = getCascadePanelSplit(ch).outerBottom;
+  if (my >= padTop && my <= outerPanelBottomZoom) {
     const pvFullMin = Math.min(sim.scenario.process.measurementRange.min, 0);
     const pvFullMax = Math.max(sim.scenario.process.measurementRange.max, 100);
     const pvFullSpan = pvFullMax - pvFullMin;
@@ -1942,7 +2051,7 @@ chartCanvas.addEventListener("wheel", e => {
     const pvSpan = curPv.max - curPv.min;
     const newPvSpan = Math.max(5, Math.min(pvFullSpan, pvSpan * factor));
     // PV-värde vid musen (y-axeln är inverterad: top=max, bottom=min)
-    const yRatio = (my - padTop) / (ch * 0.62 - padTop);
+    const yRatio = (my - padTop) / (outerPanelBottomZoom - padTop);
     const pvAtMouse = curPv.max - yRatio * pvSpan;
     const newPvMax = Math.min(pvFullMax, pvAtMouse + yRatio * newPvSpan);
     const newPvMin = Math.max(pvFullMin, newPvMax - newPvSpan);

@@ -411,6 +411,18 @@
     .advanced-toggle.open .group-toggle { transform: rotate(90deg); }
     .advanced-fields { display: contents; }
     .advanced-fields[hidden] { display: none; }
+    /* FEAT-050 — Kaskadreglering: Slavslinga-panelen visar bara AVLÄSTA
+       värden (SP2/PV2/U), aldrig redigerbara — DES-001 avsnitt 2.2 var
+       tydlig med att detta INTE ska kunna förväxlas med en andra,
+       konfigurerbar regulator. `[readonly]` här är en ren visuell markör
+       (input-fältet accepterar ändå aldrig skrivning) som skiljer den
+       tydligt från alla vanliga, redigerbara .field-inputs i övriga grupper. */
+    #groupSlavslinga { border-color: #2f7a8f; }
+    #groupSlavslinga .param-group-label { color: #2f7a8f; }
+    #groupSlavslinga .field input[readonly] { background: var(--panel-strong); color: var(--muted); cursor: default; }
+    .slave-status-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: var(--panel-strong); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+    .slave-status-badge.saturated { background: #fbeadb; color: #b5651d; border-color: #e0a458; }
+    #cascadeChain { font-family: Consolas, monospace; font-size: 12px; background: var(--panel-strong); border: 1px solid #2f7a8f; border-radius: 6px; padding: 6px 10px; color: #1b242c; overflow-x: auto; white-space: nowrap; }
     /* FEAT-044 (mergad ovanpå UX-004) — zonerna för Parameterstyrning/
        Olinjär ventilkarakteristik samlade i en kompakt tabell (en rad per
        zon) istället för utspridda enskilda fält — adresserar att layouten
@@ -892,7 +904,11 @@
           </div>
           <div class="field">
             <label for="umin">U min <button class="help-btn" data-help="umin">?</button></label>
-            <input id="umin" type="number" step="0.1" min="0" max="100">
+            <!-- FEAT-050 — inget HTML min-attribut: i kaskadläge är detta ett
+                 avvikelsespann (t.ex. -50) kring slavslingans normalläge, inte
+                 en ventilprocent. Den auktoritativa gränsen sätts i JS av
+                 syncParamsFromUI() (se dess FEAT-050-kommentar), inte här. -->
+            <input id="umin" type="number" step="0.1" max="100">
           </div>
           <div class="field">
             <label for="umax">U max <button class="help-btn" data-help="umax">?</button></label>
@@ -992,6 +1008,35 @@
         </div>
       </div>
 
+      <!-- FEAT-050 (STRAT-007/DES-001) — Kaskadreglering: Slavslingan är
+           INTE en andra, konfigurerbar regulator (PO-beslut, DES-001
+           avsnitt 2.2) — bara en skrivskyddad avläsning av SP2/PV2/U.
+           Döljs helt (`hidden`) utom när aktivt scenario har
+           `cascade.enabled`, satt av updateCascadeVisibility() i app.js.
+           Ingen Avancerat-sektion, ingen data-addon (ingen konfiguration
+           att gömma/visa via APPLICATION_PROFILES — se DES-001 avsnitt 2.3). -->
+      <div class="param-group" id="groupSlavslinga" hidden>
+        <span class="param-group-label">Slavslinga (inre process)</span>
+        <div class="param-group-body">
+          <div class="field">
+            <label for="cascadeSp2">SP2 <button class="help-btn" data-help="cascadeSp2">?</button></label>
+            <input id="cascadeSp2" type="text" readonly>
+          </div>
+          <div class="field">
+            <label for="cascadePv2">PV2 <button class="help-btn" data-help="cascadePv2">?</button></label>
+            <input id="cascadePv2" type="text" readonly>
+          </div>
+          <div class="field">
+            <label for="cascadeU">U <button class="help-btn" data-help="cascadeU">?</button></label>
+            <input id="cascadeU" type="text" readonly>
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <span id="cascadeStatusBadge" class="slave-status-badge">OK</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Processpåverkan — UX-004: "Styrning"+"Störningar" slagna ihop,
            eftersom båda är parametrar användaren ändrar UNDER pågående
            körning (PO:s motivering). Hålls medvetet FLACK, ingen egen
@@ -1066,6 +1111,13 @@
     <div class="row" id="chartControls">
       <label class="measure-check"><input type="checkbox" id="showPB"> Visa PB <button class="help-btn" data-help="showPB">?</button></label>
     </div>
+
+    <!-- FEAT-050 (DES-001 avsnitt 4) — Kaskadreglering: alltid synlig
+         signalkedja SP1 → Huvud-PID → SP2 → Slav-PID → U → PV2 → PV1,
+         medvetet EN textrad (inget nytt grafikbibliotek, ingen
+         SVG-rendering) — se DES-001 för motivering. Dold utom när aktivt
+         scenario har cascade.enabled (updateCascadeVisibility() i app.js). -->
+    <div class="row" id="cascadeChain" hidden></div>
 
     <div id="chartWrap">
       <canvas id="chart" width="980" height="280"></canvas>

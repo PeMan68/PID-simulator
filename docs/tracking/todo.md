@@ -37,7 +37,18 @@ Vanligt fel/Slutsats, se STRAT-007 avsnitt 8).
 **Kaskad-windup:** ingen avancerad lösning i första versionen om inte
 simulatorn kräver det för att fungera korrekt — PO vill ha en bedömning
 redovisad, inte ett antagande gjort i förväg.
-**Status:** Implementation påbörjad på `feature/FEAT-050-kaskadreglering`.
+**Status:** Implementation klar på `feature/FEAT-050-kaskadreglering`, verifierad
+(27 nya enhetstester + fullständig regressionskörning av alla befintliga
+testsviter + webbläsarverifiering via headless Chrome), redovisad för PO.
+**Ingen merge, ingen release ännu** — väntar på PO-granskning.
+**Kaskad-windup:** ingen dedikerad cross-loop-mekanism implementerad — verifierat
+att den inte behövs för att de tre levererade demoscenarierna ska fungera
+korrekt (inre regulatorns utsignal mättar aldrig i något av dem). Kvarstår som
+känd, dokumenterad begränsning för framtida scenarier med större störningar.
+**Bugg hittad och fixad under verifiering:** `syncParamsFromUI()` klippte den
+yttre regulatorns U min/max till [0,100] varje steg, vilket skulle förstöra
+kaskadens avvikelsebaserade SP2-spann (t.ex. ±50) — fixat till ett bredare
+spann när `cascade.enabled`. Se `apps/app/app.js` (sökord FEAT-050) för detaljer.
 
 ### FEAT-049 — HMI-/SCADA-vy för reglerstrategier
 **Prioritet:** Ej prioriterad — idé registrerad på PO:s begäran (2026-09-24).

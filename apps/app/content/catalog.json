@@ -36,7 +36,10 @@
     { "id": "framkoppling-demo-pid-ff",      "file": "scenarios/framkoppling-demo-pid-ff.json" },
     { "id": "kvotreglering-demo-fast-sp",     "file": "scenarios/kvotreglering-demo-fast-sp.json" },
     { "id": "kvotreglering-demo-korrekt",     "file": "scenarios/kvotreglering-demo-korrekt.json" },
-    { "id": "kvotreglering-demo-fel-kvot",    "file": "scenarios/kvotreglering-demo-fel-kvot.json" }
+    { "id": "kvotreglering-demo-fel-kvot",    "file": "scenarios/kvotreglering-demo-fel-kvot.json" },
+    { "id": "kaskad-demo-enkelslinga",   "file": "scenarios/kaskad-demo-enkelslinga.json" },
+    { "id": "kaskad-demo-losning",       "file": "scenarios/kaskad-demo-losning.json" },
+    { "id": "kaskad-demo-langsam-slav",  "file": "scenarios/kaskad-demo-langsam-slav.json" }
   ],
   "theory": [
     { "id": "pid-intro",      "file": "theory/pid-intro.v1.json" },
@@ -50,7 +53,8 @@
     { "id": "disturbance-robustness",  "file": "theory/disturbance-robustness.v1.json" },
     { "id": "parameterstyrning-ventilkarakteristik", "file": "theory/parameterstyrning-ventilkarakteristik.v1.json" },
     { "id": "framkoppling",            "file": "theory/framkoppling.v1.json" },
-    { "id": "kvotreglering",           "file": "theory/kvotreglering.v1.json" }
+    { "id": "kvotreglering",           "file": "theory/kvotreglering.v1.json" },
+    { "id": "kaskadreglering",         "file": "theory/kaskadreglering.v1.json" }
   ],
   "learning_paths": [
     { "id": "kom-igång.v1",                    "file": "exercises/kom-igång.v1.json" },
@@ -65,6 +69,7 @@
     { "id": "stegsvar-identifiering.v1",       "file": "exercises/stegsvar-identifiering.v1.json" },
     { "id": "lambda-metoden.v1",               "file": "exercises/lambda-metoden.v1.json" },
     { "id": "framkoppling.v1",                 "file": "exercises/framkoppling.v1.json" },
-    { "id": "kvotreglering.v1",                "file": "exercises/kvotreglering.v1.json" }
+    { "id": "kvotreglering.v1",                "file": "exercises/kvotreglering.v1.json" },
+    { "id": "kaskadreglering.v1",               "file": "exercises/kaskadreglering.v1.json" }
   ]
 }
