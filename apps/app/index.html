@@ -434,7 +434,12 @@
     .slave-chart-wrap canvas { width: 100%; max-width: 100%; height: 90px; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
     .slave-status-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: var(--panel-strong); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
     .slave-status-badge.saturated { background: #fbeadb; color: #b5651d; border-color: #e0a458; }
-    #cascadeChain { font-family: Consolas, monospace; font-size: 12px; background: var(--panel-strong); border: 1px solid #2f7a8f; border-radius: 6px; padding: 6px 10px; color: #1b242c; overflow-x: auto; white-space: nowrap; }
+    /* FEAT-050 uppföljning (PO-test, andra rundan) — flyttad in i
+       Slavslinga-panelen (från en fristående rad ovanför huvudgrafen).
+       white-space:normal (inte nowrap som tidigare) eftersom panelen är
+       sidopanelsbred, inte lika bred som huvudgrafen. */
+    #cascadeChain { font-family: Consolas, monospace; font-size: 11px; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; color: #1b242c; white-space: normal; line-height: 1.5; }
+    #cascadeChain:empty { display: none; }
     /* FEAT-044 (mergad ovanpå UX-004) — zonerna för Parameterstyrning/
        Olinjär ventilkarakteristik samlade i en kompakt tabell (en rad per
        zon) istället för utspridda enskilda fält — adresserar att layouten
@@ -1054,8 +1059,15 @@
             <label>Status</label>
             <span id="cascadeStatusBadge" class="slave-status-badge">OK</span>
           </div>
+          <!-- FEAT-050 uppföljning (PO-test 2026-09-24, andra rundan) —
+               signalkedjeraden flyttad hit FRÅN en fristående rad ovanför
+               huvudgrafen: hela kedjan (inkl. SP2/U/PV2) hör hemma
+               tillsammans med resten av slavslinge-informationen, inte
+               bredvid huvudgrafen som bara visar huvudslingan nu. -->
+          <div id="cascadeChain" class="slave-chart-wrap"></div>
           <div class="slave-chart-wrap">
             <canvas id="cascadeMiniChart" width="260" height="90"></canvas>
+            <div id="cascadeMiniLegend" class="legend" style="font-size: 10px; margin-top: 2px;"></div>
           </div>
         </div>
       </div>
@@ -1134,13 +1146,6 @@
     <div class="row" id="chartControls">
       <label class="measure-check"><input type="checkbox" id="showPB"> Visa PB <button class="help-btn" data-help="showPB">?</button></label>
     </div>
-
-    <!-- FEAT-050 (DES-001 avsnitt 4) — Kaskadreglering: alltid synlig
-         signalkedja SP1 → Huvud-PID → SP2 → Slav-PID → U → PV2 → PV1,
-         medvetet EN textrad (inget nytt grafikbibliotek, ingen
-         SVG-rendering) — se DES-001 för motivering. Dold utom när aktivt
-         scenario har cascade.enabled (updateCascadeVisibility() i app.js). -->
-    <div class="row" id="cascadeChain" hidden></div>
 
     <div id="chartWrap">
       <canvas id="chart" width="980" height="280"></canvas>

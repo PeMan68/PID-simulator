@@ -184,6 +184,17 @@ function drawChart() {
   // panel 1:s "PV1/SP1"-etikett (fortfarande relevant: PV1 skiljer sig från
   // PV2, även om PV2 inte längre ritas här).
   const cascadeActive = !!(sim.scenario.cascade && sim.scenario.cascade.enabled);
+  // FEAT-050 uppföljning (PO-test, andra rundan) — "u" i huvudgrafens nedre
+  // panel var SLAVREGULATORNS utsignal i kaskadläge (sim-core.js:s
+  // publishedU, se Simulation.step()), inte huvudregulatorns — förvirrande,
+  // eftersom huvudgrafen annars bara visar huvudslingans egna signaler
+  // (PV1/SP1). Huvudregulatorn har heller ingen egen "u" att visa i
+  // kaskadläge (dess utsignal ÄR SP2, redan synlig i Slavslinga-panelen) —
+  // den nedre panelen tas därför bort helt för kaskadscenarier, och panel 1
+  // (PV1/SP1) fyller hela grafhöjden. U flyttad till Slavslinga-panelens
+  // mini-graf (drawCascadeMiniChart()), tillsammans med PV2/SP2.
+  const showUPanel = !cascadeActive;
+  const topPanelBottom = showUPanel ? h * 0.62 : h - pad.bottom;
   const tFull = Math.max(1, t[t.length - 1] || 1);
   const tStart = zoomView ? zoomView.start : 0;
   const tMax   = zoomView ? zoomView.end   : tFull;
@@ -191,19 +202,22 @@ function drawChart() {
   const yMax = pvZoomView ? pvZoomView.max : Math.max(sim.scenario.process.measurementRange.max, 100);
   const uViewMin = 0, uViewMax = 100;
   const xScale = v => pad.left + ((v - tStart) / (tMax - tStart || 1)) * (w - pad.left - pad.right);
-  const yScaleTop = v => pad.top + (1 - (v - yMin) / (yMax - yMin || 1)) * (h * 0.62 - pad.top);
+  const yScaleTop = v => pad.top + (1 - (v - yMin) / (yMax - yMin || 1)) * (topPanelBottom - pad.top);
   const yScaleBot = v => h * 0.68 + (1 - (v - uViewMin) / (uViewMax - uViewMin || 1)) * (h - pad.bottom - h * 0.68);
   ctx.clearRect(0, 0, w, h); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = "#d8d8d8"; ctx.strokeRect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top); ctx.strokeRect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
+  ctx.strokeStyle = "#d8d8d8"; ctx.strokeRect(pad.left, pad.top, w - pad.left - pad.right, topPanelBottom - pad.top);
+  if (showUPanel) ctx.strokeRect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
 
   // Y-axel etiketter för PV1/SP1
   ctx.fillStyle = "#666"; ctx.font = "11px Segoe UI"; ctx.textAlign = "right";
   ctx.fillText("100", pad.left - 8, yScaleTop(100) + 4);
   ctx.fillText("0", pad.left - 8, yScaleTop(0) + 4);
 
-  // Y-axel etiketter för u (nedre grafen)
-  ctx.fillText("100", pad.left - 8, h * 0.68 + 4);
-  ctx.fillText("0", pad.left - 8, h - pad.bottom + 4);
+  // Y-axel etiketter för u (nedre grafen) — bara när panelen finns
+  if (showUPanel) {
+    ctx.fillText("100", pad.left - 8, h * 0.68 + 4);
+    ctx.fillText("0", pad.left - 8, h - pad.bottom + 4);
+  }
 
   // Hystersgränser för on/off
   if (sim.scenario.controller.mode === "onoff") {
@@ -260,7 +274,7 @@ function drawChart() {
     ctx.restore();
   }
   const ng042 = sim.scenario.process.nonlinearGain;
-  if (ng042 && ng042.enabled) {
+  if (showUPanel && ng042 && ng042.enabled) {
     ctx.save();
     ctx.globalAlpha = 0.6;
     ctx.strokeStyle = "#16a085"; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
@@ -276,10 +290,10 @@ function drawChart() {
 
   ctx.fillStyle = "#444"; ctx.font = "12px Segoe UI"; ctx.textAlign = "left";
   ctx.fillText(cascadeActive ? "PV1/SP1" : "PV/SP", pad.left + 6, pad.top + 14);
-  ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
+  if (showUPanel) ctx.fillText("u", pad.left + 6, h * 0.68 + 16);
   ctx.save();
   ctx.beginPath();
-  ctx.rect(pad.left, pad.top, w - pad.left - pad.right, h * 0.62 - pad.top);
+  ctx.rect(pad.left, pad.top, w - pad.left - pad.right, topPanelBottom - pad.top);
   ctx.clip();
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(y[i]) })), "#1266f1", false);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleTop(sp[i]) })), "#d64545", true);
@@ -318,15 +332,17 @@ function drawChart() {
     // enda och äter upp den visuella luften mellan posterna (samma
     // anledning till att HTML-varianten ursprungligen använde &nbsp;&nbsp;).
     const gap = "  ";
-    legendEl.textContent = (cascadeActive ? "Blå: PV1" + gap + "Röd streckad: SP1" : "Blå: PV" + gap + "Röd streckad: SP") + gap + "Grön: u" + (hasWildFlow ? gap + "Rosa streckad (tunn): Flöde A" : "");
+    legendEl.textContent = (cascadeActive ? "Blå: PV1" + gap + "Röd streckad: SP1" : "Blå: PV" + gap + "Röd streckad: SP") + (showUPanel ? gap + "Grön: u" : "") + (hasWildFlow ? gap + "Rosa streckad (tunn): Flöde A" : "");
   }
 
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
-  ctx.clip();
-  drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(Math.max(0, Math.min(100, u[i]))) })), "#2f9e44", false);
-  ctx.restore();
+  if (showUPanel) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pad.left, h * 0.68, w - pad.left - pad.right, h - pad.bottom - h * 0.68);
+    ctx.clip();
+    drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScaleBot(Math.max(0, Math.min(100, u[i]))) })), "#2f9e44", false);
+    ctx.restore();
+  }
 
   // ── Markeringar vid parameterändring (fortsatt körning på samma graf) ──
   const changeMarkers = sim.history.markers || [];
@@ -498,33 +514,31 @@ function drawChart() {
 
         ctx.save();
         ctx.strokeStyle = "rgba(30,30,30,0.38)"; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
-        ctx.beginPath(); ctx.moveTo(mx, pad.top); ctx.lineTo(mx, h * 0.62); ctx.stroke();
-        if (hoverPos.y >= pad.top && hoverPos.y <= h * 0.62) {
+        ctx.beginPath(); ctx.moveTo(mx, pad.top); ctx.lineTo(mx, topPanelBottom); ctx.stroke();
+        if (hoverPos.y >= pad.top && hoverPos.y <= topPanelBottom) {
           ctx.beginPath(); ctx.moveTo(pad.left, hoverPos.y); ctx.lineTo(w - pad.right, hoverPos.y); ctx.stroke();
         }
         ctx.setLineDash([]);
 
-        const lines = ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(1), "u  = " + uH.toFixed(1)];
+        // FEAT-050 uppföljning (PO-test, andra rundan) — "u" och SP2/PV2
+        // borttagna ur huvudgrafens crosshair för kaskadscenarier: de hör
+        // till slavslingan (redan ständigt synliga i Slavslinga-panelens
+        // egna fält/mini-graf) — huvudgrafens crosshair visar nu bara
+        // huvudslingans EGNA signal (PV1), i linje med att huvudgrafen bara
+        // ritar huvudslingans linjer.
+        const lines = cascadeActive
+          ? ["t   = " + Math.round(tHover), "PV1 = " + pvH.toFixed(1)]
+          : ["t  = " + Math.round(tHover), "PV = " + pvH.toFixed(1), "u  = " + uH.toFixed(1)];
         if (hasWildFlow) {
           lines.push("SP_B    = " + spH.toFixed(1));
           lines.push("Flöde A = " + wildH.toFixed(1));
-        }
-        // FEAT-050 — kaskad: crosshairen visar även SP2/PV2 punktvis, samma
-        // princip som Kvotreglerings SP_B/Flöde A ovan (PO-önskemål:
-        // studerande ska kunna avläsa slavslingans värden exakt, inte bara
-        // grafens visuella intryck).
-        if (cascadeActive) {
-          const sp2H = sim.history.sp2[iNear] != null ? sim.history.sp2[iNear] : 0;
-          const pv2H = sim.history.pv2[iNear] != null ? sim.history.pv2[iNear] : 0;
-          lines.push("SP2 = " + sp2H.toFixed(1));
-          lines.push("PV2 = " + pv2H.toFixed(1));
         }
         ctx.font = "11px Consolas, monospace";
         const lH = 15, pX = 7, pY = 5;
         const ttW = Math.max(...lines.map(s => ctx.measureText(s).width)) + pX * 2;
         const ttH = lines.length * lH + pY * 2;
         const ttX = mx + 10 + ttW <= w - pad.right ? mx + 10 : mx - ttW - 8;
-        const ttY = Math.max(pad.top + 4, Math.min(h * 0.62 - ttH - 4, hoverPos.y - ttH / 2));
+        const ttY = Math.max(pad.top + 4, Math.min(topPanelBottom - ttH - 4, hoverPos.y - ttH / 2));
         ctx.fillStyle = "rgba(255,255,255,0.95)";
         ctx.strokeStyle = "#bbb"; ctx.lineWidth = 1;
         ctx.fillRect(ttX, ttY, ttW, ttH); ctx.strokeRect(ttX, ttY, ttW, ttH);
@@ -623,8 +637,10 @@ function markZoneChangeIfAny() {
 function updateCascadePanel() {
   const active = !!(sim && sim.scenario.cascade && sim.scenario.cascade.enabled);
   if (fields.groupSlavslinga) fields.groupSlavslinga.hidden = !active;
-  if (fields.cascadeChain) fields.cascadeChain.hidden = !active;
-  if (!active) return;
+  // FEAT-050 uppföljning (PO-test, andra rundan) — cascadeChain flyttad in i
+  // #groupSlavslinga (se index.html): dess synlighet ärvs nu från panelen,
+  // behöver inget eget hidden-attribut längre.
+  if (!active) { if (fields.cascadeChain) fields.cascadeChain.textContent = ""; return; }
   const s = sim.getState();
   const spAtStep = sim.history.sp[sim.history.sp.length - 1] ?? sim.scenario.runtime.setpoint;
   fields.cascadeSp2.value = fmt1(s.sp2);
@@ -654,7 +670,7 @@ function drawCascadeMiniChart() {
   const w = canvas.width, h = canvas.height;
   const pad = { left: 30, right: 6, top: 6, bottom: 4 };
   ctx.clearRect(0, 0, w, h);
-  const t = sim.history.t, pv2 = sim.history.pv2, sp2 = sim.history.sp2;
+  const t = sim.history.t, pv2 = sim.history.pv2, sp2 = sim.history.sp2, u = sim.history.u;
   const tFull = Math.max(1, t[t.length - 1] || 1);
   const innerProcCfg = sim.scenario.cascade.inner.process;
   const yMin = Math.min(innerProcCfg.measurementRange.min, 0);
@@ -664,8 +680,16 @@ function drawCascadeMiniChart() {
   ctx.fillStyle = "#666"; ctx.font = "9px Segoe UI"; ctx.textAlign = "right";
   ctx.fillText(String(yMax), pad.left - 4, yScale(yMax) + 3);
   ctx.fillText(String(yMin), pad.left - 4, yScale(yMin) + 3);
+  // FEAT-050 uppföljning (PO-test, andra rundan) — U (slavregulatorns
+  // utsignal) tillagd HÄR som en tredje linje, samma gröna färgkonvention
+  // som huvudgrafens u-panel använder för icke-kaskad-scenarier. Delar
+  // samma 0–100-axel som PV2/SP2 (U är redan 0–100%, samma skala råkar
+  // stämma) — ingen egen sub-panel behövs, håller mini-grafen enkel.
+  drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScale(Math.max(0, Math.min(100, u[i]))) })), "#2f9e44", false, 1.5);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScale(pv2[i]) })), "#2f7a8f", false, 1.5);
   drawSeries(ctx, t.map((tv, i) => ({ x: xScale(tv), y: yScale(sp2[i]) })), "#e07a2f", true, 1.5);
+  const miniLegend = document.getElementById("cascadeMiniLegend");
+  if (miniLegend) miniLegend.textContent = "Teal: PV2   Orange streckad: SP2   Grön: U";
 }
 function updateStatus() {
   if (!sim) { statusEl.textContent = "Status: ej laddad"; updateZoneIndicators(); updateCascadePanel(); return; }
@@ -2009,8 +2033,12 @@ chartCanvas.addEventListener("wheel", e => {
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
   const cw = chartCanvas.width, ch = chartCanvas.height;
-  const padL = 52, padR = 16, padTop = 14;
+  const padL = 52, padR = 16, padTop = 14, padBottom = 28;
   const chartW = cw - padL - padR;
+  // FEAT-050 uppföljning — PV-panelen fyller HELA grafhöjden för
+  // kaskadscenarier (ingen u-panel, se drawChart()s showUPanel).
+  const cascadeActiveForZoom = !!(sim.scenario.cascade && sim.scenario.cascade.enabled);
+  const pvPanelBottom = cascadeActiveForZoom ? ch - padBottom : ch * 0.62;
 
   // X-zoom (båda graferna)
   const tFull = sim.history.t.at(-1) || 1;
@@ -2024,7 +2052,7 @@ chartCanvas.addEventListener("wheel", e => {
   zoomView = (newEnd - newStart >= tFull - 0.5) ? null : { start: newStart, end: newEnd };
 
   // Y-zoom (endast PV-ytan)
-  if (my >= padTop && my <= ch * 0.62) {
+  if (my >= padTop && my <= pvPanelBottom) {
     const pvFullMin = Math.min(sim.scenario.process.measurementRange.min, 0);
     const pvFullMax = Math.max(sim.scenario.process.measurementRange.max, 100);
     const pvFullSpan = pvFullMax - pvFullMin;
@@ -2032,7 +2060,7 @@ chartCanvas.addEventListener("wheel", e => {
     const pvSpan = curPv.max - curPv.min;
     const newPvSpan = Math.max(5, Math.min(pvFullSpan, pvSpan * factor));
     // PV-värde vid musen (y-axeln är inverterad: top=max, bottom=min)
-    const yRatio = (my - padTop) / (ch * 0.62 - padTop);
+    const yRatio = (my - padTop) / (pvPanelBottom - padTop);
     const pvAtMouse = curPv.max - yRatio * pvSpan;
     const newPvMax = Math.min(pvFullMax, pvAtMouse + yRatio * newPvSpan);
     const newPvMin = Math.max(pvFullMin, newPvMax - newPvSpan);

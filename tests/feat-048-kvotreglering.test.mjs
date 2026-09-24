@@ -188,7 +188,12 @@ function makeScenario({ ratioControl, kp = 3.0, ti = 5.0, sp = 25, noiseStd = 0 
 // (PO:s komplettering, 2026-09-24), OFÖRÄNDRAT för övriga reglerstrategier ──
 {
   const appJs = readFileSync(path.join(APP_DIR, "app.js"), "utf8");
-  check("12a. Crosshair-raderna PV/u är BYTE-IDENTISKA med tidigare (oförändrat för övriga strategier)", /const lines = \["t  = " \+ Math\.round\(tHover\), "PV = " \+ pvH\.toFixed\(1\), "u  = " \+ uH\.toFixed\(1\)\];/.test(appJs));
+  // FEAT-050 (uppföljning, andra rundan) — crosshairen grenar nu på
+  // cascadeActive (kaskadscenarier visar bara PV1, inte den missvisande
+  // "u" som i själva verket är slavregulatorns, se sim-core.js:s
+  // publishedU). Icke-kaskad-grenen är BYTE-IDENTISK med den gamla,
+  // ovillkorade raden — regexen uppdaterad för att matcha ternären.
+  check("12a. Crosshair-raderna PV/u är BYTE-IDENTISKA med tidigare för icke-kaskad-grenen (oförändrat för övriga strategier)", /: \["t  = " \+ Math\.round\(tHover\), "PV = " \+ pvH\.toFixed\(1\), "u  = " \+ uH\.toFixed\(1\)\];/.test(appJs));
   check("12b. SP_B/Flöde A läggs till EXAKT när hasWildFlow — samma villkor som styr grafens Flöde A-linje (avsnitt 11a)", /if \(hasWildFlow\) \{\s*\n\s*lines\.push\("SP_B    = " \+ spH\.toFixed\(1\)\);\s*\n\s*lines\.push\("Flöde A = " \+ wildH\.toFixed\(1\)\);/.test(appJs));
   check("12c. spH/wildH läses från sim.history.sp/wildFlow vid samma tidpunkt (iNear) som PV/u redan gör — inte en separat, potentiellt osynkad källa", /const spH = hasWildFlow \? \(sp\[iNear\] != null \? sp\[iNear\] : 0\) : null;/.test(appJs) && /const wildH = hasWildFlow \? \(wildFlow\[iNear\] != null \? wildFlow\[iNear\] : 0\) : null;/.test(appJs));
   check("12d. wildFlow/hasWildFlow lyfta till funktionsnivå (återanvänds av både grafens linje och crosshairen, ingen duplicerad logik)", (appJs.match(/const hasWildFlow = sim\.scenario\.ratioControl\?\.wildFlow\?\.base > 0/g) || []).length === 1);
