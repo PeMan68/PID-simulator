@@ -440,6 +440,26 @@
     .zone-table tr.zone-active-process th,
     .zone-table tr.zone-active-process td { background: #e6f5f2; }
     .zone-table tr.zone-active-process th { color: #0f6a53; }
+    /* Pedagogisk layoutjustering (PO-beslut) — brytpunkten visas som en egen,
+       visuellt DISTINKT rad MELLAN de två zoner den avgränsar (istället för
+       som ett separat fält före hela tabellen), så sambandet "den här siffran
+       skiljer just de här två zonerna åt" blir uppenbart utan förklaring.
+       Smalare/tystare än en vanlig zonrad (mindre text, streckad kant) så den
+       läses som en gräns, inte en fjärde zon. */
+    .zone-table tr.zone-breakpoint-row td {
+      padding: 2px 4px;
+      border-top: 1px dashed var(--line);
+      border-bottom: 1px dashed var(--line);
+      background: var(--panel);
+    }
+    .zone-table tr.zone-breakpoint-row label {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; color: var(--muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .zone-table tr.zone-breakpoint-row input[type="number"] {
+      width: 52px; padding: 2px 5px; font-size: 11px; margin-left: 8px;
+    }
     /* flex: 0 0 auto — bredden styrs av innehållet (etiketten eller
        select/input:s egen naturliga bredd), inte av en delad rutnätskolumn.
        min-width är en golvnivå, inte ett tvingat mått. */
@@ -778,16 +798,12 @@
               <input id="nonlinearGainEnabled" type="checkbox" title="Processens K varierar med utsignalen i tre fasta zoner">
             </div>
             <div class="schedule-fields" id="nonlinearGainFields" data-addon="ventilkarakteristik" hidden>
-              <div class="field">
-                <label for="ngBreak1">Brytpunkt 1 (u) <button class="help-btn" data-help="ngBreak">?</button></label>
-                <input id="ngBreak1" type="number" step="1" min="0" max="100">
-              </div>
-              <div class="field">
-                <label for="ngBreak2">Brytpunkt 2 (u) <button class="help-btn" data-help="ngBreak">?</button></label>
-                <input id="ngBreak2" type="number" step="1" min="0" max="100">
-              </div>
-              <!-- FEAT-044 (mergad ovanpå UX-004) — zonfälten som en kompakt
-                   tabell istället för tre utspridda .field-rutor. -->
+              <!-- Pedagogisk layoutjustering (PO-beslut) — brytpunkterna
+                   ligger inte längre som egna fält FÖRE tabellen, utan som
+                   egna rader MELLAN de zoner de avgränsar: Brytpunkt 1
+                   mellan Zon 1/Zon 2, Brytpunkt 2 mellan Zon 2/Zon 3. Samma
+                   fält-ID:n/logik som tidigare — ren presentationsändring,
+                   se .zone-breakpoint-row-kommentaren i CSS:en ovan. -->
               <div class="zone-table-wrap">
                 <table class="zone-table">
                   <thead>
@@ -795,7 +811,19 @@
                   </thead>
                   <tbody>
                     <tr id="ngZoneRow1"><th>Zon 1 (låg u)</th><td><input id="ngZ1K" type="number" step="0.01" min="0.001"></td></tr>
+                    <tr class="zone-breakpoint-row">
+                      <td colspan="2">
+                        <label for="ngBreak1">Brytpunkt 1 (u) <button class="help-btn" data-help="ngBreak">?</button></label>
+                        <input id="ngBreak1" type="number" step="1" min="0" max="100">
+                      </td>
+                    </tr>
                     <tr id="ngZoneRow2"><th>Zon 2 (mellan-u)</th><td><input id="ngZ2K" type="number" step="0.01" min="0.001"></td></tr>
+                    <tr class="zone-breakpoint-row">
+                      <td colspan="2">
+                        <label for="ngBreak2">Brytpunkt 2 (u) <button class="help-btn" data-help="ngBreak">?</button></label>
+                        <input id="ngBreak2" type="number" step="1" min="0" max="100">
+                      </td>
+                    </tr>
                     <tr id="ngZoneRow3"><th>Zon 3 (hög u)</th><td><input id="ngZ3K" type="number" step="0.01" min="0.001"></td></tr>
                   </tbody>
                 </table>
@@ -876,16 +904,12 @@
               <input id="gainScheduleEnabled" type="checkbox" title="Kp/Ti/Td väljs utifrån PV i tre fasta zoner">
             </div>
             <div class="schedule-fields" id="gainScheduleFields" data-addon="parameterstyrning" hidden>
-              <div class="field">
-                <label for="gsBreak1">Brytpunkt 1 (PV) <button class="help-btn" data-help="gsBreak">?</button></label>
-                <input id="gsBreak1" type="number" step="1" min="0" max="100">
-              </div>
-              <div class="field">
-                <label for="gsBreak2">Brytpunkt 2 (PV) <button class="help-btn" data-help="gsBreak">?</button></label>
-                <input id="gsBreak2" type="number" step="1" min="0" max="100">
-              </div>
-              <!-- FEAT-044 (mergad ovanpå UX-004) — zonfälten som en kompakt
-                   tabell istället för nio utspridda .field-rutor. -->
+              <!-- Pedagogisk layoutjustering (PO-beslut) — brytpunkterna
+                   ligger inte längre som egna fält FÖRE tabellen, utan som
+                   egna rader MELLAN de zoner de avgränsar: Brytpunkt 1
+                   mellan Zon 1/Zon 2, Brytpunkt 2 mellan Zon 2/Zon 3. Samma
+                   fält-ID:n/logik som tidigare — ren presentationsändring,
+                   se .zone-breakpoint-row-kommentaren i CSS:en ovan. -->
               <div class="zone-table-wrap">
                 <table class="zone-table">
                   <thead>
@@ -903,11 +927,23 @@
                       <td><input id="gsZ1Ti" type="number" step="0.1" min="0"></td>
                       <td><input id="gsZ1Td" type="number" step="0.1" min="0"></td>
                     </tr>
+                    <tr class="zone-breakpoint-row">
+                      <td colspan="4">
+                        <label for="gsBreak1">Brytpunkt 1 (PV) <button class="help-btn" data-help="gsBreak">?</button></label>
+                        <input id="gsBreak1" type="number" step="1" min="0" max="100">
+                      </td>
+                    </tr>
                     <tr id="gsZoneRow2">
                       <th>Zon 2</th>
                       <td><input id="gsZ2Kp" type="number" step="0.1" min="0.1"></td>
                       <td><input id="gsZ2Ti" type="number" step="0.1" min="0"></td>
                       <td><input id="gsZ2Td" type="number" step="0.1" min="0"></td>
+                    </tr>
+                    <tr class="zone-breakpoint-row">
+                      <td colspan="4">
+                        <label for="gsBreak2">Brytpunkt 2 (PV) <button class="help-btn" data-help="gsBreak">?</button></label>
+                        <input id="gsBreak2" type="number" step="1" min="0" max="100">
+                      </td>
                     </tr>
                     <tr id="gsZoneRow3">
                       <th>Zon 3</th>
