@@ -874,7 +874,6 @@ function loadScenarioByName(name) {
     fields.applicationProfile.value = currentPath.forceApplicationProfile;
   }
   applyApplicationProfile(); // filtrerar Processmodell-alternativen/tilläggen åt den härledda (eller lärstigs-tvingade) Tillämpningen, och synkar om processType-beroende fält
-  captureMarkerBaseline();
   appendLog("Laddat scenario: " + currentScenario.id);
   updateControllerUIState();
   // UX-004 — updateControllerUIState() ovan anropar internt
@@ -885,6 +884,7 @@ function loadScenarioByName(name) {
   // upprepas HÄR, som allra sista steget, precis som i
   // applyApplicationProfile() självt.
   applyPathVisibilityOverride();
+  normalizeAndCaptureMarkerBaseline();
   updateStatus(); updateStepLimitUI(); drawChart();
   activityDispatch("scenario_loaded", { scenarioId: currentScenario.id, contextKey: activityContextKey() });
 }
@@ -935,6 +935,23 @@ function captureMarkerBaseline() {
   // byte, Rensa graf, Återställ system) ska nollställa zonbytesspårningen
   // som redan nollställer den vanliga markeringsbaslinjen ovan.
   resetZoneChangeTracking();
+}
+// Bugg 2026-018 — baslinjen måste tas på samma NORMALISERADE form som
+// syncParamsFromUI() producerar vid varje Stega/Kör-klick. Annars jämförs
+// scenariofilens råa form (saknade kff/auxGain/gainSchedule/nonlinearGain,
+// Ti/Td satta i OnOff-läge) mot den normaliserade, och en spurios "X ändrad"-
+// markering läggs till vid första steget. Synken körs UTAN föregående baslinje
+// (null), så den kan aldrig själv lägga till en markering. Måste anropas SIST
+// i en laddning, efter alla fältjusteringar (Tillämpning, lägesstyrd
+// döljning, lärstigens visibilityOverride). Används även av Återställ system/
+// Rensa graf: där kan scenariots körtillstånd avvika från fälten (t.ex.
+// kvotregleringens beräknade SP mot SP-fältets bas), vilket annars gav en
+// falsk "SP x→y". Simuleringen påverkas inte: exakt samma synk körs ändå före
+// nästa steg.
+function normalizeAndCaptureMarkerBaseline() {
+  lastMarkerSnapshot = null;
+  syncParamsFromUI();
+  captureMarkerBaseline();
 }
 function resetMarkers() {
   if (sim) sim.history.markers = [];
@@ -1622,7 +1639,9 @@ function initUI() {
   if (initialProfile !== fields.applicationProfile.value) {
     fields.applicationProfile.value = initialProfile;
     applyApplicationProfile();
-    if (sim) { syncParamsFromUI(); drawChart(); updateStatus(); }
+    // Bugg 2026-018 — del av själva startladdningen, inte en användarändring:
+    // ta om baslinjen istället för att markera tillämpningsbytet i grafen.
+    if (sim) { normalizeAndCaptureMarkerBaseline(); drawChart(); updateStatus(); }
   }
   if (!localStorage.getItem("pidSimWelcomed")) showWelcome();
   applyEnvironmentUI();
@@ -1906,7 +1925,7 @@ document.getElementById("triggerAux").addEventListener("click", () => {
 // sim.clearHistory() (se sim-core.js) — enda källan till historikens
 // fältform, fortsätter från NUVARANDE process-/regulatortillstånd (till
 // skillnad från "Återställ system", som även nollställer det).
-document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.clearHistory(); sim.history.markers = []; captureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
+document.getElementById("clearChart").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.clearHistory(); sim.history.markers = []; normalizeAndCaptureMarkerBaseline(); appendLog("Graf nollställd."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("chart_cleared", {}); });
 // FEAT-050 uppföljning (PO-test, sjätte rundan) — den här handlern byggde
 // tidigare om sim.history för hand med en HÅRDKODAD fältlista (t/y/u/e/sp/
 // p/i/d/aux/wildFlow/markers) som glömde sp2/pv2/uInner — sim.step() kastade
@@ -1916,7 +1935,7 @@ document.getElementById("clearChart").addEventListener("click", () => { if (!sim
 // exakt Simulation-klassens egna fält, oavsett vilka som finns) — den enda
 // EXTRA saken den här handlern behöver göra är att nollställa markers
 // (ett app.js-tillägg till history, inte en del av Simulation självt).
-document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history.markers = []; captureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
+document.getElementById("systemReset").addEventListener("click", () => { if (!sim) return; zoomView = null; pvZoomView = null; sim.reset(); sim.history.markers = []; normalizeAndCaptureMarkerBaseline(); appendLog("System återställt."); updateStatus(); updateStepLimitUI(); drawChart(); activityDispatch("system_reset", { contextKey: activityContextKey() }); });
 document.getElementById("loadPath").addEventListener("click", () => loadPath(learningPathSelect.value));
 document.getElementById("prevStep").addEventListener("click", prevPathStep);
 document.getElementById("nextStep").addEventListener("click", nextPathStep);
