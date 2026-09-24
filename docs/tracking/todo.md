@@ -8,6 +8,37 @@ Klara features flyttas till [todo-done.md](todo-done.md).
 
 ## Webbapp (`apps/app/`)
 
+### FEAT-050 — Kaskadreglering
+**Prioritet:** Aktiv — PO har godkänt STRAT-007 (förstudie) och DES-001
+(designförslag) och beslutat att påbörja implementation (2026-09-24).
+**Bakgrund:** Se `docs/reports/STRAT-007_FORSTUDIE-KASKADREGLERING.md`
+(arkitekturanalys — den enda av de fyra reglerstrategierna som kräver en
+verklig flerslingearkitektur, dubbla `ProcessModel`/`PIDController`-instanser)
+och `docs/reports/DES-001_DESIGN-KASKADREGLERING-UI.md` (UI/graf/
+informationsflödesdesign — huvudslinga oförändrad, ny skrivskyddad
+"Slavslinga"-panel, tre grafpaneler, signalkedje-rad).
+**Produktbeslut (PO):** Processexempel = värmeväxlare, yttre slinga =
+temperatur (PV1), inre slinga = flöde (PV2). Pedagogiskt mål: SP1 → Huvudslinga
+→ SP2 → Slavslinga → U → PV2 → PV1. Målet är en pedagogiskt tydlig första
+version, inte maximal industriell realism.
+**UI-beslut:** Huvudslingans gränssnitt oförändrat (SP1, Kp/Ti/Td m.fl.). Ny
+skrivskyddad "Slavslinga"-panel (SP2/PV2/U, ev. status-/mättad-indikator) —
+INGA Kp/Ti/Td/anti-windup/bumpless för slavslingan, de styrs av scenariot.
+Benämning: "Huvudslinga"/"Slavslinga", inte "Huvudregulator"/"Slavregulator".
+**Graf:** tre paneler (PV1/SP1, PV2/SP2, U), båda slingorna synliga samtidigt,
+ingen vyväxlare, ingen överlagring av alla signaler i samma panel.
+**Informationsflöde:** alltid synlig textbaserad signalkedja (SP1 → Huvud-PID
+→ SP2 → Slav-PID → U → PV2 → PV1) — ingen SVG-rendering, ingen HMI-/SCADA-vy
+(det är FEAT-049, en separat, oprioriterad feature).
+**Omfattning:** flerslingearkitektur i `sim-core.js` (dubbla ProcessModel/
+PIDController-instanser), historikmodell för två slingor, scenarioformat för
+kaskad, UI/graf enligt DES-001, grundläggande lärstig (Problem/Lösning/
+Vanligt fel/Slutsats, se STRAT-007 avsnitt 8).
+**Kaskad-windup:** ingen avancerad lösning i första versionen om inte
+simulatorn kräver det för att fungera korrekt — PO vill ha en bedömning
+redovisad, inte ett antagande gjort i förväg.
+**Status:** Implementation påbörjad på `feature/FEAT-050-kaskadreglering`.
+
 ### FEAT-049 — HMI-/SCADA-vy för reglerstrategier
 **Prioritet:** Ej prioriterad — idé registrerad på PO:s begäran (2026-09-24).
 **INGEN analys gjord, INGEN branch, INGEN implementation påbörjad** — väntar
