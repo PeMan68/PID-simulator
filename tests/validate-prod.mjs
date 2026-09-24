@@ -45,7 +45,9 @@ const EXPECTED_LEARNING_PATHS = [
   "storningar-robusthet.v1", // v1.5.0 — FEAT-030, PO-testad och godkänd för PROD
   "integrerande-process-niva.v1", // v1.6.2 — FEAT-047, PO-testad och godkänd för PROD
   "parameterstyrning-ventilkarakteristik.v1", // v1.5.5 — FEAT-042, PO-testad och godkänd för PROD
-  "framkoppling.v1" // v1.6.0 — FEAT-045, PO-testad och godkänd för PROD
+  "framkoppling.v1", // v1.6.0 — FEAT-045, PO-testad och godkänd för PROD
+  "kvotreglering.v1", // v1.7.0 — FEAT-048, PO-beslut (PROD-002 alt. A) 2026-09-24
+  "kaskadreglering.v1" // v1.7.0 — FEAT-050, PO-beslut (PROD-002 alt. A) 2026-09-24
 ];
 const HIDDEN_LEARNING_PATHS = [
   "stegsvar-identifiering.v1",

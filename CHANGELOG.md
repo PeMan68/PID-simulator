@@ -2,6 +2,65 @@
 
 Alla nämnvärda ändringar i PID Simulator-webbappen dokumenteras här.
 
+## [v1.7.0] — 2026-09-24
+
+### Nytt i denna release
+
+Samlad release av de två sista reglerstrategierna från STRAT-001. Med denna
+release är samtliga fyra publicerade: Parameterstyrning, Framkoppling,
+Kvotreglering och Kaskadreglering. PO-beslut enligt PROD-002 alternativ A.
+
+- **Ny publicerad lärstig: "Kvotreglering (Ratio Control)"** (FEAT-048). SP
+  för flöde B beräknas automatiskt som Kvot × Flöde A. Flöde A visas i
+  trendgrafen och i Mätläge. Lärstigen har 4 steg (teori plus tre scenarier:
+  fast SP, korrekt kvot och felaktig kvot). Kryssrutan Kvotreglering finns
+  också under Tillämpning "Avancerat".
+- **Ny publicerad lärstig: "Kaskadreglering (Cascade Control)"** (FEAT-050).
+  Simulatorns första flerslingearkitektur: en yttre huvudregulator ger
+  börvärdet SP2 till en inre slavslinga. En skrivskyddad Slavslinga-panel
+  visar SP2, PV2 och slavens utsignal, med egen minigraf och signalkedja.
+  Lärstigen har 5 steg: teori, grundmekanismen via en SP-förändring,
+  enkelslinga mot kaskad vid samma störning, samt en feltrimmad slavslinga.
+- Två nya teorimoduler och sju nya scenarier i produktionskatalogen.
+
+### Rättat
+
+- **Falsk "X ändrad"-markering i grafen** (bugg 2026-018). Vid första steget
+  efter en scenarioladdning, och redan vid sidladdning, lades en markering
+  som "Parameterstyrning ändrad" in fast inget hade ändrats. Det gällde i
+  praktiken alla scenarier. Kvotscenarierna fick dessutom en falsk
+  "SP x→y" efter Återställ system och Rensa graf. Nu markeras bara verkliga
+  ändringar. Simuleringen påverkas inte.
+
+### Produktionsurval i v1.7.0
+
+Tolv lärstigar publicerade, i denna ordning:
+
+1. Kom igång med PID Simulator
+2. Öppen slinga, On/Off och P-reglering
+3. Proportionalband och regulatorförstärkning
+4. PI- och PID-reglering
+5. Processens begränsningar
+6. Windup och anti-windup
+7. Störningar och robusthet
+8. Integrerande process och nivåreglering
+9. Parameterstyrning och olinjär ventilkarakteristik
+10. Framkoppling (Feedforward)
+11. Kvotreglering (Ratio Control)
+12. Kaskadreglering (Cascade Control)
+
+### Kända förhållanden
+
+- Kaskadreglering har ingen särskild windup-hantering mellan slingorna. Den
+  behövs inte i de publicerade scenarierna, där slavregulatorn aldrig mättar
+  (se STRAT-007).
+- Test-läge och de två lärstigarna Stegsvar och processidentifiering samt
+  Lambda-metoden ingår fortfarande inte i PROD.
+
+### Version
+
+`APP_VERSION` = 1.7.0.
+
 ## [v1.6.2] — 2026-09-24
 
 ### Nytt i denna release

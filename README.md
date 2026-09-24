@@ -12,14 +12,14 @@ täcker inte kursens övriga innehåll om fysiska mätdon och styrdon.
 
 ## Officiell version
 
-- **Stabil version:** v1.6.2 (källkoden är taggad `v1.6.2`)
+- **Stabil version:** v1.7.0 (källkoden är taggad `v1.7.0`)
 - **Officiell URL:** https://peman68.github.io/PID-simulator/
 
 Använd den officiella URL:en för undervisning och självstudier. `main`-branchen är källan
 för den stabila undervisningsversionen, och GitHub Pages bygger och publicerar
 produktionsprofilen (PROD) uteslutande därifrån.
 
-## Funktioner i v1.6.2
+## Funktioner i v1.7.0
 
 Publicerat i produktionsversionen:
 
@@ -48,7 +48,7 @@ Publicerat i produktionsversionen:
   synliggör aktivitet och repetition. Sparas lokalt per enhet. Inte ett betyg eller
   mått på yrkeskompetens — se [`docs/development/GAMIFICATION-XP-PROTOTYPE.md`](docs/development/GAMIFICATION-XP-PROTOTYPE.md).
 
-Tio publicerade lärstigar, i denna ordning:
+Tolv publicerade lärstigar, i denna ordning:
 
 1. Kom igång med PID Simulator
 2. Öppen slinga, On/Off och P-reglering
@@ -60,6 +60,8 @@ Tio publicerade lärstigar, i denna ordning:
 8. Integrerande process och nivåreglering
 9. Parameterstyrning och olinjär ventilkarakteristik
 10. Framkoppling (Feedforward)
+11. Kvotreglering (Ratio Control)
+12. Kaskadreglering (Cascade Control)
 
 Produktionsversionen innehåller **inte** Test-läge, poängräkning eller
 experimentella scenarier — se nästa avsnitt.
@@ -141,10 +143,11 @@ innan det visas i PROD.
 
 ## Projektstatus
 
-v1.6.2 är den senaste stabila undervisningsversionen. Fortsatt utveckling sker i
-`develop`. Två ytterligare lärstigar (Stegsvar och processidentifiering, Lambda-metoden)
-samt en helt ny reglerstrategi (Kvotreglering, FEAT-048) finns i utvecklingsversionen och
-väntar på pedagogisk granskning innan produktionsgodkännande. Test-läge med poängräkning är
+v1.7.0 är den senaste stabila undervisningsversionen. Med den är samtliga fyra
+reglerstrategier (Parameterstyrning, Framkoppling, Kvotreglering, Kaskadreglering)
+publicerade. Fortsatt utveckling sker i `develop`. Två ytterligare lärstigar (Stegsvar
+och processidentifiering, Lambda-metoden) finns i utvecklingsversionen och väntar på
+pedagogisk granskning innan produktionsgodkännande. Test-läge med poängräkning är
 tekniskt klart men ingår inte i PROD. Nivåprogression aktiverades i PROD med v1.5.0. Se
 [`CHANGELOG.md`](CHANGELOG.md) för fullständig releasehistorik.
 
